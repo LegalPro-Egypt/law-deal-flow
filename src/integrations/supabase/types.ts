@@ -14,7 +14,384 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      case_categories: {
+        Row: {
+          applicable_laws: string[] | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          name_ar: string | null
+          name_de: string | null
+          parent_id: string | null
+          required_documents: string[] | null
+          typical_timeline: string | null
+          urgency_indicators: string[] | null
+        }
+        Insert: {
+          applicable_laws?: string[] | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          name_ar?: string | null
+          name_de?: string | null
+          parent_id?: string | null
+          required_documents?: string[] | null
+          typical_timeline?: string | null
+          urgency_indicators?: string[] | null
+        }
+        Update: {
+          applicable_laws?: string[] | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          name_ar?: string | null
+          name_de?: string | null
+          parent_id?: string | null
+          required_documents?: string[] | null
+          typical_timeline?: string | null
+          urgency_indicators?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "case_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cases: {
+        Row: {
+          ai_summary: string | null
+          assigned_admin_id: string | null
+          assigned_lawyer_id: string | null
+          case_number: string
+          category: string
+          client_email: string
+          client_name: string
+          client_phone: string | null
+          consultation_fee: number | null
+          created_at: string
+          description: string | null
+          extracted_entities: Json | null
+          id: string
+          jurisdiction: string
+          language: string
+          remaining_fee: number | null
+          status: string
+          subcategory: string | null
+          title: string
+          total_fee: number | null
+          updated_at: string
+          urgency: string
+          user_id: string
+        }
+        Insert: {
+          ai_summary?: string | null
+          assigned_admin_id?: string | null
+          assigned_lawyer_id?: string | null
+          case_number?: string
+          category: string
+          client_email: string
+          client_name: string
+          client_phone?: string | null
+          consultation_fee?: number | null
+          created_at?: string
+          description?: string | null
+          extracted_entities?: Json | null
+          id?: string
+          jurisdiction?: string
+          language?: string
+          remaining_fee?: number | null
+          status?: string
+          subcategory?: string | null
+          title: string
+          total_fee?: number | null
+          updated_at?: string
+          urgency?: string
+          user_id: string
+        }
+        Update: {
+          ai_summary?: string | null
+          assigned_admin_id?: string | null
+          assigned_lawyer_id?: string | null
+          case_number?: string
+          category?: string
+          client_email?: string
+          client_name?: string
+          client_phone?: string | null
+          consultation_fee?: number | null
+          created_at?: string
+          description?: string | null
+          extracted_entities?: Json | null
+          id?: string
+          jurisdiction?: string
+          language?: string
+          remaining_fee?: number | null
+          status?: string
+          subcategory?: string | null
+          title?: string
+          total_fee?: number | null
+          updated_at?: string
+          urgency?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      conversations: {
+        Row: {
+          case_id: string | null
+          created_at: string
+          id: string
+          language: string
+          metadata: Json | null
+          mode: string
+          session_id: string
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          case_id?: string | null
+          created_at?: string
+          id?: string
+          language?: string
+          metadata?: Json | null
+          mode?: string
+          session_id: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          case_id?: string | null
+          created_at?: string
+          id?: string
+          language?: string
+          metadata?: Json | null
+          mode?: string
+          session_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documents: {
+        Row: {
+          case_id: string
+          conversation_id: string | null
+          created_at: string
+          document_category: string | null
+          extracted_data: Json | null
+          file_name: string
+          file_size: number
+          file_type: string
+          file_url: string
+          id: string
+          is_required: boolean | null
+          ocr_text: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          case_id: string
+          conversation_id?: string | null
+          created_at?: string
+          document_category?: string | null
+          extracted_data?: Json | null
+          file_name: string
+          file_size: number
+          file_type: string
+          file_url: string
+          id?: string
+          is_required?: boolean | null
+          ocr_text?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          case_id?: string
+          conversation_id?: string | null
+          created_at?: string
+          document_category?: string | null
+          extracted_data?: Json | null
+          file_name?: string
+          file_size?: number
+          file_type?: string
+          file_url?: string
+          id?: string
+          is_required?: boolean | null
+          ocr_text?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      legal_knowledge: {
+        Row: {
+          article_number: string | null
+          category: string
+          content: string
+          created_at: string
+          id: string
+          is_active: boolean | null
+          keywords: string[] | null
+          language: string
+          law_reference: string | null
+          subcategory: string | null
+          tags: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          article_number?: string | null
+          category: string
+          content: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          keywords?: string[] | null
+          language?: string
+          law_reference?: string | null
+          subcategory?: string | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          article_number?: string | null
+          category?: string
+          content?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          keywords?: string[] | null
+          language?: string
+          law_reference?: string | null
+          subcategory?: string | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          message_type: string
+          metadata: Json | null
+          role: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          message_type?: string
+          metadata?: Json | null
+          role: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          message_type?: string
+          metadata?: Json | null
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          first_name: string | null
+          id: string
+          is_active: boolean | null
+          is_verified: boolean | null
+          jurisdictions: string[] | null
+          last_name: string | null
+          phone: string | null
+          preferred_language: string | null
+          role: string
+          specializations: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          first_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_verified?: boolean | null
+          jurisdictions?: string[] | null
+          last_name?: string | null
+          phone?: string | null
+          preferred_language?: string | null
+          role?: string
+          specializations?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          first_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_verified?: boolean | null
+          jurisdictions?: string[] | null
+          last_name?: string | null
+          phone?: string | null
+          preferred_language?: string | null
+          role?: string
+          specializations?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
