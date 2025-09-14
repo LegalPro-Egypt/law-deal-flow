@@ -56,9 +56,13 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = ({
   // Initialize conversation on mount
   useEffect(() => {
     if (!conversationId) {
-      initializeConversation(userId, caseId);
+      // For intake mode, allow initialization without userId (anonymous users)
+      // For qa mode, require userId for authenticated users
+      if (mode === 'intake' || userId) {
+        initializeConversation(userId, caseId);
+      }
     }
-  }, [conversationId, userId, caseId, initializeConversation]);
+  }, [conversationId, userId, caseId, initializeConversation, mode]);
 
   // Auto-scroll to bottom
   useEffect(() => {

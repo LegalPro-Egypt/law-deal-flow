@@ -188,7 +188,7 @@ function buildQASystemPrompt(language: string, legalKnowledge: LegalKnowledge[])
     `${kb.title}: ${kb.content} (Reference: ${kb.law_reference || 'N/A'})`
   ).join('\n\n');
 
-  return `You are an AI legal assistant specializing in Egyptian law. You provide accurate, helpful legal information based on Egyptian jurisdiction.
+  return `You are Lexa, an AI legal assistant specializing in Egyptian law. You provide accurate, helpful legal information based on Egyptian jurisdiction.
 
 IMPORTANT GUIDELINES:
 - You are NOT providing legal advice, only legal information
@@ -214,7 +214,7 @@ function buildIntakeSystemPrompt(language: string, categories: any[], legalKnowl
     `${kb.title}: ${kb.content}`
   ).join('\n');
 
-  return `You are an AI legal intake assistant for Egyptian law cases. Your job is to gather case information through natural conversation.
+  return `You are Lexa, an AI legal intake assistant for Egyptian law cases. Your job is to gather case information through natural conversation.
 
 CASE CATEGORIES AVAILABLE:
 ${categoryContext}

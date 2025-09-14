@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Scale, ArrowLeft, MessageSquare, Upload, FileText, CheckCircle, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { LegalChatbot } from "@/components/LegalChatbot";
+import { AuthenticationPrompt } from "@/components/AuthenticationPrompt";
 
 const Intake = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -21,6 +22,8 @@ const Intake = () => {
     category: ""
   });
   const [extractedCaseData, setExtractedCaseData] = useState<any>(null);
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   const handleCaseDataExtracted = (data: any) => {
     setExtractedCaseData(data);
@@ -35,6 +38,26 @@ const Intake = () => {
     }
   };
 
+  const handleContinueToDocuments = () => {
+    // Show authentication prompt when users want to proceed
+    if (!currentUser) {
+      setShowAuthPrompt(true);
+    } else {
+      setCurrentStep(2);
+    }
+  };
+
+  const handleAuthenticated = (user: any) => {
+    setCurrentUser(user);
+    setShowAuthPrompt(false);
+    setCurrentStep(2);
+  };
+
+  const handleContinueAsGuest = () => {
+    setShowAuthPrompt(false);
+    setCurrentStep(2);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -43,7 +66,7 @@ const Intake = () => {
           <div className="flex items-center justify-between h-16">
             <Link to="/" className="flex items-center space-x-2">
               <Scale className="h-8 w-8 text-primary" />
-              <span className="text-xl font-bold">LegalConnect</span>
+              <span className="text-xl font-bold">LegalPro</span>
             </Link>
             <Link to="/" className="inline-flex items-center text-muted-foreground hover:text-primary transition-colors">
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -78,7 +101,7 @@ const Intake = () => {
           <div className="text-center">
             <h1 className="text-3xl font-bold mb-2">Case Intake Process</h1>
             <p className="text-muted-foreground">
-              {currentStep === 1 && "AI-powered consultation to understand your legal needs"}
+              {currentStep === 1 && "Chat with Lexa to understand your legal needs"}
               {currentStep === 2 && "Document collection and case categorization"}
               {currentStep === 3 && "Review and submit your case for lawyer matching"}
             </p>
@@ -110,7 +133,7 @@ const Intake = () => {
                   </div>
                 )}
               </div>
-              <Button onClick={() => setCurrentStep(2)} className="bg-gradient-primary">
+              <Button onClick={handleContinueToDocuments} className="bg-gradient-primary">
                 Continue to Documents
               </Button>
             </div>
@@ -284,6 +307,15 @@ const Intake = () => {
           </Card>
         )}
       </div>
+
+      {/* Authentication Prompt */}
+      {showAuthPrompt && (
+        <AuthenticationPrompt
+          trigger="case_submission"
+          onAuthenticated={handleAuthenticated}
+          onContinueAsGuest={handleContinueAsGuest}
+        />
+      )}
     </div>
   );
 };

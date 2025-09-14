@@ -12,7 +12,7 @@ const Landing = () => {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-2">
               <Scale className="h-8 w-8 text-primary" />
-              <span className="text-xl font-bold">LegalConnect</span>
+              <span className="text-xl font-bold">LegalPro</span>
             </div>
             <div className="flex items-center space-x-4">
               <Link to="/auth">
@@ -58,7 +58,7 @@ const Landing = () => {
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Why Choose LegalConnect?</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Why Choose LegalPro?</h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Streamlined legal services with built-in protection and transparency
             </p>
@@ -68,8 +68,8 @@ const Landing = () => {
             {[
               {
                 icon: <MessageSquare className="h-8 w-8" />,
-                title: "AI-Powered Intake",
-                description: "Smart chatbot collects your case details and matches you with the right specialist"
+                title: "Lexa AI Intake",
+                description: "Lexa, our AI assistant, collects your case details and matches you with the right specialist"
               },
               {
                 icon: <Shield className="h-8 w-8" />,
@@ -124,9 +124,9 @@ const Landing = () => {
               </div>
               <div className="order-1 md:order-2">
                 <div className="text-accent font-bold mb-2">Step 1</div>
-                <h3 className="text-2xl font-bold mb-4">AI Intake Process</h3>
+                <h3 className="text-2xl font-bold mb-4">Lexa AI Intake</h3>
                 <p className="text-muted-foreground text-lg">
-                  Chat with our AI assistant to describe your legal needs. Upload documents, 
+                  Chat with Lexa, our AI legal assistant, to describe your needs. Upload documents, 
                   answer guided questions, and get your case categorized automatically.
                 </p>
               </div>
@@ -189,10 +189,10 @@ const Landing = () => {
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <Scale className="h-6 w-6 text-primary" />
-                <span className="font-bold">LegalConnect</span>
+                <span className="font-bold">LegalPro</span>
               </div>
               <p className="text-muted-foreground">
-                Professional legal services with AI-powered matching and secure payment protection.
+                Professional legal services with Lexa AI-powered matching and secure payment protection.
               </p>
             </div>
             <div>
@@ -223,7 +223,7 @@ const Landing = () => {
             </div>
           </div>
           <div className="mt-8 pt-8 border-t text-center text-muted-foreground">
-            <p>&copy; 2024 LegalConnect. All rights reserved.</p>
+            <p>&copy; 2024 LegalPro. All rights reserved.</p>
           </div>
         </div>
       </footer>
