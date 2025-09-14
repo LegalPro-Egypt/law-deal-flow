@@ -96,7 +96,6 @@ serve(async (req) => {
         model: 'gpt-4.1-2025-04-14',
         messages: messages,
         max_completion_tokens: 800,
-        temperature: 0.7,
         functions: mode === 'intake' ? getIntakeFunctions() : undefined,
         function_call: mode === 'intake' ? 'auto' : undefined,
       }),
@@ -105,7 +104,49 @@ serve(async (req) => {
     if (!openAIResponse.ok) {
       const errorText = await openAIResponse.text();
       console.error('OpenAI API error:', errorText);
-      throw new Error(`OpenAI API error: ${errorText}`);
+      
+      // Handle OpenAI errors gracefully with fallback response
+      const fallbackMessage = language === 'ar' 
+        ? 'أعتذر، أواجه صعوبة تقنية مؤقتة. يرجى مشاركة: اسمك الكامل، أفضل بريد إلكتروني، رقم هاتف، ووصف مختصر لحالتك القانونية حتى أتمكن من مساعدتك.'
+        : language === 'de'
+        ? 'Entschuldigung, ich habe momentan technische Schwierigkeiten. Bitte teilen Sie mit: Ihren vollständigen Namen, beste E-Mail-Adresse, Telefonnummer und eine kurze Beschreibung Ihres Rechtsfalls, damit ich Ihnen helfen kann.'
+        : 'I apologize, but I\'m experiencing temporary technical difficulties. Please share: your full name, best email address, phone number, and a brief description of your legal matter so I can assist you.';
+      
+      // Return a graceful fallback instead of throwing error
+      aiResponse = fallbackMessage;
+      
+      // Save conversation to database if conversationId provided
+      if (conversationId) {
+        await supabase.from('messages').insert([
+          {
+            conversation_id: conversationId,
+            role: 'user',
+            content: message,
+            metadata: { timestamp: new Date().toISOString() }
+          },
+          {
+            conversation_id: conversationId,
+            role: 'assistant',
+            content: aiResponse,
+            metadata: { 
+              timestamp: new Date().toISOString(),
+              mode,
+              fallback: true,
+              openai_error: errorText
+            }
+          }
+        ]);
+      }
+
+      return new Response(
+        JSON.stringify({ 
+          response: aiResponse,
+          extractedData: undefined,
+          nextQuestions: undefined,
+          conversationId
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const openAIData = await openAIResponse.json();

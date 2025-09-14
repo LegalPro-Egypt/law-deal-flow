@@ -127,7 +127,7 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = ({
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Scale className="h-5 w-5 text-primary" />
-            Legal AI Assistant
+            Lexa — LegalPro
             <Badge variant={mode === 'qa' ? 'default' : 'secondary'}>
               {mode === 'qa' ? 'Q&A' : 'Case Intake'}
             </Badge>
