@@ -322,38 +322,24 @@ const Auth = () => {
               <TabsContent value="admin">
                 <div className="space-y-4 mt-6">
                   <div className="text-center mb-6">
+                    <Lock className="h-8 w-8 mx-auto text-primary mb-2" />
                     <h3 className="text-lg font-semibold">Admin Portal</h3>
-                    <p className="text-sm text-muted-foreground">Manage cases, lawyers, and platform settings</p>
-                  </div>
-                  
-                  <div className="p-4 bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-lg mb-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Lock className="h-4 w-4 text-primary" />
-                      <span className="text-sm font-semibold text-primary">Authorized Admin</span>
-                    </div>
-                    <p className="text-sm font-mono bg-background px-2 py-1 rounded border">
-                      dankevforster@gmail.com
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Admin access is restricted to this email address only
+                    <p className="text-sm text-muted-foreground">
+                      Enter your admin credentials to access the dashboard
                     </p>
                   </div>
                   
                   <form onSubmit={handleAdminSignIn} className="space-y-4">
                     <div>
-                      <Label htmlFor="admin-email">Confirm Admin Email</Label>
+                      <Label htmlFor="admin-email">Email Address</Label>
                       <Input
                         id="admin-email"
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="dankevforster@gmail.com"
+                        placeholder="Enter your admin email"
                         required
-                        className="font-mono"
                       />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Enter the authorized admin email to receive a secure login link
-                      </p>
                     </div>
                     <Button 
                       type="submit" 
@@ -362,6 +348,10 @@ const Auth = () => {
                     >
                       {isLoading ? "Sending..." : "Send Secure Login Link"}
                     </Button>
+                    
+                    <p className="text-xs text-muted-foreground text-center">
+                      A secure one-time password will be sent to your email
+                    </p>
                   </form>
                 </div>
               </TabsContent>
