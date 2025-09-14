@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,11 +23,28 @@ import {
   Search,
   Filter,
   ArrowRight,
-  Settings
+  Settings,
+  UserCheck
 } from "lucide-react";
+import { LawyerRequestsManager } from "@/components/LawyerRequestsManager";
 
 const AdminDashboard = () => {
   const [selectedCase, setSelectedCase] = useState("");
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate('/');
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to sign out: " + error.message,
+        variant: "destructive",
+      });
+    }
+  };
 
   // Mock data - would come from Supabase  
   const stats = {
@@ -141,7 +161,7 @@ const AdminDashboard = () => {
                 <Settings className="h-4 w-4 mr-2" />
                 Settings
               </Button>
-              <Button variant="ghost" size="sm">Sign Out</Button>
+              <Button variant="ghost" size="sm" onClick={handleSignOut}>Sign Out</Button>
             </div>
           </div>
         </div>
@@ -227,9 +247,10 @@ const AdminDashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="cases" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="cases">Case Inbox</TabsTrigger>
             <TabsTrigger value="lawyers">Lawyers</TabsTrigger>
+            <TabsTrigger value="requests">Lawyer Requests</TabsTrigger>
             <TabsTrigger value="assignments">Assignments</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
@@ -368,6 +389,11 @@ const AdminDashboard = () => {
                 </Card>
               ))}
             </div>
+          </TabsContent>
+
+          {/* Lawyer Requests Tab */}
+          <TabsContent value="requests" className="space-y-6">
+            <LawyerRequestsManager />
           </TabsContent>
 
           {/* Assignments Tab */}
