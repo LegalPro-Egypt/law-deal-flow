@@ -1,0 +1,242 @@
+import { useState, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/components/ui/use-toast';
+
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  timestamp: Date;
+  metadata?: any;
+}
+
+export interface CaseData {
+  category?: string;
+  subcategory?: string;
+  urgency?: 'low' | 'medium' | 'high' | 'urgent';
+  entities?: {
+    parties?: string[];
+    dates?: string[];
+    amounts?: string[];
+    locations?: string[];
+  };
+  requiredDocuments?: string[];
+  nextQuestions?: string[];
+}
+
+export interface ChatbotState {
+  messages: ChatMessage[];
+  isLoading: boolean;
+  conversationId: string | null;
+  mode: 'qa' | 'intake';
+  language: 'en' | 'ar' | 'de';
+  extractedData: CaseData | null;
+}
+
+export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
+  const { toast } = useToast();
+  const [state, setState] = useState<ChatbotState>({
+    messages: [],
+    isLoading: false,
+    conversationId: null,
+    mode: initialMode,
+    language: 'en',
+    extractedData: null,
+  });
+
+  // Initialize conversation
+  const initializeConversation = useCallback(async (userId?: string, caseId?: string) => {
+    try {
+      console.log('Initializing conversation...', { userId, caseId });
+      
+      // Create conversation record
+      const { data: conversation, error } = await supabase
+        .from('conversations')
+        .insert({
+          user_id: userId,
+          case_id: caseId,
+          session_id: crypto.randomUUID(),
+          mode: state.mode,
+          language: state.language,
+          status: 'active',
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating conversation:', error);
+        throw error;
+      }
+
+      setState(prev => ({
+        ...prev,
+        conversationId: conversation.id,
+        messages: [{
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          content: getWelcomeMessage(state.mode, state.language),
+          timestamp: new Date(),
+        }]
+      }));
+
+      console.log('Conversation initialized:', conversation.id);
+      return conversation.id;
+    } catch (error) {
+      console.error('Failed to initialize conversation:', error);
+      toast({
+        title: "Error",
+        description: "Failed to start conversation. Please try again.",
+        variant: "destructive",
+      });
+      return null;
+    }
+  }, [state.mode, state.language, toast]);
+
+  // Send message to AI
+  const sendMessage = useCallback(async (content: string) => {
+    if (!content.trim()) return;
+
+    const userMessage: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: 'user',
+      content,
+      timestamp: new Date(),
+    };
+
+    setState(prev => ({
+      ...prev,
+      messages: [...prev.messages, userMessage],
+      isLoading: true,
+    }));
+
+    try {
+      console.log('Sending message to AI:', { content, conversationId: state.conversationId });
+
+      const { data, error } = await supabase.functions.invoke('legal-chatbot', {
+        body: {
+          message: content,
+          conversationId: state.conversationId,
+          mode: state.mode,
+          language: state.language,
+          chatHistory: state.messages.slice(-10).map(m => ({
+            role: m.role,
+            content: m.content
+          })),
+        },
+      });
+
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
+
+      console.log('AI response received:', data);
+
+      const aiMessage: ChatMessage = {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        content: data.response,
+        timestamp: new Date(),
+        metadata: data.extractedData,
+      };
+
+      setState(prev => ({
+        ...prev,
+        messages: [...prev.messages, aiMessage],
+        isLoading: false,
+        extractedData: data.extractedData || prev.extractedData,
+      }));
+
+    } catch (error) {
+      console.error('Error sending message:', error);
+      
+      const errorMessage: ChatMessage = {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        content: 'I apologize, but I encountered an error. Please try again or contact support if the problem persists.',
+        timestamp: new Date(),
+      };
+
+      setState(prev => ({
+        ...prev,
+        messages: [...prev.messages, errorMessage],
+        isLoading: false,
+      }));
+
+      toast({
+        title: "Error",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }, [state.conversationId, state.mode, state.language, state.messages, toast]);
+
+  // Switch between Q&A and Intake modes
+  const switchMode = useCallback((newMode: 'qa' | 'intake') => {
+    setState(prev => ({
+      ...prev,
+      mode: newMode,
+      messages: [{
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        content: getWelcomeMessage(newMode, prev.language),
+        timestamp: new Date(),
+      }],
+      extractedData: null,
+    }));
+  }, []);
+
+  // Change language
+  const setLanguage = useCallback((language: 'en' | 'ar' | 'de') => {
+    setState(prev => ({
+      ...prev,
+      language,
+      messages: [{
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        content: getWelcomeMessage(prev.mode, language),
+        timestamp: new Date(),
+      }],
+    }));
+  }, []);
+
+  // Clear conversation
+  const clearConversation = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      messages: [{
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        content: getWelcomeMessage(prev.mode, prev.language),
+        timestamp: new Date(),
+      }],
+      extractedData: null,
+    }));
+  }, []);
+
+  return {
+    ...state,
+    initializeConversation,
+    sendMessage,
+    switchMode,
+    setLanguage,
+    clearConversation,
+  };
+};
+
+function getWelcomeMessage(mode: 'qa' | 'intake', language: 'en' | 'ar' | 'de'): string {
+  const messages = {
+    qa: {
+      en: "Hello! I'm your AI legal assistant specialized in Egyptian law. I can help answer your legal questions based on Egyptian jurisdiction. Please note that I provide legal information, not legal advice. For specific legal matters, please consult with a qualified Egyptian lawyer. How can I help you today?",
+      ar: "مرحباً! أنا مساعدك القانوني الذكي المتخصص في القانون المصري. يمكنني مساعدتك في الإجابة على أسئلتك القانونية بناءً على القضاء المصري. يرجى ملاحظة أنني أقدم معلومات قانونية وليس استشارة قانونية. للأمور القانونية المحددة، يرجى استشارة محامٍ مصري مؤهل. كيف يمكنني مساعدتك اليوم؟",
+      de: "Hallo! Ich bin Ihr KI-Rechtsassistent, der sich auf ägyptisches Recht spezialisiert hat. Ich kann Ihnen bei der Beantwortung Ihrer Rechtsfragen basierend auf ägyptischer Rechtsprechung helfen. Bitte beachten Sie, dass ich Rechtsinformationen und keine Rechtsberatung anbiete. Für spezifische Rechtsangelegenheiten wenden Sie sich bitte an einen qualifizierten ägyptischen Anwalt. Wie kann ich Ihnen heute helfen?"
+    },
+    intake: {
+      en: "Hello! I'm here to help you with your legal case intake. I'll ask you some questions to understand your situation and connect you with the right Egyptian lawyer. This conversation will help us categorize your case and gather the necessary information. Please note that I'm collecting information, not providing legal advice. Let's start with your name and a brief description of your legal issue.",
+      ar: "مرحباً! أنا هنا لمساعدتك في استقبال قضيتك القانونية. سأطرح عليك بعض الأسئلة لفهم وضعك وربطك بالمحامي المصري المناسب. ستساعدنا هذه المحادثة في تصنيف قضيتك وجمع المعلومات اللازمة. يرجى ملاحظة أنني أجمع المعلومات وليس أقدم استشارة قانونية. لنبدأ باسمك ووصف موجز لمشكلتك القانونية.",
+      de: "Hallo! Ich bin hier, um Ihnen bei der Aufnahme Ihres Rechtsfalls zu helfen. Ich werde Ihnen einige Fragen stellen, um Ihre Situation zu verstehen und Sie mit dem richtigen ägyptischen Anwalt zu verbinden. Dieses Gespräch hilft uns, Ihren Fall zu kategorisieren und die notwendigen Informationen zu sammeln. Bitte beachten Sie, dass ich Informationen sammle und keine Rechtsberatung anbiete. Lassen Sie uns mit Ihrem Namen und einer kurzen Beschreibung Ihres Rechtsproblems beginnen."
+    }
+  };
+
+  return messages[mode][language];
+}

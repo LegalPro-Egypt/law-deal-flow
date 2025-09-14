@@ -1,1 +1,4 @@
 project_id = "igrpbeordzwcsxihlwny"
+
+[functions.legal-chatbot]
+verify_jwt = false

@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Scale, ArrowLeft, MessageSquare, Upload, FileText, CheckCircle, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
+import { LegalChatbot } from "@/components/LegalChatbot";
 
 const Intake = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -19,45 +20,19 @@ const Intake = () => {
     urgency: "medium",
     category: ""
   });
+  const [extractedCaseData, setExtractedCaseData] = useState<any>(null);
 
-  const categories = [
-    "Family Law / Marriage & Divorce",
-    "Immigration / Visas & Residency", 
-    "Real Estate / Property Law",
-    "Corporate / Business Law",
-    "Criminal Defense",
-    "Employment Law",
-    "Other"
-  ];
-
-  const chatMessages = [
-    {
-      type: "bot",
-      message: "Hello! I'm your AI legal assistant. I'll help gather information about your case to connect you with the right lawyer. Let's start with some basic information."
-    },
-    {
-      type: "bot", 
-      message: "What's your full name?"
+  const handleCaseDataExtracted = (data: any) => {
+    setExtractedCaseData(data);
+    
+    // Auto-fill form data from extracted case information
+    if (data.category) {
+      setFormData(prev => ({
+        ...prev,
+        category: data.category,
+        urgency: data.urgency || 'medium'
+      }));
     }
-  ];
-
-  const [messages, setMessages] = useState(chatMessages);
-  const [currentMessage, setCurrentMessage] = useState("");
-
-  const handleSendMessage = () => {
-    if (!currentMessage.trim()) return;
-    
-    const newMessages = [...messages, { type: "user", message: currentMessage }];
-    setMessages(newMessages);
-    setCurrentMessage("");
-    
-    // Simulate AI response
-    setTimeout(() => {
-      setMessages(prev => [...prev, {
-        type: "bot",
-        message: "Thank you! Now, could you provide your email address for our records?"
-      }]);
-    }, 1000);
   };
 
   return (
@@ -112,55 +87,34 @@ const Intake = () => {
 
         {/* Step 1: AI Chat Interface */}
         {currentStep === 1 && (
-          <Card className="bg-gradient-card shadow-elevated">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <MessageSquare className="h-5 w-5 mr-2" />
-                AI Legal Assistant
-              </CardTitle>
-              <CardDescription>
-                Our AI will ask you questions to understand your case better
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {/* Chat Messages */}
-              <div className="h-96 border rounded-lg p-4 overflow-y-auto mb-4 bg-background">
-                <div className="space-y-4">
-                  {messages.map((msg, index) => (
-                    <div key={index} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[80%] p-3 rounded-lg ${
-                        msg.type === 'user' 
-                          ? 'bg-primary text-primary-foreground' 
-                          : 'bg-muted text-muted-foreground'
-                      }`}>
-                        {msg.message}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+          <div className="h-[600px]">
+            <LegalChatbot 
+              mode="intake"
+              onCaseDataExtracted={handleCaseDataExtracted}
+              className="h-full"
+            />
+            
+            <div className="flex justify-between mt-6">
+              <div className="text-sm text-muted-foreground">
+                {extractedCaseData && (
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="outline">Case detected</Badge>
+                    {extractedCaseData.category && (
+                      <Badge variant="secondary">{extractedCaseData.category}</Badge>
+                    )}
+                    {extractedCaseData.urgency && (
+                      <Badge variant={extractedCaseData.urgency === 'high' || extractedCaseData.urgency === 'urgent' ? 'destructive' : 'default'}>
+                        {extractedCaseData.urgency} priority
+                      </Badge>
+                    )}
+                  </div>
+                )}
               </div>
-
-              {/* Chat Input */}
-              <div className="flex space-x-2">
-                <Input
-                  value={currentMessage}
-                  onChange={(e) => setCurrentMessage(e.target.value)}
-                  placeholder="Type your response..."
-                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                  className="flex-1"
-                />
-                <Button onClick={handleSendMessage} className="bg-gradient-primary">
-                  Send
-                </Button>
-              </div>
-
-              <div className="flex justify-end mt-6">
-                <Button onClick={() => setCurrentStep(2)} className="bg-gradient-primary">
-                  Continue to Documents
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+              <Button onClick={() => setCurrentStep(2)} className="bg-gradient-primary">
+                Continue to Documents
+              </Button>
+            </div>
+          </div>
         )}
 
         {/* Step 2: Document Upload */}
