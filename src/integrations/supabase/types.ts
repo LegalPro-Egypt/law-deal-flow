@@ -255,6 +255,51 @@ export type Database = {
           },
         ]
       }
+      lawyer_requests: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          law_firm: string | null
+          message: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          specializations: string[] | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          law_firm?: string | null
+          message?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          specializations?: string[] | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          law_firm?: string | null
+          message?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          specializations?: string[] | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       legal_knowledge: {
         Row: {
           article_number: string | null
