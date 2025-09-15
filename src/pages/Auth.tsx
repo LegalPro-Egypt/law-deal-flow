@@ -10,6 +10,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { GoogleAuthButton } from "@/components/GoogleAuthButton";
+import { EmailAuthForm } from "@/components/EmailAuthForm";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -244,24 +245,41 @@ const Auth = () => {
               </TabsList>
 
               <TabsContent value="client">
-                <div className="space-y-4 mt-6">
+                <div className="space-y-6 mt-6">
                   <div className="text-center mb-6">
                     <h3 className="text-lg font-semibold">Client Portal</h3>
                     <p className="text-sm text-muted-foreground">Access your cases and communicate with lawyers</p>
                   </div>
                   
-                  <GoogleAuthButton
-                    variant="default"
-                    size="default"
-                  >
-                    <Mail className="mr-2 h-4 w-4" />
-                    Sign in with Google
-                  </GoogleAuthButton>
+                  {/* Google OAuth Button */}
+                  <div className="space-y-4">
+                    <GoogleAuthButton
+                      variant="default"
+                      size="default"
+                    >
+                      <Mail className="mr-2 h-4 w-4" />
+                      Continue with Google
+                    </GoogleAuthButton>
+                    
+                    {/* Divider */}
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-background px-2 text-muted-foreground">
+                          Or continue with email
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* Email Authentication Form */}
+                    <EmailAuthForm />
+                  </div>
                   
                   <div className="text-center">
                     <p className="text-xs text-muted-foreground">
-                      Secure authentication powered by Google. 
-                      Your legal information is protected and encrypted.
+                      Your legal information is protected with enterprise-grade security
                     </p>
                   </div>
                 </div>
