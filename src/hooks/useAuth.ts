@@ -16,20 +16,34 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('useAuth: Setting up auth state listener');
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('useAuth: Auth state change', event, !!session);
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Fetch user profile
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('role, first_name, last_name, email')
-            .eq('user_id', session.user.id)
-            .single();
-          
-          setProfile(profileData);
+          try {
+            console.log('useAuth: Fetching profile for user', session.user.id);
+            const { data: profileData, error } = await supabase
+              .from('profiles')
+              .select('role, first_name, last_name, email')
+              .eq('user_id', session.user.id)
+              .single();
+            
+            if (error) {
+              console.error('useAuth: Profile fetch error:', error);
+              setProfile(null);
+            } else {
+              console.log('useAuth: Profile loaded:', profileData);
+              setProfile(profileData);
+            }
+          } catch (error) {
+            console.error('useAuth: Profile fetch exception:', error);
+            setProfile(null);
+          }
         } else {
           setProfile(null);
         }
@@ -39,26 +53,61 @@ export const useAuth = () => {
     );
 
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        supabase
-          .from('profiles')
-          .select('role, first_name, last_name, email')
-          .eq('user_id', session.user.id)
-          .single()
-          .then(({ data: profileData }) => {
-            setProfile(profileData);
-            setLoading(false);
-          });
-      } else {
+    const initializeAuth = async () => {
+      try {
+        console.log('useAuth: Getting initial session');
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('useAuth: Session fetch error:', error);
+          setLoading(false);
+          return;
+        }
+
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          try {
+            console.log('useAuth: Fetching initial profile for user', session.user.id);
+            const { data: profileData, error: profileError } = await supabase
+              .from('profiles')
+              .select('role, first_name, last_name, email')
+              .eq('user_id', session.user.id)
+              .single();
+              
+            if (profileError) {
+              console.error('useAuth: Initial profile fetch error:', profileError);
+              setProfile(null);
+            } else {
+              console.log('useAuth: Initial profile loaded:', profileData);
+              setProfile(profileData);
+            }
+          } catch (error) {
+            console.error('useAuth: Initial profile fetch exception:', error);
+            setProfile(null);
+          }
+        }
+        
+        setLoading(false);
+      } catch (error) {
+        console.error('useAuth: Initialize auth exception:', error);
         setLoading(false);
       }
-    });
+    };
 
-    return () => subscription.unsubscribe();
+    initializeAuth();
+
+    // Timeout fallback to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      console.warn('useAuth: Timeout reached, forcing loading to false');
+      setLoading(false);
+    }, 10000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   const signOut = async () => {
