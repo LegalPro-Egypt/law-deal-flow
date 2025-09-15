@@ -170,7 +170,7 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = ({
                 Q&A
               </Button>
               <Button
-                variant={mode === 'intake' ? 'default' : 'ghost'}
+                variant={mode === 'intake' ? 'default' : mode === 'qa' ? 'outline' : 'ghost'}
                 size="sm"
                 onClick={() => switchMode('intake')}
                 className="rounded-l-none text-xs px-2 py-1"
@@ -218,7 +218,7 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = ({
                   Q&A
                 </Button>
                 <Button
-                  variant={mode === 'intake' ? 'default' : 'ghost'}
+                  variant={mode === 'intake' ? 'default' : mode === 'qa' ? 'outline' : 'ghost'}
                   size="sm"
                   onClick={() => switchMode('intake')}
                   className="rounded-l-none"
