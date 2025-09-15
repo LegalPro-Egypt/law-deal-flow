@@ -17,61 +17,104 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useClientData } from "@/hooks/useClientData";
+import { useAuth } from "@/hooks/useAuth";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const ClientDashboard = () => {
   const [newMessage, setNewMessage] = useState("");
+  const { signOut } = useAuth();
+  const { 
+    cases, 
+    activeCase, 
+    messages, 
+    documents, 
+    loading, 
+    setActiveCase, 
+    sendMessage 
+  } = useClientData();
 
-  // Mock data - would come from Supabase
-  const caseData = {
-    id: "CASE-2024-001",
-    title: "Divorce Proceedings - Smith vs Smith",
-    category: "Family Law",
-    status: "In Progress",
-    urgency: "Medium",
-    assignedLawyer: {
-      name: "Sarah Johnson",
-      specialization: "Family Law",
-      rating: 4.8,
-      avatar: "/placeholder-avatar.jpg"
-    },
-    timeline: [
-      { date: "2024-01-15", event: "Case submitted", status: "completed" },
-      { date: "2024-01-16", event: "Lawyer assigned", status: "completed" },
-      { date: "2024-01-17", event: "Proposal received", status: "completed" },
-      { date: "2024-01-18", event: "Consultation fee paid", status: "completed" },
-      { date: "2024-01-20", event: "Initial consultation", status: "current" },
-      { date: "2024-01-25", event: "Document review", status: "pending" },
-      { date: "2024-02-01", event: "Filing deadline", status: "pending" }
-    ],
-    payments: [
-      { type: "Consultation Fee", amount: "$500", status: "Paid", date: "2024-01-18" },
-      { type: "Remaining Fee", amount: "$2,000", status: "Authorized", date: "2024-01-18" }
-    ]
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !activeCase) return;
+
+    // Get conversation ID for this case
+    const conversationId = `conv_${activeCase.id}`;
+    await sendMessage(newMessage, conversationId);
+    setNewMessage("");
   };
 
-  const messages = [
-    {
-      sender: "lawyer",
-      name: "Sarah Johnson",
-      time: "2 hours ago",
-      message: "I've reviewed your documents. The marriage certificate looks good, but I'll need the financial statements updated with current values. Can you provide the most recent bank statements?",
-      type: "text"
-    },
-    {
-      sender: "client",
-      name: "You",
-      time: "1 hour ago", 
-      message: "I'll get those statements from the bank tomorrow. Should I also include the investment account details?",
-      type: "text"
-    },
-    {
-      sender: "lawyer",
-      name: "Sarah Johnson", 
-      time: "30 minutes ago",
-      message: "Yes, please include all investment accounts. Also, I'm scheduling our next consultation for Friday at 2 PM. Does that work for you?",
-      type: "text"
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'active':
+      case 'in_progress':
+        return 'bg-accent';
+      case 'completed':
+        return 'bg-success';
+      case 'draft':
+        return 'bg-warning';
+      default:
+        return 'bg-muted';
     }
-  ];
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <header className="border-b bg-background/95 backdrop-blur sticky top-0 z-50">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              <div className="flex items-center space-x-2">
+                <Scale className="h-8 w-8 text-primary" />
+                <span className="text-xl font-bold">LegalConnect</span>
+                <Badge variant="secondary" className="ml-2">Client Portal</Badge>
+              </div>
+            </div>
+          </div>
+        </header>
+        <div className="container mx-auto px-4 py-8 space-y-6">
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-96 w-full" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!activeCase) {
+    return (
+      <div className="min-h-screen bg-background">
+        <header className="border-b bg-background/95 backdrop-blur sticky top-0 z-50">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              <div className="flex items-center space-x-2">
+                <Scale className="h-8 w-8 text-primary" />
+                <span className="text-xl font-bold">LegalConnect</span>
+                <Badge variant="secondary" className="ml-2">Client Portal</Badge>
+              </div>
+              <Button variant="ghost" size="sm" onClick={signOut}>Sign Out</Button>
+            </div>
+          </div>
+        </header>
+        <div className="container mx-auto px-4 py-8 text-center">
+          <Card className="max-w-md mx-auto">
+            <CardContent className="p-8">
+              <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h2 className="text-xl font-semibold mb-2">No Active Cases</h2>
+              <p className="text-muted-foreground mb-4">
+                You don't have any active legal cases yet.
+              </p>
+              <Button asChild>
+                <a href="/intake">Start New Case</a>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -97,18 +140,16 @@ const ClientDashboard = () => {
         <div className="mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
             <div>
-              <h1 className="text-3xl font-bold mb-2">{caseData.title}</h1>
+              <h1 className="text-3xl font-bold mb-2">{activeCase.title}</h1>
               <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="outline">{caseData.id}</Badge>
-                <Badge className="bg-primary">{caseData.category}</Badge>
-                <Badge variant="secondary">{caseData.urgency} Priority</Badge>
+                <Badge variant="outline">{activeCase.case_number}</Badge>
+                <Badge className="bg-primary">{activeCase.category}</Badge>
+                <Badge variant="secondary">{activeCase.urgency} Priority</Badge>
               </div>
             </div>
             <div className="flex items-center space-x-2 mt-4 lg:mt-0">
-              <div className={`w-3 h-3 rounded-full ${
-                caseData.status === 'In Progress' ? 'bg-accent' : 'bg-success'
-              }`} />
-              <span className="font-medium">{caseData.status}</span>
+              <div className={`w-3 h-3 rounded-full ${getStatusColor(activeCase.status)}`} />
+              <span className="font-medium capitalize">{activeCase.status.replace('_', ' ')}</span>
             </div>
           </div>
 
@@ -117,11 +158,23 @@ const ClientDashboard = () => {
             <CardHeader>
               <div className="flex items-center space-x-4">
                 <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center">
-                  <span className="text-lg font-semibold">SJ</span>
+                  <span className="text-lg font-semibold">
+                    {activeCase.assigned_lawyer_id ? 'AL' : 'UN'}
+                  </span>
                 </div>
                 <div>
-                  <CardTitle className="text-lg">{caseData.assignedLawyer.name}</CardTitle>
-                  <CardDescription>{caseData.assignedLawyer.specialization} • ⭐ {caseData.assignedLawyer.rating}/5.0</CardDescription>
+                  <CardTitle className="text-lg">
+                    {activeCase.assigned_lawyer_id 
+                      ? 'Your Assigned Lawyer'
+                      : 'Lawyer Not Assigned Yet'
+                    }
+                  </CardTitle>
+                  <CardDescription>
+                    {activeCase.assigned_lawyer_id 
+                      ? 'Legal Representation' 
+                      : 'Waiting for assignment'
+                    }
+                  </CardDescription>
                 </div>
                 <div className="ml-auto">
                   <Button size="sm" className="bg-gradient-primary">
@@ -156,30 +209,40 @@ const ClientDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {caseData.timeline.map((item, index) => (
-                      <div key={index} className="flex items-center space-x-3">
-                        <div className={`w-3 h-3 rounded-full ${
-                          item.status === 'completed' ? 'bg-success' :
-                          item.status === 'current' ? 'bg-accent' : 'bg-muted'
-                        }`} />
+                    <div className="flex items-center space-x-3">
+                      <div className="w-3 h-3 rounded-full bg-success" />
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">Case Created</span>
+                          <span className="text-sm text-muted-foreground">{formatDate(activeCase.created_at)}</span>
+                        </div>
+                      </div>
+                      <CheckCircle className="h-4 w-4 text-success" />
+                    </div>
+                    
+                    {activeCase.assigned_lawyer_id && (
+                      <div className="flex items-center space-x-3">
+                        <div className="w-3 h-3 rounded-full bg-success" />
                         <div className="flex-1">
                           <div className="flex items-center justify-between">
-                            <span className={`font-medium ${
-                              item.status === 'current' ? 'text-accent' : ''
-                            }`}>
-                              {item.event}
-                            </span>
-                            <span className="text-sm text-muted-foreground">{item.date}</span>
+                            <span className="font-medium">Lawyer Assigned</span>
+                            <span className="text-sm text-muted-foreground">{formatDate(activeCase.updated_at)}</span>
                           </div>
                         </div>
-                        {item.status === 'completed' && (
-                          <CheckCircle className="h-4 w-4 text-success" />
-                        )}
-                        {item.status === 'current' && (
-                          <Clock className="h-4 w-4 text-accent" />
-                        )}
+                        <CheckCircle className="h-4 w-4 text-success" />
                       </div>
-                    ))}
+                    )}
+                    
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-3 h-3 rounded-full ${getStatusColor(activeCase.status)}`} />
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">Current Status: {activeCase.status.replace('_', ' ')}</span>
+                          <span className="text-sm text-muted-foreground">{formatDate(activeCase.updated_at)}</span>
+                        </div>
+                      </div>
+                      <Clock className="h-4 w-4 text-accent" />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -223,7 +286,7 @@ const ClientDashboard = () => {
               <CardContent>
                 {/* Messages */}
                 <div className="h-96 border rounded-lg p-4 overflow-y-auto mb-4 bg-background space-y-4">
-                  {messages.map((msg, index) => (
+                  {messages.length > 0 ? messages.map((msg, index) => (
                     <div key={index} className={`flex ${msg.sender === 'client' ? 'justify-end' : 'justify-start'}`}>
                       <div className={`max-w-[70%] ${
                         msg.sender === 'client' 
@@ -234,10 +297,15 @@ const ClientDashboard = () => {
                           <span className="text-sm font-medium">{msg.name}</span>
                           <span className="text-xs opacity-70">{msg.time}</span>
                         </div>
-                        <p className="text-sm">{msg.message}</p>
+                        <p className="text-sm">{msg.content}</p>
                       </div>
                     </div>
-                  ))}
+                  )) : (
+                    <div className="text-center text-muted-foreground py-8">
+                      <MessageSquare className="h-8 w-8 mx-auto mb-2" />
+                      <p>No messages yet. Start a conversation with your lawyer.</p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Message Input */}
@@ -249,7 +317,12 @@ const ClientDashboard = () => {
                     className="flex-1 min-h-[80px]"
                   />
                   <div className="flex flex-col space-y-2">
-                    <Button size="sm" className="bg-gradient-primary">
+                    <Button 
+                      size="sm" 
+                      className="bg-gradient-primary"
+                      onClick={handleSendMessage}
+                      disabled={!newMessage.trim()}
+                    >
                       <Send className="h-4 w-4" />
                     </Button>
                     <Button size="sm" variant="outline">
@@ -277,30 +350,32 @@ const ClientDashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid gap-4">
-                  {[
-                    { name: "Marriage Certificate.pdf", size: "1.2 MB", uploaded: "2024-01-15", status: "verified" },
-                    { name: "Financial Statement.pdf", size: "856 KB", uploaded: "2024-01-15", status: "verified" },
-                    { name: "Bank Statement Jan 2024.pdf", size: "2.1 MB", uploaded: "2024-01-20", status: "pending" },
-                    { name: "Investment Portfolio.pdf", size: "1.8 MB", uploaded: "2024-01-22", status: "pending" }
-                  ].map((doc, index) => (
+                  {documents.length > 0 ? documents.map((doc, index) => (
                     <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                       <div className="flex items-center space-x-3">
                         <FileText className="h-5 w-5 text-muted-foreground" />
                         <div>
-                          <p className="font-medium">{doc.name}</p>
-                          <p className="text-sm text-muted-foreground">{doc.size} • Uploaded {doc.uploaded}</p>
+                          <p className="font-medium">{doc.file_name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {Math.round(doc.file_size / 1024)} KB • Uploaded {formatDate(doc.created_at)}
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Badge variant={doc.status === 'verified' ? 'default' : 'secondary'}>
-                          {doc.status}
+                        <Badge variant="secondary">
+                          {doc.file_type}
                         </Badge>
                         <Button size="sm" variant="ghost">
                           <Download className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
-                  ))}
+                  )) : (
+                    <div className="text-center text-muted-foreground py-8">
+                      <FileText className="h-8 w-8 mx-auto mb-2" />
+                      <p>No documents uploaded yet.</p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="mt-6 border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center">
@@ -320,20 +395,38 @@ const ClientDashboard = () => {
                   <CardTitle>Payment Summary</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {caseData.payments.map((payment, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                  {activeCase.consultation_fee && (
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
                       <div>
-                        <p className="font-medium">{payment.type}</p>
-                        <p className="text-sm text-muted-foreground">{payment.date}</p>
+                        <p className="font-medium">Consultation Fee</p>
+                        <p className="text-sm text-muted-foreground">{formatDate(activeCase.created_at)}</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-lg">{payment.amount}</p>
-                        <Badge variant={payment.status === 'Paid' ? 'default' : 'secondary'}>
-                          {payment.status}
-                        </Badge>
+                        <p className="font-bold text-lg">${activeCase.consultation_fee}</p>
+                        <Badge variant="default">Paid</Badge>
                       </div>
                     </div>
-                  ))}
+                  )}
+                  
+                  {activeCase.remaining_fee && (
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium">Remaining Fee</p>
+                        <p className="text-sm text-muted-foreground">{formatDate(activeCase.created_at)}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-lg">${activeCase.remaining_fee}</p>
+                        <Badge variant="secondary">Authorized</Badge>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {!activeCase.consultation_fee && !activeCase.remaining_fee && (
+                    <div className="text-center text-muted-foreground py-8">
+                      <CreditCard className="h-8 w-8 mx-auto mb-2" />
+                      <p>No payment information available yet.</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -343,20 +436,26 @@ const ClientDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="p-4 bg-success/10 border border-success/20 rounded-lg">
-                      <h4 className="font-medium text-success mb-2">Escrow Protection Active</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Your remaining fee ($2,000) is held in escrow. Funds will be released to the lawyer only after case completion and your approval.
-                      </p>
-                    </div>
+                    {activeCase.remaining_fee && (
+                      <div className="p-4 bg-success/10 border border-success/20 rounded-lg">
+                        <h4 className="font-medium text-success mb-2">Escrow Protection Active</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Your remaining fee (${activeCase.remaining_fee}) is held in escrow. Funds will be released to the lawyer only after case completion and your approval.
+                        </p>
+                      </div>
+                    )}
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span>Consultation Fee</span>
-                        <span className="text-success">✓ Paid</span>
+                        <span className={activeCase.consultation_fee ? "text-success" : "text-muted-foreground"}>
+                          {activeCase.consultation_fee ? "✓ Paid" : "Not Set"}
+                        </span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span>Remaining Fee (Escrow)</span>
-                        <span className="text-accent">⏳ Secured</span>
+                        <span className={activeCase.remaining_fee ? "text-accent" : "text-muted-foreground"}>
+                          {activeCase.remaining_fee ? "⏳ Secured" : "Not Set"}
+                        </span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span>Platform Fee (10%)</span>
