@@ -45,39 +45,46 @@ const Auth = () => {
           .single();
         
         const role = profile?.role || 'client';
-        navigate(`/${role}`);
+        navigate(`/${role}`, { replace: true });
       }
     };
     
     checkAuth();
     
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         if (event === 'SIGNED_IN' && session) {
-          // Get or create user profile
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('user_id', session.user.id)
-            .single();
+          // Use setTimeout to defer async operations and prevent deadlocks
+          setTimeout(async () => {
+            try {
+              // Get or create user profile
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('role')  
+                .eq('user_id', session.user.id)
+                .single();
 
-          if (!profile) {
-            // Create profile for new user
-            const isAdmin = session.user.email === 'dankevforster@gmail.com';
-            const userRole = isAdmin ? 'admin' : 'client';
-            
-            await supabase.from('profiles').insert({
-              user_id: session.user.id,
-              email: session.user.email || '',
-              first_name: session.user.user_metadata?.first_name || '',
-              last_name: session.user.user_metadata?.last_name || '',
-              role: userRole
-            });
+              if (!profile) {
+                // Create profile for new user
+                const isAdmin = session.user.email === 'dankevforster@gmail.com';
+                const userRole = isAdmin ? 'admin' : 'client';
+                
+                await supabase.from('profiles').insert({
+                  user_id: session.user.id,
+                  email: session.user.email || '',
+                  first_name: session.user.user_metadata?.first_name || '',
+                  last_name: session.user.user_metadata?.last_name || '',
+                  role: userRole
+                });
 
-            navigate(`/${userRole}`);
-          } else {
-            navigate(`/${profile.role}`);
-          }
+                navigate(`/${userRole}`, { replace: true });
+              } else {
+                navigate(`/${profile.role}`, { replace: true });
+              }
+            } catch (error) {
+              console.error('Auth redirect error:', error);
+            }
+          }, 0);
         }
       }
     );
