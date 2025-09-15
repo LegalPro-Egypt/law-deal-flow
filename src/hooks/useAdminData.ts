@@ -1,0 +1,241 @@
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+
+interface AdminStats {
+  totalCases: number;
+  activeCases: number;
+  pendingIntakes: number;
+  totalLawyers: number;
+}
+
+interface IntakeConversation {
+  id: string;
+  session_id: string;
+  created_at: string;
+  language: string;
+  status: string;
+  messages?: Array<{
+    role: string;
+    content: string;
+    created_at: string;
+  }>;
+  case_data?: any;
+}
+
+interface CaseItem {
+  id: string;
+  case_number: string;
+  title: string;
+  description: string;
+  category: string;
+  urgency: string;
+  status: string;
+  client_name: string;
+  client_email: string;
+  created_at: string;
+  language: string;
+  ai_summary?: string;
+  extracted_entities?: any;
+}
+
+export const useAdminData = () => {
+  const [stats, setStats] = useState<AdminStats>({
+    totalCases: 0,
+    activeCases: 0,
+    pendingIntakes: 0,
+    totalLawyers: 0
+  });
+  const [pendingIntakes, setPendingIntakes] = useState<IntakeConversation[]>([]);
+  const [cases, setCases] = useState<CaseItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  const fetchAdminStats = async () => {
+    try {
+      // Get total cases
+      const { count: totalCases } = await supabase
+        .from('cases')
+        .select('*', { count: 'exact', head: true });
+
+      // Get active cases (non-draft status)
+      const { count: activeCases } = await supabase
+        .from('cases')
+        .select('*', { count: 'exact', head: true })
+        .neq('status', 'draft');
+
+      // Get pending intake conversations (mode=intake, status=active)
+      const { count: pendingIntakes } = await supabase
+        .from('conversations')
+        .select('*', { count: 'exact', head: true })
+        .eq('mode', 'intake')
+        .eq('status', 'active');
+
+      // Get total lawyers from profiles
+      const { count: totalLawyers } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('role', 'lawyer')
+        .eq('is_active', true);
+
+      setStats({
+        totalCases: totalCases || 0,
+        activeCases: activeCases || 0,
+        pendingIntakes: pendingIntakes || 0,
+        totalLawyers: totalLawyers || 0
+      });
+    } catch (error: any) {
+      console.error('Error fetching admin stats:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch statistics",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchPendingIntakes = async () => {
+    try {
+      const { data: conversations, error } = await supabase
+        .from('conversations')
+        .select(`
+          id,
+          session_id,
+          created_at,
+          language,
+          status,
+          metadata,
+          messages (
+            role,
+            content,
+            created_at
+          )
+        `)
+        .eq('mode', 'intake')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setPendingIntakes(conversations || []);
+    } catch (error: any) {
+      console.error('Error fetching pending intakes:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch pending intakes",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchCases = async () => {
+    try {
+      const { data: casesData, error } = await supabase
+        .from('cases')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setCases(casesData || []);
+    } catch (error: any) {
+      console.error('Error fetching cases:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch cases",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const createCaseFromIntake = async (conversationId: string) => {
+    try {
+      // Get conversation with messages
+      const { data: conversation, error: convError } = await supabase
+        .from('conversations')
+        .select(`
+          *,
+          messages (*)
+        `)
+        .eq('id', conversationId)
+        .single();
+
+      if (convError) throw convError;
+
+      // Extract client info and case details from conversation metadata and messages
+      const metadata = (conversation.metadata as any) || {};
+      const lastMessage = conversation.messages?.slice(-1)[0];
+      
+      // Create case from intake data - we'll use a placeholder user_id for admin-created cases
+      const { data: newCase, error: caseError } = await supabase
+        .from('cases')
+        .insert({
+          user_id: conversation.user_id || '00000000-0000-0000-0000-000000000000', // placeholder for admin cases
+          title: metadata.title || 'Legal Case from AI Intake',
+          description: metadata.description || lastMessage?.content || 'Case created from AI chatbot intake',
+          category: metadata.category || 'General',
+          urgency: metadata.urgency || 'medium',
+          client_name: metadata.client_name || 'Client Name',
+          client_email: metadata.client_email || 'client@example.com',
+          language: conversation.language,
+          status: 'pending_review',
+          ai_summary: metadata.ai_summary,
+          extracted_entities: metadata.extracted_entities || {}
+        })
+        .select()
+        .single();
+
+      if (caseError) throw caseError;
+
+      // Update conversation status to mark as converted
+      await supabase
+        .from('conversations')
+        .update({ 
+          status: 'converted_to_case',
+          case_id: newCase.id 
+        })
+        .eq('id', conversationId);
+
+      // Refresh data
+      await Promise.all([fetchAdminStats(), fetchPendingIntakes(), fetchCases()]);
+
+      toast({
+        title: "Success",
+        description: "Case created from intake conversation",
+      });
+
+      return newCase;
+    } catch (error: any) {
+      console.error('Error creating case from intake:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create case from intake",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      await Promise.all([
+        fetchAdminStats(),
+        fetchPendingIntakes(),
+        fetchCases()
+      ]);
+      setLoading(false);
+    };
+
+    loadData();
+  }, []);
+
+  return {
+    stats,
+    pendingIntakes,
+    cases,
+    loading,
+    createCaseFromIntake,
+    refreshData: () => Promise.all([fetchAdminStats(), fetchPendingIntakes(), fetchCases()])
+  };
+};
