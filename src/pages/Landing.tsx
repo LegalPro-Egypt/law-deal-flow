@@ -69,7 +69,7 @@ const Landing = () => {
               </Link>
               <Link to="/legal-database">
                 <Button size="lg" variant="secondary" className="bg-white text-primary hover:bg-white/90 text-lg px-8 py-3">
-                  Browse Legal Database
+                  Browse Legal Guides
                 </Button>
               </Link>
             </div>
