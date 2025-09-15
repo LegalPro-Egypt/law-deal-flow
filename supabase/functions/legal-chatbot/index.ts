@@ -142,6 +142,7 @@ serve(async (req) => {
         JSON.stringify({ 
           response: aiResponse,
           extractedData: undefined,
+          needsPersonalDetails: false,
           nextQuestions: undefined,
           conversationId
         }),
@@ -197,6 +198,7 @@ serve(async (req) => {
       JSON.stringify({ 
         response: aiResponse,
         extractedData: mode === 'intake' ? extractedData : undefined,
+        needsPersonalDetails: mode === 'intake' ? extractedData?.needsPersonalDetails : false,
         nextQuestions: mode === 'intake' ? nextQuestions : undefined,
         conversationId
       }),
@@ -264,12 +266,18 @@ EGYPTIAN LEGAL CONTEXT:
 ${knowledgeContext}
 
 YOUR ROLE:
-1. Gather basic information: name, email, phone, case description
-2. Understand the legal issue through follow-up questions  
-3. Categorize the case appropriately
-4. Extract key entities (parties, dates, amounts, jurisdiction)
-5. Determine urgency level
-6. Suggest required documents
+1. Understand the legal issue through conversation
+2. Categorize the case appropriately
+3. Extract key entities (parties, dates, amounts, jurisdiction)
+4. Determine urgency level
+5. Suggest required documents
+6. Identify when personal contact information is needed
+
+CONVERSATION FLOW:
+- Start by understanding their legal situation
+- Once you have a good understanding of their case (after 3-4 exchanges), you should collect their personal details
+- Ask for: full name, email, phone number, preferred language, and address
+- Then continue with case-specific questions
 
 CONVERSATION STYLE:
 - Be friendly, professional, and empathetic
@@ -285,7 +293,7 @@ IMPORTANT:
 
 LANGUAGE: Conduct conversation in ${language === 'ar' ? 'Arabic' : language === 'de' ? 'German' : 'English'}
 
-Use the extract_case_data function when you have sufficient information to categorize and structure the case data.`;
+Use the extract_case_data function when you have sufficient information to categorize the case. Set needsPersonalDetails to true when you've understood their case and need to collect their contact information.`;
 }
 
 function getIntakeFunctions() {
@@ -343,6 +351,10 @@ function getIntakeFunctions() {
             type: 'array',
             items: { type: 'string' },
             description: 'Follow-up questions to gather more specific information',
+          },
+          needsPersonalDetails: {
+            type: 'boolean',
+            description: 'Set to true when you need to collect personal contact information (name, email, phone, address)',
           },
         },
         required: ['category', 'urgency'],

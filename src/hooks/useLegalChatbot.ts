@@ -31,6 +31,7 @@ export interface ChatbotState {
   mode: 'qa' | 'intake';
   language: 'en' | 'ar' | 'de';
   extractedData: CaseData | null;
+  needsPersonalDetails: boolean;
 }
 
 export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
@@ -42,6 +43,7 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
     mode: initialMode,
     language: 'en',
     extractedData: null,
+    needsPersonalDetails: false,
   });
 
   // Initialize conversation
@@ -145,6 +147,7 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
         messages: [...prev.messages, aiMessage],
         isLoading: false,
         extractedData: data.extractedData || prev.extractedData,
+        needsPersonalDetails: data.needsPersonalDetails || false,
       }));
 
     } catch (error) {
@@ -211,6 +214,15 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
         timestamp: new Date(),
       }],
       extractedData: null,
+      needsPersonalDetails: false,
+    }));
+  }, []);
+
+  // Mark personal details as completed
+  const setPersonalDetailsCompleted = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      needsPersonalDetails: false,
     }));
   }, []);
 
@@ -221,6 +233,7 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
     switchMode,
     setLanguage,
     clearConversation,
+    setPersonalDetailsCompleted,
   };
 };
 

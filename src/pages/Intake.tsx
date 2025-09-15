@@ -5,40 +5,46 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Scale, ArrowLeft, MessageSquare, Upload, FileText, CheckCircle, Clock } from "lucide-react";
+import { Scale, ArrowLeft, MessageSquare, Upload, FileText, CheckCircle, Clock, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import { LegalChatbot } from "@/components/LegalChatbot";
 import { AuthenticationPrompt } from "@/components/AuthenticationPrompt";
+import { PersonalDetailsForm, PersonalDetailsData } from "@/components/PersonalDetailsForm";
 
 const Intake = () => {
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    language: "EN",
-    caseDescription: "",
-    urgency: "medium",
-    category: ""
-  });
+  const [personalData, setPersonalData] = useState<PersonalDetailsData | null>(null);
   const [extractedCaseData, setExtractedCaseData] = useState<any>(null);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [showPersonalForm, setShowPersonalForm] = useState(false);
 
   const handleCaseDataExtracted = (data: any) => {
     setExtractedCaseData(data);
     
-    // Auto-fill form data from extracted case information
-    if (data.category) {
-      setFormData(prev => ({
-        ...prev,
-        category: data.category,
-        urgency: data.urgency || 'medium'
-      }));
+    // Check if AI needs personal details
+    if (data.needsPersonalDetails) {
+      setShowPersonalForm(true);
     }
   };
 
+  const handlePersonalDetailsSubmit = (data: PersonalDetailsData) => {
+    setPersonalData(data);
+    setShowPersonalForm(false);
+    // Continue with AI conversation or move to documents
+  };
+
+  const handleBackFromPersonalForm = () => {
+    setShowPersonalForm(false);
+  };
+
   const handleContinueToDocuments = () => {
+    // Check if personal details are needed first
+    if (!personalData) {
+      setShowPersonalForm(true);
+      return;
+    }
+    
     // Show authentication prompt when users want to proceed
     if (!currentUser) {
       setShowAuthPrompt(true);
@@ -80,18 +86,31 @@ const Intake = () => {
         {/* Progress Header */}
         <div className="mb-8">
           <div className="flex items-center justify-center space-x-4 mb-6">
-            {[1, 2, 3].map((step) => (
-              <div key={step} className="flex items-center">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                  currentStep >= step 
+            {[
+              { number: 1, label: 'AI Chat', icon: MessageSquare },
+              { number: 2, label: 'Personal Details', icon: User },
+              { number: 3, label: 'Documents', icon: Upload },
+              { number: 4, label: 'Review', icon: FileText }
+            ].map((step, index) => (
+              <div key={step.number} className="flex items-center">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium relative ${
+                  (currentStep > step.number) || 
+                  (currentStep === step.number && !showPersonalForm) ||
+                  (step.number === 2 && personalData) ||
+                  (step.number === 1 && showPersonalForm)
                     ? 'bg-primary text-primary-foreground' 
                     : 'bg-muted text-muted-foreground'
                 }`}>
-                  {currentStep > step ? <CheckCircle className="h-4 w-4" /> : step}
+                  {((currentStep > step.number) || (step.number === 2 && personalData)) ? (
+                    <CheckCircle className="h-5 w-5" />
+                  ) : (
+                    <step.icon className="h-5 w-5" />
+                  )}
                 </div>
-                {step < 3 && (
+                {index < 3 && (
                   <div className={`w-12 h-0.5 mx-2 ${
-                    currentStep > step ? 'bg-primary' : 'bg-muted'
+                    (currentStep > step.number) || (step.number === 1 && personalData)
+                      ? 'bg-primary' : 'bg-muted'
                   }`} />
                 )}
               </div>
@@ -101,15 +120,26 @@ const Intake = () => {
           <div className="text-center">
             <h1 className="text-3xl font-bold mb-2">Case Intake Process</h1>
             <p className="text-muted-foreground">
-              {currentStep === 1 && "Chat with Lexa to understand your legal needs"}
+              {(currentStep === 1 && !showPersonalForm) && "Chat with Lexa to understand your legal needs"}
+              {showPersonalForm && "Provide your contact information"}
               {currentStep === 2 && "Document collection and case categorization"}
               {currentStep === 3 && "Review and submit your case for lawyer matching"}
             </p>
           </div>
         </div>
 
+        {/* Personal Details Form */}
+        {showPersonalForm && (
+          <PersonalDetailsForm
+            initialData={personalData || undefined}
+            onSubmit={handlePersonalDetailsSubmit}
+            onBack={handleBackFromPersonalForm}
+            className="mb-8"
+          />
+        )}
+
         {/* Step 1: AI Chat Interface */}
-        {currentStep === 1 && (
+        {currentStep === 1 && !showPersonalForm && (
           <div className="h-[600px]">
             <LegalChatbot 
               mode="intake"
@@ -134,13 +164,13 @@ const Intake = () => {
                 )}
               </div>
               <Button onClick={handleContinueToDocuments} className="bg-gradient-primary">
-                Continue to Documents
+                {personalData ? 'Continue to Documents' : 'Continue'}
               </Button>
             </div>
           </div>
         )}
 
-        {/* Step 2: Document Upload */}
+        {/* Step 3: Document Upload */}
         {currentStep === 2 && (
           <Card className="bg-gradient-card shadow-elevated">
             <CardHeader>
@@ -204,7 +234,7 @@ const Intake = () => {
           </Card>
         )}
 
-        {/* Step 3: Case Summary */}
+        {/* Step 4: Case Summary */}
         {currentStep === 3 && (
           <Card className="bg-gradient-card shadow-elevated">
             <CardHeader>
@@ -242,15 +272,30 @@ const Intake = () => {
                   <div className="space-y-3">
                     <div>
                       <Label className="text-sm font-medium">Name</Label>
-                      <p className="text-sm text-muted-foreground">John Smith</p>
+                      <p className="text-sm text-muted-foreground">
+                        {personalData?.fullName || 'Not provided'}
+                      </p>
                     </div>
                     <div>
                       <Label className="text-sm font-medium">Email</Label>
-                      <p className="text-sm text-muted-foreground">john@example.com</p>
+                      <p className="text-sm text-muted-foreground">
+                        {personalData?.email || 'Not provided'}
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium">Phone</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {personalData?.phone || 'Not provided'}
+                      </p>
                     </div>
                     <div>
                       <Label className="text-sm font-medium">Language</Label>
-                      <p className="text-sm text-muted-foreground">English</p>
+                      <p className="text-sm text-muted-foreground">
+                        {personalData?.preferredLanguage === 'en' && 'English'}
+                        {personalData?.preferredLanguage === 'ar' && 'Arabic'}
+                        {personalData?.preferredLanguage === 'de' && 'German'}
+                        {!personalData?.preferredLanguage && 'Not provided'}
+                      </p>
                     </div>
                   </div>
                 </div>
