@@ -23,9 +23,9 @@ export const useAuth = () => {
         console.log('useAuth: Auth state change', event, !!session);
         setSession(session);
         setUser(session?.user ?? null);
-        setLoading(false);
         
-        if (session?.user) {
+        // Only fetch profile on sign in or token refresh events
+        if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
           // Defer profile fetching to prevent auth callback deadlocks
           setTimeout(async () => {
             try {
@@ -48,7 +48,7 @@ export const useAuth = () => {
               setProfile(null);
             }
           }, 0);
-        } else {
+        } else if (!session) {
           setProfile(null);
         }
       }

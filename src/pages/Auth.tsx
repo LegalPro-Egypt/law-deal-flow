@@ -59,25 +59,6 @@ const Auth = () => {
     };
     
     checkAuth();
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (event === 'SIGNED_IN' && session) {
-          const urlParams = new URLSearchParams(window.location.search);
-          const redirectTo = urlParams.get('redirect');
-          
-          // Immediate redirect for better UX - profile will load after
-          if (redirectTo === 'intake') {
-            navigate('/intake', { replace: true });
-          } else {
-            // Default to client dashboard if role isn't loaded yet
-            navigate('/client', { replace: true });
-          }
-        }
-      }
-    );
-
-    return () => subscription.unsubscribe();
   }, [navigate]);
 
   const handleAdminSignIn = async (e: React.FormEvent) => {
