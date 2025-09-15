@@ -30,7 +30,7 @@ interface LegalChatbotProps {
 }
 
 export const LegalChatbot: React.FC<LegalChatbotProps> = ({
-  mode = 'intake',
+  mode: initialMode = 'intake',
   userId,
   caseId,
   onCaseDataExtracted,
@@ -42,6 +42,7 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = ({
   const { toast } = useToast();
 
   const {
+    mode,
     messages,
     isLoading,
     conversationId,
@@ -53,7 +54,7 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = ({
     switchMode,
     setLanguage,
     setPersonalDetailsCompleted,
-  } = useLegalChatbot(mode);
+  } = useLegalChatbot(initialMode);
 
   // Initialize conversation on mount
   useEffect(() => {
