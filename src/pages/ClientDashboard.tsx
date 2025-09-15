@@ -144,7 +144,6 @@ const ClientDashboard = () => {
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline">{activeCase.case_number}</Badge>
                 <Badge className="bg-primary">{activeCase.category}</Badge>
-                <Badge variant="secondary">{activeCase.urgency} Priority</Badge>
               </div>
             </div>
             <div className="flex items-center space-x-2 mt-4 lg:mt-0">

@@ -31,7 +31,8 @@ const Intake = () => {
   const handlePersonalDetailsSubmit = (data: PersonalDetailsData) => {
     setPersonalData(data);
     setShowPersonalForm(false);
-    // Continue with AI conversation or move to documents
+    // Advance to document upload step
+    setCurrentStep(3);
   };
 
   const handleBackFromPersonalForm = () => {
@@ -49,19 +50,19 @@ const Intake = () => {
     if (!currentUser) {
       setShowAuthPrompt(true);
     } else {
-      setCurrentStep(2);
+      setCurrentStep(3);
     }
   };
 
   const handleAuthenticated = (user: any) => {
     setCurrentUser(user);
     setShowAuthPrompt(false);
-    setCurrentStep(2);
+    setCurrentStep(3);
   };
 
   const handleContinueAsGuest = () => {
     setShowAuthPrompt(false);
-    setCurrentStep(2);
+    setCurrentStep(3);
   };
 
   return (
@@ -122,8 +123,8 @@ const Intake = () => {
             <p className="text-muted-foreground">
               {(currentStep === 1 && !showPersonalForm) && "Chat with Lexa to understand your legal needs"}
               {showPersonalForm && "Provide your contact information"}
-              {currentStep === 2 && "Document collection and case categorization"}
-              {currentStep === 3 && "Review and submit your case for lawyer matching"}
+              {currentStep === 3 && "Document collection and case categorization"}
+              {currentStep === 4 && "Review and submit your case for lawyer matching"}
             </p>
           </div>
         </div>
@@ -155,11 +156,6 @@ const Intake = () => {
                     {extractedCaseData.category && (
                       <Badge variant="secondary">{extractedCaseData.category}</Badge>
                     )}
-                    {extractedCaseData.urgency && (
-                      <Badge variant={extractedCaseData.urgency === 'high' || extractedCaseData.urgency === 'urgent' ? 'destructive' : 'default'}>
-                        {extractedCaseData.urgency} priority
-                      </Badge>
-                    )}
                   </div>
                 )}
               </div>
@@ -171,7 +167,7 @@ const Intake = () => {
         )}
 
         {/* Step 3: Document Upload */}
-        {currentStep === 2 && (
+        {currentStep === 3 && (
           <Card className="bg-gradient-card shadow-elevated">
             <CardHeader>
               <CardTitle className="flex items-center">
@@ -226,7 +222,7 @@ const Intake = () => {
                 <Button variant="outline" onClick={() => setCurrentStep(1)}>
                   Back to Chat
                 </Button>
-                <Button onClick={() => setCurrentStep(3)} className="bg-gradient-primary">
+                <Button onClick={() => setCurrentStep(4)} className="bg-gradient-primary">
                   Review Case
                 </Button>
               </div>
@@ -235,7 +231,7 @@ const Intake = () => {
         )}
 
         {/* Step 4: Case Summary */}
-        {currentStep === 3 && (
+        {currentStep === 4 && (
           <Card className="bg-gradient-card shadow-elevated">
             <CardHeader>
               <CardTitle className="flex items-center">
@@ -255,10 +251,6 @@ const Intake = () => {
                     <div>
                       <Label className="text-sm font-medium">Category</Label>
                       <p className="text-sm text-muted-foreground">Family Law / Marriage & Divorce</p>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium">Urgency</Label>
-                      <Badge className="ml-2">Medium Priority</Badge>
                     </div>
                     <div>
                       <Label className="text-sm font-medium">Jurisdiction</Label>
@@ -341,7 +333,7 @@ const Intake = () => {
               </Card>
 
               <div className="flex justify-between">
-                <Button variant="outline" onClick={() => setCurrentStep(2)}>
+                <Button variant="outline" onClick={() => setCurrentStep(3)}>
                   Back to Documents
                 </Button>
                 <Button className="bg-gradient-primary">

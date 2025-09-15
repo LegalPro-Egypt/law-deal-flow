@@ -18,12 +18,14 @@ interface CaseDataSummaryProps {
   caseData: CaseData;
   clientName?: string;
   clientEmail?: string;
+  showPriority?: boolean;
 }
 
 export const CaseDataSummary: React.FC<CaseDataSummaryProps> = ({
   caseData,
   clientName,
-  clientEmail
+  clientEmail,
+  showPriority = true
 }) => {
   const getUrgencyColor = (urgency: string) => {
     switch (urgency) {
@@ -79,7 +81,7 @@ export const CaseDataSummary: React.FC<CaseDataSummaryProps> = ({
                 </div>
               )}
               
-              {caseData.urgency && (
+              {showPriority && caseData.urgency && (
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Priority Level</label>
                   <div className="flex items-center gap-2 mt-1">
