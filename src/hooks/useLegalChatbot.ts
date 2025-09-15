@@ -147,7 +147,7 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
         messages: [...prev.messages, aiMessage],
         isLoading: false,
         extractedData: data.extractedData || prev.extractedData,
-        needsPersonalDetails: data.needsPersonalDetails || false,
+        needsPersonalDetails: data.needsPersonalDetails || prev.needsPersonalDetails,
       }));
 
     } catch (error) {

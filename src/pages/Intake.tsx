@@ -22,8 +22,8 @@ const Intake = () => {
   const handleCaseDataExtracted = (data: any) => {
     setExtractedCaseData(data);
     
-    // Check if AI needs personal details
-    if (data.needsPersonalDetails) {
+    // Check if AI needs personal details and we don't have them yet
+    if (data.needsPersonalDetails && !personalData) {
       setShowPersonalForm(true);
     }
   };
@@ -141,7 +141,7 @@ const Intake = () => {
 
         {/* Step 1: AI Chat Interface */}
         {currentStep === 1 && !showPersonalForm && (
-          <div className="h-[600px]">
+          <div className="min-h-[500px] h-[70vh] max-h-[600px]">
             <LegalChatbot 
               mode="intake"
               onCaseDataExtracted={handleCaseDataExtracted}

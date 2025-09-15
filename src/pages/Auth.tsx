@@ -34,6 +34,9 @@ const Auth = () => {
 
   // Check if user is already authenticated
   useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const redirectTo = urlParams.get('redirect');
+    
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
@@ -45,7 +48,13 @@ const Auth = () => {
           .single();
         
         const role = profile?.role || 'client';
-        navigate(`/${role}`, { replace: true });
+        
+        // Redirect to intended page or default dashboard
+        if (redirectTo === 'intake') {
+          navigate('/intake', { replace: true });
+        } else {
+          navigate(`/${role}`, { replace: true });
+        }
       }
     };
     
@@ -57,6 +66,9 @@ const Auth = () => {
           // Use setTimeout to defer async operations and prevent deadlocks
           setTimeout(async () => {
             try {
+              const urlParams = new URLSearchParams(window.location.search);
+              const redirectTo = urlParams.get('redirect');
+              
               // Get or create user profile
               const { data: profile } = await supabase
                 .from('profiles')
@@ -77,9 +89,19 @@ const Auth = () => {
                   role: userRole
                 });
 
-                navigate(`/${userRole}`, { replace: true });
+                // Redirect to intended page or default dashboard
+                if (redirectTo === 'intake') {
+                  navigate('/intake', { replace: true });
+                } else {
+                  navigate(`/${userRole}`, { replace: true });
+                }
               } else {
-                navigate(`/${profile.role}`, { replace: true });
+                // Redirect to intended page or default dashboard
+                if (redirectTo === 'intake') {
+                  navigate('/intake', { replace: true });
+                } else {
+                  navigate(`/${profile.role}`, { replace: true });
+                }
               }
             } catch (error) {
               console.error('Auth redirect error:', error);

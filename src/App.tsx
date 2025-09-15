@@ -25,7 +25,11 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/intake" element={<Intake />} />
+          <Route path="/intake" element={
+            <ProtectedRoute>
+              <Intake />
+            </ProtectedRoute>
+          } />
           <Route path="/legal-database" element={<LegalDatabase />} />
           <Route path="/legal-database/article/:id" element={<LegalArticle />} />
           <Route path="/client" element={

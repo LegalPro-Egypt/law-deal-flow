@@ -62,7 +62,7 @@ const Landing = () => {
               Get legal help the modern way with full payment protection.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/intake">
+              <Link to="/auth?redirect=intake">
                 <Button size="lg" className="bg-accent hover:bg-accent-hover text-lg px-8 py-3">
                   Start Your Case
                 </Button>
@@ -197,7 +197,7 @@ const Landing = () => {
           <p className="text-xl mb-8 max-w-2xl mx-auto text-gray-200">
             Join thousands of clients who have found legal help through our platform
           </p>
-          <Link to="/intake">
+          <Link to="/auth?redirect=intake">
             <Button size="lg" className="bg-accent hover:bg-accent-hover text-lg px-8 py-3">
               Start Your Legal Journey
             </Button>

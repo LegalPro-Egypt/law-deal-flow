@@ -37,7 +37,7 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = ({
   className
 }) => {
   const [inputMessage, setInputMessage] = useState('');
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -47,10 +47,12 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = ({
     conversationId,
     language,
     extractedData,
+    needsPersonalDetails,
     initializeConversation,
     sendMessage,
     switchMode,
     setLanguage,
+    setPersonalDetailsCompleted,
   } = useLegalChatbot(mode);
 
   // Initialize conversation on mount
@@ -66,17 +68,19 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = ({
 
   // Auto-scroll to bottom
   useEffect(() => {
-    if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
-    }
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   // Call onCaseDataExtracted when case data is extracted
   useEffect(() => {
     if (extractedData && onCaseDataExtracted) {
-      onCaseDataExtracted(extractedData);
+      const dataWithNeedsPersonalDetails = {
+        ...extractedData,
+        needsPersonalDetails
+      };
+      onCaseDataExtracted(dataWithNeedsPersonalDetails);
     }
-  }, [extractedData, onCaseDataExtracted]);
+  }, [extractedData, needsPersonalDetails, onCaseDataExtracted]);
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
@@ -202,8 +206,8 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = ({
 
       <CardContent className="flex-1 flex flex-col p-4 min-h-0">
         {/* Messages Area */}
-        <ScrollArea className="flex-1 pr-4" ref={scrollAreaRef}>
-          <div className="space-y-4">
+        <ScrollArea className="flex-1 pr-4">
+          <div className="space-y-4 pb-4">
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -216,7 +220,7 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = ({
                 </div>
                 
                 <div
-                  className={`max-w-[80%] rounded-lg px-4 py-3 ${
+                  className={`max-w-[80%] sm:max-w-[85%] rounded-lg px-4 py-3 ${
                     message.role === 'user'
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-muted text-foreground'
@@ -248,6 +252,9 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = ({
                 </div>
               </div>
             )}
+            
+            {/* Auto-scroll anchor */}
+            <div ref={bottomRef} />
           </div>
         </ScrollArea>
 
