@@ -63,50 +63,16 @@ const Auth = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (event === 'SIGNED_IN' && session) {
-          // Use setTimeout to defer async operations and prevent deadlocks
-          setTimeout(async () => {
-            try {
-              const urlParams = new URLSearchParams(window.location.search);
-              const redirectTo = urlParams.get('redirect');
-              
-              // Get or create user profile
-              const { data: profile } = await supabase
-                .from('profiles')
-                .select('role')  
-                .eq('user_id', session.user.id)
-                .single();
-
-              if (!profile) {
-                // Create profile for new user
-                const isAdmin = session.user.email === 'dankevforster@gmail.com';
-                const userRole = isAdmin ? 'admin' : 'client';
-                
-                await supabase.from('profiles').insert({
-                  user_id: session.user.id,
-                  email: session.user.email || '',
-                  first_name: session.user.user_metadata?.first_name || '',
-                  last_name: session.user.user_metadata?.last_name || '',
-                  role: userRole
-                });
-
-                // Redirect to intended page or default dashboard
-                if (redirectTo === 'intake') {
-                  navigate('/intake', { replace: true });
-                } else {
-                  navigate(`/${userRole}`, { replace: true });
-                }
-              } else {
-                // Redirect to intended page or default dashboard
-                if (redirectTo === 'intake') {
-                  navigate('/intake', { replace: true });
-                } else {
-                  navigate(`/${profile.role}`, { replace: true });
-                }
-              }
-            } catch (error) {
-              console.error('Auth redirect error:', error);
-            }
-          }, 0);
+          const urlParams = new URLSearchParams(window.location.search);
+          const redirectTo = urlParams.get('redirect');
+          
+          // Immediate redirect for better UX - profile will load after
+          if (redirectTo === 'intake') {
+            navigate('/intake', { replace: true });
+          } else {
+            // Default to client dashboard if role isn't loaded yet
+            navigate('/client', { replace: true });
+          }
         }
       }
     );
@@ -303,7 +269,17 @@ const Auth = () => {
                     </div>
                     
                     {/* Email Authentication Form */}
-                    <EmailAuthForm />
+                    <EmailAuthForm 
+                      onSuccess={() => {
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const redirectTo = urlParams.get('redirect');
+                        if (redirectTo === 'intake') {
+                          navigate('/intake', { replace: true });
+                        } else {
+                          navigate('/client', { replace: true });
+                        }
+                      }}
+                    />
                   </div>
                   
                   <div className="text-center">

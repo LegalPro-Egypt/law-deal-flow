@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface EmailAuthFormProps {
   onSuccess?: (user: any) => void;
@@ -24,6 +25,7 @@ export const EmailAuthForm = ({ onSuccess, onError }: EmailAuthFormProps) => {
     lastName: ''
   });
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -86,6 +88,16 @@ export const EmailAuthForm = ({ onSuccess, onError }: EmailAuthFormProps) => {
           title: "Account created successfully",
           description: "Welcome to LegalPro! You're now signed in.",
         });
+        
+        // Immediate navigation
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirectTo = urlParams.get('redirect');
+        if (redirectTo === 'intake') {
+          navigate('/intake', { replace: true });
+        } else {
+          navigate('/client', { replace: true });
+        }
+        
         onSuccess?.(data.user);
       }
 
@@ -128,6 +140,15 @@ export const EmailAuthForm = ({ onSuccess, onError }: EmailAuthFormProps) => {
         title: "Welcome back!",
         description: "You've successfully signed in to LegalPro.",
       });
+      
+      // Immediate navigation
+      const urlParams = new URLSearchParams(window.location.search);
+      const redirectTo = urlParams.get('redirect');
+      if (redirectTo === 'intake') {
+        navigate('/intake', { replace: true });
+      } else {
+        navigate('/client', { replace: true });
+      }
       
       onSuccess?.(data.user);
 

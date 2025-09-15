@@ -11,8 +11,10 @@ const Landing = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && isAuthenticated && role) {
-      navigate(`/${role}`, { replace: true });
+    if (!loading && isAuthenticated) {
+      // Navigate to role-based dashboard if role is available, otherwise default to client
+      const targetRole = role || 'client';
+      navigate(`/${targetRole}`, { replace: true });
     }
   }, [isAuthenticated, role, loading, navigate]);
 

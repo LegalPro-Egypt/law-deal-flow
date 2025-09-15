@@ -19,36 +19,38 @@ export const useAuth = () => {
     console.log('useAuth: Setting up auth state listener');
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log('useAuth: Auth state change', event, !!session);
         setSession(session);
         setUser(session?.user ?? null);
+        setLoading(false);
         
         if (session?.user) {
-          try {
-            console.log('useAuth: Fetching profile for user', session.user.id);
-            const { data: profileData, error } = await supabase
-              .from('profiles')
-              .select('role, first_name, last_name, email')
-              .eq('user_id', session.user.id)
-              .single();
-            
-            if (error) {
-              console.error('useAuth: Profile fetch error:', error);
+          // Defer profile fetching to prevent auth callback deadlocks
+          setTimeout(async () => {
+            try {
+              console.log('useAuth: Fetching profile for user', session.user.id);
+              const { data: profileData, error } = await supabase
+                .from('profiles')
+                .select('role, first_name, last_name, email')
+                .eq('user_id', session.user.id)
+                .single();
+              
+              if (error) {
+                console.error('useAuth: Profile fetch error:', error);
+                setProfile(null);
+              } else {
+                console.log('useAuth: Profile loaded:', profileData);
+                setProfile(profileData);
+              }
+            } catch (error) {
+              console.error('useAuth: Profile fetch exception:', error);
               setProfile(null);
-            } else {
-              console.log('useAuth: Profile loaded:', profileData);
-              setProfile(profileData);
             }
-          } catch (error) {
-            console.error('useAuth: Profile fetch exception:', error);
-            setProfile(null);
-          }
+          }, 0);
         } else {
           setProfile(null);
         }
-        
-        setLoading(false);
       }
     );
 
