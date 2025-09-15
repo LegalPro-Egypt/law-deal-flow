@@ -7,6 +7,8 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Intake from "./pages/Intake";
+import LegalDatabase from "./pages/LegalDatabase";
+import LegalArticle from "./pages/LegalArticle";
 import ClientDashboard from "./pages/ClientDashboard";
 import LawyerDashboard from "./pages/LawyerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -24,6 +26,8 @@ const App = () => (
           <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/intake" element={<Intake />} />
+          <Route path="/legal-database" element={<LegalDatabase />} />
+          <Route path="/legal-database/article/:id" element={<LegalArticle />} />
           <Route path="/client" element={
             <ProtectedRoute requiredRole="client">
               <ClientDashboard />

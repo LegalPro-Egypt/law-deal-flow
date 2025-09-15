@@ -67,9 +67,9 @@ const Landing = () => {
                   Start Your Case
                 </Button>
               </Link>
-              <Link to="/lawyers">
+              <Link to="/legal-database">
                 <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-primary text-lg px-8 py-3">
-                  Browse Lawyers
+                  Browse Legal Database
                 </Button>
               </Link>
             </div>
