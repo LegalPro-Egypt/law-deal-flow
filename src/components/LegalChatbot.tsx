@@ -109,16 +109,20 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = ({
     }
   };
 
-  const formatMessageContent = (content: string) => {
+  const formatMessageContent = (content: string | null) => {
+    // Handle null/undefined content
+    if (!content) {
+      return 'No response content';
+    }
+    
     // Simple formatting for better readability
-    return content
-      .split('\n')
-      .map((line, index) => (
-        <React.Fragment key={index}>
-          {line}
-          {index < content.split('\n').length - 1 && <br />}
-        </React.Fragment>
-      ));
+    const lines = content.split('\n');
+    return lines.map((line, index) => (
+      <React.Fragment key={index}>
+        {line}
+        {index < lines.length - 1 && <br />}
+      </React.Fragment>
+    ));
   };
 
   return (
