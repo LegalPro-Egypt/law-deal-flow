@@ -104,11 +104,31 @@ const LegalDatabase = () => {
         .order('created_at', { ascending: false });
 
       if (selectedCategory) {
-        query = query.eq('category', selectedCategory);
+        const cat = categories.find(c => c.id === selectedCategory);
+        const matchers = [
+          selectedCategory,
+          ...(cat ? [cat.name, ...(cat.keywords || [])] : []),
+        ];
+        const orFilters = [
+          `category.eq.${selectedCategory}`,
+          ...matchers.map((m) => `category.ilike.%${m}%`),
+          ...matchers.map((m) => `subcategory.ilike.%${m}%`),
+          ...matchers.map((m) => `keywords.cs.{${m}}`),
+        ].join(',');
+        query = query.or(orFilters);
       }
 
       if (searchQuery) {
-        query = query.or(`title.ilike.%${searchQuery}%,content.ilike.%${searchQuery}%,keywords.cs.{${searchQuery}}`);
+        const q = searchQuery.trim();
+        query = query.or(
+          [
+            `title.ilike.%${q}%`,
+            `content.ilike.%${q}%`,
+            `category.ilike.%${q}%`,
+            `subcategory.ilike.%${q}%`,
+            `keywords.cs.{${q}}`,
+          ].join(',')
+        );
       }
 
       const { data, error } = await query.limit(20);
@@ -253,8 +273,12 @@ const LegalDatabase = () => {
           ) : articles.length === 0 ? (
             <div className="text-center py-12">
               <BookOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-2">No articles found</h3>
-              <p className="text-muted-foreground">Try adjusting your search or browse categories above</p>
+              <h3 className="text-xl font-semibold mb-2">No guides found</h3>
+              <p className="text-muted-foreground">
+                {selectedCategory
+                  ? "Guides for this category are coming soon. Try another category or clear the filter."
+                  : "Try adjusting your search or browse categories above"}
+              </p>
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
