@@ -68,25 +68,63 @@ const Intake = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b bg-background/95 backdrop-blur">
+      <header className="border-b bg-background/95 backdrop-blur sticky top-0 z-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-14 sm:h-16">
             <Link to="/" className="flex items-center space-x-2">
-              <Scale className="h-8 w-8 text-primary" />
-              <span className="text-xl font-bold">LegalPro</span>
+              <Scale className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+              <span className="text-lg sm:text-xl font-bold">LegalPro</span>
             </Link>
             <Link to="/" className="inline-flex items-center text-muted-foreground hover:text-primary transition-colors">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Home
+              <ArrowLeft className="h-4 w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Back to Home</span>
+              <span className="sm:hidden">Back</span>
             </Link>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 max-w-4xl">
         {/* Progress Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-center space-x-4 mb-6">
+        <div className="mb-4 sm:mb-8">
+          {/* Mobile Progress Steps */}
+          <div className="block sm:hidden mb-4">
+            <div className="flex items-center justify-between px-2">
+              {[
+                { number: 1, label: 'Chat', icon: MessageSquare },
+                { number: 2, label: 'Details', icon: User },
+                { number: 3, label: 'Docs', icon: Upload },
+                { number: 4, label: 'Review', icon: FileText }
+              ].map((step, index) => (
+                <div key={step.number} className="flex flex-col items-center">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium relative ${
+                    (currentStep > step.number) || 
+                    (currentStep === step.number && !showPersonalForm) ||
+                    (step.number === 2 && personalData) ||
+                    (step.number === 1 && showPersonalForm)
+                      ? 'bg-primary text-primary-foreground' 
+                      : 'bg-muted text-muted-foreground'
+                  }`}>
+                    {((currentStep > step.number) || (step.number === 2 && personalData)) ? (
+                      <CheckCircle className="h-4 w-4" />
+                    ) : (
+                      <step.icon className="h-4 w-4" />
+                    )}
+                  </div>
+                  <span className="text-xs mt-1 text-center">{step.label}</span>
+                  {index < 3 && (
+                    <div className={`absolute top-4 left-1/2 w-16 h-0.5 ${
+                      (currentStep > step.number) || (step.number === 1 && personalData)
+                        ? 'bg-primary' : 'bg-muted'
+                    }`} style={{ transform: 'translateX(50%)' }} />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Desktop Progress Steps */}
+          <div className="hidden sm:flex items-center justify-center space-x-4 mb-6">
             {[
               { number: 1, label: 'AI Chat', icon: MessageSquare },
               { number: 2, label: 'Personal Details', icon: User },
@@ -119,8 +157,8 @@ const Intake = () => {
           </div>
           
           <div className="text-center">
-            <h1 className="text-3xl font-bold mb-2">Case Intake Process</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-xl sm:text-3xl font-bold mb-2">Case Intake Process</h1>
+            <p className="text-sm sm:text-base text-muted-foreground px-2">
               {(currentStep === 1 && !showPersonalForm) && "Chat with Lexa to understand your legal needs"}
               {showPersonalForm && "Provide your contact information"}
               {currentStep === 3 && "Document collection and case categorization"}
@@ -141,25 +179,25 @@ const Intake = () => {
 
         {/* Step 1: AI Chat Interface */}
         {currentStep === 1 && !showPersonalForm && (
-          <div className="min-h-[500px] h-[70vh] max-h-[600px]">
+          <div className="flex flex-col h-[calc(100vh-280px)] sm:h-[calc(100vh-320px)] min-h-[400px] max-h-[600px]">
             <LegalChatbot 
               mode="intake"
               onCaseDataExtracted={handleCaseDataExtracted}
-              className="h-full"
+              className="flex-1"
             />
             
-            <div className="flex justify-between mt-6">
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-3 mt-4 p-3 bg-background border-t">
               <div className="text-sm text-muted-foreground">
                 {extractedCaseData && (
                   <div className="flex flex-wrap gap-2">
-                    <Badge variant="outline">Case detected</Badge>
+                    <Badge variant="outline" className="text-xs">Case detected</Badge>
                     {extractedCaseData.category && (
-                      <Badge variant="secondary">{extractedCaseData.category}</Badge>
+                      <Badge variant="secondary" className="text-xs">{extractedCaseData.category}</Badge>
                     )}
                   </div>
                 )}
               </div>
-              <Button onClick={handleContinueToDocuments} className="bg-gradient-primary">
+              <Button onClick={handleContinueToDocuments} className="bg-gradient-primary w-full sm:w-auto">
                 {personalData ? 'Continue to Documents' : 'Continue'}
               </Button>
             </div>

@@ -131,24 +131,27 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = ({
 
   return (
     <Card className={`flex flex-col h-full max-w-4xl mx-auto ${className}`}>
-      <CardHeader className="flex-shrink-0 pb-4">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Scale className="h-5 w-5 text-primary" />
-            Lexa — LegalPro
-            <Badge variant={mode === 'qa' ? 'default' : 'secondary'}>
-              {mode === 'qa' ? 'Q&A' : 'Case Intake'}
+      <CardHeader className="flex-shrink-0 pb-3 sm:pb-4">
+        {/* Mobile Header */}
+        <div className="block sm:hidden">
+          <div className="flex items-center justify-between mb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Scale className="h-4 w-4 text-primary" />
+              Lexa — LegalPro
+            </CardTitle>
+            <Badge variant={mode === 'qa' ? 'default' : 'secondary'} className="text-xs">
+              {mode === 'qa' ? 'Q&A' : 'Intake'}
             </Badge>
-          </CardTitle>
+          </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between gap-2">
             {/* Language Selector */}
             <div className="flex items-center gap-1">
               <Languages className="h-4 w-4 text-muted-foreground" />
               <select
                 value={language}
                 onChange={(e) => setLanguage(e.target.value as 'en' | 'ar' | 'de')}
-                className="text-sm border rounded px-2 py-1 bg-background"
+                className="text-xs border rounded px-2 py-1 bg-background"
               >
                 <option value="en">English</option>
                 <option value="ar">العربية</option>
@@ -162,7 +165,7 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = ({
                 variant={mode === 'qa' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => switchMode('qa')}
-                className="rounded-r-none"
+                className="rounded-r-none text-xs px-2 py-1"
               >
                 Q&A
               </Button>
@@ -170,28 +173,78 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = ({
                 variant={mode === 'intake' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => switchMode('intake')}
-                className="rounded-l-none"
+                className="rounded-l-none text-xs px-2 py-1"
               >
                 Intake
               </Button>
             </div>
           </div>
         </div>
+
+        {/* Desktop Header */}
+        <div className="hidden sm:block">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Scale className="h-5 w-5 text-primary" />
+              Lexa — LegalPro
+              <Badge variant={mode === 'qa' ? 'default' : 'secondary'}>
+                {mode === 'qa' ? 'Q&A' : 'Case Intake'}
+              </Badge>
+            </CardTitle>
+            
+            <div className="flex items-center gap-2">
+              {/* Language Selector */}
+              <div className="flex items-center gap-1">
+                <Languages className="h-4 w-4 text-muted-foreground" />
+                <select
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value as 'en' | 'ar' | 'de')}
+                  className="text-sm border rounded px-2 py-1 bg-background"
+                >
+                  <option value="en">English</option>
+                  <option value="ar">العربية</option>
+                  <option value="de">Deutsch</option>
+                </select>
+              </div>
+
+              {/* Mode Switch */}
+              <div className="flex rounded-md border">
+                <Button
+                  variant={mode === 'qa' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => switchMode('qa')}
+                  className="rounded-r-none"
+                >
+                  Q&A
+                </Button>
+                <Button
+                  variant={mode === 'intake' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => switchMode('intake')}
+                  className="rounded-l-none"
+                >
+                  Intake
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
         
         {/* Status Info */}
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground mt-2 sm:mt-0">
           <div className="flex items-center gap-1">
             {conversationId ? (
-              <CheckCircle2 className="h-4 w-4 text-green-600" />
+              <CheckCircle2 className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
             ) : (
-              <Clock className="h-4 w-4" />
+              <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
             )}
             {conversationId ? 'Connected' : 'Connecting...'}
           </div>
           {mode === 'intake' && extractedData && (
-            <div className="flex items-center gap-1">
-              <FileText className="h-4 w-4 text-blue-600" />
-              <span>Case data detected</span>
+            <div className="flex items-center gap-1 flex-wrap">
+              <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
+              <span className="hidden sm:inline">Case data detected</span>
+              <span className="sm:hidden">Case detected</span>
               {extractedData.category && (
                 <Badge variant="outline" className="text-xs">
                   {extractedData.category}
@@ -204,32 +257,32 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = ({
 
       <Separator />
 
-      <CardContent className="flex-1 flex flex-col p-4 min-h-0">
+      <CardContent className="flex-1 flex flex-col p-2 sm:p-4 min-h-0">
         {/* Messages Area */}
-        <ScrollArea className="flex-1 pr-4">
-          <div className="space-y-4 pb-4">
+        <ScrollArea className="flex-1 pr-2 sm:pr-4">
+          <div className="space-y-3 sm:space-y-4 pb-4">
             {messages.map((message) => (
               <div
                 key={message.id}
-                className={`flex items-start gap-3 ${
+                className={`flex items-start gap-2 sm:gap-3 ${
                   message.role === 'user' ? 'flex-row-reverse' : 'flex-row'
                 }`}
               >
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                <div className="flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-muted flex items-center justify-center">
                   {getMessageIcon(message.role)}
                 </div>
                 
                 <div
-                  className={`max-w-[80%] sm:max-w-[85%] rounded-lg px-4 py-3 ${
+                  className={`max-w-[85%] sm:max-w-[80%] rounded-lg px-3 py-2 sm:px-4 sm:py-3 ${
                     message.role === 'user'
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-muted text-foreground'
                   }`}
                 >
-                  <div className="text-sm leading-relaxed">
+                  <div className="text-xs sm:text-sm leading-relaxed">
                     {formatMessageContent(message.content)}
                   </div>
-                  <div className="text-xs opacity-70 mt-2">
+                  <div className="text-xs opacity-70 mt-1 sm:mt-2">
                     {message.timestamp.toLocaleTimeString()}
                   </div>
                 </div>
@@ -259,7 +312,7 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = ({
         </ScrollArea>
 
         {/* Input Area */}
-        <div className="flex-shrink-0 pt-4">
+        <div className="flex-shrink-0 pt-3 sm:pt-4 border-t bg-background">
           <div className="flex gap-2">
             <Input
               ref={inputRef}
@@ -268,30 +321,30 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = ({
               onKeyPress={handleKeyPress}
               placeholder={
                 mode === 'qa' 
-                  ? "Ask a legal question about Egyptian law..."
+                  ? "Ask a legal question..."
                   : "Describe your legal situation..."
               }
               disabled={isLoading || !conversationId}
-              className="flex-1"
+              className="flex-1 text-sm"
             />
             <Button
               onClick={handleSendMessage}
               disabled={!inputMessage.trim() || isLoading || !conversationId}
               size="icon"
-              className="flex-shrink-0"
+              className="flex-shrink-0 h-9 w-9 sm:h-10 sm:w-10"
             >
               {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
               ) : (
-                <Send className="h-4 w-4" />
+                <Send className="h-3 w-3 sm:h-4 sm:w-4" />
               )}
             </Button>
           </div>
 
           {/* Legal Disclaimer */}
-          <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+          <div className="mt-2 sm:mt-3 p-2 sm:p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
             <div className="flex items-start gap-2">
-              <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+              <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
               <div className="text-xs text-amber-800 dark:text-amber-200">
                 <strong>Legal Disclaimer:</strong> This AI provides legal information based on Egyptian law, not legal advice. 
                 Always consult with a qualified Egyptian lawyer for specific legal matters and before making any legal decisions.
