@@ -31,7 +31,6 @@ import {
 } from "lucide-react";
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { LawyerRequestsManager } from "@/components/LawyerRequestsManager";
-import { LawyerVerificationManager } from "@/components/LawyerVerificationManager";
 import { CaseDetailsDialog } from "@/components/CaseDetailsDialog";
 import { ConversationDialog } from "@/components/ConversationDialog";
 import { InviteLawyerDialog } from "@/components/InviteLawyerDialog";
@@ -56,28 +55,85 @@ const AdminDashboard = () => {
   const [caseToDeny, setCaseToDeny] = useState<string | null>(null);
   const [showCaseDenyConfirm, setShowCaseDenyConfirm] = useState(false);
   const [denyReason, setDenyReason] = useState("");
-  const [approvedLawyers, setApprovedLawyers] = useState<any[]>([]);
+  const [allLawyers, setAllLawyers] = useState<any[]>([]);
   const [selectedLawyerId, setSelectedLawyerId] = useState<string | null>(null);
   const [showLawyerDetails, setShowLawyerDetails] = useState(false);
 
   useEffect(() => {
-    fetchApprovedLawyers();
+    fetchAllLawyers();
   }, []);
 
-  const fetchApprovedLawyers = async () => {
+  const fetchAllLawyers = async () => {
     try {
       const { data: lawyers, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('role', 'lawyer')
         .eq('is_active', true)
-        .eq('is_verified', true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setApprovedLawyers(lawyers || []);
+      setAllLawyers(lawyers || []);
     } catch (error: any) {
-      console.error('Error fetching approved lawyers:', error);
+      console.error('Error fetching lawyers:', error);
+    }
+  };
+
+  const handleApproveVerification = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          verification_status: 'verified',
+          is_verified: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userId);
+
+      if (error) throw error;
+      
+      toast({
+        title: "Lawyer Approved",
+        description: "The lawyer verification has been approved successfully",
+      });
+      
+      await fetchAllLawyers();
+      await refreshData();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to approve lawyer: " + error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRejectVerification = async (userId: string, reason: string = '') => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          verification_status: 'pending_basic',
+          is_verified: false,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userId);
+
+      if (error) throw error;
+      
+      toast({
+        title: "Lawyer Verification Rejected",
+        description: "The lawyer will need to resubmit their verification",
+      });
+      
+      await fetchAllLawyers();
+      await refreshData();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to reject verification: " + error.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -305,12 +361,11 @@ const AdminDashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="intakes" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="intakes">AI Intakes</TabsTrigger>
             <TabsTrigger value="cases">Cases</TabsTrigger>
-            <TabsTrigger value="lawyers">Lawyers</TabsTrigger>
-            <TabsTrigger value="verifications">
-              Verifications {stats.pendingVerifications > 0 && (
+            <TabsTrigger value="lawyers">
+              Lawyers {stats.pendingVerifications > 0 && (
                 <Badge variant="destructive" className="ml-1 text-xs">
                   {stats.pendingVerifications}
                 </Badge>
@@ -561,30 +616,36 @@ const AdminDashboard = () => {
               </Button>
             </div>
 
-            {approvedLawyers.length === 0 ? (
+            {allLawyers.length === 0 ? (
               <Card className="bg-gradient-card shadow-card">
                 <CardContent className="p-8 text-center">
                   <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No approved lawyers</h3>
-                  <p className="text-muted-foreground">Approved lawyers will appear here</p>
+                  <h3 className="text-lg font-semibold mb-2">No lawyers found</h3>
+                  <p className="text-muted-foreground">Lawyers will appear here once they register</p>
                 </CardContent>
               </Card>
             ) : (
               <div className="grid gap-4">
-                {approvedLawyers.map((lawyer) => (
+                {allLawyers.map((lawyer) => (
                   <Card key={lawyer.id} className="bg-gradient-card shadow-card">
                     <CardContent className="p-6">
                       <div className="grid lg:grid-cols-3 gap-6">
                         {/* Lawyer Info */}
                         <div>
                           <div className="flex items-center gap-2 mb-2">
-                            <Badge variant="default" className="bg-success">
-                              Active Lawyer
-                            </Badge>
-                            {lawyer.is_verified && (
-                              <Badge variant="outline">
+                            {lawyer.verification_status === 'verified' ? (
+                              <Badge variant="default" className="bg-success">
                                 <CheckCircle className="h-3 w-3 mr-1" />
                                 Verified
+                              </Badge>
+                            ) : lawyer.verification_status === 'pending_complete' ? (
+                              <Badge variant="secondary" className="bg-warning text-warning-foreground">
+                                <Clock className="h-3 w-3 mr-1" />
+                                Pending Review
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline">
+                                Incomplete Profile
                               </Badge>
                             )}
                           </div>
@@ -595,38 +656,74 @@ const AdminDashboard = () => {
                           )}
                         </div>
 
-                        {/* Specializations */}
+                        {/* Professional Details */}
                         <div>
-                          <h4 className="font-medium mb-2 text-sm">Specializations</h4>
-                          <div className="flex flex-wrap gap-1">
-                            {lawyer.specializations && lawyer.specializations.length > 0 ? (
-                              lawyer.specializations.map((spec: string, index: number) => (
+                          <h4 className="font-medium mb-2 text-sm">Professional Details</h4>
+                          {lawyer.verification_status === 'pending_complete' ? (
+                            <div className="space-y-1 text-xs">
+                              <div className="flex flex-wrap gap-1">
+                                {lawyer.specializations?.map((spec: string, index: number) => (
+                                  <Badge key={index} variant="outline" className="text-xs">
+                                    {spec}
+                                  </Badge>
+                                )) || <span className="text-muted-foreground">No specializations</span>}
+                              </div>
+                              {lawyer.years_experience && (
+                                <p className="text-muted-foreground">{lawyer.years_experience} years experience</p>
+                              )}
+                              {lawyer.team_size && (
+                                <p className="text-muted-foreground">Team size: {lawyer.team_size}</p>
+                              )}
+                              {lawyer.license_number && (
+                                <p className="text-muted-foreground">License: {lawyer.license_number}</p>
+                              )}
+                            </div>
+                          ) : lawyer.verification_status === 'verified' ? (
+                            <div className="flex flex-wrap gap-1">
+                              {lawyer.specializations?.map((spec: string, index: number) => (
                                 <Badge key={index} variant="outline" className="text-xs">
                                   {spec}
                                 </Badge>
-                              ))
-                            ) : (
-                              <span className="text-xs text-muted-foreground">No specializations listed</span>
-                            )}
-                          </div>
-                          {lawyer.years_experience && (
-                            <p className="text-xs text-muted-foreground mt-2">
-                              {lawyer.years_experience} years experience
-                            </p>
+                              )) || <span className="text-xs text-muted-foreground">No specializations</span>}
+                            </div>
+                          ) : (
+                            <p className="text-xs text-muted-foreground">Profile incomplete - awaiting verification submission</p>
                           )}
                         </div>
 
                         {/* Actions */}
                         <div className="flex flex-col space-y-2">
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="justify-start"
-                            onClick={() => handleViewLawyerDetails(lawyer.user_id)}
-                          >
-                            <Eye className="h-4 w-4 mr-2" />
-                            View Details & Q&A History
-                          </Button>
+                          {lawyer.verification_status === 'pending_complete' ? (
+                            <>
+                              <Button 
+                                size="sm" 
+                                className="bg-success justify-start"
+                                onClick={() => handleApproveVerification(lawyer.user_id)}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-2" />
+                                Approve Verification
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="destructive" 
+                                className="justify-start"
+                                onClick={() => handleRejectVerification(lawyer.user_id)}
+                              >
+                                <XCircle className="h-4 w-4 mr-2" />
+                                Reject Verification
+                              </Button>
+                            </>
+                          ) : (
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="justify-start"
+                              onClick={() => handleViewLawyerDetails(lawyer.user_id)}
+                            >
+                              <Eye className="h-4 w-4 mr-2" />
+                              View Details & Q&A History
+                            </Button>
+                          )}
                           <div className="text-xs text-muted-foreground">
                             Joined: {formatDate(lawyer.created_at)}
                           </div>
@@ -639,10 +736,6 @@ const AdminDashboard = () => {
             )}
           </TabsContent>
 
-          {/* Lawyer Verifications Tab */}
-          <TabsContent value="verifications" className="space-y-6">
-            <LawyerVerificationManager onVerificationUpdate={refreshData} />
-          </TabsContent>
 
           {/* Lawyer Requests Tab */}
           <TabsContent value="requests" className="space-y-6">
@@ -745,7 +838,7 @@ const AdminDashboard = () => {
           onOpenChange={setShowInviteLawyerDialog}
           onSuccess={() => {
             console.log('Lawyer invitation sent successfully');
-            fetchApprovedLawyers();
+            fetchAllLawyers();
           }}
         />
 
