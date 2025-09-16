@@ -53,10 +53,39 @@ const Auth = () => {
       return; // Don't redirect, allow reset form to show
     }
     
-    // Set up auth state listener for password recovery
+    // Set up auth state listener for password recovery and sign in
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state change:', event, !!session);
+      
       if (event === 'PASSWORD_RECOVERY') {
         setResetMode(true);
+        return;
+      }
+      
+      // Handle successful sign in - redirect after login
+      if (event === 'SIGNED_IN' && session) {
+        setTimeout(async () => {
+          try {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('user_id', session.user.id)
+              .single();
+            
+            const role = profile?.role || 'client';
+            
+            // Remove force parameter from URL
+            const url = new URL(window.location.href);
+            url.searchParams.delete('force');
+            window.history.replaceState({}, '', url.toString());
+            
+            // Navigate to appropriate dashboard
+            navigate(`/${role}`, { replace: true });
+          } catch (error) {
+            console.error('Error fetching profile after sign in:', error);
+            navigate('/client', { replace: true }); // Fallback to client dashboard
+          }
+        }, 0);
       }
     });
     
@@ -64,7 +93,8 @@ const Auth = () => {
       const { data: { session } } = await supabase.auth.getSession();
       console.log('Auth checkAuth - session exists:', !!session, 'forceStay:', forceStay, 'resetMode:', resetMode);
       
-      if (session && !resetMode && !forceStay) {
+      // If user is logged in and not in reset mode, redirect regardless of force parameter
+      if (session && !resetMode) {
         // Get user profile to determine role and redirect
         const { data: profile } = await supabase
           .from('profiles')
@@ -76,6 +106,13 @@ const Auth = () => {
         
         console.log('Auth redirecting to:', redirectTo === 'intake' ? '/intake' : `/${role}`);
         
+        // Remove force parameter from URL since we're redirecting
+        if (forceStay) {
+          const url = new URL(window.location.href);
+          url.searchParams.delete('force');
+          window.history.replaceState({}, '', url.toString());
+        }
+        
         // Redirect to intended page or default dashboard
         if (redirectTo === 'intake') {
           navigate('/intake', { replace: true });
@@ -83,7 +120,7 @@ const Auth = () => {
           navigate(`/${role}`, { replace: true });
         }
       } else if (forceStay) {
-        console.log('Auth staying on page due to force=true');
+        console.log('Auth staying on page due to force=true (no session or in reset mode)');
       }
     };
     
@@ -128,9 +165,16 @@ const Auth = () => {
       });
     } else {
       toast({
-        title: "Success",
+        title: "Success", 
         description: "Authentication successful! Redirecting to admin dashboard...",
       });
+      
+      // Remove force parameter and navigate immediately
+      const url = new URL(window.location.href);
+      url.searchParams.delete('force');
+      window.history.replaceState({}, '', url.toString());
+      
+      navigate('/admin', { replace: true });
     }
     
     setIsLoading(false);
