@@ -183,6 +183,16 @@ serve(async (req) => {
                 .eq('id', conversationId)
                 .single();
 
+              // Generate client response summary
+              const clientSummary = await generateClientResponseSummary(
+                chatHistory, 
+                aiResponse, 
+                extractedData, 
+                language, 
+                conversationId, 
+                supabase
+              );
+
               let caseId = conversation?.case_id;
 
               if (!caseId) {
@@ -191,6 +201,7 @@ serve(async (req) => {
                   const newMeta = {
                     ...(conversation?.metadata || {}),
                     extractedData,
+                    clientSummary,
                     draft: {
                       currentStep: 1,
                       lastUpdated: new Date().toISOString()
@@ -216,6 +227,7 @@ serve(async (req) => {
                       language: language || 'en',
                       jurisdiction: 'egypt',
                       extracted_entities: extractedData.entities || {},
+                      client_responses_summary: clientSummary,
                       draft_data: {
                         extractedData,
                         currentStep: 1,
@@ -245,6 +257,7 @@ serve(async (req) => {
                     subcategory: extractedData.subcategory,
                     urgency: extractedData.urgency || 'medium',
                     extracted_entities: extractedData.entities || {},
+                    client_responses_summary: clientSummary,
                     draft_data: {
                       extractedData,
                       currentStep: 1,
@@ -307,6 +320,115 @@ serve(async (req) => {
     );
   }
 });
+
+/**
+ * Generate client response summary from conversation
+ */
+async function generateClientResponseSummary(
+  chatHistory: ChatMessage[],
+  latestResponse: string,
+  extractedData: any,
+  language: string,
+  conversationId: string,
+  supabase: any
+): Promise<any> {
+  try {
+    // Get user messages from the conversation
+    const { data: messages } = await supabase
+      .from('messages')
+      .select('content, role')
+      .eq('conversation_id', conversationId)
+      .eq('role', 'user')
+      .order('created_at', { ascending: true });
+
+    const userMessages = messages?.map(msg => msg.content).join('\n') || 
+                        chatHistory.filter(msg => msg.role === 'user').map(msg => msg.content).join('\n');
+
+    const summaryPrompt = `Based on the following client responses during legal intake, create a concise summary for admin review.
+
+Client responses:
+${userMessages}
+
+Latest AI response: ${latestResponse}
+
+Create a JSON summary with the following structure:
+{
+  "summary": "A readable summary of the client's legal issue and key points",
+  "key_points": ["Important point 1", "Important point 2"],
+  "urgency_indicators": ["Why this case is urgent/not urgent"],
+  "client_goals": "What the client wants to achieve",
+  "mentioned_documents": ["Documents the client mentioned or will provide"],
+  "timeline_mentioned": "Any dates or deadlines mentioned by the client",
+  "parties_involved": ["Other parties mentioned in the case"],
+  "language": "${language}"
+}
+
+Keep the summary concise but comprehensive for admin review.`;
+
+    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: 'You are a legal assistant that creates case summaries from client intake conversations.' },
+          { role: 'user', content: summaryPrompt }
+        ],
+        temperature: 0.3,
+        max_tokens: 1000
+      }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      const summaryText = data.choices[0].message.content;
+      
+      try {
+        return JSON.parse(summaryText);
+      } catch (parseError) {
+        console.error('Failed to parse summary JSON:', parseError);
+        return {
+          summary: summaryText,
+          key_points: [],
+          urgency_indicators: [],
+          client_goals: "",
+          mentioned_documents: [],
+          timeline_mentioned: "",
+          parties_involved: [],
+          language: language
+        };
+      }
+    } else {
+      console.error('Failed to generate client summary:', response.statusText);
+      return {
+        summary: "Summary generation failed",
+        key_points: [],
+        urgency_indicators: [],
+        client_goals: "",
+        mentioned_documents: [],
+        timeline_mentioned: "",
+        parties_involved: [],
+        language: language
+      };
+    }
+  } catch (error) {
+    console.error('Error generating client response summary:', error);
+    return {
+      summary: "Error generating summary",
+      key_points: [],
+      urgency_indicators: [],
+      client_goals: "",
+      mentioned_documents: [],
+      timeline_mentioned: "",
+      parties_involved: [],
+      language: language
+    };
+  }
+}
 
 function extractKeywords(text: string): string {
   const keywords = text.toLowerCase()

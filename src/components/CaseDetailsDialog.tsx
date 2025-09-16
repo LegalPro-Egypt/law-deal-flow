@@ -51,6 +51,7 @@ interface CaseDetails {
   updated_at: string;
   ai_summary?: string;
   extracted_entities?: any;
+  client_responses_summary?: any;
   user_id: string;
   assigned_lawyer_id?: string;
   assigned_admin_id?: string;
@@ -84,6 +85,7 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
   const [loading, setLoading] = useState(false);
   const [generatingSummary, setGeneratingSummary] = useState(false);
   const [previewDocument, setPreviewDocument] = useState<CaseDocument | null>(null);
+  const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
   useEffect(() => {
@@ -213,7 +215,18 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
 
   const downloadDocument = async (doc: CaseDocument) => {
     try {
-      const response = await fetch(doc.file_url);
+      setLoadingStates(prev => ({ ...prev, [`download-${doc.id}`]: true }));
+      
+      // Get signed URL for download
+      const { data, error } = await supabase.functions.invoke('get-document-signed-url', {
+        body: { documentId: doc.id }
+      });
+
+      if (error || !data?.signedUrl) {
+        throw new Error('Failed to get download URL');
+      }
+
+      const response = await fetch(data.signedUrl);
       const blob = await response.blob();
       
       const url = window.URL.createObjectURL(blob);
@@ -236,18 +249,56 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
         description: "Failed to download document",
         variant: "destructive",
       });
+    } finally {
+      setLoadingStates(prev => ({ ...prev, [`download-${doc.id}`]: false }));
     }
   };
 
-  const viewDocument = (doc: CaseDocument) => {
-    const isImage = doc.file_type.startsWith('image/');
-    const isPDF = doc.file_type === 'application/pdf';
-    
-    if (isImage || isPDF) {
-      setPreviewDocument(doc);
-    } else {
-      // For other file types, open in new tab
-      window.open(doc.file_url, '_blank');
+  const viewDocument = async (doc: CaseDocument) => {
+    try {
+      setLoadingStates(prev => ({ ...prev, [`view-${doc.id}`]: true }));
+      
+      const isImage = doc.file_type.startsWith('image/');
+      const isPDF = doc.file_type === 'application/pdf';
+      
+      if (isImage || isPDF) {
+        // Get signed URL for viewing in preview
+        const { data, error } = await supabase.functions.invoke('get-document-signed-url', {
+          body: { documentId: doc.id }
+        });
+
+        if (error || !data?.signedUrl) {
+          throw new Error('Failed to get document URL');
+        }
+
+        // Create document object with signed URL for preview
+        const documentWithSignedUrl = {
+          ...doc,
+          file_url: data.signedUrl
+        };
+
+        setPreviewDocument(documentWithSignedUrl);
+      } else {
+        // For other file types, get signed URL and open in new tab
+        const { data, error } = await supabase.functions.invoke('get-document-signed-url', {
+          body: { documentId: doc.id }
+        });
+
+        if (error || !data?.signedUrl) {
+          throw new Error('Failed to get document URL');
+        }
+
+        window.open(data.signedUrl, '_blank');
+      }
+    } catch (error) {
+      console.error('Error viewing document:', error);
+      toast({
+        title: "View Failed",
+        description: "Failed to view document",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingStates(prev => ({ ...prev, [`view-${doc.id}`]: false }));
     }
   };
 
@@ -275,10 +326,11 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
           </div>
         ) : caseDetails ? (
           <Tabs defaultValue="overview" className="h-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="conversation">Conversation</TabsTrigger>
               <TabsTrigger value="documents">Documents</TabsTrigger>
+              <TabsTrigger value="client-responses">Client Responses</TabsTrigger>
               <TabsTrigger value="entities">Extracted Data</TabsTrigger>
             </TabsList>
 
@@ -485,19 +537,21 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                                 variant="outline"
                                 size="sm"
                                 onClick={() => viewDocument(doc)}
+                                disabled={loadingStates[`view-${doc.id}`]}
                                 className="flex items-center gap-2"
                               >
                                 <Eye className="h-4 w-4" />
-                                View
+                                {loadingStates[`view-${doc.id}`] ? 'Loading...' : 'View'}
                               </Button>
                               <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => downloadDocument(doc)}
+                                disabled={loadingStates[`download-${doc.id}`]}
                                 className="flex items-center gap-2"
                               >
                                 <Download className="h-4 w-4" />
-                                Download
+                                {loadingStates[`download-${doc.id}`] ? 'Loading...' : 'Download'}
                               </Button>
                             </div>
                           </div>
@@ -514,6 +568,103 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                     </CardContent>
                   </Card>
                 )}
+              </TabsContent>
+
+              <TabsContent value="client-responses" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <MessageSquare className="h-5 w-5" />
+                      Client Response Summary
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {caseDetails.client_responses_summary && Object.keys(caseDetails.client_responses_summary).length > 0 ? (
+                      <>
+                        <div>
+                          <h4 className="font-semibold mb-2">Summary</h4>
+                          <p className="text-sm text-muted-foreground bg-muted p-3 rounded-lg">
+                            {caseDetails.client_responses_summary.summary || "No summary available"}
+                          </p>
+                        </div>
+                        
+                        {caseDetails.client_responses_summary.key_points && caseDetails.client_responses_summary.key_points.length > 0 && (
+                          <div>
+                            <h4 className="font-semibold mb-2">Key Points</h4>
+                            <ul className="space-y-1">
+                              {caseDetails.client_responses_summary.key_points.map((point: string, index: number) => (
+                                <li key={index} className="flex items-start gap-2 text-sm">
+                                  <span className="text-primary">•</span>
+                                  <span>{point}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {caseDetails.client_responses_summary.client_goals && (
+                          <div>
+                            <h4 className="font-semibold mb-2">Client Goals</h4>
+                            <p className="text-sm text-muted-foreground bg-muted p-3 rounded-lg">
+                              {caseDetails.client_responses_summary.client_goals}
+                            </p>
+                          </div>
+                        )}
+
+                        {caseDetails.client_responses_summary.urgency_indicators && caseDetails.client_responses_summary.urgency_indicators.length > 0 && (
+                          <div>
+                            <h4 className="font-semibold mb-2">Urgency Indicators</h4>
+                            <ul className="space-y-1">
+                              {caseDetails.client_responses_summary.urgency_indicators.map((indicator: string, index: number) => (
+                                <li key={index} className="flex items-start gap-2 text-sm">
+                                  <span className="text-yellow-500">⚠</span>
+                                  <span>{indicator}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {caseDetails.client_responses_summary.parties_involved && caseDetails.client_responses_summary.parties_involved.length > 0 && (
+                          <div>
+                            <h4 className="font-semibold mb-2">Parties Involved</h4>
+                            <div className="flex flex-wrap gap-2">
+                              {caseDetails.client_responses_summary.parties_involved.map((party: string, index: number) => (
+                                <Badge key={index} variant="outline">{party}</Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {caseDetails.client_responses_summary.timeline_mentioned && (
+                          <div>
+                            <h4 className="font-semibold mb-2">Timeline Mentioned</h4>
+                            <p className="text-sm text-muted-foreground bg-muted p-3 rounded-lg">
+                              {caseDetails.client_responses_summary.timeline_mentioned}
+                            </p>
+                          </div>
+                        )}
+
+                        {caseDetails.client_responses_summary.mentioned_documents && caseDetails.client_responses_summary.mentioned_documents.length > 0 && (
+                          <div>
+                            <h4 className="font-semibold mb-2">Documents Mentioned</h4>
+                            <div className="flex flex-wrap gap-2">
+                              {caseDetails.client_responses_summary.mentioned_documents.map((doc: string, index: number) => (
+                                <Badge key={index} variant="secondary">{doc}</Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="text-center py-8">
+                        <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold mb-2">No client responses summary</h3>
+                        <p className="text-muted-foreground">Client response summary will be generated during intake conversations.</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               </TabsContent>
 
               <TabsContent value="entities" className="space-y-4">

@@ -77,6 +77,7 @@ export type Database = {
           client_email: string | null
           client_name: string | null
           client_phone: string | null
+          client_responses_summary: Json | null
           consultation_fee: number | null
           created_at: string
           description: string | null
@@ -104,6 +105,7 @@ export type Database = {
           client_email?: string | null
           client_name?: string | null
           client_phone?: string | null
+          client_responses_summary?: Json | null
           consultation_fee?: number | null
           created_at?: string
           description?: string | null
@@ -131,6 +133,7 @@ export type Database = {
           client_email?: string | null
           client_name?: string | null
           client_phone?: string | null
+          client_responses_summary?: Json | null
           consultation_fee?: number | null
           created_at?: string
           description?: string | null
