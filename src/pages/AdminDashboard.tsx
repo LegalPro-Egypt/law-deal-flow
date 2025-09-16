@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { LawyerRequestsManager } from "@/components/LawyerRequestsManager";
+import { LawyerVerificationManager } from "@/components/LawyerVerificationManager";
 import { CaseDetailsDialog } from "@/components/CaseDetailsDialog";
 import { ConversationDialog } from "@/components/ConversationDialog";
 import { InviteLawyerDialog } from "@/components/InviteLawyerDialog";
@@ -291,7 +292,10 @@ const AdminDashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Pending Reviews</p>
-                  <p className="text-3xl font-bold text-primary">{stats.pendingReviews}</p>
+                  <p className="text-3xl font-bold text-primary">{stats.pendingReviews + stats.pendingVerifications}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {stats.pendingReviews} cases • {stats.pendingVerifications} verifications
+                  </p>
                 </div>
                 <AlertCircle className="h-8 w-8 text-primary" />
               </div>
@@ -301,10 +305,17 @@ const AdminDashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="intakes" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="intakes">AI Intakes</TabsTrigger>
             <TabsTrigger value="cases">Cases</TabsTrigger>
             <TabsTrigger value="lawyers">Lawyers</TabsTrigger>
+            <TabsTrigger value="verifications">
+              Verifications {stats.pendingVerifications > 0 && (
+                <Badge variant="destructive" className="ml-1 text-xs">
+                  {stats.pendingVerifications}
+                </Badge>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="requests">Lawyer Requests</TabsTrigger>
           </TabsList>
 
@@ -626,6 +637,11 @@ const AdminDashboard = () => {
                 ))}
               </div>
             )}
+          </TabsContent>
+
+          {/* Lawyer Verifications Tab */}
+          <TabsContent value="verifications" className="space-y-6">
+            <LawyerVerificationManager onVerificationUpdate={refreshData} />
           </TabsContent>
 
           {/* Lawyer Requests Tab */}

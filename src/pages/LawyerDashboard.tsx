@@ -302,13 +302,13 @@ const LawyerDashboard = () => {
                   {profile?.verification_status === 'pending_basic' ? (
                     <AlertTriangle className="h-6 w-6 text-warning" />
                   ) : profile?.verification_status === 'pending_complete' ? (
-                    <Clock className="h-6 w-6 text-warning" />
+                    <Clock className="h-6 w-6 text-primary" />
                   ) : (
                     <ShieldCheck className="h-6 w-6 text-success" />
                   )}
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold mb-2">
+                  <h3 className="font-semibold mb-2 text-primary">
                     {getVerificationTitle(profile?.verification_status)}
                   </h3>
                   <p className="text-sm text-muted-foreground mb-4">
@@ -319,10 +319,26 @@ const LawyerDashboard = () => {
                       <Button 
                         onClick={() => setShowVerificationForm(true)}
                         size="sm"
+                        className="bg-primary hover:bg-primary/90"
                       >
                         <Settings className="h-4 w-4 mr-2" />
                         Complete Verification
                       </Button>
+                    </div>
+                  )}
+                  {profile?.verification_status === 'pending_complete' && (
+                    <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mt-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Clock className="h-4 w-4 text-primary" />
+                        <span className="font-medium text-primary">Approval Pending</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Your verification documents have been submitted and are currently under review by our admin team. 
+                        You will be notified via email once the review is complete.
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Expected review time: 1-3 business days
+                      </p>
                     </div>
                   )}
                 </div>
