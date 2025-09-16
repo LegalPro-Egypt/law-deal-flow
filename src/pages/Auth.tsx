@@ -20,6 +20,7 @@ const Auth = () => {
   
   // Password reset state
   const [resetMode, setResetMode] = useState(false);
+  const [flow, setFlow] = useState<'none' | 'invite' | 'recovery' | 'adminReset'>('none');
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -57,12 +58,21 @@ const Auth = () => {
     if (type === 'recovery') {
       console.log('Password recovery detected - showing reset form');
       setResetMode(true);
+      setFlow('recovery');
       return;
     }
     
-    // Handle Supabase invitation/other flows
-    if (type === 'invite' || (accessToken && refreshToken)) {
-      console.log('Processing Supabase invitation/other tokens...');
+    // Handle Supabase invitation flow - set resetMode immediately
+    if (type === 'invite') {
+      console.log('Invitation detected - showing password setup form');
+      setResetMode(true);
+      setFlow('invite');
+      return;
+    }
+    
+    // Handle other token flows (but don't set resetMode for these)
+    if (accessToken && refreshToken) {
+      console.log('Processing other token flows...');
       // Don't redirect yet, let Supabase handle the token exchange
       return;
     }
@@ -70,6 +80,7 @@ const Auth = () => {
     // Check if we're in admin reset mode
     if (resetParam === 'admin') {
       setResetMode(true);
+      setFlow('adminReset');
       return; // Don't redirect, allow reset form to show
     }
     
@@ -190,13 +201,13 @@ const Auth = () => {
       }
     };
     
-    // Only check auth if we're not in a password recovery flow
-    if (type !== 'recovery' && resetParam !== 'admin') {
+    // Only check auth if we're not in a password recovery or invite flow
+    if (type !== 'recovery' && type !== 'invite' && resetParam !== 'admin') {
       checkAuth();
     }
     
     return () => subscription.unsubscribe();
-  }, [navigate, resetMode, toast]);
+  }, [navigate, resetMode, flow, toast]);
 
   const handleAdminSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -325,12 +336,15 @@ const Auth = () => {
       });
     } else {
       toast({
-        title: "Password Updated",
-        description: "Your password has been updated successfully. Redirecting to your dashboard...",
+        title: flow === 'invite' ? "Account Activated" : "Password Updated",
+        description: flow === 'invite' 
+          ? "Your account has been activated successfully. Redirecting to your dashboard..." 
+          : "Your password has been updated successfully. Redirecting to your dashboard...",
       });
       
       // Clear reset mode and redirect to appropriate dashboard
       setResetMode(false);
+      setFlow('none');
       
       // Get user profile to determine redirect
       setTimeout(async () => {
@@ -351,6 +365,7 @@ const Auth = () => {
             url.searchParams.delete('refresh_token');
             url.searchParams.delete('token_type');
             url.searchParams.delete('type');
+            url.searchParams.delete('reset');
             window.history.replaceState({}, '', url.toString());
             
             navigate(`/${role}`, { replace: true });
@@ -444,238 +459,256 @@ const Auth = () => {
           </CardHeader>
           
           <CardContent>
-            <Tabs defaultValue="client" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="client">Client</TabsTrigger>
-                <TabsTrigger value="lawyer">Lawyer</TabsTrigger>
-                <TabsTrigger value="admin">Admin</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="client">
-                <div className="space-y-6 mt-6">
-                  <div className="text-center mb-6">
-                    <h3 className="text-lg font-semibold">Client Portal</h3>
-                    <p className="text-sm text-muted-foreground">Access your cases and communicate with lawyers</p>
-                  </div>
-                  
-                  {/* Google OAuth Button */}
-                  <div className="space-y-4">
-                    <GoogleAuthButton
-                      variant="default"
-                      size="default"
-                    >
-                      <Mail className="mr-2 h-4 w-4" />
-                      Continue with Google
-                    </GoogleAuthButton>
-                    
-                    {/* Divider */}
+            {resetMode ? (
+              // Dedicated Password Setup UI
+              <div className="space-y-4 mt-6">
+                <div className="text-center mb-6">
+                  <Lock className="h-8 w-8 mx-auto text-primary mb-2" />
+                  <h3 className="text-lg font-semibold">
+                    {flow === 'invite' ? 'Create Your Password' : 'Set New Password'}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {flow === 'invite' 
+                      ? "Create your password to activate your account and access your lawyer dashboard" 
+                      : "Enter a new password for your account"
+                    }
+                  </p>
+                </div>
+                
+                <form onSubmit={handleSetNewPassword} className="space-y-4">
+                  <div>
+                    <Label htmlFor="new-password">New Password</Label>
                     <div className="relative">
-                      <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t" />
-                      </div>
-                      <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-background px-2 text-muted-foreground">
-                          Or continue with email
-                        </span>
-                      </div>
+                      <Input
+                        id="new-password"
+                        type={showNewPassword ? "text" : "password"}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Enter new password"
+                        required
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                      >
+                        {showNewPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="confirm-password">Confirm Password</Label>
+                    <div className="relative">
+                      <Input
+                        id="confirm-password"
+                        type={showConfirmPassword ? "text" : "password"}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Confirm new password"
+                        required
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-gradient-primary"
+                    disabled={resetLoading}
+                  >
+                    {resetLoading ? "Setting Password..." : 
+                     flow === 'invite' ? "Activate Account" : "Update Password"}
+                  </Button>
+                  
+                  <p className="text-xs text-muted-foreground text-center">
+                    Password must be at least 6 characters long
+                  </p>
+                </form>
+              </div>
+            ) : (
+              // Normal Authentication Tabs
+              <Tabs defaultValue="client" className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="client">Client</TabsTrigger>
+                  <TabsTrigger value="lawyer">Lawyer</TabsTrigger>
+                  <TabsTrigger value="admin">Admin</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="client">
+                  <div className="space-y-6 mt-6">
+                    <div className="text-center mb-6">
+                      <h3 className="text-lg font-semibold">Client Portal</h3>
+                      <p className="text-sm text-muted-foreground">Access your cases and communicate with lawyers</p>
                     </div>
                     
-                    {/* Email Authentication Form */}
-                    <EmailAuthForm 
-                      onSuccess={() => {
-                        const urlParams = new URLSearchParams(window.location.search);
-                        const redirectTo = urlParams.get('redirect');
-                        if (redirectTo === 'intake') {
-                          navigate('/intake', { replace: true });
-                        } else {
-                          navigate('/client', { replace: true });
-                        }
-                      }}
-                    />
-                  </div>
-                  
-                  <div className="text-center">
-                    <p className="text-xs text-muted-foreground">
-                      Your legal information is protected with enterprise-grade security
-                    </p>
-                  </div>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="lawyer">
-                <div className="space-y-4 mt-6">
-                  <div className="text-center mb-6">
-                    <h3 className="text-lg font-semibold">Lawyer Portal</h3>
-                    <p className="text-sm text-muted-foreground">Request access to manage cases and create proposals</p>
-                  </div>
-                  
-                  {lawyerRequestSent ? (
-                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-center">
-                      <p className="text-sm text-green-800 mb-2">✅ Request Submitted Successfully</p>
-                      <p className="text-xs text-green-600">
-                        Your lawyer access request has been sent to the admin for review. 
-                        You'll be contacted via email once reviewed.
+                    {/* Google OAuth Button */}
+                    <div className="space-y-4">
+                      <GoogleAuthButton
+                        variant="default"
+                        size="default"
+                      >
+                        <Mail className="mr-2 h-4 w-4" />
+                        Continue with Google
+                      </GoogleAuthButton>
+                      
+                      {/* Divider */}
+                      <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                          <span className="w-full border-t" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                          <span className="bg-background px-2 text-muted-foreground">
+                            Or continue with email
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {/* Email Authentication Form */}
+                      <EmailAuthForm 
+                        onSuccess={() => {
+                          const urlParams = new URLSearchParams(window.location.search);
+                          const redirectTo = urlParams.get('redirect');
+                          if (redirectTo === 'intake') {
+                            navigate('/intake', { replace: true });
+                          } else {
+                            navigate('/client', { replace: true });
+                          }
+                        }}
+                      />
+                    </div>
+                    
+                    <div className="text-center">
+                      <p className="text-xs text-muted-foreground">
+                        By continuing, you agree to our terms of service and privacy policy
                       </p>
                     </div>
-                  ) : (
-                    <form onSubmit={handleLawyerRequest} className="space-y-4">
-                      <div className="grid grid-cols-1 gap-4">
-                        <div>
-                          <Label htmlFor="lawyer-email">Email Address *</Label>
-                          <Input
-                            id="lawyer-email"
-                            type="email"
-                            value={lawyerForm.email}
-                            onChange={(e) => handleLawyerFormChange('email', e.target.value)}
-                            placeholder="your.email@lawfirm.com"
-                            required
-                          />
-                        </div>
-                        
-                        <div>
-                          <Label htmlFor="lawyer-name">Full Name *</Label>
-                          <Input
-                            id="lawyer-name"
-                            type="text"
-                            value={lawyerForm.fullName}
-                            onChange={(e) => handleLawyerFormChange('fullName', e.target.value)}
-                            placeholder="John Doe"
-                            required
-                          />
-                        </div>
-                        
-                        <div>
-                          <Label htmlFor="lawyer-firm">Law Firm/Organization</Label>
-                          <Input
-                            id="lawyer-firm"
-                            type="text"
-                            value={lawyerForm.lawFirm}
-                            onChange={(e) => handleLawyerFormChange('lawFirm', e.target.value)}
-                            placeholder="ABC Law Firm"
-                          />
-                        </div>
-                        
-                        <div>
-                          <Label htmlFor="lawyer-specializations">Specializations</Label>
-                          <Input
-                            id="lawyer-specializations"
-                            type="text"
-                            value={lawyerForm.specializations}
-                            onChange={(e) => handleLawyerFormChange('specializations', e.target.value)}
-                            placeholder="Corporate Law, Criminal Defense, etc."
-                          />
-                        </div>
-                        
-                        <div>
-                          <Label htmlFor="lawyer-message">Message/Credentials</Label>
-                          <Textarea
-                            id="lawyer-message"
-                            value={lawyerForm.message}
-                            onChange={(e) => handleLawyerFormChange('message', e.target.value)}
-                            placeholder="Brief description of your experience and why you'd like to join..."
-                            rows={3}
-                          />
-                        </div>
-                      </div>
-                      
-                      <Button 
-                        type="submit"
-                        className="w-full"
-                        disabled={lawyerFormLoading}
-                      >
-                        {lawyerFormLoading ? "Submitting Request..." : "Submit Lawyer Access Request"}
-                      </Button>
-                      
-                      <p className="text-xs text-muted-foreground text-center">
-                        * Required fields. Your request will be reviewed by our admin team.
-                      </p>
-                    </form>
-                  )}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="admin">
-                <div className="space-y-4 mt-6">
-                  <div className="text-center mb-6">
-                    <Lock className="h-8 w-8 mx-auto text-primary mb-2" />
-                    <h3 className="text-lg font-semibold">
-                      {resetMode ? "Set New Password" : "Admin Portal"}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {resetMode 
-                        ? "Create a new password for your admin account" 
-                        : "Enter your admin credentials to access the dashboard"
-                      }
-                    </p>
                   </div>
-                  
-                  {resetMode ? (
-                    <form onSubmit={handleSetNewPassword} className="space-y-4">
-                      <div>
-                        <Label htmlFor="new-password">New Password</Label>
-                        <div className="relative">
-                          <Input
-                            id="new-password"
-                            type={showNewPassword ? "text" : "password"}
-                            value={newPassword}
-                            onChange={(e) => setNewPassword(e.target.value)}
-                            placeholder="Enter new password"
-                            required
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                            onClick={() => setShowNewPassword(!showNewPassword)}
-                          >
-                            {showNewPassword ? (
-                              <EyeOff className="h-4 w-4" />
-                            ) : (
-                              <Eye className="h-4 w-4" />
-                            )}
-                          </Button>
+                </TabsContent>
+
+                <TabsContent value="lawyer">
+                  <div className="space-y-4 mt-6">
+                    <div className="text-center mb-6">
+                      <h3 className="text-lg font-semibold">Request Lawyer Access</h3>
+                      <p className="text-sm text-muted-foreground">Submit your credentials for admin review</p>
+                    </div>
+                    
+                    {lawyerRequestSent ? (
+                      <div className="text-center py-8">
+                        <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <Mail className="h-8 w-8 text-primary" />
                         </div>
+                        <h3 className="text-lg font-semibold mb-2">Request Submitted!</h3>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Your lawyer access request has been sent to our admin team for review.
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          You'll receive an email confirmation once your request is processed.
+                        </p>
                       </div>
-                      <div>
-                        <Label htmlFor="confirm-password">Confirm Password</Label>
-                        <div className="relative">
-                          <Input
-                            id="confirm-password"
-                            type={showConfirmPassword ? "text" : "password"}
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            placeholder="Confirm new password"
-                            required
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          >
-                            {showConfirmPassword ? (
-                              <EyeOff className="h-4 w-4" />
-                            ) : (
-                              <Eye className="h-4 w-4" />
-                            )}
-                          </Button>
+                    ) : (
+                      <form onSubmit={handleLawyerRequest} className="space-y-4">
+                        <div className="grid grid-cols-1 gap-4">
+                          <div>
+                            <Label htmlFor="lawyer-email">Email Address *</Label>
+                            <Input
+                              id="lawyer-email"
+                              type="email"
+                              value={lawyerForm.email}
+                              onChange={(e) => handleLawyerFormChange('email', e.target.value)}
+                              placeholder="your.email@example.com"
+                              required
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="lawyer-name">Full Name *</Label>
+                            <Input
+                              id="lawyer-name"
+                              type="text"
+                              value={lawyerForm.fullName}
+                              onChange={(e) => handleLawyerFormChange('fullName', e.target.value)}
+                              placeholder="John Doe"
+                              required
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="lawyer-firm">Law Firm/Organization</Label>
+                            <Input
+                              id="lawyer-firm"
+                              type="text"
+                              value={lawyerForm.lawFirm}
+                              onChange={(e) => handleLawyerFormChange('lawFirm', e.target.value)}
+                              placeholder="ABC Law Firm"
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="lawyer-specializations">Specializations</Label>
+                            <Input
+                              id="lawyer-specializations"
+                              type="text"
+                              value={lawyerForm.specializations}
+                              onChange={(e) => handleLawyerFormChange('specializations', e.target.value)}
+                              placeholder="Corporate Law, Criminal Defense, etc."
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="lawyer-message">Message/Credentials</Label>
+                            <Textarea
+                              id="lawyer-message"
+                              value={lawyerForm.message}
+                              onChange={(e) => handleLawyerFormChange('message', e.target.value)}
+                              placeholder="Brief description of your experience and why you'd like to join..."
+                              rows={3}
+                            />
+                          </div>
                         </div>
-                      </div>
-                      <Button 
-                        type="submit" 
-                        className="w-full bg-gradient-primary"
-                        disabled={resetLoading}
-                      >
-                        {resetLoading ? "Updating Password..." : "Set New Password"}
-                      </Button>
-                      
-                      <p className="text-xs text-muted-foreground text-center">
-                        Password must be at least 6 characters long
+                        
+                        <Button 
+                          type="submit"
+                          className="w-full"
+                          disabled={lawyerFormLoading}
+                        >
+                          {lawyerFormLoading ? "Submitting Request..." : "Submit Lawyer Access Request"}
+                        </Button>
+                        
+                        <p className="text-xs text-muted-foreground text-center">
+                          * Required fields. Your request will be reviewed by our admin team.
+                        </p>
+                      </form>
+                    )}
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="admin">
+                  <div className="space-y-4 mt-6">
+                    <div className="text-center mb-6">
+                      <Lock className="h-8 w-8 mx-auto text-primary mb-2" />
+                      <h3 className="text-lg font-semibold">Admin Portal</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Enter your admin credentials to access the dashboard
                       </p>
-                    </form>
-                  ) : (
+                    </div>
+                    
                     <form onSubmit={handleAdminSignIn} className="space-y-4">
                       <div>
                         <Label htmlFor="admin-email">Email Address</Label>
@@ -725,19 +758,21 @@ const Auth = () => {
                         Secure admin authentication for authorized personnel only
                       </p>
                     </form>
-                  )}
-                </div>
-              </TabsContent>
-            </Tabs>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            )}
 
-            <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-              <h4 className="font-medium text-sm mb-2">Secure Authentication</h4>
-              <div className="text-xs text-muted-foreground space-y-1">
-                <p>🔒 End-to-end encrypted communication</p>
-                <p>🛡️ OAuth 2.0 security standards</p>
-                <p>⚡ Instant access to legal services</p>
+            {!resetMode && (
+              <div className="mt-6 p-4 bg-muted/50 rounded-lg">
+                <h4 className="font-medium text-sm mb-2">Secure Authentication</h4>
+                <div className="text-xs text-muted-foreground space-y-1">
+                  <p>🔒 End-to-end encrypted communication</p>
+                  <p>🛡️ OAuth 2.0 security standards</p>
+                  <p>⚡ Instant access to legal services</p>
+                </div>
               </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>
