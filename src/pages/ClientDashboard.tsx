@@ -296,12 +296,11 @@ const ClientDashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="details">Personal Details</TabsTrigger>
             <TabsTrigger value="messages">Messages</TabsTrigger>
             <TabsTrigger value="documents" id="documents-tab">Documents</TabsTrigger>
-            <TabsTrigger value="payments">Payments</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
@@ -617,90 +616,6 @@ const ClientDashboard = () => {
                 />
               </CardContent>
             </Card>
-          </TabsContent>
-
-          {/* Payments Tab */}
-          <TabsContent value="payments" className="space-y-6">
-            <div className="grid lg:grid-cols-2 gap-6">
-              <Card className="bg-gradient-card shadow-card">
-                <CardHeader>
-                  <CardTitle>Payment Summary</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {activeCase.consultation_fee && (
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium">Consultation Fee</p>
-                        <p className="text-sm text-muted-foreground">{formatDate(activeCase.created_at)}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-lg">${activeCase.consultation_fee}</p>
-                        <Badge variant="default">Paid</Badge>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {activeCase.remaining_fee && (
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium">Remaining Fee</p>
-                        <p className="text-sm text-muted-foreground">{formatDate(activeCase.created_at)}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-lg">${activeCase.remaining_fee}</p>
-                        <Badge variant="secondary">Authorized</Badge>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {!activeCase.consultation_fee && !activeCase.remaining_fee && (
-                    <div className="text-center text-muted-foreground py-8">
-                      <CreditCard className="h-8 w-8 mx-auto mb-2" />
-                      <p>No payment information available yet.</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gradient-card shadow-card">
-                <CardHeader>
-                  <CardTitle>Payment Protection</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {activeCase.remaining_fee && (
-                      <div className="p-4 bg-success/10 border border-success/20 rounded-lg">
-                        <h4 className="font-medium text-success mb-2">Escrow Protection Active</h4>
-                        <p className="text-sm text-muted-foreground">
-                          Your remaining fee (${activeCase.remaining_fee}) is held in escrow. Funds will be released to the lawyer only after case completion and your approval.
-                        </p>
-                      </div>
-                    )}
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Consultation Fee</span>
-                        <span className={activeCase.consultation_fee ? "text-success" : "text-muted-foreground"}>
-                          {activeCase.consultation_fee ? "✓ Paid" : "Not Set"}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span>Remaining Fee (Escrow)</span>
-                        <span className={activeCase.remaining_fee ? "text-accent" : "text-muted-foreground"}>
-                          {activeCase.remaining_fee ? "⏳ Secured" : "Not Set"}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span>Platform Fee (10%)</span>
-                        <span>Included</span>
-                      </div>
-                    </div>
-                    <Button className="w-full" variant="outline">
-                      Download Invoice
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
           </TabsContent>
         </Tabs>
       </div>
