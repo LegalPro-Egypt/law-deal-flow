@@ -132,61 +132,17 @@ export const LawyerRequestsManager = () => {
     setDeletingId(requestId);
     
     try {
-      const request = requests.find(r => r.id === requestId);
-      if (!request) throw new Error('Request not found');
+      const { error } = await supabase
+        .from('lawyer_requests')
+        .delete()
+        .eq('id', requestId);
 
-      if (request.status === 'approved') {
-        // For approved lawyers, we need to delete everything (profile, auth user, etc.)
-        // First, find the profile to get the user_id
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('email', request.email)
-          .single();
+      if (error) throw error;
 
-        if (profile) {
-          // Use comprehensive deletion function
-          const { error: deleteError } = await supabase.functions.invoke('delete-lawyer-complete', {
-            body: {
-              lawyerId: profile.id,
-              email: request.email
-            }
-          });
-
-          if (deleteError) throw deleteError;
-
-          toast({
-            title: "Lawyer Completely Removed",
-            description: "The approved lawyer and all associated data have been permanently deleted.",
-          });
-        } else {
-          // Profile doesn't exist, just delete the request
-          const { error } = await supabase
-            .from('lawyer_requests')
-            .delete()
-            .eq('id', requestId);
-
-          if (error) throw error;
-
-          toast({
-            title: "Request Deleted",
-            description: "The lawyer request has been successfully deleted.",
-          });
-        }
-      } else {
-        // For pending/rejected requests, just delete the request
-        const { error } = await supabase
-          .from('lawyer_requests')
-          .delete()
-          .eq('id', requestId);
-
-        if (error) throw error;
-
-        toast({
-          title: "Request Deleted",
-          description: "The lawyer request has been successfully deleted.",
-        });
-      }
+      toast({
+        title: "Request Deleted",
+        description: "The lawyer request has been successfully deleted.",
+      });
 
       fetchRequests(); // Refresh the list
     } catch (error: any) {
