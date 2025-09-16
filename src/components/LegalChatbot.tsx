@@ -26,6 +26,7 @@ interface LegalChatbotProps {
   userId?: string;
   caseId?: string;
   onCaseDataExtracted?: (data: CaseData) => void;
+  onCaseCreated?: (caseId: string) => void;
   className?: string;
 }
 
@@ -34,6 +35,7 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = ({
   userId,
   caseId,
   onCaseDataExtracted,
+  onCaseCreated,
   className
 }) => {
   const [inputMessage, setInputMessage] = useState('');
@@ -54,6 +56,7 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = ({
     switchMode,
     setLanguage,
     setPersonalDetailsCompleted,
+    caseId: hookCaseId,
   } = useLegalChatbot(initialMode);
 
   // Initialize conversation on mount
@@ -82,6 +85,13 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = ({
       onCaseDataExtracted(dataWithNeedsPersonalDetails);
     }
   }, [extractedData, needsPersonalDetails, onCaseDataExtracted]);
+
+  // Notify parent when a case is created/linked
+  useEffect(() => {
+    if (hookCaseId && onCaseCreated) {
+      onCaseCreated(hookCaseId);
+    }
+  }, [hookCaseId, onCaseCreated]);
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;

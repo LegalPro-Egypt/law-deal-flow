@@ -154,9 +154,15 @@ serve(async (req) => {
     console.log('OpenAI Response:', openAIData);
 
     let aiResponse = openAIData.choices[0].message.content;
+    if (!aiResponse) {
+      aiResponse = language === 'ar'
+        ? 'تم استلام معلوماتك. سأقوم الآن بطرح بعض الأسئلة لتوضيح التفاصيل.'
+        : language === 'de'
+        ? 'Ihre Informationen wurden empfangen. Ich stelle nun einige Fragen, um Details zu klären.'
+        : 'Thanks, I will now ask a few questions to clarify the details.';
+    }
     let extractedData: CaseData = {};
     let nextQuestions: string[] = [];
-
     // Handle function calls in intake mode
     if (openAIData.choices[0].message.function_call && mode === 'intake') {
       const functionCall = openAIData.choices[0].message.function_call;
@@ -173,47 +179,62 @@ serve(async (req) => {
               // Get conversation to check if it already has a case linked
               const { data: conversation } = await supabase
                 .from('conversations')
-                .select('case_id, user_id')
+                .select('case_id, user_id, metadata')
                 .eq('id', conversationId)
                 .single();
 
               let caseId = conversation?.case_id;
 
               if (!caseId) {
-                // Create new draft case
-                const { data: newCase, error: caseError } = await supabase
-                  .from('cases')
-                  .insert({
-                    user_id: conversation?.user_id,
-                    title: extractedData.category || 'Draft Case',
-                    description: 'Case created from AI intake conversation',
-                    category: extractedData.category || 'General',
-                    subcategory: extractedData.subcategory,
-                    urgency: extractedData.urgency || 'medium',  
-                    status: 'draft',
-                    step: 1,
-                    language: language || 'en',
-                    jurisdiction: 'egypt',
-                    extracted_entities: extractedData.entities || {},
-                    draft_data: {
-                      extractedData,
+                if (!conversation?.user_id) {
+                  // Anonymous conversation: store draft in conversation metadata instead of creating a case
+                  const newMeta = {
+                    ...(conversation?.metadata || {}),
+                    extractedData,
+                    draft: {
                       currentStep: 1,
                       lastUpdated: new Date().toISOString()
                     }
-                  })
-                  .select()
-                  .single();
-
-                if (caseError) {
-                  console.error('Error creating draft case:', caseError);
-                } else {
-                  caseId = newCase.id;
-                  
-                  // Link conversation to the case
+                  };
                   await supabase
                     .from('conversations')
-                    .update({ case_id: caseId })
+                    .update({ metadata: newMeta })
                     .eq('id', conversationId);
+                } else {
+                  // Authenticated user: create new draft case
+                  const { data: newCase, error: caseError } = await supabase
+                    .from('cases')
+                    .insert({
+                      user_id: conversation.user_id,
+                      title: extractedData.category || 'Draft Case',
+                      description: 'Case created from AI intake conversation',
+                      category: extractedData.category || 'General',
+                      subcategory: extractedData.subcategory,
+                      urgency: extractedData.urgency || 'medium',
+                      status: 'draft',
+                      step: 1,
+                      language: language || 'en',
+                      jurisdiction: 'egypt',
+                      extracted_entities: extractedData.entities || {},
+                      draft_data: {
+                        extractedData,
+                        currentStep: 1,
+                        lastUpdated: new Date().toISOString()
+                      }
+                    })
+                    .select()
+                    .single();
+
+                  if (caseError) {
+                    console.error('Error creating draft case:', caseError);
+                  } else {
+                    caseId = newCase.id;
+                    // Link conversation to the case
+                    await supabase
+                      .from('conversations')
+                      .update({ case_id: caseId })
+                      .eq('id', conversationId);
+                  }
                 }
               } else {
                 // Update existing draft case

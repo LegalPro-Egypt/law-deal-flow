@@ -12,7 +12,6 @@ import { AuthenticationPrompt } from "@/components/AuthenticationPrompt";
 import { PersonalDetailsForm, PersonalDetailsData } from "@/components/PersonalDetailsForm";
 import DocumentUpload from "@/components/DocumentUpload";
 import { useAuth } from "@/hooks/useAuth";
-import { useLegalChatbot } from "@/hooks/useLegalChatbot";
 import { supabase } from "@/integrations/supabase/client";
 
 const Intake = () => {
@@ -24,7 +23,7 @@ const Intake = () => {
   const [showPersonalForm, setShowPersonalForm] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
-  const { caseId } = useLegalChatbot();
+  const [caseId, setCaseId] = useState<string | null>(null);
 
   const handleCaseDataExtracted = (data: any) => {
     setExtractedCaseData(data);
@@ -244,7 +243,9 @@ const Intake = () => {
           <div className="flex flex-col h-[calc(100vh-280px)] sm:h-[calc(100vh-320px)] min-h-[400px] max-h-[600px]">
             <LegalChatbot 
               mode="intake"
+              userId={user?.id}
               onCaseDataExtracted={handleCaseDataExtracted}
+              onCaseCreated={(id) => setCaseId(id)}
               className="flex-1"
             />
             
