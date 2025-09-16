@@ -33,6 +33,51 @@ const handler = async (req: Request): Promise<Response> => {
     const origin = req.headers.get('origin') || 'https://yourapp.com';
     const signinLink = `${origin}/auth`;
 
+    // Create Supabase admin client
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    if (approved) {
+      // Create user account for approved lawyer
+      console.log('Creating user account for approved lawyer:', email);
+      
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email: email,
+        email_confirm: true,
+        user_metadata: {
+          full_name: lawyerName,
+          role: 'lawyer'
+        }
+      });
+
+      if (authError) {
+        console.error('Error creating user account:', authError);
+        // Continue with email sending even if user creation fails
+      } else {
+        console.log('User account created successfully:', authData.user?.id);
+        
+        // Create profile for the lawyer
+        if (authData.user) {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              user_id: authData.user.id,
+              email: email,
+              first_name: lawyerName.split(' ')[0] || '',
+              last_name: lawyerName.split(' ').slice(1).join(' ') || '',
+              role: 'lawyer',
+              is_verified: true,
+              is_active: true
+            });
+
+          if (profileError) {
+            console.error('Error creating profile:', profileError);
+          } else {
+            console.log('Profile created successfully for lawyer');
+          }
+        }
+      }
+    }
+
     if (approved) {
       // Send approval notification
       const emailResponse = await resend.emails.send({
@@ -44,18 +89,30 @@ const handler = async (req: Request): Promise<Response> => {
             <h1 style="color: #1a365d; margin-bottom: 24px;">Congratulations, ${lawyerName}!</h1>
             
             <p style="color: #4a5568; font-size: 16px; line-height: 1.5; margin-bottom: 24px;">
-              Your lawyer account has been approved and you can now access the LegalConnect platform to start receiving and handling cases.
+              Your lawyer account has been approved and your user account has been created! You can now access the LegalConnect platform to start receiving and handling cases.
             </p>
             
             <div style="background-color: #f0fff4; padding: 20px; border-radius: 8px; margin-bottom: 24px; border-left: 4px solid #38a169;">
-              <h2 style="color: #276749; margin-bottom: 16px; font-size: 18px;">✅ Account Approved</h2>
-              <p style="color: #2d3748; margin-bottom: 8px;">You now have access to:</p>
+              <h2 style="color: #276749; margin-bottom: 16px; font-size: 18px;">✅ Account Created & Approved</h2>
+              <p style="color: #2d3748; margin-bottom: 8px;"><strong>Your email:</strong> ${email}</p>
+              <p style="color: #2d3748; margin-bottom: 16px;">You now have access to:</p>
               <ul style="color: #2d3748; padding-left: 20px;">
                 <li style="margin-bottom: 8px;">Lawyer dashboard with case management</li>
                 <li style="margin-bottom: 8px;">Direct communication with clients</li>
                 <li style="margin-bottom: 8px;">Case assignment notifications</li>
                 <li>Professional profile management</li>
               </ul>
+            </div>
+
+            <div style="background-color: #fffbf0; padding: 20px; border-radius: 8px; margin-bottom: 24px; border-left: 4px solid #f6ad55;">
+              <h3 style="color: #c05621; margin-bottom: 12px; font-size: 16px;">🔑 First Time Login Instructions</h3>
+              <p style="color: #2d3748; margin-bottom: 12px;">Since this is your first time logging in:</p>
+              <ol style="color: #2d3748; padding-left: 20px;">
+                <li style="margin-bottom: 8px;">Click the "Sign In to Your Dashboard" button below</li>
+                <li style="margin-bottom: 8px;">Click on "Lawyer" tab, then "Forgot Password?"</li>
+                <li style="margin-bottom: 8px;">Enter your email (${email}) to receive a password reset link</li>
+                <li>Create your password and access your lawyer dashboard</li>
+              </ol>
             </div>
             
             ${reviewNotes ? `

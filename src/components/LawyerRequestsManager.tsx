@@ -59,7 +59,13 @@ export const LawyerRequestsManager = () => {
     
     try {
       const { data: { user } } = await supabase.auth.getUser();
+      const request = requests.find(r => r.id === requestId);
       
+      if (!request) {
+        throw new Error('Request not found');
+      }
+
+      // Update the database first
       const { error } = await supabase
         .from('lawyer_requests')
         .update({
@@ -72,10 +78,40 @@ export const LawyerRequestsManager = () => {
 
       if (error) throw error;
 
-      toast({
-        title: `Request ${status}`,
-        description: `The lawyer request has been ${status}.`,
-      });
+      // Send approval/rejection email and create user account if approved
+      try {
+        const { error: emailError } = await supabase.functions.invoke('send-lawyer-approval', {
+          body: {
+            email: request.email,
+            lawyerName: request.full_name,
+            approved: status === 'approved',
+            reviewNotes: reviewNotes[requestId] || undefined,
+          }
+        });
+
+        if (emailError) {
+          console.error('Error sending notification email:', emailError);
+          toast({
+            title: "Partial Success",
+            description: `Request ${status} but failed to send notification email. The lawyer has been ${status} in the system.`,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: `Request ${status}`,
+            description: status === 'approved' 
+              ? `The lawyer request has been approved. User account created and notification email sent to ${request.email}.`
+              : `The lawyer request has been rejected and notification email sent.`,
+          });
+        }
+      } catch (emailError) {
+        console.error('Email sending failed:', emailError);
+        toast({
+          title: "Partial Success",
+          description: `Request ${status} but notification email failed. The lawyer has been ${status} in the system.`,
+          variant: "destructive",
+        });
+      }
 
       fetchRequests(); // Refresh the list
     } catch (error: any) {
