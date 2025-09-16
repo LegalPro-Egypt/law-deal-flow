@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChevronDown, Plus, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -71,14 +70,14 @@ const CaseSelector = ({ cases, activeCase, onCaseSelect }: CaseSelectorProps) =>
           <div className="flex items-center justify-between">
             <h4 className="font-medium">Your Cases ({cases.length})</h4>
             <Button size="sm" asChild>
-              <Link to="/intake">
+              <Link to="/intake?new=1">
                 <Plus className="h-4 w-4 mr-1" />
                 New
               </Link>
             </Button>
           </div>
         </div>
-        <ScrollArea className="max-h-64">
+        <div className="max-h-80 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
           <div className="p-2">
             {cases.map((caseItem) => (
               <Button
@@ -110,7 +109,7 @@ const CaseSelector = ({ cases, activeCase, onCaseSelect }: CaseSelectorProps) =>
               </Button>
             ))}
           </div>
-        </ScrollArea>
+        </div>
       </PopoverContent>
     </Popover>
   );
