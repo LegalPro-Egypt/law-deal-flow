@@ -74,18 +74,20 @@ export type Database = {
           assigned_lawyer_id: string | null
           case_number: string
           category: string
-          client_email: string
-          client_name: string
+          client_email: string | null
+          client_name: string | null
           client_phone: string | null
           consultation_fee: number | null
           created_at: string
           description: string | null
+          draft_data: Json | null
           extracted_entities: Json | null
           id: string
           jurisdiction: string
           language: string
           remaining_fee: number | null
           status: string
+          step: number | null
           subcategory: string | null
           title: string
           total_fee: number | null
@@ -99,18 +101,20 @@ export type Database = {
           assigned_lawyer_id?: string | null
           case_number?: string
           category: string
-          client_email: string
-          client_name: string
+          client_email?: string | null
+          client_name?: string | null
           client_phone?: string | null
           consultation_fee?: number | null
           created_at?: string
           description?: string | null
+          draft_data?: Json | null
           extracted_entities?: Json | null
           id?: string
           jurisdiction?: string
           language?: string
           remaining_fee?: number | null
           status?: string
+          step?: number | null
           subcategory?: string | null
           title: string
           total_fee?: number | null
@@ -124,18 +128,20 @@ export type Database = {
           assigned_lawyer_id?: string | null
           case_number?: string
           category?: string
-          client_email?: string
-          client_name?: string
+          client_email?: string | null
+          client_name?: string | null
           client_phone?: string | null
           consultation_fee?: number | null
           created_at?: string
           description?: string | null
+          draft_data?: Json | null
           extracted_entities?: Json | null
           id?: string
           jurisdiction?: string
           language?: string
           remaining_fee?: number | null
           status?: string
+          step?: number | null
           subcategory?: string | null
           title?: string
           total_fee?: number | null
