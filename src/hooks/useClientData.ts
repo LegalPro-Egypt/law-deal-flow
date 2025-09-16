@@ -59,11 +59,18 @@ export const useClientData = () => {
   const [messages, setMessages] = useState<ClientMessage[]>([]);
   const [documents, setDocuments] = useState<ClientDocument[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchingCases, setFetchingCases] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
 
   const fetchCases = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('useClientData: No user available for fetching cases');
+      return;
+    }
+    
+    console.log('useClientData: Fetching cases for user:', user.id);
+    setFetchingCases(true);
     
     try {
       const { data, error } = await supabase
@@ -79,17 +86,25 @@ export const useClientData = () => {
         assigned_lawyer: null as any // Will fetch separately if needed
       }));
       
+      console.log('useClientData: Fetched cases:', casesData.length, casesData);
       setCases(casesData);
+      
       if (casesData.length > 0) {
+        console.log('useClientData: Setting active case:', casesData[0].id);
         setActiveCase(casesData[0]);
+      } else {
+        console.log('useClientData: No cases found');
+        setActiveCase(null);
       }
     } catch (error) {
-      console.error('Error fetching cases:', error);
+      console.error('useClientData: Error fetching cases:', error);
       toast({
         title: "Error",
-        description: "Failed to fetch cases",
+        description: "Failed to fetch cases. Click refresh to try again.",
         variant: "destructive"
       });
+    } finally {
+      setFetchingCases(false);
     }
   };
 
@@ -201,8 +216,16 @@ export const useClientData = () => {
   useEffect(() => {
     const loadData = async () => {
       if (user) {
+        console.log('useClientData: User authenticated, loading data...');
         setLoading(true);
         await fetchCases();
+        setLoading(false);
+      } else {
+        console.log('useClientData: No user, resetting state');
+        setCases([]);
+        setActiveCase(null);
+        setMessages([]);
+        setDocuments([]);
         setLoading(false);
       }
     };
@@ -258,15 +281,25 @@ export const useClientData = () => {
     };
   }, [user, activeCase]);
 
+  const refreshData = async () => {
+    console.log('useClientData: Manual refresh triggered');
+    if (user) {
+      setLoading(true);
+      await fetchCases();
+      setLoading(false);
+    }
+  };
+
   return {
     cases,
     activeCase,
     messages,
     documents,
     loading,
+    fetchingCases,
     setActiveCase,
     sendMessage,
-    refreshData: fetchCases,
+    refreshData,
     continueDraftCase
   };
 };

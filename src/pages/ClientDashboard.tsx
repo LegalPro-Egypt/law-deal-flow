@@ -48,10 +48,11 @@ const ClientDashboard = () => {
     activeCase, 
     messages, 
     documents, 
-    loading, 
+    loading,
+    fetchingCases,
     setActiveCase, 
     sendMessage,
-    refreshData: fetchCases
+    refreshData
   } = useClientData();
 
   const handleDeleteDraftCase = async () => {
@@ -72,7 +73,7 @@ const ClientDashboard = () => {
       });
 
       // Refresh the cases list
-      await fetchCases();
+      await refreshData();
     } catch (error) {
       console.error('Error deleting case:', error);
       toast({
@@ -344,9 +345,19 @@ const ClientDashboard = () => {
               <p className="text-muted-foreground mb-4">
                 You don't have any active legal cases yet.
               </p>
-              <Button asChild>
-                <Link to="/intake">Start New Case</Link>
-              </Button>
+              <div className="space-y-2">
+                <Button asChild>
+                  <Link to="/intake">Start New Case</Link>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={refreshData}
+                  disabled={fetchingCases}
+                  className="w-full"
+                >
+                  {fetchingCases ? "Refreshing..." : "Refresh Cases"}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -829,6 +840,7 @@ const ClientDashboard = () => {
                     console.log('Files uploaded:', files);
                     // Documents will be refreshed via realtime subscription
                   }}
+                  onRefreshRequested={refreshData}
                 />
               </CardContent>
             </Card>

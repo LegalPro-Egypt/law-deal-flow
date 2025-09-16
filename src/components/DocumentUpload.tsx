@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
@@ -36,13 +36,53 @@ interface DocumentUploadProps {
     file_url: string;
     document_category?: string;
   }>;
+  onRefreshRequested?: () => void;
 }
 
-const DocumentUpload: React.FC<DocumentUploadProps> = ({ onFilesUploaded, onCompletionChange, caseId, existingDocuments = [] }) => {
+const DocumentUpload: React.FC<DocumentUploadProps> = ({ 
+  onFilesUploaded, 
+  onCompletionChange, 
+  caseId, 
+  existingDocuments = [],
+  onRefreshRequested
+}) => {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
   const [isUploading, setIsUploading] = useState<Record<string, boolean>>({});
   const isMobile = useIsMobile();
+
+  // Show loading state or case not ready message
+  if (!caseId) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Upload className="h-5 w-5" />
+            Document Upload
+          </CardTitle>
+          <CardDescription>
+            Upload your legal documents
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8 space-y-4">
+            <AlertCircle className="h-12 w-12 mx-auto text-muted-foreground" />
+            <div>
+              <h3 className="font-medium">Case Not Ready</h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                Your case is still being loaded. Please wait a moment.
+              </p>
+            </div>
+            {onRefreshRequested && (
+              <Button variant="outline" onClick={onRefreshRequested}>
+                Refresh Cases
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const categories: DocumentCategory[] = [
     {
@@ -222,8 +262,13 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onFilesUploaded, onComp
     if (!caseId) {
       toast({
         title: "Case not ready",
-        description: "Please continue the AI chat until a draft case is created, then try again.",
+        description: "Your case is still loading. Please wait a moment and try refreshing if the issue persists.",
         variant: "destructive",
+        action: onRefreshRequested ? (
+          <Button variant="outline" size="sm" onClick={onRefreshRequested}>
+            Refresh
+          </Button>
+        ) : undefined,
       });
       return;
     }
@@ -282,13 +327,6 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onFilesUploaded, onComp
 
   return (
     <div className="space-y-6">
-      {!caseId && (
-        <Card className="p-4 bg-muted/50">
-          <div className="text-sm">
-            A draft case hasn't been created yet. Please complete the AI chat step to initialize your case before uploading documents.
-          </div>
-        </Card>
-      )}
       {/* Document Categories */}
       <div className="grid md:grid-cols-2 gap-4">
         {categories.map((category) => {
@@ -457,10 +495,10 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onFilesUploaded, onComp
               const allRequired = requiredCategories.length === completedCategories.length;
               
               return (
-                <div className={`mt-3 p-2 rounded ${allRequired ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'}`}>
+                <div className="flex items-center space-x-2 mt-3 pt-3 border-t">
                   <div className="flex items-center space-x-2">
                     {allRequired ? (
-                      <CheckCircle className="h-4 w-4" />
+                      <CheckCircle className="h-4 w-4 text-green-600" />
                     ) : (
                       <AlertCircle className="h-4 w-4" />
                     )}
