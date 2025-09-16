@@ -74,6 +74,8 @@ const AdminDashboard = () => {
   const [showLawyerDetails, setShowLawyerDetails] = useState(false);
   const [cardUrls, setCardUrls] = useState<Record<string, { front?: string; back?: string }>>({});
   const [expandedLawyers, setExpandedLawyers] = useState<Set<string>>(new Set());
+  const [lawyerToDelete, setLawyerToDelete] = useState<string | null>(null);
+  const [showLawyerDeleteConfirm, setShowLawyerDeleteConfirm] = useState(false);
 
   useEffect(() => {
     fetchAllLawyers();
@@ -267,6 +269,40 @@ const AdminDashboard = () => {
       newExpanded.add(lawyerId);
     }
     setExpandedLawyers(newExpanded);
+  };
+
+  const handleDeleteLawyer = (lawyerId: string) => {
+    setLawyerToDelete(lawyerId);
+    setShowLawyerDeleteConfirm(true);
+  };
+
+  const confirmDeleteLawyer = async () => {
+    if (!lawyerToDelete) return;
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', lawyerToDelete);
+
+      if (error) throw error;
+      
+      toast({
+        title: "Lawyer Deleted",
+        description: "The lawyer has been permanently deleted",
+      });
+      
+      await fetchAllLawyers();
+      await refreshData();
+      setShowLawyerDeleteConfirm(false);
+      setLawyerToDelete(null);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to delete lawyer: " + error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   const confirmDenyCase = async () => {
@@ -803,6 +839,15 @@ const AdminDashboard = () => {
                               View Details & Q&A History
                             </Button>
                           )}
+                          <Button 
+                            size="sm" 
+                            variant="destructive" 
+                            className="justify-start"
+                            onClick={() => handleDeleteLawyer(lawyer.id)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete Lawyer
+                          </Button>
                           <div className="text-xs text-muted-foreground">
                             Joined: {formatDate(lawyer.created_at)}
                           </div>
@@ -1082,6 +1127,25 @@ const AdminDashboard = () => {
               </AlertDialogCancel>
               <Button variant="destructive" onClick={confirmDeleteCase}>
                 Delete Permanently
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={showLawyerDeleteConfirm} onOpenChange={setShowLawyerDeleteConfirm}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Lawyer</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to permanently delete this lawyer? This will remove all their data and cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setLawyerToDelete(null)}>
+                Cancel
+              </AlertDialogCancel>
+              <Button variant="destructive" onClick={confirmDeleteLawyer}>
+                Delete Lawyer
               </Button>
             </AlertDialogFooter>
           </AlertDialogContent>
