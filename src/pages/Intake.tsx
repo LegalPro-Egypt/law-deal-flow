@@ -318,11 +318,11 @@ const Intake = () => {
     }
 
     try {
-      // Update case status to pending_review
+      // Update case status to submitted (for admin review)
       const { error } = await supabase
         .from('cases')
         .update({ 
-          status: 'pending_review',
+          status: 'submitted',
           updated_at: new Date().toISOString()
         })
         .eq('id', caseId);

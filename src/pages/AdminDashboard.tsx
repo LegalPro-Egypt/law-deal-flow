@@ -309,20 +309,20 @@ const AdminDashboard = () => {
               <div className="grid gap-4">
                 {cases
                   .sort((a, b) => {
-                    // Priority: pending_review cases first
-                    if (a.status === 'pending_review' && b.status !== 'pending_review') return -1;
-                    if (a.status !== 'pending_review' && b.status === 'pending_review') return 1;
+                    // Priority: submitted cases (pending review) first
+                    if (a.status === 'submitted' && b.status !== 'submitted') return -1;
+                    if (a.status !== 'submitted' && b.status === 'submitted') return 1;
                     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
                   })
                   .map((caseItem) => (
                   <Card 
                     key={caseItem.id} 
                     className={`bg-gradient-card shadow-card ${
-                      caseItem.status === 'pending_review' ? 'border-primary border-2' : ''
+                      caseItem.status === 'submitted' ? 'border-primary border-2' : ''
                     }`}
                   >
                     <CardContent className="p-6">
-                      {caseItem.status === 'pending_review' && (
+                      {caseItem.status === 'submitted' && (
                         <div className="mb-4">
                           <Badge className="bg-primary text-primary-foreground">
                             <AlertCircle className="h-3 w-3 mr-1" />
@@ -354,7 +354,7 @@ const AdminDashboard = () => {
                           <div className="space-y-1 text-xs">
                             <p><span className="font-medium">Category:</span> {caseItem.category}</p>
                             <p><span className="font-medium">Status:</span> {
-                              caseItem.status === 'pending_review' ? 'Under Review' : caseItem.status.replace('_', ' ')
+                              caseItem.status === 'submitted' ? 'Under Review' : caseItem.status.replace('_', ' ')
                             }</p>
                             <p><span className="font-medium">Email:</span> {caseItem.client_email}</p>
                           </div>

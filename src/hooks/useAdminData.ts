@@ -73,11 +73,11 @@ export const useAdminData = () => {
         .eq('mode', 'intake')
         .eq('status', 'active');
 
-      // Get pending review cases
+      // Get pending review cases (submitted status)
       const { count: pendingReviews } = await supabase
         .from('cases')
         .select('*', { count: 'exact', head: true })
-        .eq('status', 'pending_review');
+        .eq('status', 'submitted');
 
       // Get total lawyers from profiles
       const { count: totalLawyers } = await supabase
@@ -187,7 +187,7 @@ export const useAdminData = () => {
           client_name: metadata.client_name || 'Client Name',
           client_email: metadata.client_email || 'client@example.com',
           language: conversation.language,
-          status: 'pending_review',
+          status: 'submitted',
           ai_summary: metadata.ai_summary,
           extracted_entities: metadata.extracted_entities || {}
         })
