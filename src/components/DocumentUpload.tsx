@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Upload, File, X, CheckCircle } from 'lucide-react';
+import { Upload, File, X, CheckCircle, AlertCircle } from 'lucide-react';
 
 interface UploadedFile {
   name: string;
@@ -263,12 +263,27 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onFilesUploaded, caseId
           const hasFiles = categoryFiles.length > 0;
           
           return (
-            <Card key={category.id} className="p-4">
+            <Card key={category.id} className={`p-4 ${hasFiles && category.required ? 'border-green-500 bg-green-50/50' : category.required ? 'border-orange-400 bg-orange-50/20' : ''}`}>
               <div className="flex items-center justify-between mb-3">
-                <h4 className="font-medium">{category.title}</h4>
-                <Badge variant={category.required ? "default" : "secondary"}>
-                  {category.required ? "Required" : "Optional"}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <h4 className="font-medium">{category.title}</h4>
+                  {hasFiles && category.required && (
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant={hasFiles && category.required ? "default" : category.required ? "destructive" : "secondary"}>
+                    {category.required 
+                      ? (hasFiles ? "Completed" : "Required") 
+                      : "Optional"
+                    }
+                  </Badge>
+                  {hasFiles && (
+                    <Badge variant="outline" className="text-xs">
+                      {categoryFiles.length} file{categoryFiles.length !== 1 ? 's' : ''}
+                    </Badge>
+                  )}
+                </div>
               </div>
               
               <div className="space-y-3">
@@ -351,17 +366,71 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onFilesUploaded, caseId
         </div>
       ))}
 
-      {/* Upload Summary */}
-      {uploadedFiles.length > 0 && (
-        <Card className="p-4 bg-muted/50">
-          <div className="flex items-center space-x-2">
-            <CheckCircle className="h-5 w-5 text-green-600" />
-            <span className="font-medium">
-              {uploadedFiles.length} file{uploadedFiles.length !== 1 ? 's' : ''} uploaded successfully
-            </span>
+      {/* Upload Summary & Requirements Status */}
+      <Card className="p-4 bg-muted/50">
+        <div className="space-y-3">
+          {uploadedFiles.length > 0 && (
+            <div className="flex items-center space-x-2">
+              <CheckCircle className="h-5 w-5 text-green-600" />
+              <span className="font-medium">
+                {uploadedFiles.length} file{uploadedFiles.length !== 1 ? 's' : ''} uploaded successfully
+              </span>
+            </div>
+          )}
+          
+          {/* Requirements Checklist */}
+          <div>
+            <h4 className="font-medium mb-2">Document Requirements:</h4>
+            {categories.filter(cat => cat.required).map((category) => {
+              const categoryFiles = getCategoryFiles(category.id);
+              const isCompleted = categoryFiles.length > 0;
+              
+              return (
+                <div key={category.id} className="flex items-center justify-between py-1">
+                  <div className="flex items-center space-x-2">
+                    {isCompleted ? (
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <div className="h-4 w-4 rounded-full border-2 border-orange-400" />
+                    )}
+                    <span className={`text-sm ${isCompleted ? 'text-green-700' : 'text-orange-700'}`}>
+                      {category.title}
+                    </span>
+                  </div>
+                  <Badge variant={isCompleted ? "default" : "destructive"} className="text-xs">
+                    {isCompleted ? `${categoryFiles.length} uploaded` : "Missing"}
+                  </Badge>
+                </div>
+              );
+            })}
+            
+            {/* Overall Status */}
+            {(() => {
+              const requiredCategories = categories.filter(cat => cat.required);
+              const completedCategories = requiredCategories.filter(cat => getCategoryFiles(cat.id).length > 0);
+              const allRequired = requiredCategories.length === completedCategories.length;
+              
+              return (
+                <div className={`mt-3 p-2 rounded ${allRequired ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'}`}>
+                  <div className="flex items-center space-x-2">
+                    {allRequired ? (
+                      <CheckCircle className="h-4 w-4" />
+                    ) : (
+                      <AlertCircle className="h-4 w-4" />
+                    )}
+                    <span className="text-sm font-medium">
+                      {allRequired 
+                        ? "All required documents uploaded!" 
+                        : `${requiredCategories.length - completedCategories.length} required document${requiredCategories.length - completedCategories.length !== 1 ? 's' : ''} missing`
+                      }
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
-        </Card>
-      )}
+        </div>
+      </Card>
     </div>
   );
 };
