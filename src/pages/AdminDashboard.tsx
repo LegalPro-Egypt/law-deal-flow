@@ -32,7 +32,7 @@ import { ConversationDialog } from "@/components/ConversationDialog";
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { stats, pendingIntakes, cases, loading, createCaseFromIntake, refreshData } = useAdminData();
+  const { stats, pendingIntakes, cases, loading, createCaseFromIntake, cleanupAnonymousIntakes, refreshData } = useAdminData();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
@@ -73,6 +73,14 @@ const AdminDashboard = () => {
   const handleViewCaseDetails = (caseId: string) => {
     setSelectedCaseId(caseId);
     setShowCaseDetails(true);
+  };
+
+  const handleCleanupIntakes = async () => {
+    try {
+      await cleanupAnonymousIntakes();
+    } catch (error) {
+      // Error handling is done in the hook
+    }
   };
 
   const getUrgencyColor = (urgency: string) => {
@@ -215,6 +223,15 @@ const AdminDashboard = () => {
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold">AI Intake Conversations</h2>
               <div className="flex items-center space-x-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleCleanupIntakes}
+                  className="text-muted-foreground hover:text-destructive"
+                >
+                  <AlertCircle className="h-4 w-4 mr-2" />
+                  Cleanup Anonymous
+                </Button>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input 

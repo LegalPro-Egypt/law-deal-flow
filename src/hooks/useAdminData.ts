@@ -66,12 +66,14 @@ export const useAdminData = () => {
         .select('*', { count: 'exact', head: true })
         .neq('status', 'draft');
 
-      // Get pending intake conversations (mode=intake, status=active)
+      // Get pending intake conversations (mode=intake, status=active, with user_id - actionable ones only)
       const { count: pendingIntakes } = await supabase
         .from('conversations')
         .select('*', { count: 'exact', head: true })
         .eq('mode', 'intake')
-        .eq('status', 'active');
+        .eq('status', 'active')
+        .not('user_id', 'is', null)
+        .is('case_id', null);
 
       // Get pending review cases (submitted status)
       const { count: pendingReviews } = await supabase
@@ -114,6 +116,8 @@ export const useAdminData = () => {
           language,
           status,
           metadata,
+          user_id,
+          case_id,
           messages (
             role,
             content,
@@ -122,6 +126,8 @@ export const useAdminData = () => {
         `)
         .eq('mode', 'intake')
         .eq('status', 'active')
+        .not('user_id', 'is', null)
+        .is('case_id', null)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -235,6 +241,36 @@ export const useAdminData = () => {
     }
   };
 
+  const cleanupAnonymousIntakes = async () => {
+    try {
+      // Mark all anonymous intakes (no user_id) as completed to clear them from pending list
+      const { error } = await supabase
+        .from('conversations')
+        .update({ status: 'completed' })
+        .eq('mode', 'intake')
+        .eq('status', 'active')
+        .is('user_id', null);
+
+      if (error) throw error;
+
+      // Refresh data to reflect changes
+      await Promise.all([fetchAdminStats(), fetchPendingIntakes(), fetchCases()]);
+
+      toast({
+        title: "Success",
+        description: "Anonymous test intakes have been cleaned up",
+      });
+    } catch (error: any) {
+      console.error('Error cleaning up anonymous intakes:', error);
+      toast({
+        title: "Error",
+        description: `Failed to cleanup intakes: ${error.message}`,
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -255,6 +291,7 @@ export const useAdminData = () => {
     cases,
     loading,
     createCaseFromIntake,
+    cleanupAnonymousIntakes,
     refreshData: () => Promise.all([fetchAdminStats(), fetchPendingIntakes(), fetchCases()])
   };
 };
