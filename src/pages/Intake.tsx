@@ -23,6 +23,7 @@ const Intake = () => {
   const { user } = useAuth();
   const [caseId, setCaseId] = useState<string | null>(null);
   const [documentsComplete, setDocumentsComplete] = useState(false);
+  const [documents, setDocuments] = useState<any[]>([]);
 
   const handleCaseDataExtracted = (data: any) => {
     setExtractedCaseData(data);
@@ -44,6 +45,29 @@ const Intake = () => {
   };
 
   // Load existing draft case on mount
+  useEffect(() => {
+    if (caseId) {
+      fetchDocuments();
+    }
+  }, [caseId]);
+
+  const fetchDocuments = async () => {
+    if (!caseId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('documents')
+        .select('id, file_name, file_size, file_type, file_url, document_category, uploaded_by, created_at, case_id')
+        .eq('case_id', caseId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setDocuments(data || []);
+    } catch (error) {
+      console.error('Error fetching documents:', error);
+    }
+  };
+
   useEffect(() => {
     const loadDraftCase = async () => {
       if (!user) {
@@ -300,8 +324,9 @@ const Intake = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <DocumentUpload 
+              <DocumentUpload
                 caseId={caseId}
+                existingDocuments={documents}
                 onFilesUploaded={(files) => {
                   console.log('Files uploaded:', files);
                 }}

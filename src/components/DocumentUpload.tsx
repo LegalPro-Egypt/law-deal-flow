@@ -27,9 +27,16 @@ interface DocumentUploadProps {
   onFilesUploaded?: (files: UploadedFile[]) => void;
   onCompletionChange?: (isComplete: boolean) => void;
   caseId?: string;
+  existingDocuments?: Array<{
+    id: string;
+    file_name: string;
+    file_size: number;
+    file_url: string;
+    document_category?: string;
+  }>;
 }
 
-const DocumentUpload: React.FC<DocumentUploadProps> = ({ onFilesUploaded, onCompletionChange, caseId }) => {
+const DocumentUpload: React.FC<DocumentUploadProps> = ({ onFilesUploaded, onCompletionChange, caseId, existingDocuments = [] }) => {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
   const [isUploading, setIsUploading] = useState<Record<string, boolean>>({});
@@ -247,6 +254,19 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onFilesUploaded, onComp
   const getCategoryFiles = (categoryId: string) => {
     return uploadedFiles.filter(file => file.category === categoryId);
   };
+
+  // Initialize with existing documents
+  useEffect(() => {
+    if (existingDocuments.length > 0) {
+      const formattedExisting = existingDocuments.map(doc => ({
+        name: doc.file_name,
+        size: doc.file_size,
+        url: doc.file_url,
+        category: doc.document_category || 'case'
+      }));
+      setUploadedFiles(formattedExisting);
+    }
+  }, [existingDocuments]);
 
   // Check completion status and notify parent
   useEffect(() => {

@@ -36,7 +36,8 @@ const ClientDashboard = () => {
     documents, 
     loading, 
     setActiveCase, 
-    sendMessage 
+    sendMessage,
+    refreshData: fetchCases
   } = useClientData();
 
   const handleDeleteDraftCase = async () => {
@@ -56,8 +57,8 @@ const ClientDashboard = () => {
         description: "Your draft case has been deleted successfully.",
       });
 
-      // Refresh the page to update the case list
-      window.location.reload();
+      // Refresh the cases list
+      await fetchCases();
     } catch (error) {
       console.error('Error deleting case:', error);
       toast({
@@ -443,10 +444,10 @@ const ClientDashboard = () => {
                 {/* Document Upload Component */}
                 <DocumentUpload 
                   caseId={activeCase?.id}
+                  existingDocuments={documents}
                   onFilesUploaded={(files) => {
                     console.log('Files uploaded:', files);
-                    // Refresh documents after upload
-                    window.location.reload();
+                    // Documents will be refreshed via realtime subscription
                   }}
                 />
               </CardContent>

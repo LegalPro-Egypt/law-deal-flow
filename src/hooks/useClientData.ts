@@ -232,8 +232,25 @@ export const useClientData = () => {
       )
       .subscribe();
 
+    const documentsChannel = supabase
+      .channel('client-documents')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'documents',
+          filter: `case_id=eq.${activeCase.id}`
+        },
+        () => {
+          fetchDocuments(activeCase.id);
+        }
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(messagesChannel);
+      supabase.removeChannel(documentsChannel);
     };
   }, [user, activeCase]);
 
