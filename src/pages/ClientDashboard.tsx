@@ -108,8 +108,12 @@ const ClientDashboard = () => {
     // Step 1: Case data exists (either extracted data or AI summary)
     const step1Complete = !!(activeCase.ai_summary || activeCase.draft_data);
     
-    // Step 2: Personal details are filled  
-    const step2Complete = !!(activeCase.client_name && activeCase.client_email && activeCase.client_phone);
+    // Step 2: Personal details are filled (check both case columns and draft_data)
+    const draftPersonalData = (activeCase.draft_data as any)?.personalData;
+    const step2Complete = !!(
+      (activeCase.client_name && activeCase.client_email && activeCase.client_phone) ||
+      (draftPersonalData?.fullName && draftPersonalData?.email && draftPersonalData?.phone)
+    );
     
     // Step 3: All required documents are uploaded
     const requiredCategories = ['identity', 'case']; // Based on DocumentUpload component
@@ -457,28 +461,34 @@ const ClientDashboard = () => {
                   <div>
                     <Label className="text-sm font-medium">Full Name</Label>
                     <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
-                      {activeCase?.client_name || 'Not provided'}
+                      {activeCase?.client_name || 
+                       (activeCase?.draft_data as any)?.personalData?.fullName || 
+                       'Not provided'}
                     </p>
                   </div>
                   <div>
                     <Label className="text-sm font-medium">Email</Label>
                     <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
-                      {activeCase?.client_email || 'Not provided'}
+                      {activeCase?.client_email || 
+                       (activeCase?.draft_data as any)?.personalData?.email || 
+                       'Not provided'}
                     </p>
                   </div>
                   <div>
                     <Label className="text-sm font-medium">Phone</Label>
                     <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
-                      {activeCase?.client_phone || 'Not provided'}
+                      {activeCase?.client_phone || 
+                       (activeCase?.draft_data as any)?.personalData?.phone || 
+                       'Not provided'}
                     </p>
                   </div>
                   <div>
                     <Label className="text-sm font-medium">Language</Label>
                     <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
-                      {activeCase?.language === 'en' && 'English'}
-                      {activeCase?.language === 'ar' && 'Arabic'}  
-                      {activeCase?.language === 'de' && 'German'}
-                      {!activeCase?.language && 'Not specified'}
+                      {(activeCase?.language || (activeCase?.draft_data as any)?.personalData?.preferredLanguage) === 'en' && 'English'}
+                      {(activeCase?.language || (activeCase?.draft_data as any)?.personalData?.preferredLanguage) === 'ar' && 'Arabic'}  
+                      {(activeCase?.language || (activeCase?.draft_data as any)?.personalData?.preferredLanguage) === 'de' && 'German'}
+                      {!(activeCase?.language || (activeCase?.draft_data as any)?.personalData?.preferredLanguage) && 'Not specified'}
                     </p>
                   </div>
                 </div>

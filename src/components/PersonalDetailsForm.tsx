@@ -16,7 +16,7 @@ const personalDetailsSchema = z.object({
   preferredLanguage: z.enum(['en', 'ar', 'de'], {
     required_error: 'Please select a preferred language',
   }),
-  address: z.string().min(5, 'Please enter your address'),
+  address: z.string().optional(),
   alternateContact: z.string().optional(),
 });
 

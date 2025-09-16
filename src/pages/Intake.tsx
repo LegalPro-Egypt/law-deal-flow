@@ -38,11 +38,43 @@ const Intake = () => {
   const handlePersonalDetailsSubmit = async (data: PersonalDetailsData) => {
     setPersonalData(data);
     setShowPersonalForm(false);
+    
+    // Save personal data to both case columns and draft_data
+    if (caseId && user) {
+      try {
+        const { error } = await supabase
+          .from('cases')
+          .update({
+            client_name: data.fullName,
+            client_email: data.email,
+            client_phone: data.phone,
+            language: data.preferredLanguage,
+            draft_data: {
+              ...(extractedCaseData || {}),
+              personalData: data
+            }
+          })
+          .eq('id', caseId);
+          
+        if (error) throw error;
+        
+        toast({
+          title: "Personal Details Saved",
+          description: "Your information has been saved successfully.",
+        });
+      } catch (error) {
+        console.error('Error saving personal details:', error);
+        toast({
+          title: "Save Failed",
+          description: "Failed to save your details. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+    
     // Advance to document upload step
     setCurrentStep(3);
-    
-    // Save personal data to case
-    // This will be handled by the LegalChatbot component's saveCaseStep function
   };
 
   // Load existing draft case on mount
@@ -93,15 +125,23 @@ const Intake = () => {
           // Set case data
           setCaseId(targetCase.id);
           
-          // Set personal data from case columns or draft_data
-          const personalDetails = draftData.personalData || {
-            fullName: targetCase.client_name,
-            email: targetCase.client_email,
-            phone: targetCase.client_phone,
-            preferredLanguage: targetCase.language || 'en'
-          };
+          // Set personal data from case columns or draft_data with proper fallback
+          let personalDetails = null;
           
-          if (personalDetails.fullName || personalDetails.email || personalDetails.phone) {
+          if (draftData.personalData) {
+            personalDetails = draftData.personalData;
+          } else if (targetCase.client_name || targetCase.client_email || targetCase.client_phone) {
+            personalDetails = {
+              fullName: targetCase.client_name,
+              email: targetCase.client_email,
+              phone: targetCase.client_phone,
+              preferredLanguage: targetCase.language || 'en',
+              address: '',
+              alternateContact: ''
+            };
+          }
+          
+          if (personalDetails) {
             setPersonalData(personalDetails as PersonalDetailsData);
           }
 
@@ -120,7 +160,11 @@ const Intake = () => {
 
           // Compute current step based on completion
           const step1Complete = !!(targetCase.ai_summary || draftData.extractedData);
-          const step2Complete = !!(targetCase.client_name && targetCase.client_email && targetCase.client_phone);
+          // Check both case columns and draft_data for personal details
+          const step2Complete = !!(
+            (targetCase.client_name && targetCase.client_email && targetCase.client_phone) ||
+            (draftData.personalData?.fullName && draftData.personalData?.email && draftData.personalData?.phone)
+          );
           const requiredCategories = ['identity', 'case'];
           const uploadedCategories = new Set(
             (caseDocuments || [])
