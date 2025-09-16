@@ -270,7 +270,13 @@ const ClientDashboard = () => {
   };
 
   const handleSignOut = async () => {
-    await signOut();
+    try {
+      await signOut();
+      toast({ title: "Signed out", description: "You have been logged out." });
+      navigate('/auth');
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to sign out.", variant: "destructive" });
+    }
   };
 
   if (loading) {
@@ -317,7 +323,7 @@ const ClientDashboard = () => {
                     <span className="hidden sm:inline">Start New Case</span>
                   </Link>
                 </Button>
-                <Button variant="ghost" size="sm" onClick={signOut} className="h-9 w-9 sm:h-10 sm:w-auto sm:px-4">
+                <Button variant="ghost" size="sm" onClick={handleSignOut} className="h-9 w-9 sm:h-10 sm:w-auto sm:px-4">
                   <LogOut className="h-4 w-4" />
                   <span className="hidden sm:inline sm:ml-2">Sign Out</span>
                 </Button>
