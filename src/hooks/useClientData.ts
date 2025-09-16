@@ -42,6 +42,8 @@ interface ClientDocument {
   file_name: string;
   file_size: number;
   file_type: string;
+  file_url: string;
+  document_category?: string;
   uploaded_by?: string;
   created_at: string;
   case_id: string;
@@ -128,7 +130,7 @@ export const useClientData = () => {
     try {
       const { data, error } = await supabase
         .from('documents')
-        .select('*')
+        .select('id, file_name, file_size, file_type, file_url, document_category, uploaded_by, created_at, case_id')
         .eq('case_id', caseId)
         .order('created_at', { ascending: false });
 

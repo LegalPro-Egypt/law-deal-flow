@@ -20,9 +20,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { useClientData } from "@/hooks/useClientData";
 import { useAuth } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
+import DocumentUpload from "@/components/DocumentUpload";
+import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Link } from "react-router-dom";
 
 const ClientDashboard = () => {
   const [newMessage, setNewMessage] = useState("");
+  const [deletingCase, setDeletingCase] = useState(false);
   const { signOut } = useAuth();
   const { 
     cases, 
@@ -33,6 +38,37 @@ const ClientDashboard = () => {
     setActiveCase, 
     sendMessage 
   } = useClientData();
+
+  const handleDeleteDraftCase = async () => {
+    if (!activeCase || activeCase.status !== 'draft') return;
+    
+    setDeletingCase(true);
+    try {
+      const { error } = await supabase
+        .from('cases')
+        .delete()
+        .eq('id', activeCase.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Draft Case Deleted",
+        description: "Your draft case has been deleted successfully.",
+      });
+
+      // Refresh the page to update the case list
+      window.location.reload();
+    } catch (error) {
+      console.error('Error deleting case:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete the draft case. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingCase(false);
+    }
+  };
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !activeCase) return;
@@ -107,7 +143,7 @@ const ClientDashboard = () => {
                 You don't have any active legal cases yet.
               </p>
               <Button asChild>
-                <a href="/intake">Start New Case</a>
+                <Link to="/intake">Start New Case</Link>
               </Button>
             </CardContent>
           </Card>
@@ -191,7 +227,7 @@ const ClientDashboard = () => {
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="messages">Messages</TabsTrigger>
-            <TabsTrigger value="documents">Documents</TabsTrigger>
+            <TabsTrigger value="documents" id="documents-tab">Documents</TabsTrigger>
             <TabsTrigger value="payments">Payments</TabsTrigger>
           </TabsList>
 
@@ -252,7 +288,11 @@ const ClientDashboard = () => {
                   <CardTitle>Quick Actions</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <Button className="w-full justify-start" variant="outline">
+                  <Button 
+                    className="w-full justify-start" 
+                    variant="outline"
+                    onClick={() => document.getElementById('documents-tab')?.click()}
+                  >
                     <Upload className="h-4 w-4 mr-2" />
                     Upload Documents
                   </Button>
@@ -268,6 +308,25 @@ const ClientDashboard = () => {
                     <CreditCard className="h-4 w-4 mr-2" />
                     View Payment History
                   </Button>
+                  {activeCase.status === 'draft' && (
+                    <>
+                      <Button asChild className="w-full justify-start" variant="outline">
+                        <Link to="/intake">
+                          <FileText className="h-4 w-4 mr-2" />
+                          Continue Case Setup
+                        </Link>
+                      </Button>
+                      <Button 
+                        className="w-full justify-start" 
+                        variant="destructive"
+                        onClick={handleDeleteDraftCase}
+                        disabled={deletingCase}
+                      >
+                        <AlertCircle className="h-4 w-4 mr-2" />
+                        Delete Draft Case
+                      </Button>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -348,40 +407,48 @@ const ClientDashboard = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid gap-4">
-                  {documents.length > 0 ? documents.map((doc, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <FileText className="h-5 w-5 text-muted-foreground" />
-                        <div>
-                          <p className="font-medium">{doc.file_name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {Math.round(doc.file_size / 1024)} KB • Uploaded {formatDate(doc.created_at)}
-                          </p>
+                {/* Uploaded Documents List */}
+                {documents.length > 0 && (
+                  <div className="mb-6">
+                    <h4 className="font-medium mb-4">Uploaded Documents</h4>
+                    <div className="grid gap-4">
+                      {documents.map((doc, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                          <div className="flex items-center space-x-3">
+                            <FileText className="h-5 w-5 text-muted-foreground" />
+                            <div>
+                              <p className="font-medium">{doc.file_name}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {Math.round(doc.file_size / 1024)} KB • Uploaded {formatDate(doc.created_at)}
+                                {doc.document_category && ` • ${doc.document_category}`}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Badge variant="secondary">
+                              {doc.file_type}
+                            </Badge>
+                            <Button size="sm" variant="ghost" asChild>
+                              <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
+                                <Download className="h-4 w-4" />
+                              </a>
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Badge variant="secondary">
-                          {doc.file_type}
-                        </Badge>
-                        <Button size="sm" variant="ghost">
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      </div>
+                      ))}
                     </div>
-                  )) : (
-                    <div className="text-center text-muted-foreground py-8">
-                      <FileText className="h-8 w-8 mx-auto mb-2" />
-                      <p>No documents uploaded yet.</p>
-                    </div>
-                  )}
-                </div>
+                  </div>
+                )}
 
-                <div className="mt-6 border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center">
-                  <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground mb-2">Drop files here or click to upload</p>
-                  <Button variant="outline" size="sm">Choose Files</Button>
-                </div>
+                {/* Document Upload Component */}
+                <DocumentUpload 
+                  caseId={activeCase?.id}
+                  onFilesUploaded={(files) => {
+                    console.log('Files uploaded:', files);
+                    // Refresh documents after upload
+                    window.location.reload();
+                  }}
+                />
               </CardContent>
             </Card>
           </TabsContent>
