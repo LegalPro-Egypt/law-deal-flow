@@ -280,28 +280,41 @@ const AdminDashboard = () => {
   const confirmDeleteLawyer = async () => {
     if (!lawyerToDelete) return;
     const id = lawyerToDelete;
-    console.log('Confirming delete for lawyer id:', id);
+    const lawyer = allLawyers.find(l => l.id === id);
+    
+    if (!lawyer) {
+      toast({
+        title: 'Error',
+        description: 'Lawyer not found',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    console.log('Confirming complete deletion for lawyer:', lawyer.email);
 
     // Optimistic UI update
     setAllLawyers((prev) => prev.filter((l) => l.id !== id));
 
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', id);
+      const { error } = await supabase.functions.invoke('delete-lawyer-complete', {
+        body: {
+          lawyerId: id,
+          email: lawyer.email
+        }
+      });
 
       if (error) throw error;
 
       toast({
         title: 'Lawyer Deleted',
-        description: 'The lawyer has been permanently deleted',
+        description: 'The lawyer and all associated data have been permanently removed',
       });
 
       await fetchAllLawyers();
       await refreshData();
     } catch (error: any) {
-      console.error('Failed to delete lawyer', error);
+      console.error('Failed to delete lawyer completely:', error);
       toast({
         title: 'Error',
         description: 'Failed to delete lawyer: ' + error.message,
