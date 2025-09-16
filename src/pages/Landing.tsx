@@ -44,10 +44,10 @@ const Landing = () => {
               <span className="text-xl font-bold">LegalPro</span>
             </div>
             <div className="flex items-center space-x-4">
-              <Link to="/auth">
+              <Link to="/auth?force=true">
                 <Button variant="ghost">Sign In</Button>
               </Link>
-              <Link to="/auth">
+              <Link to="/auth?force=true">
                 <Button className="bg-gradient-primary shadow-hero">Get Started</Button>
               </Link>
             </div>
@@ -68,7 +68,7 @@ const Landing = () => {
               Get legal help the modern way with full payment protection.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/auth?redirect=intake">
+              <Link to="/auth?force=true&redirect=intake">
                 <Button size="lg" className="bg-accent hover:bg-accent-hover text-lg px-8 py-3">
                   Start Your Case
                 </Button>

@@ -43,6 +43,9 @@ const Auth = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const redirectTo = urlParams.get('redirect');
     const resetParam = urlParams.get('reset');
+    const forceStay = urlParams.get('force') === 'true';
+    
+    console.log('Auth useEffect - force:', forceStay, 'reset:', resetParam);
     
     // Check if we're in reset mode
     if (resetParam === 'admin') {
@@ -59,7 +62,9 @@ const Auth = () => {
     
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session && !resetMode) {
+      console.log('Auth checkAuth - session exists:', !!session, 'forceStay:', forceStay, 'resetMode:', resetMode);
+      
+      if (session && !resetMode && !forceStay) {
         // Get user profile to determine role and redirect
         const { data: profile } = await supabase
           .from('profiles')
@@ -69,12 +74,16 @@ const Auth = () => {
         
         const role = profile?.role || 'client';
         
+        console.log('Auth redirecting to:', redirectTo === 'intake' ? '/intake' : `/${role}`);
+        
         // Redirect to intended page or default dashboard
         if (redirectTo === 'intake') {
           navigate('/intake', { replace: true });
         } else {
           navigate(`/${role}`, { replace: true });
         }
+      } else if (forceStay) {
+        console.log('Auth staying on page due to force=true');
       }
     };
     
