@@ -39,6 +39,8 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { stats, pendingIntakes, cases, loading, createCaseFromIntake, deleteSelectedIntakes, denyCaseAndDelete, deleteCase, refreshData } = useAdminData();
+  
+  // State variables
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
