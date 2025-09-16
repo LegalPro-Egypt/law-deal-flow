@@ -80,6 +80,7 @@ export const LawyerQAChatbot = ({ isOpen, onToggle }: LawyerQAChatbotProps) => {
     setLoading(true);
 
     try {
+      console.log('Sending message to legal-chatbot:', { message: input, conversation_id: conversationId, mode: 'qa_lawyer' });
       const { data, error } = await supabase.functions.invoke('legal-chatbot', {
         body: {
           message: input,
@@ -90,7 +91,12 @@ export const LawyerQAChatbot = ({ isOpen, onToggle }: LawyerQAChatbotProps) => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
+
+      console.log('Received response from legal-chatbot:', data);
 
       if (data.response) {
         const assistantMessage: ChatMessage = {
@@ -102,8 +108,11 @@ export const LawyerQAChatbot = ({ isOpen, onToggle }: LawyerQAChatbotProps) => {
         setMessages(prev => [...prev, assistantMessage]);
       }
 
-      if (data.conversation_id && !conversationId) {
-        setConversationId(data.conversation_id);
+      // Handle both conversation_id and conversationId for backward compatibility
+      const newConversationId = data.conversation_id || data.conversationId;
+      if (newConversationId && !conversationId) {
+        setConversationId(newConversationId);
+        console.log('Set conversation ID:', newConversationId);
       }
 
     } catch (error: any) {

@@ -35,7 +35,7 @@ serve(async (req) => {
   try {
     const { message, conversation_id, mode = 'intake', language = 'en', caseId, lawyerId } = await req.json();
 
-    console.log('Legal Chatbot Request:', { message, conversationId, mode, language });
+    console.log('Legal Chatbot Request:', { message, conversation_id, mode, language });
 
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openAIApiKey) {
@@ -46,6 +46,44 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Initialize chat history
+    let chatHistory: ChatMessage[] = [];
+    
+    // If we have a conversation_id, fetch existing messages
+    if (conversation_id) {
+      console.log('Fetching existing messages for conversation:', conversation_id);
+      const { data: existingMessages } = await supabase
+        .from('messages')
+        .select('role, content')
+        .eq('conversation_id', conversation_id)
+        .order('created_at', { ascending: true });
+      
+      if (existingMessages && existingMessages.length > 0) {
+        chatHistory = existingMessages.map(msg => ({
+          role: msg.role as 'user' | 'assistant',
+          content: msg.content
+        }));
+        console.log('Loaded chat history with', chatHistory.length, 'messages');
+      }
+    } else if (mode === 'qa_lawyer') {
+      // For lawyer Q&A mode, create a new conversation
+      console.log('Creating new conversation for lawyer Q&A');
+      const { data: newConversation, error: convError } = await supabase
+        .from('conversations')
+        .insert({
+          mode: 'qa_lawyer',
+          language: language || 'en',
+          user_id: lawyerId || null
+        })
+        .select()
+        .single();
+      
+      if (!convError && newConversation) {
+        conversation_id = newConversation.id;
+        console.log('Created new conversation:', conversation_id);
+      }
+    }
 
     // Fetch relevant legal knowledge based on message content
     const { data: legalKnowledge } = await supabase
@@ -89,9 +127,10 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'gpt-4o-mini',
         messages: messages,
-        max_completion_tokens: 800,
+        max_tokens: 800,
+        temperature: 0.7,
         functions: mode === 'intake' ? getIntakeFunctions() : undefined,
         function_call: mode === 'intake' ? 'auto' : undefined,
       }),
@@ -111,17 +150,17 @@ serve(async (req) => {
       // Return a graceful fallback instead of throwing error
       aiResponse = fallbackMessage;
       
-      // Save conversation to database if conversationId provided
-      if (conversationId) {
+      // Save conversation to database if conversation_id provided
+      if (conversation_id) {
         await supabase.from('messages').insert([
           {
-            conversation_id: conversationId,
+            conversation_id: conversation_id,
             role: 'user',
             content: message,
             metadata: { timestamp: new Date().toISOString() }
           },
           {
-            conversation_id: conversationId,
+            conversation_id: conversation_id,
             role: 'assistant',
             content: aiResponse,
             metadata: { 
@@ -140,7 +179,8 @@ serve(async (req) => {
           extractedData: undefined,
           needsPersonalDetails: false,
           nextQuestions: undefined,
-          conversationId
+          conversation_id: conversation_id,
+          conversationId: conversation_id // backward compatibility
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -170,13 +210,13 @@ serve(async (req) => {
           console.log('Extracted case data:', extractedData);
 
           // Create or update draft case when AI extracts data
-          if (conversationId && extractedData) {
+          if (conversation_id && extractedData) {
             try {
               // Get conversation to check if it already has a case linked
               const { data: conversation } = await supabase
                 .from('conversations')
                 .select('case_id, user_id, metadata')
-                .eq('id', conversationId)
+                .eq('id', conversation_id)
                 .single();
 
               // Generate client response summary
@@ -185,7 +225,7 @@ serve(async (req) => {
                 aiResponse, 
                 extractedData, 
                 language, 
-                conversationId, 
+                conversation_id, 
                 supabase
               );
 
@@ -206,7 +246,7 @@ serve(async (req) => {
                   await supabase
                     .from('conversations')
                     .update({ metadata: newMeta })
-                    .eq('id', conversationId);
+                    .eq('id', conversation_id);
                 } else {
                   // Authenticated user: create new draft case
                   const legalAnalysis = {
@@ -254,7 +294,7 @@ serve(async (req) => {
                     await supabase
                       .from('conversations')
                       .update({ case_id: caseId })
-                      .eq('id', conversationId);
+                      .eq('id', conversation_id);
                   }
                 }
               } else {
@@ -298,17 +338,18 @@ serve(async (req) => {
       }
     }
 
-    // Save conversation to database if conversationId provided
-    if (conversationId) {
+    // Save conversation to database if conversation_id provided
+    if (conversation_id) {
+      console.log('Saving messages to conversation:', conversation_id);
       await supabase.from('messages').insert([
         {
-          conversation_id: conversationId,
+          conversation_id: conversation_id,
           role: 'user',
           content: message,
           metadata: { timestamp: new Date().toISOString() }
         },
         {
-          conversation_id: conversationId,
+          conversation_id: conversation_id,
           role: 'assistant',
           content: aiResponse,
           metadata: { 
@@ -326,7 +367,8 @@ serve(async (req) => {
         extractedData: mode === 'intake' ? extractedData : undefined,
         needsPersonalDetails: mode === 'intake' ? extractedData?.needsPersonalDetails : false,
         nextQuestions: mode === 'intake' ? nextQuestions : undefined,
-        conversationId
+        conversation_id: conversation_id,
+        conversationId: conversation_id // backward compatibility
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
