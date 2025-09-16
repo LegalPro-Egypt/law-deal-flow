@@ -273,7 +273,7 @@ const ClientDashboard = () => {
     try {
       await signOut();
       toast({ title: "Signed out", description: "You have been logged out." });
-      navigate('/auth');
+      navigate('/');
     } catch (error: any) {
       toast({ title: "Error", description: error.message || "Failed to sign out.", variant: "destructive" });
     }
