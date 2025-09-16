@@ -31,7 +31,7 @@ const lawyerProfileSchema = z.object({
   lastName: z.string().min(2, "Last name must be at least 2 characters"),
   phone: z.string().min(10, "Please enter a valid phone number"),
   lawFirm: z.string().min(2, "Law firm name is required"),
-  employeeCount: z.coerce.number().min(1, "Employee count must be at least 1"),
+  teamSize: z.coerce.number().min(1, "Team size must be at least 1"),
   bio: z.string().min(50, "Bio must be at least 50 characters"),
   yearsExperience: z.coerce.number().min(1, "Years of experience must be at least 1"),
   licenseNumber: z.string().min(5, "License number is required"),
@@ -83,7 +83,7 @@ export function LawyerProfileForm({ onComplete, initialData }: LawyerProfileForm
       lastName: initialData?.lastName || "",
       phone: initialData?.phone || "",
       lawFirm: initialData?.lawFirm || "",
-      employeeCount: initialData?.employeeCount || 1,
+      teamSize: initialData?.teamSize || 1,
       bio: initialData?.bio || "",
       yearsExperience: initialData?.yearsExperience || 1,
       licenseNumber: initialData?.licenseNumber || "",
@@ -204,7 +204,7 @@ export function LawyerProfileForm({ onComplete, initialData }: LawyerProfileForm
         phone: data.phone,
         role: 'lawyer',
         law_firm: data.lawFirm,
-        employee_count: data.employeeCount,
+        team_size: data.teamSize,
         specializations: selectedSpecializations,
         bio: data.bio,
         years_experience: data.yearsExperience,
@@ -347,16 +347,16 @@ export function LawyerProfileForm({ onComplete, initialData }: LawyerProfileForm
               </div>
 
               <div>
-                <Label htmlFor="employeeCount">Number of Employees</Label>
+                <Label htmlFor="teamSize">Team Size</Label>
                 <Input
-                  {...form.register("employeeCount")}
+                  {...form.register("teamSize")}
                   type="number"
                   min="1"
                   disabled={isSubmitting}
                 />
-                {form.formState.errors.employeeCount && (
+                {form.formState.errors.teamSize && (
                   <p className="text-sm text-destructive mt-1">
-                    {form.formState.errors.employeeCount.message}
+                    {form.formState.errors.teamSize.message}
                   </p>
                 )}
               </div>

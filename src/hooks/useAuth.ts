@@ -1,14 +1,9 @@
 import { useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 
-interface Profile {
-  role: string;
-  first_name?: string;
-  last_name?: string;
-  email: string;
-  is_active?: boolean;
-}
+type Profile = Database['public']['Tables']['profiles']['Row'];
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -33,7 +28,7 @@ export const useAuth = () => {
               console.log('useAuth: Fetching profile for user', session.user.id);
               const { data: profileData, error } = await supabase
                 .from('profiles')
-                .select('role, first_name, last_name, email, is_active')
+                .select('*')
                 .eq('user_id', session.user.id)
                 .single();
               
@@ -75,7 +70,7 @@ export const useAuth = () => {
             console.log('useAuth: Fetching initial profile for user', session.user.id);
             const { data: profileData, error: profileError } = await supabase
               .from('profiles')
-              .select('role, first_name, last_name, email, is_active')
+              .select('*')
               .eq('user_id', session.user.id)
               .single();
               

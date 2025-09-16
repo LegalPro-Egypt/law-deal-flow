@@ -444,10 +444,10 @@ export type Database = {
         Row: {
           bar_admissions: string[] | null
           bio: string | null
+          consultation_methods: string[] | null
           created_at: string
           credentials_documents: string[] | null
           email: string
-          employee_count: number | null
           first_name: string | null
           id: string
           is_active: boolean | null
@@ -456,23 +456,33 @@ export type Database = {
           languages: string[] | null
           last_name: string | null
           law_firm: string | null
+          lawyer_card_url: string | null
           license_number: string | null
+          notable_achievements: string | null
+          payment_structures: string[] | null
           phone: string | null
           preferred_language: string | null
+          pricing_structure: Json | null
+          professional_memberships: string[] | null
           profile_picture_url: string | null
           role: string
           specializations: string[] | null
+          team_breakdown: Json | null
+          team_size: number | null
           updated_at: string
           user_id: string
+          verification_status:
+            | Database["public"]["Enums"]["verification_status"]
+            | null
           years_experience: number | null
         }
         Insert: {
           bar_admissions?: string[] | null
           bio?: string | null
+          consultation_methods?: string[] | null
           created_at?: string
           credentials_documents?: string[] | null
           email: string
-          employee_count?: number | null
           first_name?: string | null
           id?: string
           is_active?: boolean | null
@@ -481,23 +491,33 @@ export type Database = {
           languages?: string[] | null
           last_name?: string | null
           law_firm?: string | null
+          lawyer_card_url?: string | null
           license_number?: string | null
+          notable_achievements?: string | null
+          payment_structures?: string[] | null
           phone?: string | null
           preferred_language?: string | null
+          pricing_structure?: Json | null
+          professional_memberships?: string[] | null
           profile_picture_url?: string | null
           role?: string
           specializations?: string[] | null
+          team_breakdown?: Json | null
+          team_size?: number | null
           updated_at?: string
           user_id: string
+          verification_status?:
+            | Database["public"]["Enums"]["verification_status"]
+            | null
           years_experience?: number | null
         }
         Update: {
           bar_admissions?: string[] | null
           bio?: string | null
+          consultation_methods?: string[] | null
           created_at?: string
           credentials_documents?: string[] | null
           email?: string
-          employee_count?: number | null
           first_name?: string | null
           id?: string
           is_active?: boolean | null
@@ -506,14 +526,24 @@ export type Database = {
           languages?: string[] | null
           last_name?: string | null
           law_firm?: string | null
+          lawyer_card_url?: string | null
           license_number?: string | null
+          notable_achievements?: string | null
+          payment_structures?: string[] | null
           phone?: string | null
           preferred_language?: string | null
+          pricing_structure?: Json | null
+          professional_memberships?: string[] | null
           profile_picture_url?: string | null
           role?: string
           specializations?: string[] | null
+          team_breakdown?: Json | null
+          team_size?: number | null
           updated_at?: string
           user_id?: string
+          verification_status?:
+            | Database["public"]["Enums"]["verification_status"]
+            | null
           years_experience?: number | null
         }
         Relationships: []
@@ -533,7 +563,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      verification_status: "pending_basic" | "pending_complete" | "verified"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -660,6 +690,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      verification_status: ["pending_basic", "pending_complete", "verified"],
+    },
   },
 } as const

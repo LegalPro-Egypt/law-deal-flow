@@ -1,0 +1,531 @@
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { 
+  Users, 
+  FileText, 
+  Camera, 
+  Upload,
+  CheckCircle,
+  Loader2,
+  DollarSign,
+  Award,
+  Phone,
+  Video,
+  MapPin,
+  Globe
+} from "lucide-react";
+
+const verificationSchema = z.object({
+  teamSize: z.coerce.number().min(1, "Team size must be at least 1"),
+  partnersCount: z.coerce.number().min(0, "Partners count cannot be negative"),
+  associatesCount: z.coerce.number().min(0, "Associates count cannot be negative"),
+  paralegalsCount: z.coerce.number().min(0, "Paralegals count cannot be negative"),
+  supportStaffCount: z.coerce.number().min(0, "Support staff count cannot be negative"),
+  consultationRate: z.coerce.number().min(1, "Consultation rate is required"),
+  consultationStructure: z.string().min(1, "Please select consultation structure"),
+  familyLawRate: z.coerce.number().optional(),
+  criminalLawRate: z.coerce.number().optional(),
+  corporateLawRate: z.coerce.number().optional(),
+  realEstateLawRate: z.coerce.number().optional(),
+  immigrationLawRate: z.coerce.number().optional(),
+  employmentLawRate: z.coerce.number().optional(),
+  personalInjuryRate: z.coerce.number().optional(),
+  notableAchievements: z.string().optional(),
+});
+
+type VerificationData = z.infer<typeof verificationSchema>;
+
+interface CompleteVerificationFormProps {
+  onComplete: () => void;
+  initialData?: Partial<VerificationData>;
+}
+
+const consultationMethods = [
+  { id: "in-person", label: "In-Person", icon: MapPin },
+  { id: "video", label: "Video Call", icon: Video },
+  { id: "phone", label: "Phone Call", icon: Phone },
+];
+
+const paymentStructures = [
+  { id: "hourly", label: "Hourly Rate" },
+  { id: "flat-fee", label: "Flat Fee" },
+  { id: "contingency", label: "Contingency" },
+  { id: "retainer", label: "Retainer" },
+];
+
+const professionalMemberships = [
+  "Egyptian Bar Association",
+  "International Bar Association",
+  "Arab Lawyers Union",
+  "Cairo Chamber of Commerce Legal Committee",
+  "Alexandria Bar Association",
+  "Egyptian Society for International Law",
+];
+
+const legalAreas = [
+  { key: "familyLaw", label: "Family Law", field: "familyLawRate" },
+  { key: "criminalLaw", label: "Criminal Law", field: "criminalLawRate" },
+  { key: "corporateLaw", label: "Corporate Law", field: "corporateLawRate" },
+  { key: "realEstateLaw", label: "Real Estate Law", field: "realEstateLawRate" },
+  { key: "immigrationLaw", label: "Immigration Law", field: "immigrationLawRate" },
+  { key: "employmentLaw", label: "Employment Law", field: "employmentLawRate" },
+  { key: "personalInjury", label: "Personal Injury", field: "personalInjuryRate" },
+];
+
+export function CompleteVerificationForm({ onComplete, initialData }: CompleteVerificationFormProps) {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [lawyerCard, setLawyerCard] = useState<File | null>(null);
+  const [selectedConsultationMethods, setSelectedConsultationMethods] = useState<string[]>(["in-person"]);
+  const [selectedPaymentStructures, setSelectedPaymentStructures] = useState<string[]>(["hourly"]);
+  const [selectedMemberships, setSelectedMemberships] = useState<string[]>([]);
+
+  const form = useForm<VerificationData>({
+    resolver: zodResolver(verificationSchema),
+    defaultValues: {
+      teamSize: initialData?.teamSize || 1,
+      partnersCount: initialData?.partnersCount || 0,
+      associatesCount: initialData?.associatesCount || 0,
+      paralegalsCount: initialData?.paralegalsCount || 0,
+      supportStaffCount: initialData?.supportStaffCount || 0,
+      consultationRate: initialData?.consultationRate || 500,
+      consultationStructure: initialData?.consultationStructure || "hourly",
+      ...initialData,
+    },
+  });
+
+  const uploadFile = async (file: File, bucket: string, path: string) => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `${path}/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from(bucket)
+      .upload(filePath, file);
+
+    if (uploadError) {
+      throw uploadError;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from(bucket)
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  };
+
+  const handleConsultationMethodChange = (methodId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedConsultationMethods(prev => [...prev, methodId]);
+    } else {
+      setSelectedConsultationMethods(prev => prev.filter(id => id !== methodId));
+    }
+  };
+
+  const handlePaymentStructureChange = (structureId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedPaymentStructures(prev => [...prev, structureId]);
+    } else {
+      setSelectedPaymentStructures(prev => prev.filter(id => id !== structureId));
+    }
+  };
+
+  const handleMembershipChange = (membership: string, checked: boolean) => {
+    if (checked) {
+      setSelectedMemberships(prev => [...prev, membership]);
+    } else {
+      setSelectedMemberships(prev => prev.filter(m => m !== membership));
+    }
+  };
+
+  const onSubmit = async (data: VerificationData) => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to complete verification.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!lawyerCard) {
+      toast({
+        title: "Error",
+        description: "Please upload your lawyer card/license.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (selectedConsultationMethods.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please select at least one consultation method.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Upload lawyer card
+      const lawyerCardUrl = await uploadFile(lawyerCard, "lawyer-documents", `lawyer-cards/${user.id}`);
+
+      // Prepare team breakdown
+      const teamBreakdown = {
+        partners: data.partnersCount,
+        associates: data.associatesCount,
+        paralegals: data.paralegalsCount,
+        supportStaff: data.supportStaffCount,
+        total: data.teamSize,
+      };
+
+      // Prepare pricing structure
+      const pricingStructure = {
+        consultation: {
+          rate: data.consultationRate,
+          structure: data.consultationStructure,
+        },
+        services: legalAreas.reduce((acc, area) => {
+          const rate = data[area.field as keyof VerificationData] as number;
+          if (rate && rate > 0) {
+            acc[area.key] = {
+              rate,
+              label: area.label,
+            };
+          }
+          return acc;
+        }, {} as Record<string, any>),
+      };
+
+      // Update profile with complete verification data
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          team_size: data.teamSize,
+          team_breakdown: teamBreakdown,
+          lawyer_card_url: lawyerCardUrl,
+          pricing_structure: pricingStructure,
+          consultation_methods: selectedConsultationMethods,
+          payment_structures: selectedPaymentStructures,
+          professional_memberships: selectedMemberships,
+          notable_achievements: data.notableAchievements || null,
+          verification_status: "pending_complete",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("user_id", user.id);
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Success!",
+        description: "Complete verification submitted successfully. Your profile is now under admin review.",
+      });
+
+      onComplete();
+    } catch (error) {
+      console.error("Error submitting verification:", error);
+      toast({
+        title: "Error",
+        description: "Failed to submit verification. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <Card className="w-full max-w-4xl mx-auto">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <CheckCircle className="h-6 w-6" />
+          Complete Your Lawyer Verification
+        </CardTitle>
+        <CardDescription>
+          Complete these additional details to get fully verified and start receiving client cases.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          {/* Team Information Section */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Users className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-semibold">Team Information</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="teamSize">Total Team Size</Label>
+                <Input
+                  id="teamSize"
+                  type="number"
+                  min="1"
+                  {...form.register("teamSize")}
+                />
+                {form.formState.errors.teamSize && (
+                  <p className="text-sm text-destructive mt-1">
+                    {form.formState.errors.teamSize.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="partnersCount">Partners</Label>
+                <Input
+                  id="partnersCount"
+                  type="number"
+                  min="0"
+                  {...form.register("partnersCount")}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="associatesCount">Associates</Label>
+                <Input
+                  id="associatesCount"
+                  type="number"
+                  min="0"
+                  {...form.register("associatesCount")}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="paralegalsCount">Paralegals</Label>
+                <Input
+                  id="paralegalsCount"
+                  type="number"
+                  min="0"
+                  {...form.register("paralegalsCount")}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="supportStaffCount">Support Staff</Label>
+                <Input
+                  id="supportStaffCount"
+                  type="number"
+                  min="0"
+                  {...form.register("supportStaffCount")}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Lawyer Card Upload Section */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <FileText className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-semibold">Official Lawyer License/Card</h3>
+            </div>
+            
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+              <div className="text-center">
+                <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                <div className="mt-4">
+                  <Label htmlFor="lawyerCard" className="cursor-pointer">
+                    <span className="mt-2 block text-sm font-medium text-gray-900">
+                      Upload your official lawyer license or bar card
+                    </span>
+                  </Label>
+                  <Input
+                    id="lawyerCard"
+                    type="file"
+                    accept="image/*,.pdf"
+                    onChange={(e) => setLawyerCard(e.target.files?.[0] || null)}
+                    className="hidden"
+                  />
+                </div>
+                {lawyerCard && (
+                  <p className="mt-2 text-sm text-green-600">
+                    ✓ {lawyerCard.name}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Pricing Structure Section */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <DollarSign className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-semibold">Service Pricing</h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="consultationRate">Consultation Rate (EGP)</Label>
+                <Input
+                  id="consultationRate"
+                  type="number"
+                  min="1"
+                  {...form.register("consultationRate")}
+                />
+                {form.formState.errors.consultationRate && (
+                  <p className="text-sm text-destructive mt-1">
+                    {form.formState.errors.consultationRate.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="consultationStructure">Consultation Structure</Label>
+                <Select
+                  value={form.watch("consultationStructure")}
+                  onValueChange={(value) => form.setValue("consultationStructure", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select structure" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="hourly">Per Hour</SelectItem>
+                    <SelectItem value="flat">Flat Fee</SelectItem>
+                    <SelectItem value="session">Per Session</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="font-medium">Legal Service Rates (Optional - EGP per hour)</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {legalAreas.map((area) => (
+                  <div key={area.key}>
+                    <Label htmlFor={area.field}>{area.label}</Label>
+                    <Input
+                      id={area.field}
+                      type="number"
+                      min="0"
+                      placeholder="Rate per hour (optional)"
+                      {...form.register(area.field as keyof VerificationData)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Consultation Methods */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Phone className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-semibold">Available Consultation Methods</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {consultationMethods.map((method) => (
+                <div key={method.id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={method.id}
+                    checked={selectedConsultationMethods.includes(method.id)}
+                    onCheckedChange={(checked) => 
+                      handleConsultationMethodChange(method.id, checked as boolean)
+                    }
+                  />
+                  <Label htmlFor={method.id} className="flex items-center gap-2">
+                    <method.icon className="h-4 w-4" />
+                    {method.label}
+                  </Label>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Payment Structures */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Accepted Payment Structures</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {paymentStructures.map((structure) => (
+                <div key={structure.id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={structure.id}
+                    checked={selectedPaymentStructures.includes(structure.id)}
+                    onCheckedChange={(checked) => 
+                      handlePaymentStructureChange(structure.id, checked as boolean)
+                    }
+                  />
+                  <Label htmlFor={structure.id}>{structure.label}</Label>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Professional Memberships */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Award className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-semibold">Professional Memberships (Optional)</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {professionalMemberships.map((membership) => (
+                <div key={membership} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={membership}
+                    checked={selectedMemberships.includes(membership)}
+                    onCheckedChange={(checked) => 
+                      handleMembershipChange(membership, checked as boolean)
+                    }
+                  />
+                  <Label htmlFor={membership}>{membership}</Label>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Notable Achievements */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Award className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-semibold">Notable Achievements (Optional)</h3>
+            </div>
+            
+            <Textarea
+              id="notableAchievements"
+              placeholder="Describe any notable cases, awards, publications, or professional achievements..."
+              rows={4}
+              {...form.register("notableAchievements")}
+            />
+          </div>
+
+          <div className="flex justify-end">
+            <Button 
+              type="submit" 
+              disabled={isSubmitting}
+              className="min-w-[200px]"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  Submit for Review
+                </>
+              )}
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}

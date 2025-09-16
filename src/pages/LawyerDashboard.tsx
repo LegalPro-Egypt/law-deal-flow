@@ -15,9 +15,13 @@ import {
   AlertCircle,
   Users,
   FileText,
-  MessageSquare
+  MessageSquare,
+  ShieldCheck,
+  AlertTriangle,
+  Settings
 } from "lucide-react";
 import { LawyerQAChatbot } from "@/components/LawyerQAChatbot";
+import { CompleteVerificationForm } from "@/components/CompleteVerificationForm";
 
 interface LawyerStats {
   activeCases: number;
@@ -52,6 +56,7 @@ const LawyerDashboard = () => {
   const [cases, setCases] = useState<Case[]>([]);
   const [loading, setLoading] = useState(true);
   const [chatbotOpen, setChatbotOpen] = useState(false);
+  const [showVerificationForm, setShowVerificationForm] = useState(false);
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -167,6 +172,57 @@ const LawyerDashboard = () => {
     );
   }
 
+  const getVerificationTitle = (status: string | null | undefined) => {
+    switch (status) {
+      case 'pending_basic': return "Complete Your Verification";
+      case 'pending_complete': return "Verification Under Review";
+      case 'verified': return "Fully Verified";
+      default: return "";
+    }
+  };
+
+  const getVerificationDescription = (status: string | null | undefined) => {
+    switch (status) {
+      case 'pending_basic': 
+        return "To start receiving client cases, you need to complete the verification process with additional professional details.";
+      case 'pending_complete': 
+        return "Thank you for completing your verification! Our admin team is reviewing your submission and will notify you once approved.";
+      case 'verified': 
+        return "Your profile is fully verified. You can now receive client cases and access all lawyer features.";
+      default: return "";
+    }
+  };
+
+  // Render verification form if needed
+  if (showVerificationForm) {
+    return (
+      <div className="min-h-screen bg-background">
+        <header className="border-b bg-background/95 backdrop-blur sticky top-0 z-50">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              <Link to="/?force=true" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
+                <Scale className="h-8 w-8 text-primary" />
+                <span className="text-xl font-bold">LegalConnect</span>
+                <Badge variant="secondary" className="ml-2">Lawyer Portal</Badge>
+              </Link>
+              <Button variant="ghost" size="sm" onClick={() => setShowVerificationForm(false)}>
+                Back to Dashboard
+              </Button>
+            </div>
+          </div>
+        </header>
+        <div className="container mx-auto px-4 py-8">
+          <CompleteVerificationForm 
+            onComplete={() => {
+              setShowVerificationForm(false);
+              fetchDashboardData(); // Refresh profile data
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
+
   // Check if lawyer profile is approved
   if (profile?.role !== 'lawyer' || profile?.is_active === false) {
     return (
@@ -237,6 +293,44 @@ const LawyerDashboard = () => {
       </header>
 
       <div className="container mx-auto px-4 py-8 max-w-6xl">
+        {/* Verification Status Banner */}
+        {profile?.verification_status !== 'verified' && (
+          <Card className="mb-6 border-warning bg-warning/5">
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0">
+                  {profile?.verification_status === 'pending_basic' ? (
+                    <AlertTriangle className="h-6 w-6 text-warning" />
+                  ) : profile?.verification_status === 'pending_complete' ? (
+                    <Clock className="h-6 w-6 text-warning" />
+                  ) : (
+                    <ShieldCheck className="h-6 w-6 text-success" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold mb-2">
+                    {getVerificationTitle(profile?.verification_status)}
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {getVerificationDescription(profile?.verification_status)}
+                  </p>
+                  {profile?.verification_status === 'pending_basic' && (
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={() => setShowVerificationForm(true)}
+                        size="sm"
+                      >
+                        <Settings className="h-4 w-4 mr-2" />
+                        Complete Verification
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Stats Overview */}
         <div className="grid md:grid-cols-4 gap-4 mb-8">
           <Card className="bg-gradient-card shadow-card">
