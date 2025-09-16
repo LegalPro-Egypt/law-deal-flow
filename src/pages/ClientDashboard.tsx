@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { useClientData } from "@/hooks/useClientData";
 import { useAuth } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -29,7 +30,6 @@ import { Link, useNavigate } from "react-router-dom";
 const ClientDashboard = () => {
   const [newMessage, setNewMessage] = useState("");
   const [deletingCase, setDeletingCase] = useState(false);
-  const [docsComplete, setDocsComplete] = useState(false);
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const { 
@@ -101,8 +101,49 @@ const ClientDashboard = () => {
     }
   };
 
+  // Compute completion status from actual data
+  const getStepCompletion = () => {
+    if (!activeCase) return { step1: false, step2: false, step3: false, allComplete: false };
+    
+    // Step 1: Case data exists (either extracted data or AI summary)
+    const step1Complete = !!(activeCase.ai_summary || activeCase.draft_data);
+    
+    // Step 2: Personal details are filled  
+    const step2Complete = !!(activeCase.client_name && activeCase.client_email && activeCase.client_phone);
+    
+    // Step 3: All required documents are uploaded
+    const requiredCategories = ['identity', 'case']; // Based on DocumentUpload component
+    const uploadedCategories = new Set(
+      documents
+        .filter(doc => doc.document_category)
+        .map(doc => doc.document_category)
+    );
+    const step3Complete = requiredCategories.every(cat => uploadedCategories.has(cat));
+    
+    const allComplete = step1Complete && step2Complete && step3Complete;
+    
+    return { step1: step1Complete, step2: step2Complete, step3: step3Complete, allComplete };
+  };
+
+  const stepCompletion = getStepCompletion();
+
   const handleReviewCase = async () => {
     if (!activeCase) return;
+    
+    const completion = getStepCompletion();
+    if (!completion.allComplete) {
+      const missingSteps = [];
+      if (!completion.step1) missingSteps.push("complete the AI chat");
+      if (!completion.step2) missingSteps.push("provide personal details");
+      if (!completion.step3) missingSteps.push("upload required documents");
+      
+      toast({
+        title: "Cannot Proceed to Review",
+        description: `Please ${missingSteps.join(", ")} before continuing.`,
+        variant: "destructive",
+      });
+      return;
+    }
     
     try {
       const { error } = await supabase
@@ -341,7 +382,7 @@ const ClientDashboard = () => {
                   </Button>
                   {activeCase.status === 'draft' && (
                     <>
-                      {docsComplete ? (
+                      {stepCompletion.allComplete ? (
                         <Button 
                           className="w-full justify-start bg-gradient-primary" 
                           onClick={handleReviewCase}
@@ -357,6 +398,35 @@ const ClientDashboard = () => {
                           </Link>
                         </Button>
                       )}
+                      
+                      {/* Progress indicators */}
+                      <div className="text-xs text-muted-foreground space-y-1">
+                        <div className="flex items-center gap-2">
+                          {stepCompletion.step1 ? (
+                            <CheckCircle className="h-3 w-3 text-green-600" />
+                          ) : (
+                            <div className="h-3 w-3 rounded-full border border-muted-foreground" />
+                          )}
+                          <span>AI Chat Complete</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {stepCompletion.step2 ? (
+                            <CheckCircle className="h-3 w-3 text-green-600" />
+                          ) : (
+                            <div className="h-3 w-3 rounded-full border border-muted-foreground" />
+                          )}
+                          <span>Personal Details</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {stepCompletion.step3 ? (
+                            <CheckCircle className="h-3 w-3 text-green-600" />
+                          ) : (
+                            <div className="h-3 w-3 rounded-full border border-muted-foreground" />
+                          )}
+                          <span>Required Documents</span>
+                        </div>
+                      </div>
+                      
                       <Button 
                         className="w-full justify-start" 
                         variant="destructive"
@@ -371,6 +441,60 @@ const ClientDashboard = () => {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          {/* Personal Details Tab */}
+          <TabsContent value="details" className="space-y-6">
+            <Card className="bg-gradient-card shadow-card">
+              <CardHeader>
+                <CardTitle>Personal Information</CardTitle>
+                <CardDescription>
+                  View and manage your contact information
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium">Full Name</Label>
+                    <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
+                      {activeCase?.client_name || 'Not provided'}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Email</Label>
+                    <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
+                      {activeCase?.client_email || 'Not provided'}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Phone</Label>
+                    <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
+                      {activeCase?.client_phone || 'Not provided'}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Language</Label>
+                    <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
+                      {activeCase?.language === 'en' && 'English'}
+                      {activeCase?.language === 'ar' && 'Arabic'}  
+                      {activeCase?.language === 'de' && 'German'}
+                      {!activeCase?.language && 'Not specified'}
+                    </p>
+                  </div>
+                </div>
+                
+                {activeCase?.status === 'draft' && (
+                  <div className="pt-4 border-t">
+                    <Button asChild variant="outline">
+                      <Link to="/intake">
+                        <FileText className="h-4 w-4 mr-2" />
+                        Edit Details
+                      </Link>
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Messages Tab */}
@@ -489,7 +613,6 @@ const ClientDashboard = () => {
                     console.log('Files uploaded:', files);
                     // Documents will be refreshed via realtime subscription
                   }}
-                  onCompletionChange={setDocsComplete}
                 />
               </CardContent>
             </Card>

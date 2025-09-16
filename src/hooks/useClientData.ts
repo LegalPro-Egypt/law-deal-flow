@@ -18,6 +18,10 @@ interface ClientCase {
   remaining_fee?: number;
   client_name: string;
   client_email: string;
+  client_phone?: string;
+  ai_summary?: string;
+  draft_data?: any;
+  language?: string;
   assigned_lawyer?: {
     first_name: string;
     last_name: string;

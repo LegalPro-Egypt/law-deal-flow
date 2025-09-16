@@ -237,20 +237,39 @@ const Intake = () => {
               { number: 4, label: 'Review', icon: FileText }
             ].map((step, index) => (
               <div key={step.number} className="flex items-center">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium relative ${
-                  (currentStep > step.number) || 
-                  (currentStep === step.number && !showPersonalForm) ||
-                  (step.number === 2 && personalData) ||
-                  (step.number === 1 && showPersonalForm)
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'bg-muted text-muted-foreground'
-                }`}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={`w-10 h-10 rounded-full p-0 ${
+                    (currentStep > step.number) || 
+                    (currentStep === step.number && !showPersonalForm) ||
+                    (step.number === 2 && personalData) ||
+                    (step.number === 1 && showPersonalForm)
+                      ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  }`}
+                  onClick={() => {
+                    if (step.number === 2 && personalData && currentStep >= 2) {
+                      setShowPersonalForm(true);
+                    } else if (step.number === 1 && currentStep >= 1) {
+                      setCurrentStep(1);
+                      setShowPersonalForm(false);
+                    } else if (step.number === 3 && currentStep >= 3) {
+                      setCurrentStep(3);
+                      setShowPersonalForm(false);
+                    } else if (step.number === 4 && currentStep >= 4) {
+                      setCurrentStep(4);
+                      setShowPersonalForm(false);
+                    }
+                  }}
+                  disabled={step.number > currentStep && !(step.number === 2 && personalData)}
+                >
                   {((currentStep > step.number) || (step.number === 2 && personalData)) ? (
                     <CheckCircle className="h-5 w-5" />
                   ) : (
                     <step.icon className="h-5 w-5" />
                   )}
-                </div>
+                </Button>
                 {index < 3 && (
                   <div className={`w-12 h-0.5 mx-2 ${
                     (currentStep > step.number) || (step.number === 1 && personalData)
@@ -311,8 +330,50 @@ const Intake = () => {
           </div>
         )}
 
+        {/* Step 2: Personal Details (when editing existing) */}
+        {currentStep >= 2 && personalData && showPersonalForm && (
+          <PersonalDetailsForm
+            initialData={personalData}
+            onSubmit={async (data) => {
+              // Update the case with new personal details
+              if (caseId) {
+                try {
+                  const { error } = await supabase
+                    .from('cases')
+                    .update({
+                      client_name: data.fullName,
+                      client_email: data.email,
+                      client_phone: data.phone,
+                      language: data.preferredLanguage
+                    })
+                    .eq('id', caseId);
+                    
+                  if (error) throw error;
+                  
+                  setPersonalData(data);
+                  setShowPersonalForm(false);
+                  
+                  toast({
+                    title: "Personal Details Updated",
+                    description: "Your information has been saved successfully.",
+                  });
+                } catch (error) {
+                  console.error('Error updating personal details:', error);
+                  toast({
+                    title: "Update Failed",
+                    description: "Failed to save your details. Please try again.",
+                    variant: "destructive",
+                  });
+                }
+              }
+            }}
+            onBack={() => setShowPersonalForm(false)}
+            className="mb-8"
+          />
+        )}
+
         {/* Step 3: Document Upload */}
-        {currentStep === 3 && (
+        {currentStep === 3 && !showPersonalForm && (
           <Card className="bg-gradient-card shadow-elevated">
             <CardHeader>
               <CardTitle className="flex items-center">
