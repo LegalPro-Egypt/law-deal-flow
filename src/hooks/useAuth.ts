@@ -30,7 +30,7 @@ export const useAuth = () => {
                 .from('profiles')
                 .select('*')
                 .eq('user_id', session.user.id)
-                .single();
+                .maybeSingle();
               
               if (error) {
                 console.error('useAuth: Profile fetch error:', error);
@@ -72,7 +72,7 @@ export const useAuth = () => {
               .from('profiles')
               .select('*')
               .eq('user_id', session.user.id)
-              .single();
+              .maybeSingle();
               
             if (profileError) {
               console.error('useAuth: Initial profile fetch error:', profileError);
