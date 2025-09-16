@@ -90,6 +90,13 @@ const Intake = () => {
       const searchParams = new URLSearchParams(location.search);
       const caseParam = searchParams.get('case');
       const editParam = searchParams.get('edit');
+      const newParam = searchParams.get('new');
+
+      // If ?new=1, start fresh flow
+      if (newParam === '1') {
+        setIsLoading(false);
+        return;
+      }
 
       try {
         let targetCase = null;
@@ -107,12 +114,12 @@ const Intake = () => {
             targetCase = specificCase;
           }
         } else {
-          // Look for latest case (draft or submitted for editing/review)
+          // Look for latest DRAFT case only (not submitted)
           const { data: latestCases } = await supabase
             .from('cases')
             .select('*')
             .eq('user_id', user.id)
-            .in('status', ['draft', 'submitted'])
+            .eq('status', 'draft')
             .order('updated_at', { ascending: false })
             .limit(1);
 
@@ -725,17 +732,22 @@ const Intake = () => {
                 </ul>
               </Card>
 
-              <div className="flex justify-between">
+              <div className="flex flex-col sm:flex-row gap-3 sm:justify-between">
                 <Button variant="outline" onClick={() => setCurrentStep(3)}>
                   Back to Documents
                 </Button>
-                <Button 
-                  className="bg-gradient-primary"
-                  onClick={handleSubmitCaseForReview}
-                  disabled={!caseId}
-                >
-                  Submit Case for Review
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button variant="outline" asChild>
+                    <Link to="/intake?new=1">Start New Case</Link>
+                  </Button>
+                  <Button 
+                    className="bg-gradient-primary"
+                    onClick={handleSubmitCaseForReview}
+                    disabled={!caseId}
+                  >
+                    Submit Case for Review
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>

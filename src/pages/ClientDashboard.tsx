@@ -325,7 +325,7 @@ const ClientDashboard = () => {
               </div>
               <div className="flex items-center space-x-1 sm:space-x-2">
                 <Button asChild className="h-9 sm:h-10" size="sm">
-                  <Link to="/intake">
+                  <Link to="/intake?new=1">
                     <Plus className="h-4 w-4 sm:mr-2" />
                     <span className="hidden sm:inline">Start New Case</span>
                   </Link>
@@ -348,7 +348,7 @@ const ClientDashboard = () => {
               </p>
               <div className="space-y-2">
                 <Button asChild>
-                  <Link to="/intake">Start New Case</Link>
+                  <Link to="/intake?new=1">Start New Case</Link>
                 </Button>
                 <Button 
                   variant="outline" 
@@ -406,7 +406,7 @@ const ClientDashboard = () => {
                 className="bg-primary hover:bg-primary/90 text-primary-foreground h-9 sm:h-10"
                 size="sm"
               >
-                <Link to="/intake">
+                <Link to="/intake?new=1">
                   <Plus className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:inline">Start New Case</span>
                 </Link>
