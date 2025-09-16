@@ -27,9 +27,23 @@ import {
   LogOut,
   XCircle,
   Trash2,
-  Ban
+  Ban,
+  ChevronDown,
+  ChevronUp,
+  User,
+  Briefcase,
+  GraduationCap,
+  FileImage,
+  Mail,
+  Phone,
+  DollarSign,
+  Award,
+  Video,
+  Globe
 } from "lucide-react";
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Separator } from "@/components/ui/separator";
 import { LawyerRequestsManager } from "@/components/LawyerRequestsManager";
 import { CaseDetailsDialog } from "@/components/CaseDetailsDialog";
 import { ConversationDialog } from "@/components/ConversationDialog";
@@ -58,6 +72,8 @@ const AdminDashboard = () => {
   const [allLawyers, setAllLawyers] = useState<any[]>([]);
   const [selectedLawyerId, setSelectedLawyerId] = useState<string | null>(null);
   const [showLawyerDetails, setShowLawyerDetails] = useState(false);
+  const [cardUrls, setCardUrls] = useState<Record<string, { front?: string; back?: string }>>({});
+  const [expandedLawyers, setExpandedLawyers] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchAllLawyers();
@@ -74,6 +90,44 @@ const AdminDashboard = () => {
 
       if (error) throw error;
       setAllLawyers(lawyers || []);
+
+      // Fetch signed URLs for lawyer cards for pending lawyers
+      const pendingLawyers = lawyers?.filter(l => l.verification_status === 'pending_complete') || [];
+      const urlPromises = pendingLawyers.map(async (lawyer) => {
+        const urls: { front?: string; back?: string } = {};
+
+        if (lawyer.lawyer_card_front_url) {
+          try {
+            const { data: frontUrl } = await supabase.storage
+              .from('lawyer-documents')
+              .createSignedUrl(lawyer.lawyer_card_front_url, 60 * 60 * 24); // 24 hours
+            if (frontUrl?.signedUrl) urls.front = frontUrl.signedUrl;
+          } catch (error) {
+            console.error('Error fetching front card URL:', error);
+          }
+        }
+
+        if (lawyer.lawyer_card_back_url) {
+          try {
+            const { data: backUrl } = await supabase.storage
+              .from('lawyer-documents')
+              .createSignedUrl(lawyer.lawyer_card_back_url, 60 * 60 * 24); // 24 hours
+            if (backUrl?.signedUrl) urls.back = backUrl.signedUrl;
+          } catch (error) {
+            console.error('Error fetching back card URL:', error);
+          }
+        }
+
+        return { id: lawyer.id, urls };
+      });
+
+      const urlResults = await Promise.all(urlPromises);
+      const urlMap = urlResults.reduce((acc, { id, urls }) => {
+        acc[id] = urls;
+        return acc;
+      }, {} as Record<string, { front?: string; back?: string }>);
+
+      setCardUrls(urlMap);
     } catch (error: any) {
       console.error('Error fetching lawyers:', error);
     }
@@ -203,6 +257,16 @@ const AdminDashboard = () => {
   const handleViewLawyerDetails = (lawyerId: string) => {
     setSelectedLawyerId(lawyerId);
     setShowLawyerDetails(true);
+  };
+
+  const toggleLawyerExpansion = (lawyerId: string) => {
+    const newExpanded = new Set(expandedLawyers);
+    if (newExpanded.has(lawyerId)) {
+      newExpanded.delete(lawyerId);
+    } else {
+      newExpanded.add(lawyerId);
+    }
+    setExpandedLawyers(newExpanded);
   };
 
   const confirmDenyCase = async () => {
@@ -697,6 +761,21 @@ const AdminDashboard = () => {
                             <>
                               <Button 
                                 size="sm" 
+                                variant="outline" 
+                                className="justify-between"
+                                onClick={() => toggleLawyerExpansion(lawyer.id)}
+                              >
+                                <span className="flex items-center">
+                                  <FileText className="h-4 w-4 mr-2" />
+                                  Review Questionnaire
+                                </span>
+                                {expandedLawyers.has(lawyer.id) ? 
+                                  <ChevronUp className="h-4 w-4" /> : 
+                                  <ChevronDown className="h-4 w-4" />
+                                }
+                              </Button>
+                              <Button 
+                                size="sm" 
                                 className="bg-success justify-start"
                                 onClick={() => handleApproveVerification(lawyer.user_id)}
                               >
@@ -729,6 +808,181 @@ const AdminDashboard = () => {
                           </div>
                         </div>
                       </div>
+
+                      {/* Expandable Questionnaire Details for Pending Lawyers */}
+                      {lawyer.verification_status === 'pending_complete' && expandedLawyers.has(lawyer.id) && (
+                        <div className="mt-6 pt-6 border-t">
+                          <div className="space-y-6">
+                            {/* Lawyer Cards */}
+                            {(cardUrls[lawyer.id]?.front || cardUrls[lawyer.id]?.back) && (
+                              <div>
+                                <h4 className="font-medium flex items-center gap-2 mb-3">
+                                  <FileImage className="h-4 w-4" />
+                                  Lawyer Card Documents
+                                </h4>
+                                <div className="grid grid-cols-2 gap-4">
+                                  {cardUrls[lawyer.id]?.front && (
+                                    <div>
+                                      <p className="text-xs text-muted-foreground mb-2">Front</p>
+                                      <img 
+                                        src={cardUrls[lawyer.id].front}
+                                        alt="Lawyer Card Front"
+                                        className="w-full h-32 object-cover rounded border"
+                                      />
+                                    </div>
+                                  )}
+                                  {cardUrls[lawyer.id]?.back && (
+                                    <div>
+                                      <p className="text-xs text-muted-foreground mb-2">Back</p>
+                                      <img 
+                                        src={cardUrls[lawyer.id].back}
+                                        alt="Lawyer Card Back"
+                                        className="w-full h-32 object-cover rounded border"
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Team Structure */}
+                            {(lawyer.team_size || lawyer.team_breakdown) && (
+                              <div className="bg-muted/30 p-4 rounded-lg">
+                                <h4 className="font-medium flex items-center gap-2 mb-3">
+                                  <Users className="h-4 w-4" />
+                                  Team Structure
+                                </h4>
+                                <div className="space-y-2 text-sm">
+                                  {lawyer.team_size && (
+                                    <p><strong>Total Team Size:</strong> {lawyer.team_size} members</p>
+                                  )}
+                                  {lawyer.team_breakdown && (
+                                    <div className="grid grid-cols-2 gap-2">
+                                      {lawyer.team_breakdown.partnersCount && (
+                                        <p><strong>Partners:</strong> {lawyer.team_breakdown.partnersCount}</p>
+                                      )}
+                                      {lawyer.team_breakdown.associatesCount && (
+                                        <p><strong>Associates:</strong> {lawyer.team_breakdown.associatesCount}</p>
+                                      )}
+                                      {lawyer.team_breakdown.paralegalsCount && (
+                                        <p><strong>Paralegals:</strong> {lawyer.team_breakdown.paralegalsCount}</p>
+                                      )}
+                                      {lawyer.team_breakdown.supportStaffCount && (
+                                        <p><strong>Support Staff:</strong> {lawyer.team_breakdown.supportStaffCount}</p>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Pricing & Consultation */}
+                            {(lawyer.pricing_structure || lawyer.consultation_methods) && (
+                              <div className="bg-muted/30 p-4 rounded-lg">
+                                <h4 className="font-medium flex items-center gap-2 mb-3">
+                                  <DollarSign className="h-4 w-4" />
+                                  Pricing & Consultation
+                                </h4>
+                                <div className="space-y-3 text-sm">
+                                  {lawyer.consultation_methods && (
+                                    <div>
+                                      <p className="font-medium mb-1">Consultation Methods:</p>
+                                      <div className="flex flex-wrap gap-1">
+                                        {lawyer.consultation_methods.map((method: string, index: number) => (
+                                          <Badge key={index} variant="outline" className="text-xs">
+                                            {method}
+                                          </Badge>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                  
+                                  {lawyer.payment_structures && (
+                                    <div>
+                                      <p className="font-medium mb-1">Payment Structures:</p>
+                                      <div className="flex flex-wrap gap-1">
+                                        {lawyer.payment_structures.map((structure: string, index: number) => (
+                                          <Badge key={index} variant="outline" className="text-xs">
+                                            {structure}
+                                          </Badge>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {lawyer.pricing_structure && (
+                                    <div>
+                                      {lawyer.pricing_structure.consultationRate && (
+                                        <p><strong>Consultation Rate:</strong> {lawyer.pricing_structure.consultationRate} EGP</p>
+                                      )}
+                                      
+                                      {/* Legal Service Rates */}
+                                      <div className="mt-2">
+                                        <p className="font-medium mb-1">Legal Service Rates:</p>
+                                        <div className="grid grid-cols-2 gap-1 text-xs text-muted-foreground">
+                                          {lawyer.pricing_structure.familyLawRate && (
+                                            <p>Family Law: {lawyer.pricing_structure.familyLawRate} EGP</p>
+                                          )}
+                                          {lawyer.pricing_structure.criminalLawRate && (
+                                            <p>Criminal Law: {lawyer.pricing_structure.criminalLawRate} EGP</p>
+                                          )}
+                                          {lawyer.pricing_structure.corporateLawRate && (
+                                            <p>Corporate Law: {lawyer.pricing_structure.corporateLawRate} EGP</p>
+                                          )}
+                                          {lawyer.pricing_structure.realEstateLawRate && (
+                                            <p>Real Estate Law: {lawyer.pricing_structure.realEstateLawRate} EGP</p>
+                                          )}
+                                          {lawyer.pricing_structure.immigrationLawRate && (
+                                            <p>Immigration Law: {lawyer.pricing_structure.immigrationLawRate} EGP</p>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Professional Memberships & Achievements */}
+                            {(lawyer.professional_memberships || lawyer.notable_achievements) && (
+                              <div className="bg-muted/30 p-4 rounded-lg">
+                                <h4 className="font-medium flex items-center gap-2 mb-3">
+                                  <Award className="h-4 w-4" />
+                                  Professional Memberships & Achievements
+                                </h4>
+                                <div className="space-y-3 text-sm">
+                                  {lawyer.professional_memberships && lawyer.professional_memberships.length > 0 && (
+                                    <div>
+                                      <p className="font-medium mb-2">Professional Memberships:</p>
+                                      <div className="flex flex-wrap gap-1">
+                                        {lawyer.professional_memberships.map((membership: string, index: number) => (
+                                          <Badge key={index} variant="outline" className="text-xs">
+                                            {membership}
+                                          </Badge>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                  
+                                  {lawyer.notable_achievements && (
+                                    <div>
+                                      <p className="font-medium mb-2">Notable Achievements:</p>
+                                      <p className="text-muted-foreground">{lawyer.notable_achievements}</p>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {lawyer.bio && (
+                              <div className="bg-muted/30 p-4 rounded-lg">
+                                <h4 className="font-medium mb-2">Professional Bio</h4>
+                                <p className="text-sm text-muted-foreground">{lawyer.bio}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))}
