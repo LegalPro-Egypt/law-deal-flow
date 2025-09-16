@@ -13,7 +13,8 @@ import {
   AlertCircle,
   Download,
   Upload,
-  Send
+  Send,
+  ArrowRight
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,12 +24,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import DocumentUpload from "@/components/DocumentUpload";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const ClientDashboard = () => {
   const [newMessage, setNewMessage] = useState("");
   const [deletingCase, setDeletingCase] = useState(false);
+  const [docsComplete, setDocsComplete] = useState(false);
   const { signOut } = useAuth();
+  const navigate = useNavigate();
   const { 
     cases, 
     activeCase, 
@@ -95,6 +98,33 @@ const ClientDashboard = () => {
         return 'bg-warning';
       default:
         return 'bg-muted';
+    }
+  };
+
+  const handleReviewCase = async () => {
+    if (!activeCase) return;
+    
+    try {
+      const { error } = await supabase
+        .from('cases')
+        .update({ step: 4 })
+        .eq('id', activeCase.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Proceeding to Review",
+        description: "Your case is ready for review and submission.",
+      });
+
+      navigate('/intake');
+    } catch (error) {
+      console.error('Error updating case step:', error);
+      toast({
+        title: "Error",
+        description: "Failed to proceed to review. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -311,12 +341,22 @@ const ClientDashboard = () => {
                   </Button>
                   {activeCase.status === 'draft' && (
                     <>
-                      <Button asChild className="w-full justify-start" variant="outline">
-                        <Link to="/intake">
-                          <FileText className="h-4 w-4 mr-2" />
-                          Continue Case Setup
-                        </Link>
-                      </Button>
+                      {docsComplete ? (
+                        <Button 
+                          className="w-full justify-start bg-gradient-primary" 
+                          onClick={handleReviewCase}
+                        >
+                          <ArrowRight className="h-4 w-4 mr-2" />
+                          Review Case & Submit
+                        </Button>
+                      ) : (
+                        <Button asChild className="w-full justify-start" variant="outline">
+                          <Link to="/intake">
+                            <FileText className="h-4 w-4 mr-2" />
+                            Continue Case Setup
+                          </Link>
+                        </Button>
+                      )}
                       <Button 
                         className="w-full justify-start" 
                         variant="destructive"
@@ -449,6 +489,7 @@ const ClientDashboard = () => {
                     console.log('Files uploaded:', files);
                     // Documents will be refreshed via realtime subscription
                   }}
+                  onCompletionChange={setDocsComplete}
                 />
               </CardContent>
             </Card>
