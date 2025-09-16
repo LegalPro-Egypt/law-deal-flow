@@ -496,7 +496,7 @@ const ClientDashboard = () => {
                 {activeCase?.status === 'draft' && (
                 <div className="pt-4 border-t">
                   <Button asChild variant="outline">
-                    <Link to={`/intake?case=${activeCase.id}`}>
+                    <Link to={`/intake?case=${activeCase.id}&edit=personal`}>
                       <FileText className="h-4 w-4 mr-2" />
                       Edit Details
                     </Link>

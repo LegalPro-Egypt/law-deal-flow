@@ -85,9 +85,10 @@ const Intake = () => {
         return;
       }
 
-      // Parse case ID from URL params
+      // Parse case ID and edit mode from URL params
       const searchParams = new URLSearchParams(location.search);
       const caseParam = searchParams.get('case');
+      const editParam = searchParams.get('edit');
 
       try {
         let targetCase = null;
@@ -174,8 +175,12 @@ const Intake = () => {
           const step3Complete = requiredCategories.every(cat => uploadedCategories.has(cat));
           setDocumentsComplete(step3Complete);
 
-          // Set current step
-          if (targetCase.step === 4 || step3Complete) {
+          // Set current step - handle edit mode
+          if (editParam === 'personal') {
+            // Force show personal form for editing
+            setCurrentStep(2);
+            setShowPersonalForm(true);
+          } else if (targetCase.step === 4 || step3Complete) {
             setCurrentStep(4);
           } else if (!step2Complete) {
             setCurrentStep(2);
