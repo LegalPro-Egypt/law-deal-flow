@@ -6,6 +6,8 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Upload, File, X, CheckCircle, AlertCircle } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import MobileFileInput from './MobileFileInput';
 
 interface UploadedFile {
   name: string;
@@ -40,6 +42,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onFilesUploaded, onComp
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
   const [isUploading, setIsUploading] = useState<Record<string, boolean>>({});
+  const isMobile = useIsMobile();
 
   const categories: DocumentCategory[] = [
     {
@@ -325,38 +328,51 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onFilesUploaded, onComp
 
                 {/* Upload Button */}
                 <div>
-                  <input
-                    type="file"
-                    id={`upload-${category.id}`}
-                    className="hidden"
-                    multiple
-                    accept={category.acceptedTypes}
-                    onChange={(e) => handleFileUpload(e.target.files, category.id)}
-                    disabled={!caseId}
-                  />
-                  <label htmlFor={`upload-${category.id}`}>
-                    <Button
-                      type="button"
-                      variant={hasFiles ? "secondary" : "outline"}
-                      className="w-full"
+                  {isMobile ? (
+                    <MobileFileInput
+                      onFileSelect={(files) => handleFileUpload(files, category.id)}
+                      accept={category.acceptedTypes}
+                      multiple={true}
                       disabled={!caseId}
-                      asChild
-                    >
-                      <span className="cursor-pointer flex items-center justify-center">
-                        {hasFiles ? (
-                          <>
-                            <CheckCircle className="h-4 w-4 mr-2" />
-                            {category.buttonText} More
-                          </>
-                        ) : (
-                          <>
-                            <Upload className="h-4 w-4 mr-2" />
-                            {category.buttonText}
-                          </>
-                        )}
-                      </span>
-                    </Button>
-                  </label>
+                      hasFiles={hasFiles}
+                      buttonText={category.buttonText}
+                    />
+                  ) : (
+                    <>
+                      <input
+                        type="file"
+                        id={`upload-${category.id}`}
+                        className="hidden"
+                        multiple
+                        accept={category.acceptedTypes}
+                        onChange={(e) => handleFileUpload(e.target.files, category.id)}
+                        disabled={!caseId}
+                      />
+                      <label htmlFor={`upload-${category.id}`}>
+                        <Button
+                          type="button"
+                          variant={hasFiles ? "secondary" : "outline"}
+                          className="w-full"
+                          disabled={!caseId}
+                          asChild
+                        >
+                          <span className="cursor-pointer flex items-center justify-center">
+                            {hasFiles ? (
+                              <>
+                                <CheckCircle className="h-4 w-4 mr-2" />
+                                {category.buttonText} More
+                              </>
+                            ) : (
+                              <>
+                                <Upload className="h-4 w-4 mr-2" />
+                                {category.buttonText}
+                              </>
+                            )}
+                          </span>
+                        </Button>
+                      </label>
+                    </>
+                  )}
                 </div>
 
                 {/* Uploaded Files */}
