@@ -10,7 +10,9 @@ import { Link } from "react-router-dom";
 import { LegalChatbot } from "@/components/LegalChatbot";
 import { AuthenticationPrompt } from "@/components/AuthenticationPrompt";
 import { PersonalDetailsForm, PersonalDetailsData } from "@/components/PersonalDetailsForm";
+import DocumentUpload from "@/components/DocumentUpload";
 import { useAuth } from "@/hooks/useAuth";
+import { useLegalChatbot } from "@/hooks/useLegalChatbot";
 import { supabase } from "@/integrations/supabase/client";
 
 const Intake = () => {
@@ -22,6 +24,7 @@ const Intake = () => {
   const [showPersonalForm, setShowPersonalForm] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
+  const { caseId } = useLegalChatbot();
 
   const handleCaseDataExtracted = (data: any) => {
     setExtractedCaseData(data);
@@ -276,44 +279,13 @@ const Intake = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Document Categories */}
-              <div className="grid md:grid-cols-2 gap-4">
-                {[
-                  { title: "Identity Documents", required: true, files: ["ID Card", "Passport"] },
-                  { title: "Case Related Documents", required: true, files: ["Contracts", "Correspondence"] },
-                  { title: "Financial Documents", required: false, files: ["Bank Statements", "Invoices"] },
-                  { title: "Legal Documents", required: false, files: ["Previous Court Orders", "Legal Notices"] }
-                ].map((category, index) => (
-                  <Card key={index} className="p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-medium">{category.title}</h4>
-                      <Badge variant={category.required ? "default" : "secondary"}>
-                        {category.required ? "Required" : "Optional"}
-                      </Badge>
-                    </div>
-                    <div className="space-y-2">
-                      {category.files.map((file, fileIndex) => (
-                        <div key={fileIndex} className="flex items-center justify-between p-2 bg-muted rounded">
-                          <span className="text-sm">{file}</span>
-                          <Button size="sm" variant="ghost">
-                            <Upload className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  </Card>
-                ))}
-              </div>
-
-              {/* Upload Area */}
-              <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center">
-                <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">Drop files here or click to upload</h3>
-                <p className="text-muted-foreground mb-4">
-                  Supported: PDF, DOCX, JPG, PNG (Max 25MB each)
-                </p>
-                <Button variant="outline">Choose Files</Button>
-              </div>
+              <DocumentUpload 
+                caseId={caseId}
+                onFilesUploaded={(files) => {
+                  console.log('Files uploaded:', files);
+                  // You can add additional logic here if needed
+                }}
+              />
 
               <div className="flex justify-between">
                 <Button variant="outline" onClick={() => setCurrentStep(1)}>

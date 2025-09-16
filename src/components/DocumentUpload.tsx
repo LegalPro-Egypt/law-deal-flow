@@ -1,0 +1,346 @@
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { Upload, File, X, CheckCircle } from 'lucide-react';
+
+interface UploadedFile {
+  name: string;
+  size: number;
+  url: string;
+  category: string;
+}
+
+interface DocumentCategory {
+  id: string;
+  title: string;
+  buttonText: string;
+  required: boolean;
+  examples: string[];
+  acceptedTypes: string;
+}
+
+interface DocumentUploadProps {
+  onFilesUploaded?: (files: UploadedFile[]) => void;
+  caseId?: string;
+}
+
+const DocumentUpload: React.FC<DocumentUploadProps> = ({ onFilesUploaded, caseId }) => {
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
+  const [isUploading, setIsUploading] = useState<Record<string, boolean>>({});
+
+  const categories: DocumentCategory[] = [
+    {
+      id: 'identity',
+      title: 'Identity Documents',
+      buttonText: 'Upload Passport',
+      required: true,
+      examples: ['Passport', 'National ID', 'Driver\'s License'],
+      acceptedTypes: '.pdf,.jpg,.jpeg,.png'
+    },
+    {
+      id: 'case',
+      title: 'Case Related Documents',
+      buttonText: 'Upload',
+      required: true,
+      examples: ['Contracts', 'Correspondence', 'Emails', 'Written agreements'],
+      acceptedTypes: '.pdf,.doc,.docx,.txt,.jpg,.jpeg,.png'
+    },
+    {
+      id: 'financial',
+      title: 'Financial Documents',
+      buttonText: 'Upload',
+      required: false,
+      examples: ['Bank statements', 'Invoices', 'Receipts', 'Tax documents'],
+      acceptedTypes: '.pdf,.doc,.docx,.jpg,.jpeg,.png'
+    },
+    {
+      id: 'legal',
+      title: 'Legal Documents',
+      buttonText: 'Upload',
+      required: false,
+      examples: ['Court orders', 'Legal notices', 'Previous judgments', 'Legal correspondence'],
+      acceptedTypes: '.pdf,.doc,.docx,.jpg,.jpeg,.png'
+    }
+  ];
+
+  const validateFile = (file: File): string | null => {
+    const maxSize = 20 * 1024 * 1024; // 20MB
+    if (file.size > maxSize) {
+      return 'File size must be less than 20MB';
+    }
+
+    const allowedTypes = [
+      'application/pdf',
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/plain'
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      return 'File type not supported. Please upload PDF, DOC, DOCX, TXT, JPG, or PNG files.';
+    }
+
+    return null;
+  };
+
+  const uploadFile = async (file: File, category: string): Promise<UploadedFile | null> => {
+    const uploadId = `${category}-${Date.now()}`;
+    
+    try {
+      setIsUploading(prev => ({ ...prev, [uploadId]: true }));
+      setUploadProgress(prev => ({ ...prev, [uploadId]: 0 }));
+
+      const validation = validateFile(file);
+      if (validation) {
+        toast({
+          title: "Upload Error",
+          description: validation,
+          variant: "destructive",
+        });
+        return null;
+      }
+
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to upload files.",
+          variant: "destructive",
+        });
+        return null;
+      }
+
+      // Create file path
+      const timestamp = Date.now();
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${timestamp}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      const filePath = `${user.id}/${category}/${fileName}`;
+
+      // Upload to Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('case-documents')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (error) {
+        console.error('Upload error:', error);
+        toast({
+          title: "Upload Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        return null;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('case-documents')
+        .getPublicUrl(filePath);
+
+      setUploadProgress(prev => ({ ...prev, [uploadId]: 100 }));
+
+      const uploadedFile: UploadedFile = {
+        name: file.name,
+        size: file.size,
+        url: publicUrl,
+        category
+      };
+
+      // Add to documents table if caseId is available
+      if (caseId) {
+        const { error: dbError } = await supabase
+          .from('documents')
+          .insert({
+            case_id: caseId,
+            file_name: file.name,
+            file_url: publicUrl,
+            file_type: file.type,
+            file_size: file.size,
+            document_category: category,
+            uploaded_by: user.id
+          });
+
+        if (dbError) {
+          console.error('Database error:', dbError);
+        }
+      }
+
+      toast({
+        title: "Upload Successful",
+        description: `${file.name} has been uploaded successfully.`,
+      });
+
+      return uploadedFile;
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({
+        title: "Upload Failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+      return null;
+    } finally {
+      setIsUploading(prev => ({ ...prev, [uploadId]: false }));
+      setTimeout(() => {
+        setUploadProgress(prev => {
+          const newProgress = { ...prev };
+          delete newProgress[uploadId];
+          return newProgress;
+        });
+      }, 2000);
+    }
+  };
+
+  const handleFileUpload = async (files: FileList | null, category: string) => {
+    if (!files || files.length === 0) return;
+
+    const fileArray = Array.from(files);
+    const uploadPromises = fileArray.map(file => uploadFile(file, category));
+    const results = await Promise.all(uploadPromises);
+    
+    const successfulUploads = results.filter((result): result is UploadedFile => result !== null);
+    
+    if (successfulUploads.length > 0) {
+      setUploadedFiles(prev => [...prev, ...successfulUploads]);
+      onFilesUploaded?.(successfulUploads);
+    }
+  };
+
+  const removeFile = (fileToRemove: UploadedFile) => {
+    setUploadedFiles(prev => prev.filter(file => file.url !== fileToRemove.url));
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const getCategoryFiles = (categoryId: string) => {
+    return uploadedFiles.filter(file => file.category === categoryId);
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Document Categories */}
+      <div className="grid md:grid-cols-2 gap-4">
+        {categories.map((category) => {
+          const categoryFiles = getCategoryFiles(category.id);
+          const hasFiles = categoryFiles.length > 0;
+          
+          return (
+            <Card key={category.id} className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-medium">{category.title}</h4>
+                <Badge variant={category.required ? "default" : "secondary"}>
+                  {category.required ? "Required" : "Optional"}
+                </Badge>
+              </div>
+              
+              <div className="space-y-3">
+                {/* Examples */}
+                <div className="text-sm text-muted-foreground">
+                  <p className="font-medium mb-1">Examples:</p>
+                  <p>{category.examples.join(', ')}</p>
+                </div>
+
+                {/* Upload Button */}
+                <div>
+                  <input
+                    type="file"
+                    id={`upload-${category.id}`}
+                    className="hidden"
+                    multiple
+                    accept={category.acceptedTypes}
+                    onChange={(e) => handleFileUpload(e.target.files, category.id)}
+                  />
+                  <label htmlFor={`upload-${category.id}`}>
+                    <Button
+                      type="button"
+                      variant={hasFiles ? "secondary" : "outline"}
+                      className="w-full"
+                      asChild
+                    >
+                      <span className="cursor-pointer flex items-center justify-center">
+                        {hasFiles ? (
+                          <>
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                            {category.buttonText} More
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="h-4 w-4 mr-2" />
+                            {category.buttonText}
+                          </>
+                        )}
+                      </span>
+                    </Button>
+                  </label>
+                </div>
+
+                {/* Uploaded Files */}
+                {categoryFiles.map((file, index) => (
+                  <div key={index} className="flex items-center justify-between p-2 bg-muted rounded">
+                    <div className="flex items-center space-x-2 flex-1 min-w-0">
+                      <File className="h-4 w-4 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{file.name}</p>
+                        <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeFile(file)}
+                      className="flex-shrink-0"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Upload Progress */}
+      {Object.entries(uploadProgress).map(([uploadId, progress]) => (
+        <div key={uploadId} className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span>Uploading...</span>
+            <span>{progress}%</span>
+          </div>
+          <Progress value={progress} className="w-full" />
+        </div>
+      ))}
+
+      {/* Upload Summary */}
+      {uploadedFiles.length > 0 && (
+        <Card className="p-4 bg-muted/50">
+          <div className="flex items-center space-x-2">
+            <CheckCircle className="h-5 w-5 text-green-600" />
+            <span className="font-medium">
+              {uploadedFiles.length} file{uploadedFiles.length !== 1 ? 's' : ''} uploaded successfully
+            </span>
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+};
+
+export default DocumentUpload;
