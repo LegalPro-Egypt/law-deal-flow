@@ -18,10 +18,14 @@ import {
   MessageSquare,
   AlertCircle,
   Clock,
-  CheckCircle
+  CheckCircle,
+  Download,
+  Eye,
+  Sparkles
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { DocumentPreview } from './DocumentPreview';
 
 interface CaseDetailsDialogProps {
   caseId: string | null;
@@ -64,6 +68,7 @@ interface CaseDocument {
   file_name: string;
   file_type: string;
   file_size: number;
+  file_url: string;
   document_category?: string;
   created_at: string;
 }
@@ -77,6 +82,8 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
   const [conversation, setConversation] = useState<ConversationMessage[]>([]);
   const [documents, setDocuments] = useState<CaseDocument[]>([]);
   const [loading, setLoading] = useState(false);
+  const [generatingSummary, setGeneratingSummary] = useState(false);
+  const [previewDocument, setPreviewDocument] = useState<CaseDocument | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -122,7 +129,7 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
       // Fetch documents
       const { data: documentsData } = await supabase
         .from('documents')
-        .select('id, file_name, file_type, file_size, document_category, created_at')
+        .select('id, file_name, file_type, file_size, file_url, document_category, created_at')
         .eq('case_id', caseId)
         .order('created_at', { ascending: false });
 
@@ -172,6 +179,76 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const generateSummary = async () => {
+    if (!caseId) return;
+
+    setGeneratingSummary(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-conversation-summary', {
+        body: { caseId }
+      });
+
+      if (error) throw error;
+
+      // Update the local state with the generated summary
+      setCaseDetails(prev => prev ? { ...prev, ai_summary: data.summary } : null);
+      
+      toast({
+        title: "Summary Generated",
+        description: "AI summary has been generated successfully",
+      });
+    } catch (error: any) {
+      console.error('Error generating summary:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate conversation summary",
+        variant: "destructive",
+      });
+    } finally {
+      setGeneratingSummary(false);
+    }
+  };
+
+  const downloadDocument = async (doc: CaseDocument) => {
+    try {
+      const response = await fetch(doc.file_url);
+      const blob = await response.blob();
+      
+      const url = window.URL.createObjectURL(blob);
+      const link = window.document.createElement('a');
+      link.href = url;
+      link.download = doc.file_name;
+      window.document.body.appendChild(link);
+      link.click();
+      window.document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Download Started",
+        description: `Downloading ${doc.file_name}`,
+      });
+    } catch (error) {
+      console.error('Error downloading document:', error);
+      toast({
+        title: "Download Failed",
+        description: "Failed to download document",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const viewDocument = (doc: CaseDocument) => {
+    const isImage = doc.file_type.startsWith('image/');
+    const isPDF = doc.file_type === 'application/pdf';
+    
+    if (isImage || isPDF) {
+      setPreviewDocument(doc);
+    } else {
+      // For other file types, open in new tab
+      window.open(doc.file_url, '_blank');
+    }
   };
 
   if (!isOpen || !caseId) return null;
@@ -270,12 +347,30 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                       <h4 className="font-medium">Description</h4>
                       <p className="text-sm text-muted-foreground">{caseDetails.description}</p>
                     </div>
-                    {caseDetails.ai_summary && (
-                      <div>
+                    <div>
+                      <div className="flex items-center justify-between">
                         <h4 className="font-medium">AI Summary</h4>
-                        <p className="text-sm text-muted-foreground">{caseDetails.ai_summary}</p>
+                        {!caseDetails.ai_summary && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={generateSummary}
+                            disabled={generatingSummary || conversation.length === 0}
+                            className="flex items-center gap-2"
+                          >
+                            <Sparkles className="h-4 w-4" />
+                            {generatingSummary ? 'Generating...' : 'Generate Summary'}
+                          </Button>
+                        )}
                       </div>
-                    )}
+                      {caseDetails.ai_summary ? (
+                        <p className="text-sm text-muted-foreground mt-2">{caseDetails.ai_summary}</p>
+                      ) : (
+                        <p className="text-sm text-muted-foreground mt-2 italic">
+                          {conversation.length === 0 ? 'No conversation available to summarize' : 'No summary generated yet'}
+                        </p>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
 
@@ -317,6 +412,21 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
               <TabsContent value="conversation" className="space-y-4">
                 {conversation.length > 0 ? (
                   <div className="space-y-4">
+                    {/* Conversation Statistics */}
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">
+                            {conversation.length} messages in conversation
+                          </span>
+                          <span className="text-muted-foreground">
+                            Started: {formatDate(conversation[0]?.created_at)}
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    {/* Conversation Messages */}
                     {conversation.map((message, index) => (
                       <Card key={message.id} className={message.role === 'user' ? 'ml-8' : 'mr-8'}>
                         <CardContent className="p-4">
@@ -331,7 +441,7 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                               {formatDate(message.created_at)}
                             </span>
                           </div>
-                          <p className="text-sm leading-relaxed">{message.content}</p>
+                          <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
                         </CardContent>
                       </Card>
                     ))}
@@ -367,9 +477,29 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                                 </div>
                               </div>
                             </div>
-                            {doc.document_category && (
-                              <Badge variant="outline">{doc.document_category}</Badge>
-                            )}
+                            <div className="flex items-center gap-2">
+                              {doc.document_category && (
+                                <Badge variant="outline">{doc.document_category}</Badge>
+                              )}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => viewDocument(doc)}
+                                className="flex items-center gap-2"
+                              >
+                                <Eye className="h-4 w-4" />
+                                View
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => downloadDocument(doc)}
+                                className="flex items-center gap-2"
+                              >
+                                <Download className="h-4 w-4" />
+                                Download
+                              </Button>
+                            </div>
                           </div>
                         </CardContent>
                       </Card>
@@ -429,6 +559,13 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
             </div>
           </div>
         )}
+
+        {/* Document Preview Modal */}
+        <DocumentPreview
+          isOpen={!!previewDocument}
+          onClose={() => setPreviewDocument(null)}
+          document={previewDocument}
+        />
       </DialogContent>
     </Dialog>
   );
