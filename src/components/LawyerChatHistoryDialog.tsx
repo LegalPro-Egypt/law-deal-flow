@@ -51,6 +51,10 @@ interface LawyerProfile {
   last_name: string | null;
   email: string;
   phone: string | null;
+  office_phone: string | null;
+  private_phone: string | null;
+  office_address: string | null;
+  birth_date: string | null;
   bio: string | null;
   law_firm: string | null;
   years_experience: number | null;
@@ -292,8 +296,24 @@ export const LawyerChatHistoryDialog = ({
                           <p className="text-sm">{lawyerProfile.email}</p>
                         </div>
                         <div>
-                          <label className="text-sm font-medium text-muted-foreground">Phone</label>
-                          <p className="text-sm">{lawyerProfile.phone || 'Not provided'}</p>
+                          <label className="text-sm font-medium text-muted-foreground">Office Phone</label>
+                          <p className="text-sm">{lawyerProfile.office_phone || 'Not provided'}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Private Phone</label>
+                          <p className="text-sm">{lawyerProfile.private_phone || 'Not provided'}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Office Address</label>
+                          <p className="text-sm">{lawyerProfile.office_address || 'Not provided'}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Birth Date</label>
+                          <p className="text-sm">
+                            {lawyerProfile.birth_date 
+                              ? new Date(lawyerProfile.birth_date).toLocaleDateString() 
+                              : 'Not provided'}
+                          </p>
                         </div>
                         <div>
                           <label className="text-sm font-medium text-muted-foreground">Status</label>

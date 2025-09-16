@@ -444,6 +444,7 @@ export type Database = {
         Row: {
           bar_admissions: string[] | null
           bio: string | null
+          birth_date: string | null
           consultation_methods: string[] | null
           created_at: string
           credentials_documents: string[] | null
@@ -461,10 +462,13 @@ export type Database = {
           lawyer_card_url: string | null
           license_number: string | null
           notable_achievements: string | null
+          office_address: string | null
+          office_phone: string | null
           payment_structures: string[] | null
           phone: string | null
           preferred_language: string | null
           pricing_structure: Json | null
+          private_phone: string | null
           professional_memberships: string[] | null
           profile_picture_url: string | null
           role: string
@@ -481,6 +485,7 @@ export type Database = {
         Insert: {
           bar_admissions?: string[] | null
           bio?: string | null
+          birth_date?: string | null
           consultation_methods?: string[] | null
           created_at?: string
           credentials_documents?: string[] | null
@@ -498,10 +503,13 @@ export type Database = {
           lawyer_card_url?: string | null
           license_number?: string | null
           notable_achievements?: string | null
+          office_address?: string | null
+          office_phone?: string | null
           payment_structures?: string[] | null
           phone?: string | null
           preferred_language?: string | null
           pricing_structure?: Json | null
+          private_phone?: string | null
           professional_memberships?: string[] | null
           profile_picture_url?: string | null
           role?: string
@@ -518,6 +526,7 @@ export type Database = {
         Update: {
           bar_admissions?: string[] | null
           bio?: string | null
+          birth_date?: string | null
           consultation_methods?: string[] | null
           created_at?: string
           credentials_documents?: string[] | null
@@ -535,10 +544,13 @@ export type Database = {
           lawyer_card_url?: string | null
           license_number?: string | null
           notable_achievements?: string | null
+          office_address?: string | null
+          office_phone?: string | null
           payment_structures?: string[] | null
           phone?: string | null
           preferred_language?: string | null
           pricing_structure?: Json | null
+          private_phone?: string | null
           professional_memberships?: string[] | null
           profile_picture_url?: string | null
           role?: string

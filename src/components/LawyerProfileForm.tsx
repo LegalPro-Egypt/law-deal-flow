@@ -29,13 +29,15 @@ import {
 const lawyerProfileSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
   lastName: z.string().min(2, "Last name must be at least 2 characters"),
-  phone: z.string().min(10, "Please enter a valid phone number"),
+  officePhone: z.string().min(10, "Please enter a valid office phone number"),
+  privatePhone: z.string().min(10, "Please enter a valid private phone number"),
+  officeAddress: z.string().min(10, "Office address is required"),
+  birthDate: z.string().min(1, "Birth date is required"),
   lawFirm: z.string().min(2, "Law firm name is required"),
   teamSize: z.coerce.number().min(1, "Team size must be at least 1"),
   bio: z.string().min(50, "Bio must be at least 50 characters"),
   yearsExperience: z.coerce.number().min(1, "Years of experience must be at least 1"),
   licenseNumber: z.string().min(5, "License number is required"),
-  preferredLanguage: z.string().min(1, "Please select a preferred language"),
 });
 
 type LawyerProfileData = z.infer<typeof lawyerProfileSchema>;
@@ -55,6 +57,18 @@ const specializations = [
   "International Law"
 ];
 
+const languages = [
+  "English",
+  "Arabic", 
+  "German",
+  "French",
+  "Spanish",
+  "Italian",
+  "Russian",
+  "Chinese",
+  "Japanese"
+];
+
 const barAdmissions = [
   "Cairo Bar Association",
   "Alexandria Bar Association", 
@@ -70,6 +84,7 @@ interface LawyerProfileFormProps {
 export function LawyerProfileForm({ onComplete, initialData }: LawyerProfileFormProps) {
   const [selectedSpecializations, setSelectedSpecializations] = useState<string[]>([]);
   const [selectedBarAdmissions, setSelectedBarAdmissions] = useState<string[]>([]);
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(["English"]);
   const [profilePicture, setProfilePicture] = useState<File | null>(null);
   const [credentialsFiles, setCredentialsFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -81,13 +96,15 @@ export function LawyerProfileForm({ onComplete, initialData }: LawyerProfileForm
     defaultValues: {
       firstName: initialData?.firstName || "",
       lastName: initialData?.lastName || "",
-      phone: initialData?.phone || "",
+      officePhone: initialData?.officePhone || "",
+      privatePhone: initialData?.privatePhone || "",
+      officeAddress: initialData?.officeAddress || "",
+      birthDate: initialData?.birthDate || "",
       lawFirm: initialData?.lawFirm || "",
       teamSize: initialData?.teamSize || 1,
       bio: initialData?.bio || "",
       yearsExperience: initialData?.yearsExperience || 1,
       licenseNumber: initialData?.licenseNumber || "",
-      preferredLanguage: initialData?.preferredLanguage || "en",
     },
   });
 
@@ -104,6 +121,14 @@ export function LawyerProfileForm({ onComplete, initialData }: LawyerProfileForm
       setSelectedBarAdmissions(prev => [...prev, barAdmission]);
     } else {
       setSelectedBarAdmissions(prev => prev.filter(b => b !== barAdmission));
+    }
+  };
+
+  const handleLanguageChange = (language: string, checked: boolean) => {
+    if (checked) {
+      setSelectedLanguages(prev => [...prev, language]);
+    } else {
+      setSelectedLanguages(prev => prev.filter(l => l !== language));
     }
   };
 
@@ -172,6 +197,30 @@ export function LawyerProfileForm({ onComplete, initialData }: LawyerProfileForm
       return;
     }
 
+    if (selectedLanguages.length === 0) {
+      toast({
+        title: "Languages Required",
+        description: "Please select at least one spoken language.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate birth date (must be 21+ years old)
+    const birthDate = new Date(data.birthDate);
+    const today = new Date();
+    const age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (age < 21 || (age === 21 && monthDiff < 0) || (age === 21 && monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      toast({
+        title: "Age Requirement",
+        description: "You must be at least 21 years old to practice law.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -201,7 +250,10 @@ export function LawyerProfileForm({ onComplete, initialData }: LawyerProfileForm
         first_name: data.firstName,
         last_name: data.lastName,
         email: user.email!,
-        phone: data.phone,
+        office_phone: data.officePhone,
+        private_phone: data.privatePhone,
+        office_address: data.officeAddress,
+        birth_date: data.birthDate,
         role: 'lawyer',
         law_firm: data.lawFirm,
         team_size: data.teamSize,
@@ -210,9 +262,9 @@ export function LawyerProfileForm({ onComplete, initialData }: LawyerProfileForm
         years_experience: data.yearsExperience,
         license_number: data.licenseNumber,
         bar_admissions: selectedBarAdmissions,
+        languages: selectedLanguages,
         profile_picture_url: profilePictureUrl,
         credentials_documents: credentialsUrls,
-        preferred_language: data.preferredLanguage,
         is_active: false, // Requires admin approval
       };
 
@@ -291,35 +343,66 @@ export function LawyerProfileForm({ onComplete, initialData }: LawyerProfileForm
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="phone">Phone Number</Label>
+                <Label htmlFor="officePhone">Office Phone</Label>
                 <Input
-                  {...form.register("phone")}
+                  {...form.register("officePhone")}
                   placeholder="+20 123 456 7890"
                   disabled={isSubmitting}
                 />
-                {form.formState.errors.phone && (
+                {form.formState.errors.officePhone && (
                   <p className="text-sm text-destructive mt-1">
-                    {form.formState.errors.phone.message}
+                    {form.formState.errors.officePhone.message}
                   </p>
                 )}
               </div>
 
               <div>
-                <Label htmlFor="preferredLanguage">Preferred Language</Label>
-                <Select 
-                  onValueChange={(value) => form.setValue("preferredLanguage", value)}
-                  defaultValue={form.getValues("preferredLanguage")}
+                <Label htmlFor="privatePhone">Private Phone</Label>
+                <Input
+                  {...form.register("privatePhone")}
+                  placeholder="+20 123 456 7890"
                   disabled={isSubmitting}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="ar">Arabic</SelectItem>
-                    <SelectItem value="de">German</SelectItem>
-                  </SelectContent>
-                </Select>
+                />
+                {form.formState.errors.privatePhone && (
+                  <p className="text-sm text-destructive mt-1">
+                    {form.formState.errors.privatePhone.message}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="officeAddress">Office Address</Label>
+                <Textarea
+                  {...form.register("officeAddress")}
+                  placeholder="123 Legal Street, Cairo, Egypt"
+                  className="min-h-[80px]"
+                  disabled={isSubmitting}
+                />
+                {form.formState.errors.officeAddress && (
+                  <p className="text-sm text-destructive mt-1">
+                    {form.formState.errors.officeAddress.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="birthDate">Birth Date</Label>
+                <Input
+                  {...form.register("birthDate")}
+                  type="date"
+                  disabled={isSubmitting}
+                  max={new Date(new Date().setFullYear(new Date().getFullYear() - 21)).toISOString().split('T')[0]}
+                />
+                {form.formState.errors.birthDate && (
+                  <p className="text-sm text-destructive mt-1">
+                    {form.formState.errors.birthDate.message}
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground mt-1">
+                  Must be at least 21 years old to practice law
+                </p>
               </div>
             </div>
           </div>
@@ -447,6 +530,31 @@ export function LawyerProfileForm({ onComplete, initialData }: LawyerProfileForm
                   />
                   <Label htmlFor={barAdmission} className="text-sm">
                     {barAdmission}
+                  </Label>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Spoken Languages */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Globe className="h-5 w-5" />
+              Spoken Languages
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {languages.map((language) => (
+                <div key={language} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={language}
+                    checked={selectedLanguages.includes(language)}
+                    onCheckedChange={(checked) => 
+                      handleLanguageChange(language, checked as boolean)
+                    }
+                    disabled={isSubmitting}
+                  />
+                  <Label htmlFor={language} className="text-sm">
+                    {language}
                   </Label>
                 </div>
               ))}
