@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,8 @@ import { Link } from "react-router-dom";
 import { LegalChatbot } from "@/components/LegalChatbot";
 import { AuthenticationPrompt } from "@/components/AuthenticationPrompt";
 import { PersonalDetailsForm, PersonalDetailsData } from "@/components/PersonalDetailsForm";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const Intake = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -18,6 +20,8 @@ const Intake = () => {
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [showPersonalForm, setShowPersonalForm] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
 
   const handleCaseDataExtracted = (data: any) => {
     setExtractedCaseData(data);
@@ -28,12 +32,56 @@ const Intake = () => {
     }
   };
 
-  const handlePersonalDetailsSubmit = (data: PersonalDetailsData) => {
+  const handlePersonalDetailsSubmit = async (data: PersonalDetailsData) => {
     setPersonalData(data);
     setShowPersonalForm(false);
     // Advance to document upload step
     setCurrentStep(3);
+    
+    // Save personal data to case
+    // This will be handled by the LegalChatbot component's saveCaseStep function
   };
+
+  // Load existing draft case on mount
+  useEffect(() => {
+    const loadDraftCase = async () => {
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        // Look for existing draft cases
+        const { data: draftCases } = await supabase
+          .from('cases')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('status', 'draft')
+          .order('updated_at', { ascending: false })
+          .limit(1);
+
+        if (draftCases && draftCases.length > 0) {
+          const draftCase = draftCases[0];
+          const draftData = (draftCase.draft_data as any) || {};
+          
+          // Restore state from draft case
+          setCurrentStep(draftCase.step || 1);
+          if (draftData.extractedData) {
+            setExtractedCaseData(draftData.extractedData);
+          }
+          if (draftData.personalData) {
+            setPersonalData(draftData.personalData as PersonalDetailsData);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading draft case:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadDraftCase();
+  }, [user]);
 
   const handleBackFromPersonalForm = () => {
     setShowPersonalForm(false);
@@ -64,6 +112,17 @@ const Intake = () => {
     setShowAuthPrompt(false);
     setCurrentStep(3);
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading your case...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

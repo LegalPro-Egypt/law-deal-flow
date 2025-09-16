@@ -172,6 +172,26 @@ export const useClientData = () => {
     }
   };
 
+  const continueDraftCase = async (caseId: string) => {
+    try {
+      const { data: draftCase } = await supabase
+        .from('cases')
+        .select('*')
+        .eq('id', caseId)
+        .eq('user_id', user?.id)
+        .eq('status', 'draft')
+        .single();
+
+      if (draftCase) {
+        // Navigate to intake page with case data
+        // This will be handled by the parent component
+        return draftCase;
+      }
+    } catch (error) {
+      console.error('Error loading draft case:', error);
+    }
+  };
+
   useEffect(() => {
     const loadData = async () => {
       if (user) {
@@ -223,6 +243,7 @@ export const useClientData = () => {
     loading,
     setActiveCase,
     sendMessage,
-    refreshData: fetchCases
+    refreshData: fetchCases,
+    continueDraftCase
   };
 };

@@ -46,6 +46,8 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
     needsPersonalDetails: false,
   });
 
+  const [caseId, setCaseId] = useState<string | null>(null);
+
   // Initialize conversation
   const initializeConversation = useCallback(async (userId?: string, caseId?: string) => {
     try {
@@ -150,6 +152,23 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
         needsPersonalDetails: data.needsPersonalDetails || prev.needsPersonalDetails,
       }));
 
+      // Get case ID from response or fetch it from conversation
+      if (data.conversationId && !caseId) {
+        try {
+          const { data: conversation } = await supabase
+            .from('conversations')
+            .select('case_id')
+            .eq('id', data.conversationId)
+            .single();
+          
+          if (conversation?.case_id) {
+            setCaseId(conversation.case_id);
+          }
+        } catch (error) {
+          console.error('Error fetching case ID:', error);
+        }
+      }
+
     } catch (error) {
       console.error('Error sending message:', error);
       
@@ -226,14 +245,40 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
     }));
   }, []);
 
+  const saveCaseStep = async (step: number, stepData?: any) => {
+    if (caseId) {
+      try {
+        const updateData: any = {
+          step,
+          draft_data: {
+            extractedData: state.extractedData,
+            currentStep: step,
+            lastUpdated: new Date().toISOString(),
+            ...stepData
+          }
+        };
+
+        await supabase
+          .from('cases')
+          .update(updateData)
+          .eq('id', caseId);
+      } catch (error) {
+        console.error('Error saving case step:', error);
+      }
+    }
+  };
+
   return {
     ...state,
+    caseId,
+    setCaseId,
     initializeConversation,
     sendMessage,
     switchMode,
     setLanguage,
     clearConversation,
     setPersonalDetailsCompleted,
+    saveCaseStep,
   };
 };
 

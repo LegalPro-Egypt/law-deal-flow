@@ -166,6 +166,76 @@ serve(async (req) => {
         try {
           extractedData = JSON.parse(functionCall.arguments);
           console.log('Extracted case data:', extractedData);
+
+          // Create or update draft case when AI extracts data
+          if (conversationId && extractedData) {
+            try {
+              // Get conversation to check if it already has a case linked
+              const { data: conversation } = await supabase
+                .from('conversations')
+                .select('case_id, user_id')
+                .eq('id', conversationId)
+                .single();
+
+              let caseId = conversation?.case_id;
+
+              if (!caseId) {
+                // Create new draft case
+                const { data: newCase, error: caseError } = await supabase
+                  .from('cases')
+                  .insert({
+                    user_id: conversation?.user_id,
+                    title: extractedData.category || 'Draft Case',
+                    description: 'Case created from AI intake conversation',
+                    category: extractedData.category || 'General',
+                    subcategory: extractedData.subcategory,
+                    urgency: extractedData.urgency || 'medium',  
+                    status: 'draft',
+                    step: 1,
+                    language: language || 'en',
+                    jurisdiction: 'egypt',
+                    extracted_entities: extractedData.entities || {},
+                    draft_data: {
+                      extractedData,
+                      currentStep: 1,
+                      lastUpdated: new Date().toISOString()
+                    }
+                  })
+                  .select()
+                  .single();
+
+                if (caseError) {
+                  console.error('Error creating draft case:', caseError);
+                } else {
+                  caseId = newCase.id;
+                  
+                  // Link conversation to the case
+                  await supabase
+                    .from('conversations')
+                    .update({ case_id: caseId })
+                    .eq('id', conversationId);
+                }
+              } else {
+                // Update existing draft case
+                await supabase
+                  .from('cases')
+                  .update({
+                    category: extractedData.category || 'General',
+                    subcategory: extractedData.subcategory,
+                    urgency: extractedData.urgency || 'medium',
+                    extracted_entities: extractedData.entities || {},
+                    draft_data: {
+                      extractedData,
+                      currentStep: 1,
+                      lastUpdated: new Date().toISOString()
+                    }
+                  })
+                  .eq('id', caseId);
+              }
+            } catch (error) {
+              console.error('Error handling draft case:', error);
+            }
+          }
         } catch (e) {
           console.error('Error parsing function arguments:', e);
         }
