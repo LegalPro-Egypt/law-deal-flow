@@ -22,6 +22,7 @@ import {
   Settings,
   LogOut
 } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import jsPDF from 'jspdf';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -268,16 +269,22 @@ const ClientDashboard = () => {
     }
   };
 
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <header className="border-b bg-background/95 backdrop-blur sticky top-0 z-50">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
-              <div className="flex items-center space-x-2">
-                <Scale className="h-8 w-8 text-primary" />
-                <span className="text-xl font-bold">LegalConnect</span>
-                <Badge variant="secondary" className="ml-2">Client Portal</Badge>
+        <header className="bg-card border-b border-border sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
+            <div className="flex items-center justify-between h-14 sm:h-16">
+              <div className="flex items-center space-x-2 sm:space-x-4">
+                <Scale className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+                <div className="flex items-center space-x-1 sm:space-x-2">
+                  <h1 className="text-lg sm:text-xl font-bold">LegalConnect</h1>
+                  <Badge variant="secondary" className="text-xs hidden sm:block">Client Portal</Badge>
+                </div>
               </div>
             </div>
           </div>
@@ -293,24 +300,26 @@ const ClientDashboard = () => {
   if (!activeCase) {
     return (
       <div className="min-h-screen bg-background">
-        <header className="border-b bg-background/95 backdrop-blur sticky top-0 z-50">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
-              <div className="flex items-center space-x-2">
-                <Scale className="h-8 w-8 text-primary" />
-                <span className="text-xl font-bold">LegalConnect</span>
-                <Badge variant="secondary" className="ml-2">Client Portal</Badge>
+        <header className="bg-card border-b border-border sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
+            <div className="flex items-center justify-between h-14 sm:h-16">
+              <div className="flex items-center space-x-2 sm:space-x-4">
+                <Scale className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+                <div className="flex items-center space-x-1 sm:space-x-2">
+                  <h1 className="text-lg sm:text-xl font-bold">LegalConnect</h1>
+                  <Badge variant="secondary" className="text-xs hidden sm:block">Client Portal</Badge>
+                </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <Button asChild>
+              <div className="flex items-center space-x-1 sm:space-x-2">
+                <Button asChild className="h-9 sm:h-10" size="sm">
                   <Link to="/intake">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Start New Case
+                    <Plus className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Start New Case</span>
                   </Link>
                 </Button>
-                <Button variant="ghost" size="sm" onClick={signOut}>
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Sign Out
+                <Button variant="ghost" size="sm" onClick={signOut} className="h-9 w-9 sm:h-10 sm:w-auto sm:px-4">
+                  <LogOut className="h-4 w-4" />
+                  <span className="hidden sm:inline sm:ml-2">Sign Out</span>
                 </Button>
               </div>
             </div>
@@ -337,14 +346,25 @@ const ClientDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b bg-background/95 backdrop-blur sticky top-0 z-50">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <Scale className="h-8 w-8 text-primary" />
-              <span className="text-xl font-bold">LegalConnect</span>
-              <Badge variant="secondary" className="ml-2">Client Portal</Badge>
-              {cases.length > 1 && (
+      <header className="bg-card border-b border-border sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
+          <div className="flex items-center justify-between h-14 sm:h-16">
+            {/* Logo and Title */}
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <Scale className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+              <div className="flex items-center space-x-1 sm:space-x-2">
+                <h1 className="text-lg sm:text-xl font-bold text-foreground hidden xs:block sm:block">
+                  LegalConnect
+                </h1>
+                <Badge variant="secondary" className="text-xs hidden sm:block">
+                  Client Portal
+                </Badge>
+              </div>
+            </div>
+
+            {/* Case Selector - Mobile: Reduced width, Desktop: Normal */}
+            {cases.length > 1 && (
+              <div className="flex-1 max-w-[120px] sm:max-w-xs mx-2 sm:mx-4">
                 <CaseSelector 
                   cases={cases}
                   activeCase={activeCase}
@@ -353,23 +373,36 @@ const ClientDashboard = () => {
                     if (selectedCase) setActiveCase(selectedCase);
                   }}
                 />
-              )}
-            </div>
-            <div className="flex items-center space-x-2">
-              <Button asChild>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4">
+              <Button
+                asChild
+                className="bg-primary hover:bg-primary/90 text-primary-foreground h-9 sm:h-10"
+                size="sm"
+              >
                 <Link to="/intake">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Start New Case
+                  <Plus className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Start New Case</span>
                 </Link>
               </Button>
-              <Button variant="ghost" size="sm">
-                <Settings className="h-4 w-4 mr-2" />
-                Settings
-              </Button>
-              <Button variant="ghost" size="sm" onClick={signOut}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
-              </Button>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-9 w-9 sm:h-10 sm:w-auto sm:px-4">
+                    <Settings className="h-4 w-4" />
+                    <span className="hidden sm:inline sm:ml-2">Settings</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-background border border-border shadow-lg z-50">
+                  <DropdownMenuItem onClick={handleSignOut} className="text-destructive hover:text-destructive">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
