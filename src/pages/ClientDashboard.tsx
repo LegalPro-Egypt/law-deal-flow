@@ -17,7 +17,10 @@ import {
   Send,
   ArrowRight,
   Mail,
-  Receipt
+  Receipt,
+  Plus,
+  Settings,
+  LogOut
 } from "lucide-react";
 import jsPDF from 'jspdf';
 import { Input } from "@/components/ui/input";
@@ -27,9 +30,11 @@ import { useClientData } from "@/hooks/useClientData";
 import { useAuth } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
 import DocumentUpload from "@/components/DocumentUpload";
+import CaseSelector from "@/components/CaseSelector";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
+import { downloadPDF, getUserFriendlyDownloadMessage } from "@/utils/pdfDownload";
 
 const ClientDashboard = () => {
   const [newMessage, setNewMessage] = useState("");
@@ -201,11 +206,11 @@ const ClientDashboard = () => {
         });
       }
       
-      pdf.save(`Case_Summary_${activeCase.case_number}.pdf`);
+      downloadPDF(pdf, `Case_Summary_${activeCase.case_number}.pdf`);
       
       toast({
         title: "Case Summary Downloaded",
-        description: "Your case summary has been generated and downloaded.",
+        description: getUserFriendlyDownloadMessage(),
       });
     } catch (error) {
       console.error('Error generating PDF:', error);
@@ -296,7 +301,18 @@ const ClientDashboard = () => {
                 <span className="text-xl font-bold">LegalConnect</span>
                 <Badge variant="secondary" className="ml-2">Client Portal</Badge>
               </div>
-              <Button variant="ghost" size="sm" onClick={signOut}>Sign Out</Button>
+              <div className="flex items-center space-x-2">
+                <Button asChild>
+                  <Link to="/intake">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Start New Case
+                  </Link>
+                </Button>
+                <Button variant="ghost" size="sm" onClick={signOut}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
+                </Button>
+              </div>
             </div>
           </div>
         </header>
@@ -324,14 +340,36 @@ const ClientDashboard = () => {
       <header className="border-b bg-background/95 backdrop-blur sticky top-0 z-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-4">
               <Scale className="h-8 w-8 text-primary" />
               <span className="text-xl font-bold">LegalConnect</span>
               <Badge variant="secondary" className="ml-2">Client Portal</Badge>
+              {cases.length > 1 && (
+                <CaseSelector 
+                  cases={cases}
+                  activeCase={activeCase}
+                  onCaseSelect={(caseId) => {
+                    const selectedCase = cases.find(c => c.id === caseId);
+                    if (selectedCase) setActiveCase(selectedCase);
+                  }}
+                />
+              )}
             </div>
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="sm">Settings</Button>
-              <Button variant="ghost" size="sm">Sign Out</Button>
+            <div className="flex items-center space-x-2">
+              <Button asChild>
+                <Link to="/intake">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Start New Case
+                </Link>
+              </Button>
+              <Button variant="ghost" size="sm">
+                <Settings className="h-4 w-4 mr-2" />
+                Settings
+              </Button>
+              <Button variant="ghost" size="sm" onClick={signOut}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </Button>
             </div>
           </div>
         </div>
@@ -346,6 +384,11 @@ const ClientDashboard = () => {
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline">{activeCase.case_number}</Badge>
                 <Badge className="bg-primary">{activeCase.category}</Badge>
+                {cases.length > 1 && (
+                  <Badge variant="secondary" className="text-xs">
+                    Active Case ({cases.findIndex(c => c.id === activeCase.id) + 1} of {cases.length})
+                  </Badge>
+                )}
               </div>
             </div>
             <div className="flex items-center space-x-2 mt-4 lg:mt-0">
