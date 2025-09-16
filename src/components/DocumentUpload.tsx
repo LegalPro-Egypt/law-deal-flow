@@ -173,6 +173,11 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onFilesUploaded, caseId
 
         if (dbError) {
           console.error('Database error:', dbError);
+          toast({
+            title: "Save Failed",
+            description: dbError.message,
+            variant: "destructive",
+          });
         }
       }
 
@@ -203,6 +208,15 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onFilesUploaded, caseId
   };
 
   const handleFileUpload = async (files: FileList | null, category: string) => {
+    if (!caseId) {
+      toast({
+        title: "Case not ready",
+        description: "Please continue the AI chat until a draft case is created, then try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!files || files.length === 0) return;
 
     const fileArray = Array.from(files);
@@ -235,6 +249,13 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onFilesUploaded, caseId
 
   return (
     <div className="space-y-6">
+      {!caseId && (
+        <Card className="p-4 bg-muted/50">
+          <div className="text-sm">
+            A draft case hasn't been created yet. Please complete the AI chat step to initialize your case before uploading documents.
+          </div>
+        </Card>
+      )}
       {/* Document Categories */}
       <div className="grid md:grid-cols-2 gap-4">
         {categories.map((category) => {
@@ -266,12 +287,14 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onFilesUploaded, caseId
                     multiple
                     accept={category.acceptedTypes}
                     onChange={(e) => handleFileUpload(e.target.files, category.id)}
+                    disabled={!caseId}
                   />
                   <label htmlFor={`upload-${category.id}`}>
                     <Button
                       type="button"
                       variant={hasFiles ? "secondary" : "outline"}
                       className="w-full"
+                      disabled={!caseId}
                       asChild
                     >
                       <span className="cursor-pointer flex items-center justify-center">

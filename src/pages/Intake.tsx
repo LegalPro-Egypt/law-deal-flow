@@ -8,18 +8,16 @@ import { Badge } from "@/components/ui/badge";
 import { Scale, ArrowLeft, MessageSquare, Upload, FileText, CheckCircle, Clock, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import { LegalChatbot } from "@/components/LegalChatbot";
-import { AuthenticationPrompt } from "@/components/AuthenticationPrompt";
+
 import { PersonalDetailsForm, PersonalDetailsData } from "@/components/PersonalDetailsForm";
 import DocumentUpload from "@/components/DocumentUpload";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-
+import { toast } from "@/hooks/use-toast";
 const Intake = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [personalData, setPersonalData] = useState<PersonalDetailsData | null>(null);
   const [extractedCaseData, setExtractedCaseData] = useState<any>(null);
-  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
-  const [currentUser, setCurrentUser] = useState<any>(null);
   const [showPersonalForm, setShowPersonalForm] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
@@ -67,6 +65,7 @@ const Intake = () => {
           const draftData = (draftCase.draft_data as any) || {};
           
           // Restore state from draft case
+          setCaseId(draftCase.id);
           setCurrentStep(draftCase.step || 1);
           if (draftData.extractedData) {
             setExtractedCaseData(draftData.extractedData);
@@ -89,31 +88,51 @@ const Intake = () => {
     setShowPersonalForm(false);
   };
 
-  const handleContinueToDocuments = () => {
+  const handleContinueToDocuments = async () => {
     // Check if personal details are needed first
     if (!personalData) {
       setShowPersonalForm(true);
       return;
     }
-    
-    // Show authentication prompt when users want to proceed
-    if (!currentUser) {
-      setShowAuthPrompt(true);
-    } else {
-      setCurrentStep(3);
+
+    // Ensure a draft case exists
+    try {
+      if (!caseId && user) {
+        const { data, error } = await supabase
+          .from('cases')
+          .insert({
+            user_id: user.id,
+            status: 'draft',
+            category: extractedCaseData?.category || 'general',
+            title: extractedCaseData?.title || 'Case Draft'
+          })
+          .select('id')
+          .single();
+
+        if (error) {
+          console.error('Failed to create draft case:', error);
+          toast({
+            title: 'Could not continue',
+            description: error.message,
+            variant: 'destructive',
+          });
+          return;
+        }
+        setCaseId(data.id);
+      }
+    } catch (e: any) {
+      console.error('Unexpected error creating draft case:', e);
+      toast({
+        title: 'Unexpected error',
+        description: 'Please try again.',
+        variant: 'destructive',
+      });
+      return;
     }
-  };
 
-  const handleAuthenticated = (user: any) => {
-    setCurrentUser(user);
-    setShowAuthPrompt(false);
     setCurrentStep(3);
   };
 
-  const handleContinueAsGuest = () => {
-    setShowAuthPrompt(false);
-    setCurrentStep(3);
-  };
 
   if (isLoading) {
     return (
@@ -415,14 +434,6 @@ const Intake = () => {
         )}
       </div>
 
-      {/* Authentication Prompt */}
-      {showAuthPrompt && (
-        <AuthenticationPrompt
-          trigger="case_submission"
-          onAuthenticated={handleAuthenticated}
-          onContinueAsGuest={handleContinueAsGuest}
-        />
-      )}
     </div>
   );
 };
