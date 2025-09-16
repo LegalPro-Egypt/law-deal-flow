@@ -475,7 +475,8 @@ const AdminDashboard = () => {
                             <UserPlus className="h-4 w-4 mr-2" />
                             Assign Lawyer
                           </Button>
-                          {caseItem.status === 'submitted' && (
+                          {/* Admin can deny/delete any case except completed ones */}
+                          {caseItem.status !== 'completed' && caseItem.status !== 'closed' && (
                             <>
                               <Button 
                                 size="sm" 
