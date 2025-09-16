@@ -53,14 +53,21 @@ const Auth = () => {
     
     console.log('Auth useEffect - force:', forceStay, 'reset:', resetParam, 'type:', type, 'hasTokens:', !!(accessToken && refreshToken));
     
-    // Handle Supabase invitation/recovery flow
-    if (type === 'invite' || type === 'recovery' || (accessToken && refreshToken)) {
-      console.log('Processing Supabase invitation/recovery tokens...');
+    // Handle Supabase password recovery flow - set resetMode immediately
+    if (type === 'recovery') {
+      console.log('Password recovery detected - showing reset form');
+      setResetMode(true);
+      return;
+    }
+    
+    // Handle Supabase invitation/other flows
+    if (type === 'invite' || (accessToken && refreshToken)) {
+      console.log('Processing Supabase invitation/other tokens...');
       // Don't redirect yet, let Supabase handle the token exchange
       return;
     }
     
-    // Check if we're in reset mode
+    // Check if we're in admin reset mode
     if (resetParam === 'admin') {
       setResetMode(true);
       return; // Don't redirect, allow reset form to show
@@ -68,15 +75,17 @@ const Auth = () => {
     
     // Set up auth state listener for password recovery and sign in
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth state change:', event, !!session);
+      console.log('Auth state change:', event, !!session, 'resetMode:', resetMode);
       
       if (event === 'PASSWORD_RECOVERY') {
+        console.log('PASSWORD_RECOVERY event - setting reset mode');
         setResetMode(true);
         return;
       }
       
-      // Handle successful sign in - redirect after login
-      if (event === 'SIGNED_IN' && session) {
+      // Handle successful sign in - but only redirect if NOT in reset mode
+      if (event === 'SIGNED_IN' && session && !resetMode) {
+        console.log('SIGNED_IN event - redirecting to dashboard');
         setTimeout(async () => {
           try {
             const { data: profile } = await supabase
@@ -105,8 +114,8 @@ const Auth = () => {
         }, 0);
       }
       
-      // Handle token exchange for invitations
-      if (event === 'TOKEN_REFRESHED' && session) {
+      // Handle token exchange for invitations (but not password recovery)
+      if (event === 'TOKEN_REFRESHED' && session && !resetMode) {
         console.log('Token refreshed, checking for new user setup...');
         // This happens after invitation acceptance
         setTimeout(async () => {
@@ -181,7 +190,10 @@ const Auth = () => {
       }
     };
     
-    checkAuth();
+    // Only check auth if we're not in a password recovery flow
+    if (type !== 'recovery' && resetParam !== 'admin') {
+      checkAuth();
+    }
     
     return () => subscription.unsubscribe();
   }, [navigate, resetMode, toast]);
@@ -314,10 +326,40 @@ const Auth = () => {
     } else {
       toast({
         title: "Password Updated",
-        description: "Your password has been updated successfully. Redirecting to admin dashboard...",
+        description: "Your password has been updated successfully. Redirecting to your dashboard...",
       });
+      
+      // Clear reset mode and redirect to appropriate dashboard
       setResetMode(false);
-      navigate('/admin', { replace: true });
+      
+      // Get user profile to determine redirect
+      setTimeout(async () => {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('user_id', session.user.id)
+              .single();
+            
+            const role = profile?.role || 'client';
+            
+            // Clean up URL parameters
+            const url = new URL(window.location.href);
+            url.searchParams.delete('access_token');
+            url.searchParams.delete('refresh_token');
+            url.searchParams.delete('token_type');
+            url.searchParams.delete('type');
+            window.history.replaceState({}, '', url.toString());
+            
+            navigate(`/${role}`, { replace: true });
+          }
+        } catch (error) {
+          console.error('Error redirecting after password reset:', error);
+          navigate('/client', { replace: true });
+        }
+      }, 1000);
     }
     
     setResetLoading(false);
