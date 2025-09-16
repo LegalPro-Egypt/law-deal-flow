@@ -17,6 +17,7 @@ import {
   FileText,
   MessageSquare
 } from "lucide-react";
+import { LawyerQAChatbot } from "@/components/LawyerQAChatbot";
 
 interface LawyerStats {
   activeCases: number;
@@ -50,6 +51,7 @@ const LawyerDashboard = () => {
   });
   const [cases, setCases] = useState<Case[]>([]);
   const [loading, setLoading] = useState(true);
+  const [chatbotOpen, setChatbotOpen] = useState(false);
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -346,6 +348,12 @@ const LawyerDashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Lawyer QA Chatbot */}
+      <LawyerQAChatbot 
+        isOpen={chatbotOpen} 
+        onToggle={() => setChatbotOpen(!chatbotOpen)} 
+      />
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -34,6 +34,7 @@ import { LawyerRequestsManager } from "@/components/LawyerRequestsManager";
 import { CaseDetailsDialog } from "@/components/CaseDetailsDialog";
 import { ConversationDialog } from "@/components/ConversationDialog";
 import { InviteLawyerDialog } from "@/components/InviteLawyerDialog";
+import { LawyerDetailsDialog } from "@/components/LawyerDetailsDialog";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -54,6 +55,30 @@ const AdminDashboard = () => {
   const [caseToDeny, setCaseToDeny] = useState<string | null>(null);
   const [showCaseDenyConfirm, setShowCaseDenyConfirm] = useState(false);
   const [denyReason, setDenyReason] = useState("");
+  const [approvedLawyers, setApprovedLawyers] = useState<any[]>([]);
+  const [selectedLawyerId, setSelectedLawyerId] = useState<string | null>(null);
+  const [showLawyerDetails, setShowLawyerDetails] = useState(false);
+
+  useEffect(() => {
+    fetchApprovedLawyers();
+  }, []);
+
+  const fetchApprovedLawyers = async () => {
+    try {
+      const { data: lawyers, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('role', 'lawyer')
+        .eq('is_active', true)
+        .eq('is_verified', true)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setApprovedLawyers(lawyers || []);
+    } catch (error: any) {
+      console.error('Error fetching approved lawyers:', error);
+    }
+  };
 
   const handleSignOut = async () => {
     try {
@@ -116,6 +141,11 @@ const AdminDashboard = () => {
   const handleDeleteCase = (caseId: string) => {
     setCaseToDelete(caseId);
     setShowCaseDeleteConfirm(true);
+  };
+
+  const handleViewLawyerDetails = (lawyerId: string) => {
+    setSelectedLawyerId(lawyerId);
+    setShowLawyerDetails(true);
   };
 
   const confirmDenyCase = async () => {
@@ -520,13 +550,82 @@ const AdminDashboard = () => {
               </Button>
             </div>
 
-            <Card className="bg-gradient-card shadow-card">
-              <CardContent className="p-8 text-center">
-                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No lawyers registered</h3>
-                <p className="text-muted-foreground">Approved lawyers will appear here</p>
-              </CardContent>
-            </Card>
+            {approvedLawyers.length === 0 ? (
+              <Card className="bg-gradient-card shadow-card">
+                <CardContent className="p-8 text-center">
+                  <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No approved lawyers</h3>
+                  <p className="text-muted-foreground">Approved lawyers will appear here</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4">
+                {approvedLawyers.map((lawyer) => (
+                  <Card key={lawyer.id} className="bg-gradient-card shadow-card">
+                    <CardContent className="p-6">
+                      <div className="grid lg:grid-cols-3 gap-6">
+                        {/* Lawyer Info */}
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge variant="default" className="bg-success">
+                              Active Lawyer
+                            </Badge>
+                            {lawyer.is_verified && (
+                              <Badge variant="outline">
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Verified
+                              </Badge>
+                            )}
+                          </div>
+                          <h3 className="font-semibold">{lawyer.first_name} {lawyer.last_name}</h3>
+                          <p className="text-sm text-muted-foreground">{lawyer.email}</p>
+                          {lawyer.law_firm && (
+                            <p className="text-sm text-muted-foreground">{lawyer.law_firm}</p>
+                          )}
+                        </div>
+
+                        {/* Specializations */}
+                        <div>
+                          <h4 className="font-medium mb-2 text-sm">Specializations</h4>
+                          <div className="flex flex-wrap gap-1">
+                            {lawyer.specializations && lawyer.specializations.length > 0 ? (
+                              lawyer.specializations.map((spec: string, index: number) => (
+                                <Badge key={index} variant="outline" className="text-xs">
+                                  {spec}
+                                </Badge>
+                              ))
+                            ) : (
+                              <span className="text-xs text-muted-foreground">No specializations listed</span>
+                            )}
+                          </div>
+                          {lawyer.years_experience && (
+                            <p className="text-xs text-muted-foreground mt-2">
+                              {lawyer.years_experience} years experience
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex flex-col space-y-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="justify-start"
+                            onClick={() => handleViewLawyerDetails(lawyer.user_id)}
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Details & Q&A History
+                          </Button>
+                          <div className="text-xs text-muted-foreground">
+                            Joined: {formatDate(lawyer.created_at)}
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           {/* Lawyer Requests Tab */}
@@ -630,6 +729,16 @@ const AdminDashboard = () => {
           onOpenChange={setShowInviteLawyerDialog}
           onSuccess={() => {
             console.log('Lawyer invitation sent successfully');
+            fetchApprovedLawyers();
+          }}
+        />
+
+        <LawyerDetailsDialog
+          lawyerId={selectedLawyerId}
+          isOpen={showLawyerDetails}
+          onClose={() => {
+            setShowLawyerDetails(false);
+            setSelectedLawyerId(null);
           }}
         />
       </div>

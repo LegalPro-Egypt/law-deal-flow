@@ -169,6 +169,7 @@ export type Database = {
           created_at: string
           id: string
           language: string
+          lawyer_id: string | null
           metadata: Json | null
           mode: string
           session_id: string
@@ -181,6 +182,7 @@ export type Database = {
           created_at?: string
           id?: string
           language?: string
+          lawyer_id?: string | null
           metadata?: Json | null
           mode?: string
           session_id: string
@@ -193,6 +195,7 @@ export type Database = {
           created_at?: string
           id?: string
           language?: string
+          lawyer_id?: string | null
           metadata?: Json | null
           mode?: string
           session_id?: string
