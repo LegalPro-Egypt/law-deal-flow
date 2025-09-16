@@ -26,7 +26,6 @@ import {
   LogOut,
   XCircle
 } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { LawyerRequestsManager } from "@/components/LawyerRequestsManager";
 import { CaseDetailsDialog } from "@/components/CaseDetailsDialog";
@@ -35,15 +34,14 @@ import { ConversationDialog } from "@/components/ConversationDialog";
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { stats, pendingIntakes, cases, loading, createCaseFromIntake, getAnonymousIntakes, deleteSelectedIntakes, cleanupAnonymousIntakes, refreshData } = useAdminData();
+  const { stats, pendingIntakes, cases, loading, createCaseFromIntake, deleteSelectedIntakes, refreshData } = useAdminData();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [showCaseDetails, setShowCaseDetails] = useState(false);
   const [showConversation, setShowConversation] = useState(false);
-  const [anonymousIntakes, setAnonymousIntakes] = useState<any[]>([]);
-  const [selectedIntakes, setSelectedIntakes] = useState<string[]>([]);
-  const [showCleanupDialog, setShowCleanupDialog] = useState(false);
+  const [intakeToDelete, setIntakeToDelete] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handleSignOut = async () => {
     try {
@@ -81,48 +79,18 @@ const AdminDashboard = () => {
     setShowCaseDetails(true);
   };
 
-  const handleShowCleanupDialog = async () => {
-    try {
-      const intakes = await getAnonymousIntakes();
-      setAnonymousIntakes(intakes);
-      setShowCleanupDialog(true);
-    } catch (error) {
-      // Error handling is done in the hook
-    }
+  const handleDeleteIntake = (intakeId: string) => {
+    setIntakeToDelete(intakeId);
+    setShowDeleteConfirm(true);
   };
 
-  const handleSelectIntake = (intakeId: string, checked: boolean) => {
-    if (checked) {
-      setSelectedIntakes(prev => [...prev, intakeId]);
-    } else {
-      setSelectedIntakes(prev => prev.filter(id => id !== intakeId));
-    }
-  };
-
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedIntakes(anonymousIntakes.map(intake => intake.id));
-    } else {
-      setSelectedIntakes([]);
-    }
-  };
-
-  const handleDeleteSelected = async () => {
-    if (selectedIntakes.length === 0) return;
+  const confirmDeleteIntake = async () => {
+    if (!intakeToDelete) return;
     
     try {
-      await deleteSelectedIntakes(selectedIntakes);
-      setSelectedIntakes([]);
-      setShowCleanupDialog(false);
-    } catch (error) {
-      // Error handling is done in the hook
-    }
-  };
-
-  const handleCleanupIntakes = async () => {
-    try {
-      await cleanupAnonymousIntakes();
-      setShowCleanupDialog(false);
+      await deleteSelectedIntakes([intakeToDelete]);
+      setShowDeleteConfirm(false);
+      setIntakeToDelete(null);
     } catch (error) {
       // Error handling is done in the hook
     }
@@ -268,15 +236,6 @@ const AdminDashboard = () => {
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold">AI Intake Conversations</h2>
               <div className="flex items-center space-x-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={handleShowCleanupDialog}
-                  className="text-muted-foreground hover:text-destructive"
-                >
-                  <AlertCircle className="h-4 w-4 mr-2" />
-                  Manage Anonymous Intakes
-                </Button>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input 
@@ -300,12 +259,20 @@ const AdminDashboard = () => {
             ) : (
               <div className="grid gap-4">
                 {pendingIntakes.map((intake) => (
-                  <Card key={intake.id} className="bg-gradient-card shadow-card">
+                  <Card key={intake.id} className="bg-gradient-card shadow-card relative">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="absolute top-2 right-2 h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                      onClick={() => handleDeleteIntake(intake.id)}
+                    >
+                      <XCircle className="h-4 w-4" />
+                    </Button>
                     <CardContent className="p-6">
                       <div className="grid lg:grid-cols-3 gap-6">
                         {/* Intake Info */}
                         <div>
-                          <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center justify-between mb-2 pr-8">
                             <Badge variant="outline">Session: {intake.session_id.slice(0, 8)}...</Badge>
                             <Badge variant="secondary">{intake.language.toUpperCase()}</Badge>
                           </div>
@@ -515,75 +482,21 @@ const AdminDashboard = () => {
           onCreateCase={handleCreateCase}
         />
 
-        <AlertDialog open={showCleanupDialog} onOpenChange={setShowCleanupDialog}>
-          <AlertDialogContent className="max-w-2xl">
+        <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+          <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Manage Anonymous Intakes</AlertDialogTitle>
+              <AlertDialogTitle>Delete Intake</AlertDialogTitle>
               <AlertDialogDescription>
-                These are anonymous test conversations that are not linked to any user account. 
-                You can select specific ones to delete or clean up all at once.
+                Are you sure you want to delete this intake conversation? This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
-            
-            <div className="max-h-96 overflow-y-auto">
-              {anonymousIntakes.length === 0 ? (
-                <p className="text-center text-muted-foreground py-4">
-                  No anonymous intakes found.
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2 p-2 border-b">
-                    <Checkbox 
-                      id="select-all"
-                      checked={selectedIntakes.length === anonymousIntakes.length && anonymousIntakes.length > 0}
-                      onCheckedChange={handleSelectAll}
-                    />
-                    <label htmlFor="select-all" className="text-sm font-medium">
-                      Select All ({anonymousIntakes.length} items)
-                    </label>
-                  </div>
-                  
-                  {anonymousIntakes.map((intake) => (
-                    <div key={intake.id} className="flex items-center space-x-2 p-2 hover:bg-muted/50 rounded">
-                      <Checkbox 
-                        id={intake.id}
-                        checked={selectedIntakes.includes(intake.id)}
-                        onCheckedChange={(checked) => handleSelectIntake(intake.id, checked as boolean)}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          Session: {intake.session_id}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Created: {new Date(intake.created_at).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <AlertDialogFooter className="flex justify-between">
-              <div className="flex space-x-2">
-                <Button 
-                  variant="destructive" 
-                  onClick={handleDeleteSelected}
-                  disabled={selectedIntakes.length === 0}
-                  size="sm"
-                >
-                  Delete Selected ({selectedIntakes.length})
-                </Button>
-                <Button 
-                  variant="destructive" 
-                  onClick={handleCleanupIntakes}
-                  disabled={anonymousIntakes.length === 0}
-                  size="sm"
-                >
-                  Delete All
-                </Button>
-              </div>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setIntakeToDelete(null)}>
+                No
+              </AlertDialogCancel>
+              <Button variant="destructive" onClick={confirmDeleteIntake}>
+                Yes
+              </Button>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

@@ -347,9 +347,7 @@ export const useAdminData = () => {
     cases,
     loading,
     createCaseFromIntake,
-    getAnonymousIntakes,
     deleteSelectedIntakes,
-    cleanupAnonymousIntakes,
     refreshData: () => Promise.all([fetchAdminStats(), fetchPendingIntakes(), fetchCases()])
   };
 };
