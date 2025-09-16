@@ -273,6 +273,39 @@ export type Database = {
           },
         ]
       }
+      lawyer_invitations: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invitation_token: string
+          invited_by: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invitation_token: string
+          invited_by: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invitation_token?: string
+          invited_by?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       lawyer_requests: {
         Row: {
           created_at: string
@@ -406,52 +439,79 @@ export type Database = {
       }
       profiles: {
         Row: {
+          bar_admissions: string[] | null
+          bio: string | null
           created_at: string
+          credentials_documents: string[] | null
           email: string
+          employee_count: number | null
           first_name: string | null
           id: string
           is_active: boolean | null
           is_verified: boolean | null
           jurisdictions: string[] | null
+          languages: string[] | null
           last_name: string | null
+          law_firm: string | null
+          license_number: string | null
           phone: string | null
           preferred_language: string | null
+          profile_picture_url: string | null
           role: string
           specializations: string[] | null
           updated_at: string
           user_id: string
+          years_experience: number | null
         }
         Insert: {
+          bar_admissions?: string[] | null
+          bio?: string | null
           created_at?: string
+          credentials_documents?: string[] | null
           email: string
+          employee_count?: number | null
           first_name?: string | null
           id?: string
           is_active?: boolean | null
           is_verified?: boolean | null
           jurisdictions?: string[] | null
+          languages?: string[] | null
           last_name?: string | null
+          law_firm?: string | null
+          license_number?: string | null
           phone?: string | null
           preferred_language?: string | null
+          profile_picture_url?: string | null
           role?: string
           specializations?: string[] | null
           updated_at?: string
           user_id: string
+          years_experience?: number | null
         }
         Update: {
+          bar_admissions?: string[] | null
+          bio?: string | null
           created_at?: string
+          credentials_documents?: string[] | null
           email?: string
+          employee_count?: number | null
           first_name?: string | null
           id?: string
           is_active?: boolean | null
           is_verified?: boolean | null
           jurisdictions?: string[] | null
+          languages?: string[] | null
           last_name?: string | null
+          law_firm?: string | null
+          license_number?: string | null
           phone?: string | null
           preferred_language?: string | null
+          profile_picture_url?: string | null
           role?: string
           specializations?: string[] | null
           updated_at?: string
           user_id?: string
+          years_experience?: number | null
         }
         Relationships: []
       }

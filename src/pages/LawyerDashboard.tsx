@@ -1,84 +1,141 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Scale, 
-  MessageSquare, 
-  FileText, 
-  DollarSign, 
-  Clock, 
-  CheckCircle, 
+  LogOut,
+  Clock,
+  CheckCircle,
   AlertCircle,
-  Eye,
-  Send,
-  Plus,
-  TrendingUp
+  Users,
+  FileText,
+  MessageSquare
 } from "lucide-react";
-import { useLawyerData } from "@/hooks/useLawyerData";
-import { useAuth } from "@/hooks/useAuth";
-import { Skeleton } from "@/components/ui/skeleton";
+
+interface LawyerStats {
+  activeCases: number;
+  completedCases: number;
+  pendingCases: number;
+  totalEarnings: number;
+}
+
+interface Case {
+  id: string;
+  case_number: string;
+  title: string;
+  category: string;
+  urgency: string;
+  status: string;
+  client_name: string;
+  client_email: string;
+  created_at: string;
+  updated_at: string;
+}
 
 const LawyerDashboard = () => {
-  const [proposalData, setProposalData] = useState({
-    consultationFee: "500",
-    remainingFee: "2000", 
-    timeline: "2-3 weeks",
-    scope: ""
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { user, profile, loading: authLoading } = useAuth();
+  const [stats, setStats] = useState<LawyerStats>({
+    activeCases: 0,
+    completedCases: 0,
+    pendingCases: 0,
+    totalEarnings: 0
   });
-  
-  const { signOut } = useAuth();
-  const { 
-    assignedCases, 
-    stats, 
-    loading, 
-    sendProposal, 
-    sendMessage 
-  } = useLawyerData();
+  const [cases, setCases] = useState<Case[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      fetchDashboardData();
+    }
+  }, [user, authLoading]);
+
+  const fetchDashboardData = async () => {
+    if (!user) return;
+
+    try {
+      // Fetch assigned cases
+      const { data: casesData, error: casesError } = await supabase
+        .from('cases')
+        .select('*')
+        .eq('assigned_lawyer_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (casesError) throw casesError;
+
+      setCases(casesData || []);
+
+      // Calculate stats
+      const activeCases = casesData?.filter(c => c.status === 'active').length || 0;
+      const completedCases = casesData?.filter(c => c.status === 'completed').length || 0;
+      const pendingCases = casesData?.filter(c => c.status === 'pending').length || 0;
+
+      setStats({
+        activeCases,
+        completedCases,
+        pendingCases,
+        totalEarnings: 0 // TODO: Calculate earnings when payment system is implemented
+      });
+
+    } catch (error: any) {
+      console.error('Error fetching dashboard data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load dashboard data. Please try refreshing the page.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate('/?force=true');
+      toast({
+        title: "Signed out successfully",
+        description: "You have been logged out",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to sign out: " + error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active': return 'bg-success';
+      case 'completed': return 'bg-primary';
+      case 'pending': return 'bg-warning';
+      default: return 'bg-muted';
+    }
+  };
+
+  const getUrgencyColor = (urgency: string) => {
+    switch (urgency) {
+      case 'high': return 'bg-destructive';
+      case 'medium': return 'bg-warning';
+      case 'low': return 'bg-success';
+      default: return 'bg-muted';
+    }
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'active':
-      case 'in_progress':
-        return 'bg-accent';
-      case 'completed':
-        return 'bg-success';
-      case 'draft':
-        return 'bg-warning';
-      case 'proposal_sent':
-        return 'bg-primary';
-      default:
-        return 'bg-muted';
-    }
-  };
-
-  const handleSendProposal = async (caseId: string) => {
-    await sendProposal(caseId, {
-      consultation_fee: parseInt(proposalData.consultationFee),
-      remaining_fee: parseInt(proposalData.remainingFee),
-      timeline: proposalData.timeline,
-      scope: proposalData.scope
-    });
-    
-    // Reset form
-    setProposalData({
-      consultationFee: "500",
-      remainingFee: "2000",
-      timeline: "2-3 weeks", 
-      scope: ""
-    });
-  };
-
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-background">
         <header className="border-b bg-background/95 backdrop-blur sticky top-0 z-50">
@@ -89,17 +146,66 @@ const LawyerDashboard = () => {
                 <span className="text-xl font-bold">LegalConnect</span>
                 <Badge variant="secondary" className="ml-2">Lawyer Portal</Badge>
               </Link>
+              <Button variant="ghost" size="sm" onClick={handleSignOut}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </Button>
             </div>
           </div>
         </header>
-        <div className="container mx-auto px-4 py-8 space-y-6">
-          <div className="grid md:grid-cols-4 gap-4">
-            {Array.from({length: 4}).map((_, i) => (
+        <div className="container mx-auto px-4 py-8 max-w-6xl">
+          <div className="grid md:grid-cols-4 gap-4 mb-8">
+            {[...Array(4)].map((_, i) => (
               <Skeleton key={i} className="h-24" />
             ))}
           </div>
-          <Skeleton className="h-96 w-full" />
+          <Skeleton className="h-96" />
         </div>
+      </div>
+    );
+  }
+
+  // Check if lawyer profile is approved
+  if (profile?.role !== 'lawyer' || profile?.is_active === false) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <Scale className="h-12 w-12 text-primary" />
+            </div>
+            <CardTitle className="text-2xl font-bold">Lawyer Dashboard</CardTitle>
+            <CardDescription>
+              {profile?.role !== 'lawyer' 
+                ? "You don't have lawyer permissions."
+                : "Your lawyer account is pending approval."
+              }
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center">
+            {profile?.role !== 'lawyer' ? (
+              <div className="space-y-4">
+                <AlertCircle className="h-12 w-12 text-warning mx-auto" />
+                <p className="text-muted-foreground">
+                  This dashboard is only available for approved lawyers. Please contact admin if this is an error.
+                </p>
+                <Button onClick={handleSignOut} variant="outline">
+                  Sign Out
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <Clock className="h-12 w-12 text-warning mx-auto" />
+                <p className="text-muted-foreground">
+                  Your lawyer profile is currently under review. You'll receive an email notification once it's approved.
+                </p>
+                <Button onClick={handleSignOut} variant="outline">
+                  Sign Out
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -115,10 +221,14 @@ const LawyerDashboard = () => {
               <span className="text-xl font-bold">LegalConnect</span>
               <Badge variant="secondary" className="ml-2">Lawyer Portal</Badge>
             </Link>
-            <div className="flex items-center space-x-4">
-              <Badge className="bg-success">⭐ Verified Lawyer</Badge>
-              <Button variant="ghost" size="sm">Settings</Button>
-              <Button variant="ghost" size="sm" onClick={signOut}>Sign Out</Button>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-muted-foreground">
+                Welcome, {profile?.first_name || 'Lawyer'}
+              </span>
+              <Button variant="ghost" size="sm" onClick={handleSignOut}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </Button>
             </div>
           </div>
         </div>
@@ -134,7 +244,7 @@ const LawyerDashboard = () => {
                   <p className="text-sm font-medium text-muted-foreground">Active Cases</p>
                   <p className="text-3xl font-bold">{stats.activeCases}</p>
                 </div>
-                <FileText className="h-8 w-8 text-primary" />
+                <FileText className="h-8 w-8 text-success" />
               </div>
             </CardContent>
           </Card>
@@ -143,10 +253,10 @@ const LawyerDashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Pending Payouts</p>
-                  <p className="text-3xl font-bold">${(stats.pendingPayouts || 0).toLocaleString()}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Pending Cases</p>
+                  <p className="text-3xl font-bold">{stats.pendingCases}</p>
                 </div>
-                <DollarSign className="h-8 w-8 text-accent" />
+                <Clock className="h-8 w-8 text-warning" />
               </div>
             </CardContent>
           </Card>
@@ -155,10 +265,10 @@ const LawyerDashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">This Month</p>
-                  <p className="text-3xl font-bold">${(stats.monthlyEarnings || 0).toLocaleString()}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Completed Cases</p>
+                  <p className="text-3xl font-bold">{stats.completedCases}</p>
                 </div>
-                <TrendingUp className="h-8 w-8 text-success" />
+                <CheckCircle className="h-8 w-8 text-primary" />
               </div>
             </CardContent>
           </Card>
@@ -167,305 +277,74 @@ const LawyerDashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Avg. Response</p>
-                  <p className="text-3xl font-bold">{stats.avgResponseTime}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Total Earnings</p>
+                  <p className="text-3xl font-bold">Coming Soon</p>
                 </div>
-                <Clock className="h-8 w-8 text-primary" />
+                <Users className="h-8 w-8 text-accent" />
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Main Content Tabs */}
-        <Tabs defaultValue="cases" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="cases">My Cases</TabsTrigger>
-            <TabsTrigger value="proposals">Proposals</TabsTrigger>
-            <TabsTrigger value="payouts">Payouts</TabsTrigger>
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-          </TabsList>
-
-          {/* Cases Tab */}
-          <TabsContent value="cases" className="space-y-6">
-            <div className="grid gap-4">
-              {assignedCases.length > 0 ? assignedCases.map((caseItem, index) => (
-                <Card key={index} className="bg-gradient-card shadow-card">
-                  <CardContent className="p-6">
-                    <div className="grid lg:grid-cols-4 gap-4 items-center">
+        {/* Cases Section */}
+        <Card className="bg-gradient-card shadow-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              My Cases
+            </CardTitle>
+            <CardDescription>
+              Cases assigned to you for legal assistance
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {cases.length === 0 ? (
+              <div className="text-center py-8">
+                <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No cases assigned yet</h3>
+                <p className="text-muted-foreground">
+                  New cases will appear here when they're assigned to you by the admin.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {cases.map((caseItem) => (
+                  <div key={caseItem.id} className="border rounded-lg p-4">
+                    <div className="flex items-start justify-between mb-3">
                       <div>
-                        <h3 className="font-semibold mb-1">{caseItem.title}</h3>
-                        <p className="text-sm text-muted-foreground mb-2">Client: {caseItem.client_name}</p>
-                        <div className="flex items-center space-x-2">
-                          <Badge variant="outline" className="text-xs">{caseItem.case_number}</Badge>
-                          <Badge className="text-xs">{caseItem.category}</Badge>
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge variant="outline">{caseItem.case_number}</Badge>
+                          <Badge className={getStatusColor(caseItem.status)}>
+                            {caseItem.status}
+                          </Badge>
+                          <Badge className={getUrgencyColor(caseItem.urgency)}>
+                            {caseItem.urgency} Priority
+                          </Badge>
                         </div>
-                      </div>
-                      
-                      <div className="text-center">
-                        <p className="text-sm font-medium mb-1">{caseItem.status.replace('_', ' ')}</p>
-                        <div className={`w-3 h-3 rounded-full mx-auto ${getStatusColor(caseItem.status)}`} />
-                      </div>
-
-                      <div className="text-center">
-                        <p className="text-lg font-bold">
-                          {caseItem.consultation_fee ? `$${caseItem.consultation_fee}` : 'Not Set'}
-                        </p>
+                        <h3 className="font-semibold">{caseItem.title}</h3>
                         <p className="text-sm text-muted-foreground">
-                          + {caseItem.remaining_fee ? `$${caseItem.remaining_fee}` : 'Not Set'}
+                          Client: {caseItem.client_name} • {caseItem.category}
                         </p>
-                        <Badge variant="secondary" className="text-xs capitalize">{caseItem.urgency}</Badge>
                       </div>
-
-                      <div className="flex space-x-2 justify-end">
-                        <Button size="sm" variant="outline">
-                          <Eye className="h-4 w-4 mr-1" />
-                          View
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          className="bg-gradient-primary"
-                          onClick={() => sendMessage(caseItem.id, "Hello, I wanted to check in on your case.")}
-                        >
-                          <MessageSquare className="h-4 w-4 mr-1" />
-                          Message
-                        </Button>
+                      <div className="text-right text-sm text-muted-foreground">
+                        <p>Created: {formatDate(caseItem.created_at)}</p>
+                        <p>Updated: {formatDate(caseItem.updated_at)}</p>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              )) : (
-                <Card className="bg-gradient-card shadow-card">
-                  <CardContent className="p-8 text-center">
-                    <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <h3 className="text-xl font-semibold mb-2">No Cases Assigned</h3>
-                    <p className="text-muted-foreground">
-                      You don't have any assigned cases yet. Cases will appear here once assigned by an admin.
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          </TabsContent>
-
-          {/* Proposals Tab */}
-          <TabsContent value="proposals" className="space-y-6">
-            <Card className="bg-gradient-card shadow-card">
-              <CardHeader>
-                <CardTitle>Create New Proposal</CardTitle>
-                <CardDescription>
-                  {assignedCases.length > 0 
-                    ? `Create a proposal for: ${assignedCases.find(c => c.status === 'draft')?.case_number || 'Select a case'}`
-                    : 'No cases available for proposals'
-                  }
-                </CardDescription>
-              </CardHeader>
-              
-              {assignedCases.some(c => c.status === 'draft') ? (
-                <CardContent className="space-y-6">
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="consultation-fee">Consultation Fee ($)</Label>
-                      <Input
-                        id="consultation-fee"
-                        value={proposalData.consultationFee}
-                        onChange={(e) => setProposalData({...proposalData, consultationFee: e.target.value})}
-                        placeholder="500"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="remaining-fee">Remaining Fee ($)</Label>
-                      <Input
-                        id="remaining-fee" 
-                        value={proposalData.remainingFee}
-                        onChange={(e) => setProposalData({...proposalData, remainingFee: e.target.value})}
-                        placeholder="2000"
-                      />
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline">
+                        View Details
+                      </Button>
+                      <Button size="sm">
+                        Send Message
+                      </Button>
                     </div>
                   </div>
-
-                  <div>
-                    <Label htmlFor="timeline">Expected Timeline</Label>
-                    <Input
-                      id="timeline"
-                      value={proposalData.timeline}
-                      onChange={(e) => setProposalData({...proposalData, timeline: e.target.value})}
-                      placeholder="2-3 weeks"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="scope">Scope of Work</Label>
-                    <Textarea
-                      id="scope"
-                      value={proposalData.scope}
-                      onChange={(e) => setProposalData({...proposalData, scope: e.target.value})}
-                      placeholder="Describe the scope of work, deliverables, and milestones..."
-                      className="min-h-[120px]"
-                    />
-                  </div>
-
-                  <div className="p-4 bg-muted/50 rounded-lg">
-                    <h4 className="font-medium mb-2">Proposal Summary</h4>
-                    <div className="text-sm space-y-1">
-                      <p>Consultation Fee: ${proposalData.consultationFee}</p>
-                      <p>Remaining Fee: ${proposalData.remainingFee}</p>
-                      <p>Total Fee: ${(parseInt(proposalData.consultationFee || "0") + parseInt(proposalData.remainingFee || "0")).toLocaleString()}</p>
-                      <p>Platform Fee (10%): ${Math.round((parseInt(proposalData.consultationFee || "0") + parseInt(proposalData.remainingFee || "0")) * 0.1)}</p>
-                      <p className="font-medium">Your Net Earnings: ${Math.round((parseInt(proposalData.consultationFee || "0") + parseInt(proposalData.remainingFee || "0")) * 0.9)}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex space-x-2">
-                    <Button 
-                      className="flex-1 bg-gradient-primary"
-                      onClick={() => {
-                        const draftCase = assignedCases.find(c => c.status === 'draft');
-                        if (draftCase) handleSendProposal(draftCase.id);
-                      }}
-                      disabled={!proposalData.scope.trim()}
-                    >
-                      <Send className="h-4 w-4 mr-2" />
-                      Send Proposal
-                    </Button>
-                    <Button variant="outline">Save Draft</Button>
-                  </div>
-                </CardContent>
-              ) : (
-                <CardContent className="p-8 text-center">
-                  <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">No Cases Need Proposals</h3>
-                  <p className="text-muted-foreground">
-                    All your assigned cases either already have proposals or are in different stages.
-                  </p>
-                </CardContent>
-              )}
-            </Card>
-          </TabsContent>
-
-          {/* Payouts Tab */}
-          <TabsContent value="payouts" className="space-y-6">
-            <div className="grid lg:grid-cols-3 gap-6 mb-6">
-              <Card className="bg-gradient-card shadow-card">
-                <CardContent className="p-6 text-center">
-                  <DollarSign className="h-8 w-8 mx-auto text-success mb-2" />
-                  <p className="text-sm text-muted-foreground">Total Earned</p>
-                  <p className="text-2xl font-bold">${(stats.monthlyEarnings * 3 || 0).toLocaleString()}</p>
-                </CardContent>
-              </Card>
-              
-              <Card className="bg-gradient-card shadow-card">
-                <CardContent className="p-6 text-center">
-                  <Clock className="h-8 w-8 mx-auto text-accent mb-2" />
-                  <p className="text-sm text-muted-foreground">Pending Release</p>
-                  <p className="text-2xl font-bold">${(stats.pendingPayouts || 0).toLocaleString()}</p>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gradient-card shadow-card">
-                <CardContent className="p-6 text-center">
-                  <TrendingUp className="h-8 w-8 mx-auto text-primary mb-2" />
-                  <p className="text-sm text-muted-foreground">Available Now</p>
-                  <p className="text-2xl font-bold">${((stats.monthlyEarnings || 0) * 0.6).toLocaleString()}</p>
-                </CardContent>
-              </Card>
-            </div>
-
-            <Card className="bg-gradient-card shadow-card">
-              <CardHeader>
-                <CardTitle>Payout History</CardTitle>
-                <CardDescription>Track your earnings and payment releases</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {assignedCases.length > 0 ? (
-                  <div className="space-y-3">
-                    {assignedCases
-                      .filter(c => c.consultation_fee || c.remaining_fee)
-                      .map((caseItem, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                          <div>
-                            <p className="font-medium">{caseItem.title}</p>
-                            <p className="text-sm text-muted-foreground">{caseItem.case_number} • {formatDate(caseItem.updated_at)}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-bold">
-                              ${((caseItem.consultation_fee || 0) + (caseItem.remaining_fee || 0)) * 0.9}
-                            </p>
-                            <Badge variant={
-                              caseItem.status === 'completed' ? 'default' :
-                              caseItem.status === 'active' ? 'secondary' : 'outline'
-                            }>
-                              {caseItem.status === 'completed' ? 'Released' : 
-                               caseItem.status === 'active' ? 'Pending' : 'Held in Escrow'}
-                            </Badge>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                ) : (
-                  <div className="text-center text-muted-foreground py-8">
-                    <DollarSign className="h-8 w-8 mx-auto mb-2" />
-                    <p>No earnings history yet.</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Profile Tab */}
-          <TabsContent value="profile" className="space-y-6">
-            <Card className="bg-gradient-card shadow-card">
-              <CardHeader>
-                <CardTitle>Lawyer Profile</CardTitle>
-                <CardDescription>Manage your professional information and specializations</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="name">Full Name</Label>
-                    <Input id="name" defaultValue="Sarah Johnson" />
-                  </div>
-                  <div>
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" defaultValue="sarah@example.com" disabled />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="specializations">Specializations</Label>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {["Family Law", "Immigration", "Real Estate", "Corporate Law"].map((spec, index) => (
-                      <Badge key={index} variant="outline" className="cursor-pointer">
-                        {spec} ✓
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="bio">Professional Bio</Label>
-                  <Textarea
-                    id="bio"
-                    defaultValue="Experienced family law attorney with over 10 years of practice. Specializing in divorce proceedings, child custody, and prenuptial agreements."
-                    className="min-h-[100px]"
-                  />
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="languages">Languages</Label>
-                    <Input id="languages" defaultValue="English, Arabic" />
-                  </div>
-                  <div>
-                    <Label htmlFor="availability">Availability</Label>
-                    <Input id="availability" defaultValue="Mon-Fri, 9 AM - 6 PM EST" />
-                  </div>
-                </div>
-
-                <Button className="bg-gradient-primary">Update Profile</Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

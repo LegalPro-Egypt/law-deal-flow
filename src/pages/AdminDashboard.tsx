@@ -30,6 +30,7 @@ import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescript
 import { LawyerRequestsManager } from "@/components/LawyerRequestsManager";
 import { CaseDetailsDialog } from "@/components/CaseDetailsDialog";
 import { ConversationDialog } from "@/components/ConversationDialog";
+import { InviteLawyerDialog } from "@/components/InviteLawyerDialog";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -42,6 +43,7 @@ const AdminDashboard = () => {
   const [showConversation, setShowConversation] = useState(false);
   const [intakeToDelete, setIntakeToDelete] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showInviteLawyerDialog, setShowInviteLawyerDialog] = useState(false);
 
   const handleSignOut = async () => {
     try {
@@ -441,7 +443,10 @@ const AdminDashboard = () => {
           <TabsContent value="lawyers" className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold">Lawyer Management</h2>
-              <Button className="bg-gradient-primary">
+              <Button 
+                className="bg-gradient-primary"
+                onClick={() => setShowInviteLawyerDialog(true)}
+              >
                 <UserPlus className="h-4 w-4 mr-2" />
                 Invite Lawyer
               </Button>
@@ -500,6 +505,14 @@ const AdminDashboard = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        <InviteLawyerDialog
+          open={showInviteLawyerDialog}
+          onOpenChange={setShowInviteLawyerDialog}
+          onSuccess={() => {
+            console.log('Lawyer invitation sent successfully');
+          }}
+        />
       </div>
     </div>
   );
