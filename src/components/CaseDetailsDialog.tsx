@@ -326,12 +326,22 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
           </div>
         ) : caseDetails ? (
           <Tabs defaultValue="overview" className="h-full">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="conversation">Conversation</TabsTrigger>
-              <TabsTrigger value="documents">Documents</TabsTrigger>
-              <TabsTrigger value="client-responses">Client Responses</TabsTrigger>
-              <TabsTrigger value="entities">Extracted Data</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-5 h-auto p-1 gap-1">
+              <TabsTrigger value="overview" className="text-xs sm:text-sm px-2 py-2">
+                Overview
+              </TabsTrigger>
+              <TabsTrigger value="conversation" className="text-xs sm:text-sm px-2 py-2">
+                Chat
+              </TabsTrigger>
+              <TabsTrigger value="documents" className="text-xs sm:text-sm px-2 py-2">
+                Files
+              </TabsTrigger>
+              <TabsTrigger value="client-responses" className="text-xs sm:text-sm px-2 py-2">
+                Responses
+              </TabsTrigger>
+              <TabsTrigger value="entities" className="text-xs sm:text-sm px-2 py-2">
+                Data
+              </TabsTrigger>
             </TabsList>
 
             <ScrollArea className="h-[60vh] mt-4">
