@@ -344,7 +344,7 @@ const Intake = () => {
       });
 
       // Navigate back to client dashboard
-      navigate('/client-dashboard');
+      navigate('/client', { replace: true });
     } catch (error: any) {
       console.error('Error submitting case:', error);
       toast({
