@@ -10,7 +10,11 @@ import {
   DollarSign, 
   AlertTriangle,
   CheckCircle2,
-  Scale
+  Scale,
+  Gavel,
+  BookOpen,
+  Target,
+  Shield
 } from 'lucide-react';
 import { CaseData } from '@/hooks/useLegalChatbot';
 
@@ -121,12 +125,116 @@ export const CaseDataSummary: React.FC<CaseDataSummaryProps> = ({
           </div>
         </div>
 
-        {/* Extracted Entities */}
+        {/* Legal Analysis */}
+        {(caseData.legal_issues || caseData.legal_classification || caseData.violation_types || caseData.legal_remedies_sought) && (
+          <>
+            <Separator />
+            <div>
+              <h4 className="font-medium mb-4 flex items-center gap-2">
+                <Gavel className="h-4 w-4" />
+                Legal Analysis
+              </h4>
+              <div className="grid md:grid-cols-2 gap-4">
+                {caseData.legal_issues && caseData.legal_issues.length > 0 && (
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                      <AlertTriangle className="h-3 w-3" />
+                      Legal Issues
+                    </label>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {caseData.legal_issues.map((issue, index) => (
+                        <Badge key={index} variant="destructive" className="text-xs">
+                          {issue}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {caseData.legal_classification?.primary_legal_area && (
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                      <BookOpen className="h-3 w-3" />
+                      Primary Legal Area
+                    </label>
+                    <Badge variant="default" className="mt-1">
+                      {caseData.legal_classification.primary_legal_area}
+                    </Badge>
+                  </div>
+                )}
+
+                {caseData.violation_types && caseData.violation_types.length > 0 && (
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                      <Shield className="h-3 w-3" />
+                      Violation Types
+                    </label>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {caseData.violation_types.map((violation, index) => (
+                        <Badge key={index} variant="secondary" className="text-xs">
+                          {violation}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {caseData.legal_remedies_sought && caseData.legal_remedies_sought.length > 0 && (
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                      <Target className="h-3 w-3" />
+                      Legal Remedies Sought
+                    </label>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {caseData.legal_remedies_sought.map((remedy, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {remedy}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {caseData.legal_complexity && (
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Case Complexity
+                    </label>
+                    <Badge 
+                      variant={caseData.legal_complexity === 'simple' ? 'secondary' : 
+                               caseData.legal_complexity === 'moderate' ? 'default' : 'destructive'}
+                      className="mt-1 capitalize"
+                    >
+                      {caseData.legal_complexity}
+                    </Badge>
+                  </div>
+                )}
+
+                {caseData.legal_classification?.applicable_statutes && caseData.legal_classification.applicable_statutes.length > 0 && (
+                  <div className="md:col-span-2">
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Applicable Laws & Statutes
+                    </label>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {caseData.legal_classification.applicable_statutes.map((statute, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {statute}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Enhanced Extracted Entities */}
         {caseData.entities && Object.keys(caseData.entities).length > 0 && (
           <>
             <Separator />
             <div>
-              <h4 className="font-medium mb-4">Extracted Information</h4>
+              <h4 className="font-medium mb-4">Enhanced Extracted Information</h4>
               <div className="grid md:grid-cols-2 gap-4">
                 {caseData.entities.parties && caseData.entities.parties.length > 0 && (
                   <div>
@@ -138,6 +246,22 @@ export const CaseDataSummary: React.FC<CaseDataSummaryProps> = ({
                       {caseData.entities.parties.map((party, index) => (
                         <Badge key={index} variant="outline" className="text-xs">
                           {party}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {caseData.entities.legal_relationships && caseData.entities.legal_relationships.length > 0 && (
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                      <Users className="h-3 w-3" />
+                      Legal Relationships
+                    </label>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {caseData.entities.legal_relationships.map((rel, index) => (
+                        <Badge key={index} variant="secondary" className="text-xs">
+                          {rel}
                         </Badge>
                       ))}
                     </div>
@@ -160,6 +284,22 @@ export const CaseDataSummary: React.FC<CaseDataSummaryProps> = ({
                   </div>
                 )}
 
+                {caseData.entities.legal_deadlines && caseData.entities.legal_deadlines.length > 0 && (
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      Legal Deadlines
+                    </label>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {caseData.entities.legal_deadlines.map((deadline, index) => (
+                        <Badge key={index} variant="destructive" className="text-xs">
+                          {deadline}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {caseData.entities.locations && caseData.entities.locations.length > 0 && (
                   <div>
                     <label className="text-sm font-medium text-muted-foreground flex items-center gap-1">
@@ -176,6 +316,22 @@ export const CaseDataSummary: React.FC<CaseDataSummaryProps> = ({
                   </div>
                 )}
 
+                {caseData.entities.institutions && caseData.entities.institutions.length > 0 && (
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                      <MapPin className="h-3 w-3" />
+                      Institutions
+                    </label>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {caseData.entities.institutions.map((institution, index) => (
+                        <Badge key={index} variant="secondary" className="text-xs">
+                          {institution}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {caseData.entities.amounts && caseData.entities.amounts.length > 0 && (
                   <div>
                     <label className="text-sm font-medium text-muted-foreground flex items-center gap-1">
@@ -186,6 +342,38 @@ export const CaseDataSummary: React.FC<CaseDataSummaryProps> = ({
                       {caseData.entities.amounts.map((amount, index) => (
                         <Badge key={index} variant="outline" className="text-xs">
                           {amount}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {caseData.entities.assets_property && caseData.entities.assets_property.length > 0 && (
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                      <DollarSign className="h-3 w-3" />
+                      Assets & Property
+                    </label>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {caseData.entities.assets_property.map((asset, index) => (
+                        <Badge key={index} variant="secondary" className="text-xs">
+                          {asset}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {caseData.entities.legal_documents && caseData.entities.legal_documents.length > 0 && (
+                  <div className="md:col-span-2">
+                    <label className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                      <FileText className="h-3 w-3" />
+                      Legal Documents Mentioned
+                    </label>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {caseData.entities.legal_documents.map((doc, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {doc}
                         </Badge>
                       ))}
                     </div>

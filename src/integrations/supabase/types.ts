@@ -70,8 +70,10 @@ export type Database = {
       cases: {
         Row: {
           ai_summary: string | null
+          applicable_laws: string[] | null
           assigned_admin_id: string | null
           assigned_lawyer_id: string | null
+          case_complexity_score: number | null
           case_number: string
           category: string
           client_email: string | null
@@ -86,6 +88,7 @@ export type Database = {
           id: string
           jurisdiction: string
           language: string
+          legal_analysis: Json | null
           remaining_fee: number | null
           status: string
           step: number | null
@@ -98,8 +101,10 @@ export type Database = {
         }
         Insert: {
           ai_summary?: string | null
+          applicable_laws?: string[] | null
           assigned_admin_id?: string | null
           assigned_lawyer_id?: string | null
+          case_complexity_score?: number | null
           case_number?: string
           category: string
           client_email?: string | null
@@ -114,6 +119,7 @@ export type Database = {
           id?: string
           jurisdiction?: string
           language?: string
+          legal_analysis?: Json | null
           remaining_fee?: number | null
           status?: string
           step?: number | null
@@ -126,8 +132,10 @@ export type Database = {
         }
         Update: {
           ai_summary?: string | null
+          applicable_laws?: string[] | null
           assigned_admin_id?: string | null
           assigned_lawyer_id?: string | null
+          case_complexity_score?: number | null
           case_number?: string
           category?: string
           client_email?: string | null
@@ -142,6 +150,7 @@ export type Database = {
           id?: string
           jurisdiction?: string
           language?: string
+          legal_analysis?: Json | null
           remaining_fee?: number | null
           status?: string
           step?: number | null

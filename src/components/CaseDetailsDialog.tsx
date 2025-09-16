@@ -21,7 +21,12 @@ import {
   CheckCircle,
   Download,
   Eye,
-  Sparkles
+  Sparkles,
+  Scale,
+  AlertTriangle,
+  BookOpen,
+  Shield,
+  Target
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -51,6 +56,8 @@ interface CaseDetails {
   updated_at: string;
   ai_summary?: string;
   extracted_entities?: any;
+  legal_analysis?: any;
+  case_complexity_score?: number;
   client_responses_summary?: any;
   user_id: string;
   assigned_lawyer_id?: string;
@@ -326,7 +333,7 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
           </div>
         ) : caseDetails ? (
           <Tabs defaultValue="overview" className="h-full">
-            <TabsList className="grid w-full grid-cols-5 h-auto p-1 gap-1">
+            <TabsList className="grid w-full grid-cols-6 h-auto p-1 gap-1">
               <TabsTrigger value="overview" className="text-xs sm:text-sm px-2 py-2">
                 Overview
               </TabsTrigger>
@@ -338,6 +345,9 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
               </TabsTrigger>
               <TabsTrigger value="client-responses" className="text-xs sm:text-sm px-2 py-2">
                 Responses
+              </TabsTrigger>
+              <TabsTrigger value="legal-analysis" className="text-xs sm:text-sm px-2 py-2">
+                Legal
               </TabsTrigger>
               <TabsTrigger value="entities" className="text-xs sm:text-sm px-2 py-2">
                 Data
@@ -671,6 +681,152 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                         <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                         <h3 className="text-lg font-semibold mb-2">No client responses summary</h3>
                         <p className="text-muted-foreground">Client response summary will be generated during intake conversations.</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="legal-analysis" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Scale className="h-5 w-5" />
+                      Legal Analysis & Classification
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {caseDetails.legal_analysis ? (
+                      <>
+                        {/* Legal Issues */}
+                        {caseDetails.legal_analysis.legal_issues && caseDetails.legal_analysis.legal_issues.length > 0 && (
+                          <div>
+                            <h4 className="font-semibold mb-2 flex items-center gap-2">
+                              <AlertTriangle className="h-4 w-4 text-destructive" />
+                              Legal Issues Identified
+                            </h4>
+                            <div className="flex flex-wrap gap-2">
+                              {caseDetails.legal_analysis.legal_issues.map((issue: string, index: number) => (
+                                <Badge key={index} variant="destructive">{issue}</Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Legal Classification */}
+                        {caseDetails.legal_analysis.legal_classification && (
+                          <div>
+                            <h4 className="font-semibold mb-2 flex items-center gap-2">
+                              <BookOpen className="h-4 w-4 text-primary" />
+                              Legal Classification
+                            </h4>
+                            <div className="space-y-3">
+                              {caseDetails.legal_analysis.legal_classification.primary_legal_area && (
+                                <div>
+                                  <label className="text-sm font-medium text-muted-foreground">Primary Legal Area</label>
+                                  <Badge variant="default" className="ml-2">
+                                    {caseDetails.legal_analysis.legal_classification.primary_legal_area}
+                                  </Badge>
+                                </div>
+                              )}
+                              
+                              {caseDetails.legal_analysis.legal_classification.secondary_legal_areas && 
+                               caseDetails.legal_analysis.legal_classification.secondary_legal_areas.length > 0 && (
+                                <div>
+                                  <label className="text-sm font-medium text-muted-foreground">Secondary Legal Areas</label>
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {caseDetails.legal_analysis.legal_classification.secondary_legal_areas.map((area: string, index: number) => (
+                                      <Badge key={index} variant="secondary">{area}</Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {caseDetails.legal_analysis.legal_classification.applicable_statutes && 
+                               caseDetails.legal_analysis.legal_classification.applicable_statutes.length > 0 && (
+                                <div>
+                                  <label className="text-sm font-medium text-muted-foreground">Applicable Laws & Statutes</label>
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {caseDetails.legal_analysis.legal_classification.applicable_statutes.map((statute: string, index: number) => (
+                                      <Badge key={index} variant="outline">{statute}</Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {caseDetails.legal_analysis.legal_classification.legal_concepts && 
+                               caseDetails.legal_analysis.legal_classification.legal_concepts.length > 0 && (
+                                <div>
+                                  <label className="text-sm font-medium text-muted-foreground">Legal Concepts</label>
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {caseDetails.legal_analysis.legal_classification.legal_concepts.map((concept: string, index: number) => (
+                                      <Badge key={index} variant="outline">{concept}</Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Violation Types */}
+                        {caseDetails.legal_analysis.violation_types && caseDetails.legal_analysis.violation_types.length > 0 && (
+                          <div>
+                            <h4 className="font-semibold mb-2 flex items-center gap-2">
+                              <Shield className="h-4 w-4 text-orange-500" />
+                              Violation Types
+                            </h4>
+                            <div className="flex flex-wrap gap-2">
+                              {caseDetails.legal_analysis.violation_types.map((violation: string, index: number) => (
+                                <Badge key={index} variant="secondary">{violation}</Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Legal Remedies Sought */}
+                        {caseDetails.legal_analysis.legal_remedies_sought && caseDetails.legal_analysis.legal_remedies_sought.length > 0 && (
+                          <div>
+                            <h4 className="font-semibold mb-2 flex items-center gap-2">
+                              <Target className="h-4 w-4 text-green-500" />
+                              Legal Remedies Sought
+                            </h4>
+                            <div className="flex flex-wrap gap-2">
+                              {caseDetails.legal_analysis.legal_remedies_sought.map((remedy: string, index: number) => (
+                                <Badge key={index} variant="outline">{remedy}</Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Case Complexity */}
+                        {caseDetails.legal_analysis.legal_complexity && (
+                          <div>
+                            <h4 className="font-semibold mb-2">Case Complexity Assessment</h4>
+                            <div className="flex items-center gap-2">
+                              <Badge 
+                                variant={
+                                  caseDetails.legal_analysis.legal_complexity === 'simple' ? 'secondary' :
+                                  caseDetails.legal_analysis.legal_complexity === 'moderate' ? 'default' : 'destructive'
+                                }
+                                className="capitalize"
+                              >
+                                {caseDetails.legal_analysis.legal_complexity} Complexity
+                              </Badge>
+                              {caseDetails.case_complexity_score && (
+                                <Badge variant="outline">
+                                  Score: {caseDetails.case_complexity_score}/3
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="text-center py-8">
+                        <Scale className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold mb-2">No legal analysis available</h3>
+                        <p className="text-muted-foreground">Legal analysis will be generated during AI intake conversations.</p>
                       </div>
                     )}
                   </CardContent>

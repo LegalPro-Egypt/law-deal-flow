@@ -19,9 +19,24 @@ export interface CaseData {
     dates?: string[];
     amounts?: string[];
     locations?: string[];
+    legal_documents?: string[];
+    legal_deadlines?: string[];
+    legal_relationships?: string[];
+    assets_property?: string[];
+    institutions?: string[];
   };
   requiredDocuments?: string[];
   nextQuestions?: string[];
+  legal_issues?: string[];
+  legal_classification?: {
+    primary_legal_area?: string;
+    secondary_legal_areas?: string[];
+    applicable_statutes?: string[];
+    legal_concepts?: string[];
+  };
+  violation_types?: string[];
+  legal_remedies_sought?: string[];
+  legal_complexity?: 'simple' | 'moderate' | 'complex';
 }
 
 export interface ChatbotState {
