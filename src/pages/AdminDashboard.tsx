@@ -278,30 +278,39 @@ const AdminDashboard = () => {
 
   const confirmDeleteLawyer = async () => {
     if (!lawyerToDelete) return;
-    
+    const id = lawyerToDelete;
+    console.log('Confirming delete for lawyer id:', id);
+
+    // Optimistic UI update
+    setAllLawyers((prev) => prev.filter((l) => l.id !== id));
+
     try {
       const { error } = await supabase
         .from('profiles')
         .delete()
-        .eq('id', lawyerToDelete);
+        .eq('id', id);
 
       if (error) throw error;
-      
+
       toast({
-        title: "Lawyer Deleted",
-        description: "The lawyer has been permanently deleted",
+        title: 'Lawyer Deleted',
+        description: 'The lawyer has been permanently deleted',
       });
-      
+
       await fetchAllLawyers();
       await refreshData();
+    } catch (error: any) {
+      console.error('Failed to delete lawyer', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete lawyer: ' + error.message,
+        variant: 'destructive',
+      });
+      // Re-sync data in case optimistic update was wrong
+      await fetchAllLawyers();
+    } finally {
       setShowLawyerDeleteConfirm(false);
       setLawyerToDelete(null);
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "Failed to delete lawyer: " + error.message,
-        variant: "destructive",
-      });
     }
   };
 
@@ -840,6 +849,7 @@ const AdminDashboard = () => {
                             </Button>
                           )}
                           <Button 
+                            type="button"
                             size="sm" 
                             variant="destructive" 
                             className="justify-start"
@@ -1074,7 +1084,7 @@ const AdminDashboard = () => {
               <AlertDialogCancel onClick={() => setIntakeToDelete(null)}>
                 No
               </AlertDialogCancel>
-              <Button variant="destructive" onClick={confirmDeleteIntake}>
+              <Button type="button" variant="destructive" onClick={confirmDeleteIntake}>
                 Yes
               </Button>
             </AlertDialogFooter>
@@ -1105,7 +1115,7 @@ const AdminDashboard = () => {
               }}>
                 Cancel
               </AlertDialogCancel>
-              <Button variant="destructive" onClick={confirmDenyCase}>
+              <Button type="button" variant="destructive" onClick={confirmDenyCase}>
                 Deny Case
               </Button>
             </AlertDialogFooter>
@@ -1125,7 +1135,7 @@ const AdminDashboard = () => {
               <AlertDialogCancel onClick={() => setCaseToDelete(null)}>
                 Cancel
               </AlertDialogCancel>
-              <Button variant="destructive" onClick={confirmDeleteCase}>
+              <Button type="button" variant="destructive" onClick={confirmDeleteCase}>
                 Delete Permanently
               </Button>
             </AlertDialogFooter>
@@ -1144,7 +1154,7 @@ const AdminDashboard = () => {
               <AlertDialogCancel onClick={() => setLawyerToDelete(null)}>
                 Cancel
               </AlertDialogCancel>
-              <Button variant="destructive" onClick={confirmDeleteLawyer}>
+              <Button type="button" variant="destructive" onClick={confirmDeleteLawyer}>
                 Delete Lawyer
               </Button>
             </AlertDialogFooter>
