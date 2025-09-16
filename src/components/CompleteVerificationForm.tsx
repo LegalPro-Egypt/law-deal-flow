@@ -91,6 +91,8 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lawyerCardFront, setLawyerCardFront] = useState<File | null>(null);
   const [lawyerCardBack, setLawyerCardBack] = useState<File | null>(null);
+  const [uploadingFront, setUploadingFront] = useState(false);
+  const [uploadingBack, setUploadingBack] = useState(false);
   const [selectedConsultationMethods, setSelectedConsultationMethods] = useState<string[]>(["in-person"]);
   const [selectedPaymentStructures, setSelectedPaymentStructures] = useState<string[]>(["hourly"]);
   const [selectedMemberships, setSelectedMemberships] = useState<string[]>([]);
@@ -110,22 +112,49 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
   });
 
   const uploadFile = async (file: File, type: 'front' | 'back') => {
+    console.log(`Starting upload for ${type} card:`, { fileName: file.name, fileSize: file.size, fileType: file.type });
+    
+    if (!user?.id) {
+      throw new Error('User ID not available');
+    }
+
+    // Validate file
+    if (!file.type.includes('image') && !file.type.includes('pdf')) {
+      throw new Error('Invalid file type. Please upload an image or PDF file.');
+    }
+
+    if (file.size > 10 * 1024 * 1024) { // 10MB limit
+      throw new Error('File size too large. Please upload a file smaller than 10MB.');
+    }
+
     const fileExt = file.name.split('.').pop();
-    const fileName = `lawyer-cards/${user.id}/${type}.${fileExt}`;
+    const fileName = `${user.id}/lawyer-cards/${type}.${fileExt}`;
+    
+    console.log(`Uploading to path: ${fileName}`);
     
     const { error: uploadError } = await supabase.storage
       .from('lawyer-documents')
       .upload(fileName, file, { upsert: true });
 
     if (uploadError) {
-      throw new Error(`Upload failed: ${uploadError.message}`);
+      console.error(`Upload error for ${type}:`, uploadError);
+      throw new Error(`Upload failed for ${type} card: ${uploadError.message}`);
     }
 
-    const { data: { publicUrl } } = supabase.storage
-      .from('lawyer-documents')
-      .getPublicUrl(fileName);
+    console.log(`Upload successful for ${type}, generating signed URL...`);
 
-    return publicUrl;
+    // Use signed URL for private bucket
+    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+      .from('lawyer-documents')
+      .createSignedUrl(fileName, 86400); // 24 hours
+
+    if (signedUrlError || !signedUrlData?.signedUrl) {
+      console.error(`Signed URL error for ${type}:`, signedUrlError);
+      throw new Error(`Failed to generate signed URL for ${type} card: ${signedUrlError?.message || 'Unknown error'}`);
+    }
+
+    console.log(`Signed URL generated successfully for ${type}`);
+    return signedUrlData.signedUrl;
   };
 
   const handleConsultationMethodChange = (methodId: string, checked: boolean) => {
@@ -153,9 +182,18 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
   };
 
   const onSubmit = async (data: VerificationData) => {
+    console.log('Starting verification submission...', { 
+      userID: user?.id,
+      hasFrontCard: !!lawyerCardFront,
+      hasBackCard: !!lawyerCardBack,
+      frontCardName: lawyerCardFront?.name,
+      backCardName: lawyerCardBack?.name,
+      consultationMethods: selectedConsultationMethods
+    });
+
     if (!user) {
       toast({
-        title: "Error",
+        title: "Authentication Error",
         description: "You must be logged in to complete verification.",
         variant: "destructive",
       });
@@ -164,8 +202,8 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
 
     if (!lawyerCardFront || !lawyerCardBack) {
       toast({
-        title: "Error",
-        description: "Please upload both front and back of your lawyer card.",
+        title: "Missing Files",
+        description: `Please upload ${!lawyerCardFront ? 'front' : ''} ${!lawyerCardFront && !lawyerCardBack ? 'and ' : ''}${!lawyerCardBack ? 'back' : ''} of your lawyer card.`,
         variant: "destructive",
       });
       return;
@@ -173,7 +211,7 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
 
     if (selectedConsultationMethods.length === 0) {
       toast({
-        title: "Error",
+        title: "Consultation Methods Required",
         description: "Please select at least one consultation method.",
         variant: "destructive",
       });
@@ -183,11 +221,36 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
     setIsSubmitting(true);
 
     try {
-      // Upload lawyer card front and back
-      const [lawyerCardFrontUrl, lawyerCardBackUrl] = await Promise.all([
-        uploadFile(lawyerCardFront, 'front'),
-        uploadFile(lawyerCardBack, 'back')
-      ]);
+      console.log('Uploading files...');
+      
+      // Show upload progress
+      setUploadingFront(true);
+      setUploadingBack(true);
+
+      // Upload lawyer card front and back with detailed error handling
+      let lawyerCardFrontUrl, lawyerCardBackUrl;
+      
+      try {
+        lawyerCardFrontUrl = await uploadFile(lawyerCardFront, 'front');
+        setUploadingFront(false);
+        console.log('Front card uploaded successfully');
+      } catch (error) {
+        setUploadingFront(false);
+        console.error('Front card upload failed:', error);
+        throw new Error(`Front card upload failed: ${error.message}`);
+      }
+
+      try {
+        lawyerCardBackUrl = await uploadFile(lawyerCardBack, 'back');
+        setUploadingBack(false);
+        console.log('Back card uploaded successfully');
+      } catch (error) {
+        setUploadingBack(false);
+        console.error('Back card upload failed:', error);
+        throw new Error(`Back card upload failed: ${error.message}`);
+      }
+
+      console.log('Both files uploaded, updating profile...');
 
       // Prepare team breakdown
       const teamBreakdown = {
@@ -235,9 +298,12 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
         .eq("user_id", user.id);
 
       if (error) {
-        throw error;
+        console.error("Database update error:", error);
+        throw new Error(`Profile update failed: ${error.message}${error.details ? ` (${error.details})` : ''}${error.hint ? ` Hint: ${error.hint}` : ''}`);
       }
 
+      console.log('Profile updated successfully');
+      
       toast({
         title: "Success!",
         description: "Complete verification submitted successfully. Your profile is now under admin review.",
@@ -246,9 +312,17 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
       onComplete();
     } catch (error) {
       console.error("Error submitting verification:", error);
+      
+      // Reset upload states on error
+      setUploadingFront(false);
+      setUploadingBack(false);
+      
+      // Show detailed error message
+      const errorMessage = error.message || "Failed to submit verification. Please try again.";
+      
       toast({
-        title: "Error",
-        description: "Failed to submit verification. Please try again.",
+        title: "Submission Failed", 
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -354,16 +428,24 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
                     <MobileFileInput
                       onFileSelect={(files) => {
                         const file = files?.[0];
+                        console.log('Front card selected:', file?.name, file?.size);
                         setLawyerCardFront(file || null);
                       }}
                       accept=".pdf,.jpg,.jpeg,.png"
                       buttonText="Upload Front"
                       hasFiles={!!lawyerCardFront}
+                      disabled={uploadingFront}
                       className="w-full"
                     />
-                    {lawyerCardFront && (
+                    {uploadingFront && (
+                      <p className="text-sm text-blue-600 mt-1 flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Uploading front card...
+                      </p>
+                    )}
+                    {lawyerCardFront && !uploadingFront && (
                       <p className="text-sm text-green-600 mt-1">
-                        ✓ {lawyerCardFront.name}
+                        ✓ {lawyerCardFront.name} ({(lawyerCardFront.size / 1024 / 1024).toFixed(2)} MB)
                       </p>
                     )}
                   </div>
@@ -374,16 +456,24 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
                     <MobileFileInput
                       onFileSelect={(files) => {
                         const file = files?.[0];
+                        console.log('Back card selected:', file?.name, file?.size);
                         setLawyerCardBack(file || null);
                       }}
                       accept=".pdf,.jpg,.jpeg,.png"
                       buttonText="Upload Back"
                       hasFiles={!!lawyerCardBack}
+                      disabled={uploadingBack}
                       className="w-full"
                     />
-                    {lawyerCardBack && (
+                    {uploadingBack && (
+                      <p className="text-sm text-blue-600 mt-1 flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Uploading back card...
+                      </p>
+                    )}
+                    {lawyerCardBack && !uploadingBack && (
                       <p className="text-sm text-green-600 mt-1">
-                        ✓ {lawyerCardBack.name}
+                        ✓ {lawyerCardBack.name} ({(lawyerCardBack.size / 1024 / 1024).toFixed(2)} MB)
                       </p>
                     )}
                   </div>
