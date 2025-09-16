@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { 
   CheckCircle, 
@@ -18,9 +19,18 @@ import {
   Phone,
   MapPin,
   Clock,
-  AlertTriangle
+  AlertTriangle,
+  DollarSign,
+  Users,
+  Award,
+  Video,
+  Globe,
+  ChevronDown,
+  ChevronUp,
+  FileText
 } from 'lucide-react';
 import { VerificationStatusBadge } from '@/components/VerificationStatusBadge';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface LawyerProfile {
   id: string;
@@ -38,6 +48,13 @@ interface LawyerProfile {
   lawyer_card_front_url: string | null;
   lawyer_card_back_url: string | null;
   bio: string | null;
+  team_size: number | null;
+  team_breakdown: any;
+  consultation_methods: string[] | null;
+  payment_structures: string[] | null;
+  pricing_structure: any;
+  professional_memberships: string[] | null;
+  notable_achievements: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -335,6 +352,173 @@ export function LawyerVerificationManager({ onVerificationUpdate }: LawyerVerifi
                     </div>
                   </div>
                 </div>
+
+                {/* Detailed Questionnaire Responses */}
+                <Separator />
+                
+                <Collapsible>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="outline" className="w-full justify-between">
+                      <span className="flex items-center gap-2">
+                        <FileText className="h-4 w-4" />
+                        View Detailed Questionnaire Responses
+                      </span>
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-6 mt-4">
+                    {/* Team Structure */}
+                    {(lawyer.team_size || lawyer.team_breakdown) && (
+                      <Card>
+                        <CardHeader className="pb-3">
+                          <CardTitle className="flex items-center gap-2 text-base">
+                            <Users className="h-4 w-4" />
+                            Team Structure
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                          {lawyer.team_size && (
+                            <p className="text-sm"><strong>Total Team Size:</strong> {lawyer.team_size} members</p>
+                          )}
+                          {lawyer.team_breakdown && (
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                              {lawyer.team_breakdown.partnersCount && (
+                                <p><strong>Partners:</strong> {lawyer.team_breakdown.partnersCount}</p>
+                              )}
+                              {lawyer.team_breakdown.associatesCount && (
+                                <p><strong>Associates:</strong> {lawyer.team_breakdown.associatesCount}</p>
+                              )}
+                              {lawyer.team_breakdown.paralegalsCount && (
+                                <p><strong>Paralegals:</strong> {lawyer.team_breakdown.paralegalsCount}</p>
+                              )}
+                              {lawyer.team_breakdown.supportStaffCount && (
+                                <p><strong>Support Staff:</strong> {lawyer.team_breakdown.supportStaffCount}</p>
+                              )}
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Pricing & Consultation */}
+                    {(lawyer.pricing_structure || lawyer.consultation_methods) && (
+                      <Card>
+                        <CardHeader className="pb-3">
+                          <CardTitle className="flex items-center gap-2 text-base">
+                            <DollarSign className="h-4 w-4" />
+                            Pricing & Consultation
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          {lawyer.pricing_structure && (
+                            <div>
+                              {lawyer.pricing_structure.consultationRate && (
+                                <div className="mb-2">
+                                  <p className="text-sm"><strong>Consultation Rate:</strong> {lawyer.pricing_structure.consultationRate} EGP {lawyer.pricing_structure.consultationStructure && `(${lawyer.pricing_structure.consultationStructure})`}</p>
+                                </div>
+                              )}
+                              
+                              {/* Legal Service Rates */}
+                              <div className="space-y-2">
+                                <h5 className="text-sm font-medium">Legal Service Rates:</h5>
+                                <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
+                                  {lawyer.pricing_structure.familyLawRate && (
+                                    <p>Family Law: {lawyer.pricing_structure.familyLawRate} EGP</p>
+                                  )}
+                                  {lawyer.pricing_structure.criminalLawRate && (
+                                    <p>Criminal Law: {lawyer.pricing_structure.criminalLawRate} EGP</p>
+                                  )}
+                                  {lawyer.pricing_structure.corporateLawRate && (
+                                    <p>Corporate Law: {lawyer.pricing_structure.corporateLawRate} EGP</p>
+                                  )}
+                                  {lawyer.pricing_structure.realEstateLawRate && (
+                                    <p>Real Estate Law: {lawyer.pricing_structure.realEstateLawRate} EGP</p>
+                                  )}
+                                  {lawyer.pricing_structure.immigrationLawRate && (
+                                    <p>Immigration Law: {lawyer.pricing_structure.immigrationLawRate} EGP</p>
+                                  )}
+                                  {lawyer.pricing_structure.employmentLawRate && (
+                                    <p>Employment Law: {lawyer.pricing_structure.employmentLawRate} EGP</p>
+                                  )}
+                                  {lawyer.pricing_structure.personalInjuryRate && (
+                                    <p>Personal Injury: {lawyer.pricing_structure.personalInjuryRate} EGP</p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {lawyer.consultation_methods && lawyer.consultation_methods.length > 0 && (
+                            <div>
+                              <h5 className="text-sm font-medium mb-2">Available Consultation Methods:</h5>
+                              <div className="flex flex-wrap gap-2">
+                                {lawyer.consultation_methods.map((method, index) => (
+                                  <Badge key={index} variant="outline" className="flex items-center gap-1">
+                                    {method === 'video' && <Video className="h-3 w-3" />}
+                                    {method === 'phone' && <Phone className="h-3 w-3" />}
+                                    {method === 'in-person' && <MapPin className="h-3 w-3" />}
+                                    {method.replace('-', ' ')}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {lawyer.payment_structures && lawyer.payment_structures.length > 0 && (
+                            <div>
+                              <h5 className="text-sm font-medium mb-2">Accepted Payment Structures:</h5>
+                              <div className="flex flex-wrap gap-2">
+                                {lawyer.payment_structures.map((structure, index) => (
+                                  <Badge key={index} variant="outline">
+                                    {structure.replace('-', ' ')}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Professional Memberships */}
+                    {lawyer.professional_memberships && lawyer.professional_memberships.length > 0 && (
+                      <Card>
+                        <CardHeader className="pb-3">
+                          <CardTitle className="flex items-center gap-2 text-base">
+                            <Award className="h-4 w-4" />
+                            Professional Memberships
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="flex flex-wrap gap-2">
+                            {lawyer.professional_memberships.map((membership, index) => (
+                              <Badge key={index} variant="secondary">
+                                {membership}
+                              </Badge>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Notable Achievements */}
+                    {lawyer.notable_achievements && (
+                      <Card>
+                        <CardHeader className="pb-3">
+                          <CardTitle className="flex items-center gap-2 text-base">
+                            <Award className="h-4 w-4" />
+                            Notable Achievements
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                            {lawyer.notable_achievements}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </CollapsibleContent>
+                </Collapsible>
 
                 {/* Actions */}
                 <div className="flex gap-3 pt-4 border-t">
