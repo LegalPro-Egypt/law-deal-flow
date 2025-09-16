@@ -14,11 +14,9 @@ import { EmailAuthForm } from "@/components/EmailAuthForm";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [lawyerRequestSent, setLawyerRequestSent] = useState(false);
-  const [adminCodeSent, setAdminCodeSent] = useState(false);
-  const [adminCode, setAdminCode] = useState("");
-  const [codeLoading, setCodeLoading] = useState(false);
   
   // Lawyer request form state
   const [lawyerForm, setLawyerForm] = useState({
@@ -73,55 +71,25 @@ const Auth = () => {
       return;
     }
 
-    setIsLoading(true);
-    
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        shouldCreateUser: false,
-      },
-    });
-
-    if (error) {
+    if (!password) {
       toast({
-        title: "Authentication Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    } else {
-      setAdminCodeSent(true);
-      toast({
-        title: "Code Sent",
-        description: "A 6-digit verification code has been sent to your email.",
-      });
-    }
-    
-    setIsLoading(false);
-  };
-
-  const handleVerifyCode = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!adminCode || adminCode.length !== 6) {
-      toast({
-        title: "Invalid Code",
-        description: "Please enter a valid 6-digit code.",
+        title: "Password Required",
+        description: "Please enter your password.",
         variant: "destructive",
       });
       return;
     }
 
-    setCodeLoading(true);
+    setIsLoading(true);
     
-    const { error } = await supabase.auth.verifyOtp({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
-      token: adminCode,
-      type: 'email',
+      password,
     });
 
     if (error) {
       toast({
-        title: "Verification Failed",
+        title: "Authentication Error",
         description: error.message,
         variant: "destructive",
       });
@@ -132,8 +100,9 @@ const Auth = () => {
       });
     }
     
-    setCodeLoading(false);
+    setIsLoading(false);
   };
+
 
   const handleLawyerFormChange = (field: string, value: string) => {
     setLawyerForm(prev => ({ ...prev, [field]: value }));
@@ -369,75 +338,45 @@ const Auth = () => {
                     <Lock className="h-8 w-8 mx-auto text-primary mb-2" />
                     <h3 className="text-lg font-semibold">Admin Portal</h3>
                     <p className="text-sm text-muted-foreground">
-                      {adminCodeSent ? "Enter the verification code sent to your email" : "Enter your admin credentials to access the dashboard"}
+                      Enter your admin credentials to access the dashboard
                     </p>
                   </div>
                   
-                  {!adminCodeSent ? (
-                    <form onSubmit={handleAdminSignIn} className="space-y-4">
-                      <div>
-                        <Label htmlFor="admin-email">Email Address</Label>
-                        <Input
-                          id="admin-email"
-                          type="email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          placeholder="Enter your admin email"
-                          required
-                        />
-                      </div>
-                      <Button 
-                        type="submit" 
-                        className="w-full bg-gradient-primary"
-                        disabled={isLoading}
-                      >
-                        {isLoading ? "Sending..." : "Send Verification Code"}
-                      </Button>
-                      
-                      <p className="text-xs text-muted-foreground text-center">
-                        A 6-digit verification code will be sent to your email
-                      </p>
-                    </form>
-                  ) : (
-                    <form onSubmit={handleVerifyCode} className="space-y-4">
-                      <div>
-                        <Label htmlFor="admin-code">Verification Code</Label>
-                        <Input
-                          id="admin-code"
-                          type="text"
-                          value={adminCode}
-                          onChange={(e) => setAdminCode(e.target.value)}
-                          placeholder="Enter 6-digit code"
-                          maxLength={6}
-                          className="text-center text-2xl tracking-widest font-mono"
-                          required
-                        />
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Code sent to: {email}
-                        </p>
-                      </div>
-                      <Button 
-                        type="submit" 
-                        className="w-full bg-gradient-primary"
-                        disabled={codeLoading}
-                      >
-                        {codeLoading ? "Verifying..." : "Verify Code"}
-                      </Button>
-                      
-                      <Button 
-                        type="button"
-                        variant="ghost"
-                        className="w-full"
-                        onClick={() => {
-                          setAdminCodeSent(false);
-                          setAdminCode("");
-                          setEmail("");
-                        }}
-                      >
-                        Back to Email Entry
-                      </Button>
-                    </form>
-                  )}
+                  <form onSubmit={handleAdminSignIn} className="space-y-4">
+                    <div>
+                      <Label htmlFor="admin-email">Email Address</Label>
+                      <Input
+                        id="admin-email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="Enter your admin email"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="admin-password">Password</Label>
+                      <Input
+                        id="admin-password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Enter your password"
+                        required
+                      />
+                    </div>
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-gradient-primary"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Signing In..." : "Sign In"}
+                    </Button>
+                    
+                    <p className="text-xs text-muted-foreground text-center">
+                      Secure admin authentication for authorized personnel only
+                    </p>
+                  </form>
                 </div>
               </TabsContent>
             </Tabs>
