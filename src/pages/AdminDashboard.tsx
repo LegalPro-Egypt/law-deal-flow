@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Scale, 
@@ -24,9 +25,11 @@ import {
   UserCheck,
   Plus,
   LogOut,
-  XCircle
+  XCircle,
+  Trash2,
+  Ban
 } from "lucide-react";
-import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { LawyerRequestsManager } from "@/components/LawyerRequestsManager";
 import { CaseDetailsDialog } from "@/components/CaseDetailsDialog";
 import { ConversationDialog } from "@/components/ConversationDialog";
@@ -35,7 +38,7 @@ import { InviteLawyerDialog } from "@/components/InviteLawyerDialog";
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { stats, pendingIntakes, cases, loading, createCaseFromIntake, deleteSelectedIntakes, refreshData } = useAdminData();
+  const { stats, pendingIntakes, cases, loading, createCaseFromIntake, deleteSelectedIntakes, denyCaseAndDelete, deleteCase, refreshData } = useAdminData();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
@@ -44,6 +47,11 @@ const AdminDashboard = () => {
   const [intakeToDelete, setIntakeToDelete] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showInviteLawyerDialog, setShowInviteLawyerDialog] = useState(false);
+  const [caseToDelete, setCaseToDelete] = useState<string | null>(null);
+  const [showCaseDeleteConfirm, setShowCaseDeleteConfirm] = useState(false);
+  const [caseToDeny, setCaseToDeny] = useState<string | null>(null);
+  const [showCaseDenyConfirm, setShowCaseDenyConfirm] = useState(false);
+  const [denyReason, setDenyReason] = useState("");
 
   const handleSignOut = async () => {
     try {
@@ -93,6 +101,41 @@ const AdminDashboard = () => {
       await deleteSelectedIntakes([intakeToDelete]);
       setShowDeleteConfirm(false);
       setIntakeToDelete(null);
+    } catch (error) {
+      // Error handling is done in the hook
+    }
+  };
+
+  const handleDenyCase = (caseId: string) => {
+    setCaseToDeny(caseId);
+    setShowCaseDenyConfirm(true);
+  };
+
+  const handleDeleteCase = (caseId: string) => {
+    setCaseToDelete(caseId);
+    setShowCaseDeleteConfirm(true);
+  };
+
+  const confirmDenyCase = async () => {
+    if (!caseToDeny) return;
+    
+    try {
+      await denyCaseAndDelete(caseToDeny, denyReason);
+      setShowCaseDenyConfirm(false);
+      setCaseToDeny(null);
+      setDenyReason("");
+    } catch (error) {
+      // Error handling is done in the hook
+    }
+  };
+
+  const confirmDeleteCase = async () => {
+    if (!caseToDelete) return;
+    
+    try {
+      await deleteCase(caseToDelete);
+      setShowCaseDeleteConfirm(false);
+      setCaseToDelete(null);
     } catch (error) {
       // Error handling is done in the hook
     }
@@ -430,6 +473,28 @@ const AdminDashboard = () => {
                             <UserPlus className="h-4 w-4 mr-2" />
                             Assign Lawyer
                           </Button>
+                          {caseItem.status === 'submitted' && (
+                            <>
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="justify-start text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                                onClick={() => handleDenyCase(caseItem.id)}
+                              >
+                                <Ban className="h-4 w-4 mr-2" />
+                                Deny Case
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="justify-start text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                                onClick={() => handleDeleteCase(caseItem.id)}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete Case
+                              </Button>
+                            </>
+                          )}
                         </div>
                       </div>
                     </CardContent>
@@ -501,6 +566,57 @@ const AdminDashboard = () => {
               </AlertDialogCancel>
               <Button variant="destructive" onClick={confirmDeleteIntake}>
                 Yes
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={showCaseDenyConfirm} onOpenChange={setShowCaseDenyConfirm}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Deny Case</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will deny the case and remove it from the platform. The client will be notified.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="my-4">
+              <label className="text-sm font-medium">Reason for denial (optional):</label>
+              <Textarea
+                value={denyReason}
+                onChange={(e) => setDenyReason(e.target.value)}
+                placeholder="Enter reason for denying this case..."
+                className="mt-2"
+              />
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => {
+                setCaseToDeny(null);
+                setDenyReason("");
+              }}>
+                Cancel
+              </AlertDialogCancel>
+              <Button variant="destructive" onClick={confirmDenyCase}>
+                Deny Case
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={showCaseDeleteConfirm} onOpenChange={setShowCaseDeleteConfirm}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Case Permanently</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete the case from the platform. This action cannot be undone.
+                Are you sure you want to proceed?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setCaseToDelete(null)}>
+                Cancel
+              </AlertDialogCancel>
+              <Button variant="destructive" onClick={confirmDeleteCase}>
+                Delete Permanently
               </Button>
             </AlertDialogFooter>
           </AlertDialogContent>

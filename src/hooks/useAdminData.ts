@@ -327,6 +327,77 @@ export const useAdminData = () => {
     }
   };
 
+  const denyCaseAndDelete = async (caseId: string, reason?: string) => {
+    try {
+      // First update the case status to denied with reason
+      const { error: updateError } = await supabase
+        .from('cases')
+        .update({ 
+          status: 'denied',
+          draft_data: {
+            denialReason: reason,
+            deniedAt: new Date().toISOString(),
+            deniedBy: 'admin'
+          }
+        })
+        .eq('id', caseId);
+
+      if (updateError) throw updateError;
+
+      // Then delete the case
+      const { error: deleteError } = await supabase
+        .from('cases')
+        .delete()
+        .eq('id', caseId);
+
+      if (deleteError) throw deleteError;
+
+      // Refresh data to reflect changes
+      await Promise.all([fetchAdminStats(), fetchPendingIntakes(), fetchCases()]);
+
+      toast({
+        title: "Success",
+        description: "Case has been denied and removed from the platform",
+      });
+    } catch (error: any) {
+      console.error('Error denying and deleting case:', error);
+      toast({
+        title: "Error",
+        description: `Failed to deny case: ${error.message}`,
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  const deleteCase = async (caseId: string) => {
+    try {
+      // Delete the case directly
+      const { error } = await supabase
+        .from('cases')
+        .delete()
+        .eq('id', caseId);
+
+      if (error) throw error;
+
+      // Refresh data to reflect changes
+      await Promise.all([fetchAdminStats(), fetchPendingIntakes(), fetchCases()]);
+
+      toast({
+        title: "Success",
+        description: "Case has been permanently deleted",
+      });
+    } catch (error: any) {
+      console.error('Error deleting case:', error);
+      toast({
+        title: "Error",
+        description: `Failed to delete case: ${error.message}`,
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -348,6 +419,8 @@ export const useAdminData = () => {
     loading,
     createCaseFromIntake,
     deleteSelectedIntakes,
+    denyCaseAndDelete,
+    deleteCase,
     refreshData: () => Promise.all([fetchAdminStats(), fetchPendingIntakes(), fetchCases()])
   };
 };
