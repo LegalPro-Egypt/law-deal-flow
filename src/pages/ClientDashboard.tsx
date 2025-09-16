@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { 
   Scale, 
   MessageSquare, 
@@ -14,8 +15,11 @@ import {
   Download,
   Upload,
   Send,
-  ArrowRight
+  ArrowRight,
+  Mail,
+  Receipt
 } from "lucide-react";
+import jsPDF from 'jspdf';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -30,6 +34,7 @@ import { Link, useNavigate } from "react-router-dom";
 const ClientDashboard = () => {
   const [newMessage, setNewMessage] = useState("");
   const [deletingCase, setDeletingCase] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const { 
@@ -132,6 +137,89 @@ const ClientDashboard = () => {
   };
 
   const stepCompletion = getStepCompletion();
+
+  const handleDownloadCaseSummary = () => {
+    if (!activeCase) return;
+
+    try {
+      const pdf = new jsPDF();
+      
+      // Title
+      pdf.setFontSize(20);
+      pdf.text('Case Summary', 20, 20);
+      
+      // Case Information
+      pdf.setFontSize(12);
+      pdf.text(`Case Number: ${activeCase.case_number}`, 20, 40);
+      pdf.text(`Title: ${activeCase.title}`, 20, 50);
+      pdf.text(`Category: ${activeCase.category}`, 20, 60);
+      pdf.text(`Status: ${activeCase.status === 'submitted' ? 'Under Review' : activeCase.status}`, 20, 70);
+      pdf.text(`Created: ${formatDate(activeCase.created_at)}`, 20, 80);
+      
+      // Client Information
+      if (activeCase.client_name || activeCase.client_email || activeCase.client_phone) {
+        pdf.setFontSize(14);
+        pdf.text('Client Information', 20, 100);
+        pdf.setFontSize(12);
+        let yPos = 110;
+        
+        if (activeCase.client_name) {
+          pdf.text(`Name: ${activeCase.client_name}`, 20, yPos);
+          yPos += 10;
+        }
+        if (activeCase.client_email) {
+          pdf.text(`Email: ${activeCase.client_email}`, 20, yPos);
+          yPos += 10;
+        }
+        if (activeCase.client_phone) {
+          pdf.text(`Phone: ${activeCase.client_phone}`, 20, yPos);
+          yPos += 10;
+        }
+      }
+      
+      // AI Summary
+      if (activeCase.ai_summary) {
+        pdf.setFontSize(14);
+        pdf.text('Case Summary', 20, 140);
+        pdf.setFontSize(10);
+        const summaryLines = pdf.splitTextToSize(activeCase.ai_summary, 170);
+        pdf.text(summaryLines, 20, 150);
+      }
+      
+      // Documents Summary
+      if (documents.length > 0) {
+        pdf.addPage();
+        pdf.setFontSize(14);
+        pdf.text('Documents', 20, 20);
+        pdf.setFontSize(10);
+        let yPos = 30;
+        
+        documents.forEach((doc, index) => {
+          pdf.text(`${index + 1}. ${doc.file_name} (${doc.file_type})`, 20, yPos);
+          pdf.text(`   Uploaded: ${formatDate(doc.created_at)}`, 20, yPos + 5);
+          yPos += 15;
+        });
+      }
+      
+      pdf.save(`Case_Summary_${activeCase.case_number}.pdf`);
+      
+      toast({
+        title: "Case Summary Downloaded",
+        description: "Your case summary has been generated and downloaded.",
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate case summary. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleInboxClick = () => {
+    setActiveTab("messages");
+  };
 
   const handleReviewCase = async () => {
     if (!activeCase) return;
@@ -303,7 +391,7 @@ const ClientDashboard = () => {
         </div>
 
         {/* Main Content Tabs */}
-        <Tabs defaultValue="overview" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="details">Personal Details</TabsTrigger>
@@ -373,23 +461,48 @@ const ClientDashboard = () => {
                   <Button 
                     className="w-full justify-start" 
                     variant="outline"
-                    onClick={() => document.getElementById('documents-tab')?.click()}
+                    onClick={handleInboxClick}
                   >
-                    <Upload className="h-4 w-4 mr-2" />
-                    Upload Documents
+                    <Mail className="h-4 w-4 mr-2" />
+                    Inbox
                   </Button>
-                  <Button className="w-full justify-start" variant="outline">
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Send Message to Lawyer
-                  </Button>
-                  <Button className="w-full justify-start" variant="outline">
+                  <Button 
+                    className="w-full justify-start" 
+                    variant="outline"
+                    onClick={handleDownloadCaseSummary}
+                  >
                     <Download className="h-4 w-4 mr-2" />
                     Download Case Summary
                   </Button>
-                  <Button className="w-full justify-start" variant="outline">
-                    <CreditCard className="h-4 w-4 mr-2" />
-                    View Payment History
-                  </Button>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button className="w-full justify-start" variant="outline">
+                        <Receipt className="h-4 w-4 mr-2" />
+                        View Payments
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Payment History</DialogTitle>
+                        <DialogDescription>
+                          View your payment history and status for this case.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="py-6 text-center">
+                        <Receipt className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                        <h3 className="text-lg font-medium mb-2">No Payments Yet</h3>
+                        <p className="text-muted-foreground text-sm mb-4">
+                          No payments have been made for this case yet. Payment requirements will be communicated when your case progresses.
+                        </p>
+                        <div className="bg-muted p-3 rounded text-sm">
+                          <p className="font-medium mb-1">Need Help?</p>
+                          <p className="text-muted-foreground">
+                            Contact our billing department for payment questions or assistance.
+                          </p>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                   {activeCase.status === 'draft' && (
                     <>
                       {stepCompletion.allComplete ? (
