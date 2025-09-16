@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { Scale, ArrowLeft, Mail, Lock } from "lucide-react";
+import { Scale, ArrowLeft, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -17,6 +17,14 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [lawyerRequestSent, setLawyerRequestSent] = useState(false);
+  
+  // Password reset state
+  const [resetMode, setResetMode] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
   
   // Lawyer request form state
   const [lawyerForm, setLawyerForm] = useState({
@@ -30,14 +38,28 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Check if user is already authenticated
+  // Check if user is already authenticated and handle reset mode
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const redirectTo = urlParams.get('redirect');
+    const resetParam = urlParams.get('reset');
+    
+    // Check if we're in reset mode
+    if (resetParam === 'admin') {
+      setResetMode(true);
+      return; // Don't redirect, allow reset form to show
+    }
+    
+    // Set up auth state listener for password recovery
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setResetMode(true);
+      }
+    });
     
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
+      if (session && !resetMode) {
         // Get user profile to determine role and redirect
         const { data: profile } = await supabase
           .from('profiles')
@@ -57,7 +79,9 @@ const Auth = () => {
     };
     
     checkAuth();
-  }, [navigate]);
+    
+    return () => subscription.unsubscribe();
+  }, [navigate, resetMode]);
 
   const handleAdminSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,6 +125,92 @@ const Auth = () => {
     }
     
     setIsLoading(false);
+  };
+
+  const handleForgotPassword = async () => {
+    if (email !== 'dankevforster@gmail.com') {
+      toast({
+        title: "Access Denied",
+        description: "Password reset is only available for the admin account.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setResetLoading(true);
+    
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth?reset=admin`,
+    });
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Password Reset Sent",
+        description: "Check your email for the password reset link.",
+      });
+    }
+    
+    setResetLoading(false);
+  };
+
+  const handleSetNewPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!newPassword || !confirmPassword) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in both password fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast({
+        title: "Password Mismatch",
+        description: "Passwords do not match. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast({
+        title: "Password Too Short",
+        description: "Password must be at least 6 characters long.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setResetLoading(true);
+    
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword
+    });
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Password Updated",
+        description: "Your password has been updated successfully. Redirecting to admin dashboard...",
+      });
+      setResetMode(false);
+      navigate('/admin', { replace: true });
+    }
+    
+    setResetLoading(false);
   };
 
 
@@ -336,47 +446,134 @@ const Auth = () => {
                 <div className="space-y-4 mt-6">
                   <div className="text-center mb-6">
                     <Lock className="h-8 w-8 mx-auto text-primary mb-2" />
-                    <h3 className="text-lg font-semibold">Admin Portal</h3>
+                    <h3 className="text-lg font-semibold">
+                      {resetMode ? "Set New Password" : "Admin Portal"}
+                    </h3>
                     <p className="text-sm text-muted-foreground">
-                      Enter your admin credentials to access the dashboard
+                      {resetMode 
+                        ? "Create a new password for your admin account" 
+                        : "Enter your admin credentials to access the dashboard"
+                      }
                     </p>
                   </div>
                   
-                  <form onSubmit={handleAdminSignIn} className="space-y-4">
-                    <div>
-                      <Label htmlFor="admin-email">Email Address</Label>
-                      <Input
-                        id="admin-email"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="Enter your admin email"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="admin-password">Password</Label>
-                      <Input
-                        id="admin-password"
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Enter your password"
-                        required
-                      />
-                    </div>
-                    <Button 
-                      type="submit" 
-                      className="w-full bg-gradient-primary"
-                      disabled={isLoading}
-                    >
-                      {isLoading ? "Signing In..." : "Sign In"}
-                    </Button>
-                    
-                    <p className="text-xs text-muted-foreground text-center">
-                      Secure admin authentication for authorized personnel only
-                    </p>
-                  </form>
+                  {resetMode ? (
+                    <form onSubmit={handleSetNewPassword} className="space-y-4">
+                      <div>
+                        <Label htmlFor="new-password">New Password</Label>
+                        <div className="relative">
+                          <Input
+                            id="new-password"
+                            type={showNewPassword ? "text" : "password"}
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            placeholder="Enter new password"
+                            required
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                            onClick={() => setShowNewPassword(!showNewPassword)}
+                          >
+                            {showNewPassword ? (
+                              <EyeOff className="h-4 w-4" />
+                            ) : (
+                              <Eye className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="confirm-password">Confirm Password</Label>
+                        <div className="relative">
+                          <Input
+                            id="confirm-password"
+                            type={showConfirmPassword ? "text" : "password"}
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            placeholder="Confirm new password"
+                            required
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          >
+                            {showConfirmPassword ? (
+                              <EyeOff className="h-4 w-4" />
+                            ) : (
+                              <Eye className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                      <Button 
+                        type="submit" 
+                        className="w-full bg-gradient-primary"
+                        disabled={resetLoading}
+                      >
+                        {resetLoading ? "Updating Password..." : "Set New Password"}
+                      </Button>
+                      
+                      <p className="text-xs text-muted-foreground text-center">
+                        Password must be at least 6 characters long
+                      </p>
+                    </form>
+                  ) : (
+                    <form onSubmit={handleAdminSignIn} className="space-y-4">
+                      <div>
+                        <Label htmlFor="admin-email">Email Address</Label>
+                        <Input
+                          id="admin-email"
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="Enter your admin email"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="admin-password">Password</Label>
+                        <Input
+                          id="admin-password"
+                          type="password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="Enter your password"
+                          required
+                        />
+                      </div>
+                      <Button 
+                        type="submit" 
+                        className="w-full bg-gradient-primary"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? "Signing In..." : "Sign In"}
+                      </Button>
+                      
+                      {email === 'dankevforster@gmail.com' && (
+                        <div className="text-center">
+                          <Button
+                            type="button"
+                            variant="link"
+                            className="text-sm text-primary p-0"
+                            onClick={handleForgotPassword}
+                            disabled={resetLoading}
+                          >
+                            {resetLoading ? "Sending..." : "Forgot/Set password?"}
+                          </Button>
+                        </div>
+                      )}
+                      
+                      <p className="text-xs text-muted-foreground text-center">
+                        Secure admin authentication for authorized personnel only
+                      </p>
+                    </form>
+                  )}
                 </div>
               </TabsContent>
             </Tabs>
