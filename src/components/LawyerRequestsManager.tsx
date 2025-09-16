@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { CheckCircle, XCircle, Clock, Mail, Building, Briefcase, MessageSquare } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Mail, Building, Briefcase, MessageSquare, Send, Trash2 } from 'lucide-react';
 
 interface LawyerRequest {
   id: string;
@@ -28,6 +29,8 @@ export const LawyerRequestsManager = () => {
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [reviewNotes, setReviewNotes] = useState<{ [key: string]: string }>({});
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [resendingId, setResendingId] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -122,6 +125,77 @@ export const LawyerRequestsManager = () => {
       });
     } finally {
       setProcessingId(null);
+    }
+  };
+
+  const deleteRequest = async (requestId: string) => {
+    setDeletingId(requestId);
+    
+    try {
+      const { error } = await supabase
+        .from('lawyer_requests')
+        .delete()
+        .eq('id', requestId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Request Deleted",
+        description: "The lawyer request has been successfully deleted.",
+      });
+
+      fetchRequests(); // Refresh the list
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to delete request: " + error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const resendInvitation = async (requestId: string) => {
+    setResendingId(requestId);
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const request = requests.find(r => r.id === requestId);
+      
+      if (!request) {
+        throw new Error('Request not found');
+      }
+
+      if (request.status !== 'approved') {
+        throw new Error('Can only resend invitations for approved requests');
+      }
+
+      // Send invitation email
+      const { error: inviteError } = await supabase.functions.invoke('send-lawyer-invitation', {
+        body: {
+          email: request.email,
+          invitedBy: user?.id || 'admin',
+        }
+      });
+
+      if (inviteError) {
+        console.error('Error resending invitation:', inviteError);
+        throw new Error(inviteError.message || 'Failed to resend invitation');
+      }
+
+      toast({
+        title: "Invitation Resent",
+        description: `New invitation email sent to ${request.email}.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to resend invitation: " + error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setResendingId(null);
     }
   };
 
@@ -249,17 +323,64 @@ export const LawyerRequestsManager = () => {
                 )}
 
                 {request.status !== 'pending' && (
-                  <div className="pt-4 border-t">
+                  <div className="pt-4 border-t space-y-3">
                     <div className="text-xs text-muted-foreground">
                       {request.status === 'approved' ? 'Approved' : 'Rejected'} on{' '}
                       {request.reviewed_at && new Date(request.reviewed_at).toLocaleDateString()}
                     </div>
                     {request.review_notes && (
-                      <div className="mt-2">
+                      <div>
                         <p className="text-sm font-medium">Review Notes:</p>
                         <p className="text-sm text-muted-foreground">{request.review_notes}</p>
                       </div>
                     )}
+                    
+                    {/* Action buttons for approved/rejected requests */}
+                    <div className="flex gap-2">
+                      {request.status === 'approved' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => resendInvitation(request.id)}
+                          disabled={resendingId === request.id}
+                        >
+                          <Send className="w-4 h-4 mr-2" />
+                          {resendingId === request.id ? 'Resending...' : 'Resend Invitation'}
+                        </Button>
+                      )}
+                      
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-destructive hover:text-destructive"
+                            disabled={deletingId === request.id}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            {deletingId === request.id ? 'Deleting...' : 'Delete Request'}
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Lawyer Request</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete this lawyer request for {request.full_name}? 
+                              This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => deleteRequest(request.id)}
+                              className="bg-destructive hover:bg-destructive/90"
+                            >
+                              Delete Request
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   </div>
                 )}
               </CardContent>
