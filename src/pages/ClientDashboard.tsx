@@ -296,8 +296,9 @@ const ClientDashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="details">Personal Details</TabsTrigger>
             <TabsTrigger value="messages">Messages</TabsTrigger>
             <TabsTrigger value="documents" id="documents-tab">Documents</TabsTrigger>
             <TabsTrigger value="payments">Payments</TabsTrigger>
@@ -392,7 +393,7 @@ const ClientDashboard = () => {
                         </Button>
                       ) : (
                         <Button asChild className="w-full justify-start" variant="outline">
-                          <Link to="/intake">
+                          <Link to={`/intake?case=${activeCase.id}`}>
                             <FileText className="h-4 w-4 mr-2" />
                             Continue Case Setup
                           </Link>
@@ -484,14 +485,14 @@ const ClientDashboard = () => {
                 </div>
                 
                 {activeCase?.status === 'draft' && (
-                  <div className="pt-4 border-t">
-                    <Button asChild variant="outline">
-                      <Link to="/intake">
-                        <FileText className="h-4 w-4 mr-2" />
-                        Edit Details
-                      </Link>
-                    </Button>
-                  </div>
+                <div className="pt-4 border-t">
+                  <Button asChild variant="outline">
+                    <Link to={`/intake?case=${activeCase.id}`}>
+                      <FileText className="h-4 w-4 mr-2" />
+                      Edit Details
+                    </Link>
+                  </Button>
+                </div>
                 )}
               </CardContent>
             </Card>

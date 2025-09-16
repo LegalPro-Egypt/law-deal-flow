@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Scale, ArrowLeft, MessageSquare, Upload, FileText, CheckCircle, Clock, User } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { LegalChatbot } from "@/components/LegalChatbot";
 
 import { PersonalDetailsForm, PersonalDetailsData } from "@/components/PersonalDetailsForm";
@@ -21,6 +21,7 @@ const Intake = () => {
   const [showPersonalForm, setShowPersonalForm] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
+  const location = useLocation();
   const [caseId, setCaseId] = useState<string | null>(null);
   const [documentsComplete, setDocumentsComplete] = useState(false);
   const [documents, setDocuments] = useState<any[]>([]);
@@ -46,6 +47,113 @@ const Intake = () => {
 
   // Load existing draft case on mount
   useEffect(() => {
+    const loadCase = async () => {
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      // Parse case ID from URL params
+      const searchParams = new URLSearchParams(location.search);
+      const caseParam = searchParams.get('case');
+
+      try {
+        let targetCase = null;
+
+        if (caseParam) {
+          // Fetch specific case by ID
+          const { data: specificCase, error } = await supabase
+            .from('cases')
+            .select('*')
+            .eq('id', caseParam)
+            .eq('user_id', user.id)
+            .single();
+
+          if (!error && specificCase) {
+            targetCase = specificCase;
+          }
+        } else {
+          // Look for latest draft case
+          const { data: draftCases } = await supabase
+            .from('cases')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('status', 'draft')
+            .order('updated_at', { ascending: false })
+            .limit(1);
+
+          if (draftCases && draftCases.length > 0) {
+            targetCase = draftCases[0];
+          }
+        }
+
+        if (targetCase) {
+          const draftData = (targetCase.draft_data as any) || {};
+          
+          // Set case data
+          setCaseId(targetCase.id);
+          
+          // Set personal data from case columns or draft_data
+          const personalDetails = draftData.personalData || {
+            fullName: targetCase.client_name,
+            email: targetCase.client_email,
+            phone: targetCase.client_phone,
+            preferredLanguage: targetCase.language || 'en'
+          };
+          
+          if (personalDetails.fullName || personalDetails.email || personalDetails.phone) {
+            setPersonalData(personalDetails as PersonalDetailsData);
+          }
+
+          // Set extracted case data
+          if (draftData.extractedData || targetCase.ai_summary) {
+            setExtractedCaseData(draftData.extractedData || { summary: targetCase.ai_summary });
+          }
+
+          // Fetch documents for this case
+          const { data: caseDocuments } = await supabase
+            .from('documents')
+            .select('*')
+            .eq('case_id', targetCase.id);
+
+          setDocuments(caseDocuments || []);
+
+          // Compute current step based on completion
+          const step1Complete = !!(targetCase.ai_summary || draftData.extractedData);
+          const step2Complete = !!(targetCase.client_name && targetCase.client_email && targetCase.client_phone);
+          const requiredCategories = ['identity', 'case'];
+          const uploadedCategories = new Set(
+            (caseDocuments || [])
+              .filter(doc => doc.document_category)
+              .map(doc => doc.document_category)
+          );
+          const step3Complete = requiredCategories.every(cat => uploadedCategories.has(cat));
+          setDocumentsComplete(step3Complete);
+
+          // Set current step
+          if (targetCase.step === 4 || step3Complete) {
+            setCurrentStep(4);
+          } else if (!step2Complete) {
+            setCurrentStep(2);
+            setShowPersonalForm(true);
+          } else if (!step3Complete) {
+            setCurrentStep(3);
+          } else {
+            setCurrentStep(targetCase.step || 1);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading case:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadCase();
+  }, [user, location.search]);
+
+  // Refresh documents when caseId changes
+  useEffect(() => {
     if (caseId) {
       fetchDocuments();
     }
@@ -63,51 +171,20 @@ const Intake = () => {
 
       if (error) throw error;
       setDocuments(data || []);
+      
+      // Update documents complete status
+      const requiredCategories = ['identity', 'case'];
+      const uploadedCategories = new Set(
+        (data || [])
+          .filter(doc => doc.document_category)
+          .map(doc => doc.document_category)
+      );
+      const isComplete = requiredCategories.every(cat => uploadedCategories.has(cat));
+      setDocumentsComplete(isComplete);
     } catch (error) {
       console.error('Error fetching documents:', error);
     }
   };
-
-  useEffect(() => {
-    const loadDraftCase = async () => {
-      if (!user) {
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        // Look for existing draft cases
-        const { data: draftCases } = await supabase
-          .from('cases')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('status', 'draft')
-          .order('updated_at', { ascending: false })
-          .limit(1);
-
-        if (draftCases && draftCases.length > 0) {
-          const draftCase = draftCases[0];
-          const draftData = (draftCase.draft_data as any) || {};
-          
-          // Restore state from draft case
-          setCaseId(draftCase.id);
-          setCurrentStep(draftCase.step || 1);
-          if (draftData.extractedData) {
-            setExtractedCaseData(draftData.extractedData);
-          }
-          if (draftData.personalData) {
-            setPersonalData(draftData.personalData as PersonalDetailsData);
-          }
-        }
-      } catch (error) {
-        console.error('Error loading draft case:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadDraftCase();
-  }, [user]);
 
   const handleBackFromPersonalForm = () => {
     setShowPersonalForm(false);
@@ -307,6 +384,7 @@ const Intake = () => {
             <LegalChatbot 
               mode="intake"
               userId={user?.id}
+              caseId={caseId}
               onCaseDataExtracted={handleCaseDataExtracted}
               onCaseCreated={(id) => setCaseId(id)}
               className="flex-1"
@@ -390,6 +468,8 @@ const Intake = () => {
                 existingDocuments={documents}
                 onFilesUploaded={(files) => {
                   console.log('Files uploaded:', files);
+                  // Refresh documents to update completion status
+                  fetchDocuments();
                 }}
                 onCompletionChange={setDocumentsComplete}
               />
