@@ -146,11 +146,13 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
     const uploadId = `${category}-${Date.now()}`;
     
     try {
+      console.log('DocumentUpload: Starting upload for file:', file.name, 'category:', category, 'caseId:', caseId);
       setIsUploading(prev => ({ ...prev, [uploadId]: true }));
       setUploadProgress(prev => ({ ...prev, [uploadId]: 0 }));
 
       const validation = validateFile(file);
       if (validation) {
+        console.error('DocumentUpload: File validation failed:', validation);
         toast({
           title: "Upload Error",
           description: validation,
@@ -161,7 +163,9 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
 
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
+      console.log('DocumentUpload: Current user:', user?.id);
       if (!user) {
+        console.error('DocumentUpload: No authenticated user found');
         toast({
           title: "Authentication Required",
           description: "Please log in to upload files.",
@@ -175,8 +179,10 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
       const fileExt = file.name.split('.').pop();
       const fileName = `${timestamp}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
       const filePath = `${user.id}/${category}/${fileName}`;
+      console.log('DocumentUpload: Upload path:', filePath);
 
       // Upload to Supabase Storage
+      console.log('DocumentUpload: Attempting upload to case-documents bucket');
       const { data, error } = await supabase.storage
         .from('case-documents')
         .upload(filePath, file, {
@@ -185,19 +191,23 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
         });
 
       if (error) {
-        console.error('Upload error:', error);
+        console.error('DocumentUpload: Storage upload error:', error);
         toast({
           title: "Upload Failed",
-          description: error.message,
+          description: `Storage error: ${error.message}`,
           variant: "destructive",
         });
         return null;
       }
 
+      console.log('DocumentUpload: Upload successful, data:', data);
+
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('case-documents')
         .getPublicUrl(filePath);
+
+      console.log('DocumentUpload: Generated public URL:', publicUrl);
 
       setUploadProgress(prev => ({ ...prev, [uploadId]: 100 }));
 
@@ -210,6 +220,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
 
       // Add to documents table if caseId is available
       if (caseId) {
+        console.log('DocumentUpload: Saving to database with caseId:', caseId);
         const { error: dbError } = await supabase
           .from('documents')
           .insert({
@@ -223,12 +234,14 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
           });
 
         if (dbError) {
-          console.error('Database error:', dbError);
+          console.error('DocumentUpload: Database save error:', dbError);
           toast({
             title: "Save Failed",
-            description: dbError.message,
+            description: `Database error: ${dbError.message}`,
             variant: "destructive",
           });
+        } else {
+          console.log('DocumentUpload: Successfully saved to database');
         }
       }
 
@@ -239,7 +252,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
 
       return uploadedFile;
     } catch (error) {
-      console.error('Upload error:', error);
+      console.error('DocumentUpload: Unexpected upload error:', error);
       toast({
         title: "Upload Failed",
         description: "An unexpected error occurred. Please try again.",
