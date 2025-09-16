@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminData } from "@/hooks/useAdminData";
@@ -81,11 +81,11 @@ const AdminDashboard = () => {
         <header className="border-b bg-background/95 backdrop-blur sticky top-0 z-50">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
-              <div className="flex items-center space-x-2">
+              <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
                 <Scale className="h-8 w-8 text-primary" />
                 <span className="text-xl font-bold">LegalConnect</span>
                 <Badge variant="destructive" className="ml-2">Admin Portal</Badge>
-              </div>
+              </Link>
               <Button variant="ghost" size="sm" onClick={handleSignOut}>
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
@@ -111,11 +111,11 @@ const AdminDashboard = () => {
       <header className="border-b bg-background/95 backdrop-blur sticky top-0 z-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-2">
+            <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
               <Scale className="h-8 w-8 text-primary" />
               <span className="text-xl font-bold">LegalConnect</span>
               <Badge variant="destructive" className="ml-2">Admin Portal</Badge>
-            </div>
+            </Link>
             <Button variant="ghost" size="sm" onClick={handleSignOut}>
               <LogOut className="h-4 w-4 mr-2" />
               Sign Out

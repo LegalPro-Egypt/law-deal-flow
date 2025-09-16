@@ -286,11 +286,13 @@ const ClientDashboard = () => {
           <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
             <div className="flex items-center justify-between h-14 sm:h-16">
               <div className="flex items-center space-x-2 sm:space-x-4">
-                <Scale className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
-                <div className="flex items-center space-x-1 sm:space-x-2">
-                  <h1 className="text-lg sm:text-xl font-bold">LegalConnect</h1>
-                  <Badge variant="secondary" className="text-xs hidden sm:block">Client Portal</Badge>
-                </div>
+                <Link to="/" className="flex items-center space-x-2 sm:space-x-4 hover:opacity-80 transition-opacity">
+                  <Scale className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+                  <div className="flex items-center space-x-1 sm:space-x-2">
+                    <h1 className="text-lg sm:text-xl font-bold">LegalConnect</h1>
+                    <Badge variant="secondary" className="text-xs hidden sm:block">Client Portal</Badge>
+                  </div>
+                </Link>
               </div>
             </div>
           </div>
@@ -310,11 +312,13 @@ const ClientDashboard = () => {
           <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
             <div className="flex items-center justify-between h-14 sm:h-16">
               <div className="flex items-center space-x-2 sm:space-x-4">
-                <Scale className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
-                <div className="flex items-center space-x-1 sm:space-x-2">
-                  <h1 className="text-lg sm:text-xl font-bold">LegalConnect</h1>
-                  <Badge variant="secondary" className="text-xs hidden sm:block">Client Portal</Badge>
-                </div>
+                <Link to="/" className="flex items-center space-x-2 sm:space-x-4 hover:opacity-80 transition-opacity">
+                  <Scale className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+                  <div className="flex items-center space-x-1 sm:space-x-2">
+                    <h1 className="text-lg sm:text-xl font-bold">LegalConnect</h1>
+                    <Badge variant="secondary" className="text-xs hidden sm:block">Client Portal</Badge>
+                  </div>
+                </Link>
               </div>
               <div className="flex items-center space-x-1 sm:space-x-2">
                 <Button asChild className="h-9 sm:h-10" size="sm">
@@ -356,7 +360,7 @@ const ClientDashboard = () => {
         <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16">
             {/* Logo and Title */}
-            <div className="flex items-center space-x-2 sm:space-x-4">
+            <Link to="/" className="flex items-center space-x-2 sm:space-x-4 hover:opacity-80 transition-opacity">
               <Scale className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
               <div className="flex items-center space-x-1 sm:space-x-2">
                 <h1 className="text-lg sm:text-xl font-bold text-foreground hidden xs:block sm:block">
@@ -366,7 +370,7 @@ const ClientDashboard = () => {
                   Client Portal
                 </Badge>
               </div>
-            </div>
+            </Link>
 
             {/* Case Selector - Mobile: Reduced width, Desktop: Normal */}
             {cases.length > 1 && (
