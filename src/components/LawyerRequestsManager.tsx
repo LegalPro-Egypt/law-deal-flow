@@ -171,22 +171,23 @@ export const LawyerRequestsManager = () => {
         throw new Error('Can only resend invitations for approved requests');
       }
 
-      // Send invitation email
-      const { error: inviteError } = await supabase.functions.invoke('send-lawyer-invitation', {
-        body: {
-          email: request.email,
-          invitedBy: user?.id || 'admin',
+      // For approved lawyers, send a password reset email instead of a new invitation
+      // since the user account already exists
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+        request.email,
+        {
+          redirectTo: `${window.location.origin}/auth`
         }
-      });
+      );
 
-      if (inviteError) {
-        console.error('Error resending invitation:', inviteError);
-        throw new Error(inviteError.message || 'Failed to resend invitation');
+      if (resetError) {
+        console.error('Error sending password reset:', resetError);
+        throw new Error(resetError.message || 'Failed to send password reset email');
       }
 
       toast({
-        title: "Invitation Resent",
-        description: `New invitation email sent to ${request.email}.`,
+        title: "Password Reset Sent",
+        description: `Password reset email sent to ${request.email}. They can use this to set up their account.`,
       });
     } catch (error: any) {
       toast({
@@ -345,7 +346,7 @@ export const LawyerRequestsManager = () => {
                           disabled={resendingId === request.id}
                         >
                           <Send className="w-4 h-4 mr-2" />
-                          {resendingId === request.id ? 'Resending...' : 'Resend Invitation'}
+                          {resendingId === request.id ? 'Sending Reset...' : 'Send Password Reset'}
                         </Button>
                       )}
                       
