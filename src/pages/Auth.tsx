@@ -45,7 +45,20 @@ const Auth = () => {
     const resetParam = urlParams.get('reset');
     const forceStay = urlParams.get('force') === 'true';
     
-    console.log('Auth useEffect - force:', forceStay, 'reset:', resetParam);
+    // Check for Supabase invitation tokens
+    const accessToken = urlParams.get('access_token');
+    const refreshToken = urlParams.get('refresh_token');
+    const tokenType = urlParams.get('token_type');
+    const type = urlParams.get('type');
+    
+    console.log('Auth useEffect - force:', forceStay, 'reset:', resetParam, 'type:', type, 'hasTokens:', !!(accessToken && refreshToken));
+    
+    // Handle Supabase invitation/recovery flow
+    if (type === 'invite' || type === 'recovery' || (accessToken && refreshToken)) {
+      console.log('Processing Supabase invitation/recovery tokens...');
+      // Don't redirect yet, let Supabase handle the token exchange
+      return;
+    }
     
     // Check if we're in reset mode
     if (resetParam === 'admin') {
@@ -74,9 +87,13 @@ const Auth = () => {
             
             const role = profile?.role || 'client';
             
-            // Remove force parameter from URL
+            // Remove all auth-related parameters from URL
             const url = new URL(window.location.href);
             url.searchParams.delete('force');
+            url.searchParams.delete('access_token');
+            url.searchParams.delete('refresh_token');
+            url.searchParams.delete('token_type');
+            url.searchParams.delete('type');
             window.history.replaceState({}, '', url.toString());
             
             // Navigate to appropriate dashboard
@@ -86,6 +103,46 @@ const Auth = () => {
             navigate('/client', { replace: true }); // Fallback to client dashboard
           }
         }, 0);
+      }
+      
+      // Handle token exchange for invitations
+      if (event === 'TOKEN_REFRESHED' && session) {
+        console.log('Token refreshed, checking for new user setup...');
+        // This happens after invitation acceptance
+        setTimeout(async () => {
+          try {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('user_id', session.user.id)
+              .single();
+            
+            const role = profile?.role || 'lawyer'; // Default to lawyer for invitations
+            
+            // Remove auth parameters and redirect
+            const url = new URL(window.location.href);
+            url.searchParams.delete('access_token');
+            url.searchParams.delete('refresh_token');
+            url.searchParams.delete('token_type');
+            url.searchParams.delete('type');
+            window.history.replaceState({}, '', url.toString());
+            
+            navigate(`/${role}`, { replace: true });
+            
+            toast({
+              title: "Welcome!",
+              description: "Your account has been activated. Please complete your profile setup.",
+            });
+          } catch (error) {
+            console.error('Error setting up new user:', error);
+            // If no profile exists, show a message to contact admin
+            toast({
+              title: "Account Setup Needed",
+              description: "Your invitation was accepted but profile setup is incomplete. Please contact admin.",
+              variant: "destructive",
+            });
+          }
+        }, 1000);
       }
     });
     
@@ -127,7 +184,7 @@ const Auth = () => {
     checkAuth();
     
     return () => subscription.unsubscribe();
-  }, [navigate, resetMode]);
+  }, [navigate, resetMode, toast]);
 
   const handleAdminSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
