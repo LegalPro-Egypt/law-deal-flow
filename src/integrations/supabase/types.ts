@@ -448,6 +448,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      has_admin_role: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       migrate_anonymous_conversation: {
         Args: { conversation_session_id: string; new_user_id: string }
         Returns: undefined

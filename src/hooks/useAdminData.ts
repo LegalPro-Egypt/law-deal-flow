@@ -159,7 +159,7 @@ export const useAdminData = () => {
 
   const createCaseFromIntake = async (conversationId: string) => {
     try {
-      // Get conversation with messages
+      // Get conversation with messages and metadata
       const { data: conversation, error: convError } = await supabase
         .from('conversations')
         .select(`
@@ -171,36 +171,46 @@ export const useAdminData = () => {
 
       if (convError) throw convError;
 
-      // Extract client info and case details from conversation metadata and messages
+      // Extract case data from conversation metadata or messages
       const metadata = (conversation.metadata as any) || {};
-      const lastMessage = conversation.messages?.slice(-1)[0];
+      const extractedData = metadata.extractedData || {};
+      const messages = conversation.messages || [];
       
-      // Create case from intake data - we'll use a placeholder user_id for admin-created cases
+      // Generate case summary from conversation
+      const conversationText = messages
+        .filter(msg => msg.role === 'user')
+        .map(msg => msg.content)
+        .join(' ');
+
+      // Create case with extracted data
       const { data: newCase, error: caseError } = await supabase
         .from('cases')
         .insert({
-          user_id: conversation.user_id || '00000000-0000-0000-0000-000000000000', // placeholder for admin cases
-          title: metadata.title || 'Legal Case from AI Intake',
-          description: metadata.description || lastMessage?.content || 'Case created from AI chatbot intake',
-          category: metadata.category || 'General',
-          urgency: metadata.urgency || 'medium',
-          client_name: metadata.client_name || 'Client Name',
-          client_email: metadata.client_email || 'client@example.com',
+          user_id: conversation.user_id, // Use actual user_id from conversation
+          title: extractedData.title || extractedData.category || 'Legal Case from AI Intake',
+          description: extractedData.description || conversationText.slice(0, 500) || 'Case created from AI chatbot intake',
+          category: extractedData.category || 'General',
+          subcategory: extractedData.subcategory,
+          urgency: extractedData.urgency || 'medium',
+          client_name: extractedData.client_name || 'Client Name',
+          client_email: extractedData.client_email || 'client@example.com',
+          client_phone: extractedData.client_phone,
           language: conversation.language,
           status: 'submitted',
-          ai_summary: metadata.ai_summary,
-          extracted_entities: metadata.extracted_entities || {}
+          ai_summary: extractedData.summary || conversationText.slice(0, 1000),
+          extracted_entities: extractedData.entities || {},
+          jurisdiction: 'egypt'
         })
         .select()
         .single();
 
       if (caseError) throw caseError;
 
-      // Update conversation status to mark as converted
+      // Update conversation status to mark as completed and link to case
       await supabase
         .from('conversations')
         .update({ 
-          status: 'converted_to_case',
+          status: 'completed',
           case_id: newCase.id 
         })
         .eq('id', conversationId);
@@ -210,7 +220,7 @@ export const useAdminData = () => {
 
       toast({
         title: "Success",
-        description: "Case created from intake conversation",
+        description: "Case created from intake conversation successfully",
       });
 
       return newCase;
@@ -218,7 +228,7 @@ export const useAdminData = () => {
       console.error('Error creating case from intake:', error);
       toast({
         title: "Error",
-        description: "Failed to create case from intake",
+        description: `Failed to create case from intake: ${error.message}`,
         variant: "destructive",
       });
       throw error;

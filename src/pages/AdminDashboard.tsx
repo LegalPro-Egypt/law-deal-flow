@@ -26,12 +26,18 @@ import {
   LogOut
 } from "lucide-react";
 import { LawyerRequestsManager } from "@/components/LawyerRequestsManager";
+import { CaseDetailsDialog } from "@/components/CaseDetailsDialog";
+import { ConversationDialog } from "@/components/ConversationDialog";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { stats, pendingIntakes, cases, loading, createCaseFromIntake, refreshData } = useAdminData();
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+  const [showCaseDetails, setShowCaseDetails] = useState(false);
+  const [showConversation, setShowConversation] = useState(false);
 
   const handleSignOut = async () => {
     try {
@@ -53,13 +59,20 @@ const AdminDashboard = () => {
   const handleCreateCase = async (conversationId: string) => {
     try {
       await createCaseFromIntake(conversationId);
-      toast({
-        title: "Success",
-        description: "Case created from intake conversation",
-      });
+      await refreshData();
     } catch (error) {
       // Error handling is done in the hook
     }
+  };
+
+  const handleViewConversation = (conversationId: string) => {
+    setSelectedConversationId(conversationId);
+    setShowConversation(true);
+  };
+
+  const handleViewCaseDetails = (caseId: string) => {
+    setSelectedCaseId(caseId);
+    setShowCaseDetails(true);
   };
 
   const getUrgencyColor = (urgency: string) => {
@@ -260,7 +273,12 @@ const AdminDashboard = () => {
 
                         {/* Actions */}
                         <div className="flex flex-col space-y-2">
-                          <Button size="sm" variant="outline" className="justify-start">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="justify-start"
+                            onClick={() => handleViewConversation(intake.id)}
+                          >
                             <Eye className="h-4 w-4 mr-2" />
                             View Conversation
                           </Button>
@@ -368,7 +386,12 @@ const AdminDashboard = () => {
 
                         {/* Actions */}
                         <div className="flex flex-col space-y-2">
-                          <Button size="sm" variant="outline" className="justify-start">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="justify-start"
+                            onClick={() => handleViewCaseDetails(caseItem.id)}
+                          >
                             <Eye className="h-4 w-4 mr-2" />
                             View Details
                           </Button>
@@ -409,6 +432,26 @@ const AdminDashboard = () => {
             <LawyerRequestsManager />
           </TabsContent>
         </Tabs>
+
+        {/* Dialogs */}
+        <CaseDetailsDialog
+          caseId={selectedCaseId}
+          isOpen={showCaseDetails}
+          onClose={() => {
+            setShowCaseDetails(false);
+            setSelectedCaseId(null);
+          }}
+        />
+
+        <ConversationDialog
+          conversationId={selectedConversationId}
+          isOpen={showConversation}
+          onClose={() => {
+            setShowConversation(false);
+            setSelectedConversationId(null);
+          }}
+          onCreateCase={handleCreateCase}
+        />
       </div>
     </div>
   );
