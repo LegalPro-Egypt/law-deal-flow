@@ -96,6 +96,8 @@ const ClientDashboard = () => {
         return 'bg-success';
       case 'draft':
         return 'bg-warning';
+      case 'pending_review':
+        return 'bg-primary';
       default:
         return 'bg-muted';
     }
@@ -260,7 +262,9 @@ const ClientDashboard = () => {
             </div>
             <div className="flex items-center space-x-2 mt-4 lg:mt-0">
               <div className={`w-3 h-3 rounded-full ${getStatusColor(activeCase.status)}`} />
-              <span className="font-medium capitalize">{activeCase.status.replace('_', ' ')}</span>
+      <span className="font-medium capitalize">
+        {activeCase.status === 'pending_review' ? 'Under Review' : activeCase.status.replace('_', ' ')}
+      </span>
             </div>
           </div>
 
@@ -348,7 +352,9 @@ const ClientDashboard = () => {
                       <div className={`w-3 h-3 rounded-full ${getStatusColor(activeCase.status)}`} />
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
-                          <span className="font-medium">Current Status: {activeCase.status.replace('_', ' ')}</span>
+          <span className="font-medium">
+            Current Status: {activeCase.status === 'pending_review' ? 'Under Review' : activeCase.status.replace('_', ' ')}
+          </span>
                           <span className="text-sm text-muted-foreground">{formatDate(activeCase.updated_at)}</span>
                         </div>
                       </div>

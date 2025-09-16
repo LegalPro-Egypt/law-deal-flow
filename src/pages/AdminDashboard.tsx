@@ -126,7 +126,7 @@ const AdminDashboard = () => {
 
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Stats Overview */}
-        <div className="grid md:grid-cols-4 gap-4 mb-8">
+        <div className="grid md:grid-cols-5 gap-4 mb-8">
           <Card className="bg-gradient-card shadow-card">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -171,6 +171,18 @@ const AdminDashboard = () => {
                   <p className="text-3xl font-bold">{stats.totalLawyers}</p>
                 </div>
                 <Users className="h-8 w-8 text-success" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-card shadow-card border-primary">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Pending Reviews</p>
+                  <p className="text-3xl font-bold text-primary">{stats.pendingReviews}</p>
+                </div>
+                <AlertCircle className="h-8 w-8 text-primary" />
               </div>
             </CardContent>
           </Card>
@@ -295,9 +307,29 @@ const AdminDashboard = () => {
               </Card>
             ) : (
               <div className="grid gap-4">
-                {cases.map((caseItem) => (
-                  <Card key={caseItem.id} className="bg-gradient-card shadow-card">
+                {cases
+                  .sort((a, b) => {
+                    // Priority: pending_review cases first
+                    if (a.status === 'pending_review' && b.status !== 'pending_review') return -1;
+                    if (a.status !== 'pending_review' && b.status === 'pending_review') return 1;
+                    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+                  })
+                  .map((caseItem) => (
+                  <Card 
+                    key={caseItem.id} 
+                    className={`bg-gradient-card shadow-card ${
+                      caseItem.status === 'pending_review' ? 'border-primary border-2' : ''
+                    }`}
+                  >
                     <CardContent className="p-6">
+                      {caseItem.status === 'pending_review' && (
+                        <div className="mb-4">
+                          <Badge className="bg-primary text-primary-foreground">
+                            <AlertCircle className="h-3 w-3 mr-1" />
+                            Needs Review
+                          </Badge>
+                        </div>
+                      )}
                       <div className="grid lg:grid-cols-3 gap-6">
                         {/* Case Info */}
                         <div>
@@ -321,7 +353,9 @@ const AdminDashboard = () => {
                           <h4 className="font-medium mb-2 text-sm">Case Details</h4>
                           <div className="space-y-1 text-xs">
                             <p><span className="font-medium">Category:</span> {caseItem.category}</p>
-                            <p><span className="font-medium">Status:</span> {caseItem.status}</p>
+                            <p><span className="font-medium">Status:</span> {
+                              caseItem.status === 'pending_review' ? 'Under Review' : caseItem.status.replace('_', ' ')
+                            }</p>
                             <p><span className="font-medium">Email:</span> {caseItem.client_email}</p>
                           </div>
                           {caseItem.ai_summary && (

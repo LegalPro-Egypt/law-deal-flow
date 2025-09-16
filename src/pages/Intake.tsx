@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Scale, ArrowLeft, MessageSquare, Upload, FileText, CheckCircle, Clock, User } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { LegalChatbot } from "@/components/LegalChatbot";
 
 import { PersonalDetailsForm, PersonalDetailsData } from "@/components/PersonalDetailsForm";
@@ -22,6 +22,7 @@ const Intake = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [caseId, setCaseId] = useState<string | null>(null);
   const [documentsComplete, setDocumentsComplete] = useState(false);
   const [documents, setDocuments] = useState<any[]>([]);
@@ -282,6 +283,76 @@ const Intake = () => {
     }
 
     setCurrentStep(3);
+  };
+
+  const handleSubmitCaseForReview = async () => {
+    if (!caseId) {
+      toast({
+        title: 'Error',
+        description: 'No case found to submit',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validate that all required steps are complete
+    if (!personalData) {
+      toast({
+        title: 'Incomplete Information',
+        description: 'Please complete your personal details before submitting',
+        variant: 'destructive',
+      });
+      setCurrentStep(2);
+      setShowPersonalForm(true);
+      return;
+    }
+
+    if (!documentsComplete) {
+      toast({
+        title: 'Missing Documents',
+        description: 'Please upload all required documents before submitting',
+        variant: 'destructive',
+      });
+      setCurrentStep(3);
+      return;
+    }
+
+    try {
+      // Update case status to pending_review
+      const { error } = await supabase
+        .from('cases')
+        .update({ 
+          status: 'pending_review',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', caseId);
+
+      if (error) {
+        console.error('Failed to submit case:', error);
+        toast({
+          title: 'Submission Failed',
+          description: error.message,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Show success message
+      toast({
+        title: 'Case Submitted Successfully',
+        description: 'Your case has been submitted for review. You will be notified once it has been assigned to a lawyer.',
+      });
+
+      // Navigate back to client dashboard
+      navigate('/client-dashboard');
+    } catch (error: any) {
+      console.error('Error submitting case:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to submit case for review',
+        variant: 'destructive',
+      });
+    }
   };
 
 
@@ -652,7 +723,11 @@ const Intake = () => {
                 <Button variant="outline" onClick={() => setCurrentStep(3)}>
                   Back to Documents
                 </Button>
-                <Button className="bg-gradient-primary">
+                <Button 
+                  className="bg-gradient-primary"
+                  onClick={handleSubmitCaseForReview}
+                  disabled={!caseId}
+                >
                   Submit Case for Review
                 </Button>
               </div>
