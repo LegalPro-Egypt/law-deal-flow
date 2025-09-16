@@ -49,6 +49,7 @@ import { CaseDetailsDialog } from "@/components/CaseDetailsDialog";
 import { ConversationDialog } from "@/components/ConversationDialog";
 import { InviteLawyerDialog } from "@/components/InviteLawyerDialog";
 import { LawyerDetailsDialog } from "@/components/LawyerDetailsDialog";
+import { LawyerChatHistoryDialog } from "@/components/LawyerChatHistoryDialog";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -838,15 +839,19 @@ const AdminDashboard = () => {
                               </Button>
                             </>
                           ) : (
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              className="justify-start"
-                              onClick={() => handleViewLawyerDetails(lawyer.user_id)}
+                            <LawyerChatHistoryDialog 
+                              lawyerId={lawyer.user_id} 
+                              lawyerName={`${lawyer.first_name} ${lawyer.last_name}`.trim() || lawyer.email}
                             >
-                              <Eye className="h-4 w-4 mr-2" />
-                              View Details & Q&A History
-                            </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="justify-start w-full"
+                              >
+                                <Eye className="h-4 w-4 mr-2" />
+                                View Details & Q&A History
+                              </Button>
+                            </LawyerChatHistoryDialog>
                           )}
                           <Button 
                             type="button"
