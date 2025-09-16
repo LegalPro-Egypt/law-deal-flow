@@ -43,7 +43,7 @@ const handler = async (req: Request): Promise<Response> => {
             approved_by_admin: true,
             review_notes: reviewNotes || ''
           },
-          redirectTo: `${req.headers.get('origin') || 'https://yourapp.com'}/auth`
+          redirectTo: `${req.headers.get('origin') || 'https://yourapp.com'}/auth?force=true`
         }
       );
 

@@ -41,16 +41,38 @@ const Auth = () => {
 
   // Check if user is already authenticated and handle reset mode
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const redirectTo = urlParams.get('redirect');
-    const resetParam = urlParams.get('reset');
-    const forceStay = urlParams.get('force') === 'true';
+    // Read parameters from both search and hash
+    const searchParams = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    
+    // Merge all parameters, with hash taking precedence
+    const allParams = new URLSearchParams();
+    for (const [key, value] of searchParams) {
+      allParams.set(key, value);
+    }
+    for (const [key, value] of hashParams) {
+      allParams.set(key, value);
+    }
+    
+    // Normalize URL by moving hash parameters to search
+    if (window.location.hash && hashParams.size > 0) {
+      const newUrl = new URL(window.location.href);
+      newUrl.hash = '';
+      for (const [key, value] of hashParams) {
+        newUrl.searchParams.set(key, value);
+      }
+      window.history.replaceState({}, '', newUrl.toString());
+    }
+    
+    const redirectTo = allParams.get('redirect');
+    const resetParam = allParams.get('reset');
+    const forceStay = allParams.get('force') === 'true';
     
     // Check for Supabase invitation tokens
-    const accessToken = urlParams.get('access_token');
-    const refreshToken = urlParams.get('refresh_token');
-    const tokenType = urlParams.get('token_type');
-    const type = urlParams.get('type');
+    const accessToken = allParams.get('access_token');
+    const refreshToken = allParams.get('refresh_token');
+    const tokenType = allParams.get('token_type');
+    const type = allParams.get('type');
     
     console.log('Auth useEffect - force:', forceStay, 'reset:', resetParam, 'type:', type, 'hasTokens:', !!(accessToken && refreshToken));
     
@@ -94,8 +116,8 @@ const Auth = () => {
         return;
       }
       
-      // Handle successful sign in - but only redirect if NOT in reset mode
-      if (event === 'SIGNED_IN' && session && !resetMode) {
+      // Handle successful sign in - but only redirect if NOT in reset mode and NOT forced to stay
+      if (event === 'SIGNED_IN' && session && !resetMode && !forceStay) {
         console.log('SIGNED_IN event - redirecting to dashboard');
         setTimeout(async () => {
           try {
@@ -126,7 +148,7 @@ const Auth = () => {
       }
       
       // Handle token exchange for invitations (but not password recovery)
-      if (event === 'TOKEN_REFRESHED' && session && !resetMode) {
+      if (event === 'TOKEN_REFRESHED' && session && !resetMode && !forceStay) {
         console.log('Token refreshed, checking for new user setup...');
         // This happens after invitation acceptance
         setTimeout(async () => {
@@ -170,8 +192,8 @@ const Auth = () => {
       const { data: { session } } = await supabase.auth.getSession();
       console.log('Auth checkAuth - session exists:', !!session, 'forceStay:', forceStay, 'resetMode:', resetMode);
       
-      // If user is logged in and not in reset mode, redirect regardless of force parameter
-      if (session && !resetMode) {
+      // If user is logged in and not in reset mode and not forced to stay, redirect
+      if (session && !resetMode && !forceStay) {
         // Get user profile to determine role and redirect
         const { data: profile } = await supabase
           .from('profiles')

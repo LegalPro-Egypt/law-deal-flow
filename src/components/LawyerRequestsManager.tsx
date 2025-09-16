@@ -176,7 +176,7 @@ export const LawyerRequestsManager = () => {
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(
         request.email,
         {
-          redirectTo: `${window.location.origin}/auth`
+          redirectTo: `${window.location.origin}/auth?force=true`
         }
       );
 
