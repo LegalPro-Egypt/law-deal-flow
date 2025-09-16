@@ -22,6 +22,7 @@ const Intake = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
   const [caseId, setCaseId] = useState<string | null>(null);
+  const [documentsComplete, setDocumentsComplete] = useState(false);
 
   const handleCaseDataExtracted = (data: any) => {
     setExtractedCaseData(data);
@@ -303,17 +304,28 @@ const Intake = () => {
                 caseId={caseId}
                 onFilesUploaded={(files) => {
                   console.log('Files uploaded:', files);
-                  // You can add additional logic here if needed
                 }}
+                onCompletionChange={setDocumentsComplete}
               />
 
               <div className="flex justify-between">
                 <Button variant="outline" onClick={() => setCurrentStep(1)}>
                   Back to Chat
                 </Button>
-                <Button onClick={() => setCurrentStep(4)} className="bg-gradient-primary">
-                  Review Case
-                </Button>
+                <div className="flex flex-col items-end gap-2">
+                  {!documentsComplete && (
+                    <p className="text-sm text-muted-foreground">
+                      Please upload all required documents to continue
+                    </p>
+                  )}
+                  <Button 
+                    onClick={() => setCurrentStep(4)} 
+                    className="bg-gradient-primary"
+                    disabled={!documentsComplete}
+                  >
+                    Review Case
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>

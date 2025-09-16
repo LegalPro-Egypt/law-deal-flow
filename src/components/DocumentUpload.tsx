@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -25,10 +25,11 @@ interface DocumentCategory {
 
 interface DocumentUploadProps {
   onFilesUploaded?: (files: UploadedFile[]) => void;
+  onCompletionChange?: (isComplete: boolean) => void;
   caseId?: string;
 }
 
-const DocumentUpload: React.FC<DocumentUploadProps> = ({ onFilesUploaded, caseId }) => {
+const DocumentUpload: React.FC<DocumentUploadProps> = ({ onFilesUploaded, onCompletionChange, caseId }) => {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
   const [isUploading, setIsUploading] = useState<Record<string, boolean>>({});
@@ -246,6 +247,15 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onFilesUploaded, caseId
   const getCategoryFiles = (categoryId: string) => {
     return uploadedFiles.filter(file => file.category === categoryId);
   };
+
+  // Check completion status and notify parent
+  useEffect(() => {
+    const requiredCategories = categories.filter(cat => cat.required);
+    const completedCategories = requiredCategories.filter(cat => getCategoryFiles(cat.id).length > 0);
+    const isComplete = requiredCategories.length === completedCategories.length;
+    
+    onCompletionChange?.(isComplete);
+  }, [uploadedFiles, onCompletionChange]);
 
   return (
     <div className="space-y-6">
