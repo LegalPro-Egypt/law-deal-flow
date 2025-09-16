@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Scale, Shield, MessageSquare, Users, Clock, Check } from "lucide-react";
@@ -9,14 +9,18 @@ import { useAuth } from "@/hooks/useAuth";
 const Landing = () => {
   const { isAuthenticated, role, loading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    if (!loading && isAuthenticated) {
+    // Check if user explicitly wants to view homepage (bypass auto-redirect)
+    const forceHomepage = searchParams.get('force') === 'true';
+    
+    if (!loading && isAuthenticated && !forceHomepage) {
       // Navigate to role-based dashboard if role is available, otherwise default to client
       const targetRole = role || 'client';
       navigate(`/${targetRole}`, { replace: true });
     }
-  }, [isAuthenticated, role, loading, navigate]);
+  }, [isAuthenticated, role, loading, navigate, searchParams]);
 
   if (loading) {
     return (

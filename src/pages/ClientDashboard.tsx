@@ -273,7 +273,8 @@ const ClientDashboard = () => {
     try {
       await signOut();
       toast({ title: "Signed out", description: "You have been logged out." });
-      navigate('/');
+      // Use a query parameter to bypass auto-redirect on Landing page
+      navigate('/?force=true');
     } catch (error: any) {
       toast({ title: "Error", description: error.message || "Failed to sign out.", variant: "destructive" });
     }
@@ -286,7 +287,7 @@ const ClientDashboard = () => {
           <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
             <div className="flex items-center justify-between h-14 sm:h-16">
               <div className="flex items-center space-x-2 sm:space-x-4">
-                <Link to="/" className="flex items-center space-x-2 sm:space-x-4 hover:opacity-80 transition-opacity">
+                <Link to="/?force=true" className="flex items-center space-x-2 sm:space-x-4 hover:opacity-80 transition-opacity">
                   <Scale className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
                   <div className="flex items-center space-x-1 sm:space-x-2">
                     <h1 className="text-lg sm:text-xl font-bold">LegalConnect</h1>
@@ -312,7 +313,7 @@ const ClientDashboard = () => {
           <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
             <div className="flex items-center justify-between h-14 sm:h-16">
               <div className="flex items-center space-x-2 sm:space-x-4">
-                <Link to="/" className="flex items-center space-x-2 sm:space-x-4 hover:opacity-80 transition-opacity">
+                <Link to="/?force=true" className="flex items-center space-x-2 sm:space-x-4 hover:opacity-80 transition-opacity">
                   <Scale className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
                   <div className="flex items-center space-x-1 sm:space-x-2">
                     <h1 className="text-lg sm:text-xl font-bold">LegalConnect</h1>
@@ -360,7 +361,7 @@ const ClientDashboard = () => {
         <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16">
             {/* Logo and Title */}
-            <Link to="/" className="flex items-center space-x-2 sm:space-x-4 hover:opacity-80 transition-opacity">
+            <Link to="/?force=true" className="flex items-center space-x-2 sm:space-x-4 hover:opacity-80 transition-opacity">
               <Scale className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
               <div className="flex items-center space-x-1 sm:space-x-2">
                 <h1 className="text-lg sm:text-xl font-bold text-foreground hidden xs:block sm:block">
