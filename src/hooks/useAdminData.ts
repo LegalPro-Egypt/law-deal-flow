@@ -241,15 +241,39 @@ export const useAdminData = () => {
     }
   };
 
-  const cleanupAnonymousIntakes = async () => {
+  const getAnonymousIntakes = async () => {
     try {
-      // Mark all anonymous intakes (no user_id) as completed to clear them from pending list
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('conversations')
-        .update({ status: 'completed' })
+        .select(`
+          id,
+          session_id,
+          created_at,
+          language,
+          status,
+          metadata,
+          user_id,
+          case_id
+        `)
         .eq('mode', 'intake')
         .eq('status', 'active')
-        .is('user_id', null);
+        .is('user_id', null)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error: any) {
+      console.error('Error fetching anonymous intakes:', error);
+      throw error;
+    }
+  };
+
+  const deleteSelectedIntakes = async (conversationIds: string[]) => {
+    try {
+      const { error } = await supabase
+        .from('conversations')
+        .delete()
+        .in('id', conversationIds);
 
       if (error) throw error;
 
@@ -258,7 +282,39 @@ export const useAdminData = () => {
 
       toast({
         title: "Success",
-        description: "Anonymous test intakes have been cleaned up",
+        description: `Deleted ${conversationIds.length} intake conversation${conversationIds.length > 1 ? 's' : ''}`,
+      });
+    } catch (error: any) {
+      console.error('Error deleting intakes:', error);
+      toast({
+        title: "Error",
+        description: `Failed to delete intakes: ${error.message}`,
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  const cleanupAnonymousIntakes = async () => {
+    try {
+      // Get all anonymous intakes first
+      const anonymousIntakes = await getAnonymousIntakes();
+      const conversationIds = anonymousIntakes.map(intake => intake.id);
+
+      if (conversationIds.length === 0) {
+        toast({
+          title: "Info",
+          description: "No anonymous intakes found to clean up",
+        });
+        return;
+      }
+
+      // Delete all anonymous intakes
+      await deleteSelectedIntakes(conversationIds);
+
+      toast({
+        title: "Success",
+        description: `Cleaned up ${conversationIds.length} anonymous test intakes`,
       });
     } catch (error: any) {
       console.error('Error cleaning up anonymous intakes:', error);
@@ -291,6 +347,8 @@ export const useAdminData = () => {
     cases,
     loading,
     createCaseFromIntake,
+    getAnonymousIntakes,
+    deleteSelectedIntakes,
     cleanupAnonymousIntakes,
     refreshData: () => Promise.all([fetchAdminStats(), fetchPendingIntakes(), fetchCases()])
   };
