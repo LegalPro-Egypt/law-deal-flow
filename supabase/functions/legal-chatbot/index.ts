@@ -563,6 +563,7 @@ IMPORTANT:
 LANGUAGE: Conduct conversation in ${language === 'ar' ? 'Arabic' : language === 'de' ? 'German' : 'English'}
 
 Use the extract_case_data function when you have sufficient information to categorize the case and perform legal analysis. Set needsPersonalDetails to true when you've understood their case and need to collect their contact information - DO NOT ask for personal details in chat.`;
+}
 
 function getIntakeFunctions() {
   return [
