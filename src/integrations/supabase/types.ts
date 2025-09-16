@@ -456,6 +456,8 @@ export type Database = {
           languages: string[] | null
           last_name: string | null
           law_firm: string | null
+          lawyer_card_back_url: string | null
+          lawyer_card_front_url: string | null
           lawyer_card_url: string | null
           license_number: string | null
           notable_achievements: string | null
@@ -491,6 +493,8 @@ export type Database = {
           languages?: string[] | null
           last_name?: string | null
           law_firm?: string | null
+          lawyer_card_back_url?: string | null
+          lawyer_card_front_url?: string | null
           lawyer_card_url?: string | null
           license_number?: string | null
           notable_achievements?: string | null
@@ -526,6 +530,8 @@ export type Database = {
           languages?: string[] | null
           last_name?: string | null
           law_firm?: string | null
+          lawyer_card_back_url?: string | null
+          lawyer_card_front_url?: string | null
           lawyer_card_url?: string | null
           license_number?: string | null
           notable_achievements?: string | null

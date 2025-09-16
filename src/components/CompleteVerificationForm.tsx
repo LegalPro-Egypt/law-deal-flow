@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import MobileFileInput from "@/components/MobileFileInput";
 import { 
   Users, 
   FileText, 
@@ -88,7 +89,8 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
   const { user } = useAuth();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [lawyerCard, setLawyerCard] = useState<File | null>(null);
+  const [lawyerCardFront, setLawyerCardFront] = useState<File | null>(null);
+  const [lawyerCardBack, setLawyerCardBack] = useState<File | null>(null);
   const [selectedConsultationMethods, setSelectedConsultationMethods] = useState<string[]>(["in-person"]);
   const [selectedPaymentStructures, setSelectedPaymentStructures] = useState<string[]>(["hourly"]);
   const [selectedMemberships, setSelectedMemberships] = useState<string[]>([]);
@@ -107,22 +109,21 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
     },
   });
 
-  const uploadFile = async (file: File, bucket: string, path: string) => {
+  const uploadFile = async (file: File, type: 'front' | 'back') => {
     const fileExt = file.name.split('.').pop();
-    const fileName = `${Math.random()}.${fileExt}`;
-    const filePath = `${path}/${fileName}`;
-
+    const fileName = `lawyer-cards/${user.id}/${type}.${fileExt}`;
+    
     const { error: uploadError } = await supabase.storage
-      .from(bucket)
-      .upload(filePath, file);
+      .from('lawyer-documents')
+      .upload(fileName, file, { upsert: true });
 
     if (uploadError) {
-      throw uploadError;
+      throw new Error(`Upload failed: ${uploadError.message}`);
     }
 
     const { data: { publicUrl } } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(filePath);
+      .from('lawyer-documents')
+      .getPublicUrl(fileName);
 
     return publicUrl;
   };
@@ -161,10 +162,10 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
       return;
     }
 
-    if (!lawyerCard) {
+    if (!lawyerCardFront || !lawyerCardBack) {
       toast({
         title: "Error",
-        description: "Please upload your lawyer card/license.",
+        description: "Please upload both front and back of your lawyer card.",
         variant: "destructive",
       });
       return;
@@ -182,8 +183,11 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
     setIsSubmitting(true);
 
     try {
-      // Upload lawyer card
-      const lawyerCardUrl = await uploadFile(lawyerCard, "lawyer-documents", `lawyer-cards/${user.id}`);
+      // Upload lawyer card front and back
+      const [lawyerCardFrontUrl, lawyerCardBackUrl] = await Promise.all([
+        uploadFile(lawyerCardFront, 'front'),
+        uploadFile(lawyerCardBack, 'back')
+      ]);
 
       // Prepare team breakdown
       const teamBreakdown = {
@@ -218,7 +222,8 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
         .update({
           team_size: data.teamSize,
           team_breakdown: teamBreakdown,
-          lawyer_card_url: lawyerCardUrl,
+          lawyer_card_front_url: lawyerCardFrontUrl,
+          lawyer_card_back_url: lawyerCardBackUrl,
           pricing_structure: pricingStructure,
           consultation_methods: selectedConsultationMethods,
           payment_structures: selectedPaymentStructures,
@@ -336,28 +341,56 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
               <h3 className="text-lg font-semibold">Official Lawyer License/Card</h3>
             </div>
             
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
-              <div className="text-center">
-                <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                <div className="mt-4">
-                  <Label htmlFor="lawyerCard" className="cursor-pointer">
-                    <span className="mt-2 block text-sm font-medium text-gray-900">
-                      Upload your official lawyer license or bar card
-                    </span>
-                  </Label>
-                  <Input
-                    id="lawyerCard"
-                    type="file"
-                    accept="image/*,.pdf"
-                    onChange={(e) => setLawyerCard(e.target.files?.[0] || null)}
-                    className="hidden"
-                  />
+            <div className="space-y-4">
+              <div>
+                <Label className="block text-sm font-medium text-gray-700 mb-4">
+                  Lawyer Card/License *
+                </Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="block text-sm font-medium text-gray-600 mb-2">
+                      Front Side *
+                    </Label>
+                    <MobileFileInput
+                      onFileSelect={(files) => {
+                        const file = files?.[0];
+                        setLawyerCardFront(file || null);
+                      }}
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      buttonText="Upload Front"
+                      hasFiles={!!lawyerCardFront}
+                      className="w-full"
+                    />
+                    {lawyerCardFront && (
+                      <p className="text-sm text-green-600 mt-1">
+                        ✓ {lawyerCardFront.name}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label className="block text-sm font-medium text-gray-600 mb-2">
+                      Back Side *
+                    </Label>
+                    <MobileFileInput
+                      onFileSelect={(files) => {
+                        const file = files?.[0];
+                        setLawyerCardBack(file || null);
+                      }}
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      buttonText="Upload Back"
+                      hasFiles={!!lawyerCardBack}
+                      className="w-full"
+                    />
+                    {lawyerCardBack && (
+                      <p className="text-sm text-green-600 mt-1">
+                        ✓ {lawyerCardBack.name}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                {lawyerCard && (
-                  <p className="mt-2 text-sm text-green-600">
-                    ✓ {lawyerCard.name}
-                  </p>
-                )}
+                <p className="text-sm text-gray-500 mt-2">
+                  Upload clear photos or scans of both sides of your lawyer card/license (PDF, JPG, PNG)
+                </p>
               </div>
             </div>
           </div>
@@ -404,7 +437,7 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
             </div>
 
             <div className="space-y-4">
-              <h4 className="font-medium">Legal Service Rates (Optional - EGP per hour)</h4>
+              <h4 className="font-medium">Legal Service Rates (Optional - Approximate flat fees in EGP)</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {legalAreas.map((area) => (
                   <div key={area.key}>
@@ -413,7 +446,7 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
                       id={area.field}
                       type="number"
                       min="0"
-                      placeholder="Rate per hour (optional)"
+                      placeholder="Approximate flat fee (optional)"
                       {...form.register(area.field as keyof VerificationData)}
                     />
                   </div>
