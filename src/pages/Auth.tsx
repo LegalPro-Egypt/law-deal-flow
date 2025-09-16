@@ -28,6 +28,10 @@ const Auth = () => {
   const [resetLoading, setResetLoading] = useState(false);
   
   // Lawyer request form state
+  // Lawyer tab mode state
+  const [lawyerMode, setLawyerMode] = useState<'signin' | 'request'>('signin');
+  
+  // Lawyer request form state
   const [lawyerForm, setLawyerForm] = useState({
     email: '',
     fullName: '',
@@ -36,6 +40,12 @@ const Auth = () => {
     message: ''
   });
   const [lawyerFormLoading, setLawyerFormLoading] = useState(false);
+  
+  // Lawyer sign-in state
+  const [lawyerEmail, setLawyerEmail] = useState('');
+  const [lawyerPassword, setLawyerPassword] = useState('');
+  const [lawyerSignInLoading, setLawyerSignInLoading] = useState(false);
+  const [showLawyerPassword, setShowLawyerPassword] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -403,6 +413,135 @@ const Auth = () => {
   };
 
 
+  const handleLawyerSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!lawyerEmail || !lawyerPassword) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in both email and password.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLawyerSignInLoading(true);
+    
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: lawyerEmail,
+        password: lawyerPassword,
+      });
+
+      if (error) {
+        toast({
+          title: "Authentication Error",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check if user is an active lawyer
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role, is_active, is_verified')
+        .eq('user_id', data.user.id)
+        .single();
+
+      if (profileError || !profile) {
+        toast({
+          title: "Profile Error",
+          description: "Unable to verify your lawyer profile. Please contact admin.",
+          variant: "destructive",
+        });
+        await supabase.auth.signOut();
+        return;
+      }
+
+      if (profile.role !== 'lawyer') {
+        toast({
+          title: "Access Denied",
+          description: "This account is not registered as a lawyer. Please use the client portal or request lawyer access.",
+          variant: "destructive",
+        });
+        await supabase.auth.signOut();
+        return;
+      }
+
+      if (!profile.is_active || !profile.is_verified) {
+        toast({
+          title: "Account Inactive",
+          description: "Your lawyer account is not active or verified. Please contact admin for assistance.",
+          variant: "destructive",
+        });
+        await supabase.auth.signOut();
+        return;
+      }
+
+      toast({
+        title: "Success", 
+        description: "Welcome back! Redirecting to your lawyer dashboard...",
+      });
+      
+      // Remove force parameter and navigate
+      const url = new URL(window.location.href);
+      url.searchParams.delete('force');
+      window.history.replaceState({}, '', url.toString());
+      
+      navigate('/lawyer', { replace: true });
+      
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Sign-in failed. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLawyerSignInLoading(false);
+    }
+  };
+
+  const handleLawyerForgotPassword = async () => {
+    if (!lawyerEmail) {
+      toast({
+        title: "Email Required",
+        description: "Please enter your email address to reset your password.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLawyerSignInLoading(true);
+    
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(lawyerEmail, {
+        redirectTo: `${window.location.origin}/auth`,
+      });
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Password Reset Sent",
+          description: "Check your email for the password reset link.",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send reset email. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLawyerSignInLoading(false);
+    }
+  };
+
   const handleLawyerFormChange = (field: string, value: string) => {
     setLawyerForm(prev => ({ ...prev, [field]: value }));
   };
@@ -627,96 +766,219 @@ const Auth = () => {
                 <TabsContent value="lawyer">
                   <div className="space-y-4 mt-6">
                     <div className="text-center mb-6">
-                      <h3 className="text-lg font-semibold">Request Lawyer Access</h3>
-                      <p className="text-sm text-muted-foreground">Submit your credentials for admin review</p>
+                      <h3 className="text-lg font-semibold">
+                        {lawyerMode === 'signin' ? 'Lawyer Sign In' : 'Request Lawyer Access'}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {lawyerMode === 'signin' 
+                          ? 'Access your lawyer dashboard' 
+                          : 'Submit your credentials for admin review'
+                        }
+                      </p>
                     </div>
-                    
-                    {lawyerRequestSent ? (
-                      <div className="text-center py-8">
-                        <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                          <Mail className="h-8 w-8 text-primary" />
-                        </div>
-                        <h3 className="text-lg font-semibold mb-2">Request Submitted!</h3>
-                        <p className="text-sm text-muted-foreground mb-4">
-                          Your lawyer access request has been sent to our admin team for review.
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          You'll receive an email confirmation once your request is processed.
-                        </p>
+
+                    {/* Mode Toggle */}
+                    <div className="flex bg-muted rounded-lg p-1 mb-6">
+                      <Button
+                        type="button"
+                        variant={lawyerMode === 'signin' ? 'default' : 'ghost'}
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => setLawyerMode('signin')}
+                      >
+                        Sign In
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={lawyerMode === 'request' ? 'default' : 'ghost'}
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => setLawyerMode('request')}
+                      >
+                        Request Access
+                      </Button>
+                    </div>
+
+                    {lawyerMode === 'signin' ? (
+                      // Lawyer Sign In Form
+                      <div className="space-y-4">
+                        <form onSubmit={handleLawyerSignIn} className="space-y-4">
+                          <div>
+                            <Label htmlFor="lawyer-signin-email">Email Address</Label>
+                            <Input
+                              id="lawyer-signin-email"
+                              type="email"
+                              value={lawyerEmail}
+                              onChange={(e) => setLawyerEmail(e.target.value)}
+                              placeholder="Enter your email"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="lawyer-signin-password">Password</Label>
+                            <div className="relative">
+                              <Input
+                                id="lawyer-signin-password"
+                                type={showLawyerPassword ? "text" : "password"}
+                                value={lawyerPassword}
+                                onChange={(e) => setLawyerPassword(e.target.value)}
+                                placeholder="Enter your password"
+                                required
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                onClick={() => setShowLawyerPassword(!showLawyerPassword)}
+                              >
+                                {showLawyerPassword ? (
+                                  <EyeOff className="h-4 w-4" />
+                                ) : (
+                                  <Eye className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+                          <Button 
+                            type="submit" 
+                            className="w-full bg-gradient-primary"
+                            disabled={lawyerSignInLoading}
+                          >
+                            {lawyerSignInLoading ? "Signing In..." : "Sign In"}
+                          </Button>
+                          
+                          <div className="text-center">
+                            <Button
+                              type="button"
+                              variant="link"
+                              className="text-sm text-primary p-0"
+                              onClick={handleLawyerForgotPassword}
+                              disabled={lawyerSignInLoading}
+                            >
+                              Forgot password?
+                            </Button>
+                          </div>
+                          
+                          <p className="text-xs text-muted-foreground text-center">
+                            For approved lawyers only. Need access? 
+                            <Button
+                              type="button"
+                              variant="link"
+                              className="text-xs p-0 ml-1 h-auto"
+                              onClick={() => setLawyerMode('request')}
+                            >
+                              Request access
+                            </Button>
+                          </p>
+                        </form>
                       </div>
                     ) : (
-                      <form onSubmit={handleLawyerRequest} className="space-y-4">
-                        <div className="grid grid-cols-1 gap-4">
-                          <div>
-                            <Label htmlFor="lawyer-email">Email Address *</Label>
-                            <Input
-                              id="lawyer-email"
-                              type="email"
-                              value={lawyerForm.email}
-                              onChange={(e) => handleLawyerFormChange('email', e.target.value)}
-                              placeholder="your.email@example.com"
-                              required
-                            />
+                      // Lawyer Access Request Form
+                      <div className="space-y-4">
+                        {lawyerRequestSent ? (
+                          <div className="text-center py-8">
+                            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                              <Mail className="h-8 w-8 text-primary" />
+                            </div>
+                            <h3 className="text-lg font-semibold mb-2">Request Submitted!</h3>
+                            <p className="text-sm text-muted-foreground mb-4">
+                              Your lawyer access request has been sent to our admin team for review.
+                            </p>
+                            <p className="text-xs text-muted-foreground mb-4">
+                              You'll receive an email confirmation once your request is processed.
+                            </p>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setLawyerMode('signin')}
+                            >
+                              Already have access? Sign In
+                            </Button>
                           </div>
-                          
-                          <div>
-                            <Label htmlFor="lawyer-name">Full Name *</Label>
-                            <Input
-                              id="lawyer-name"
-                              type="text"
-                              value={lawyerForm.fullName}
-                              onChange={(e) => handleLawyerFormChange('fullName', e.target.value)}
-                              placeholder="John Doe"
-                              required
-                            />
-                          </div>
-                          
-                          <div>
-                            <Label htmlFor="lawyer-firm">Law Firm/Organization</Label>
-                            <Input
-                              id="lawyer-firm"
-                              type="text"
-                              value={lawyerForm.lawFirm}
-                              onChange={(e) => handleLawyerFormChange('lawFirm', e.target.value)}
-                              placeholder="ABC Law Firm"
-                            />
-                          </div>
-                          
-                          <div>
-                            <Label htmlFor="lawyer-specializations">Specializations</Label>
-                            <Input
-                              id="lawyer-specializations"
-                              type="text"
-                              value={lawyerForm.specializations}
-                              onChange={(e) => handleLawyerFormChange('specializations', e.target.value)}
-                              placeholder="Corporate Law, Criminal Defense, etc."
-                            />
-                          </div>
-                          
-                          <div>
-                            <Label htmlFor="lawyer-message">Message/Credentials</Label>
-                            <Textarea
-                              id="lawyer-message"
-                              value={lawyerForm.message}
-                              onChange={(e) => handleLawyerFormChange('message', e.target.value)}
-                              placeholder="Brief description of your experience and why you'd like to join..."
-                              rows={3}
-                            />
-                          </div>
-                        </div>
-                        
-                        <Button 
-                          type="submit"
-                          className="w-full"
-                          disabled={lawyerFormLoading}
-                        >
-                          {lawyerFormLoading ? "Submitting Request..." : "Submit Lawyer Access Request"}
-                        </Button>
-                        
-                        <p className="text-xs text-muted-foreground text-center">
-                          * Required fields. Your request will be reviewed by our admin team.
-                        </p>
-                      </form>
+                        ) : (
+                          <form onSubmit={handleLawyerRequest} className="space-y-4">
+                            <div className="grid grid-cols-1 gap-4">
+                              <div>
+                                <Label htmlFor="lawyer-email">Email Address *</Label>
+                                <Input
+                                  id="lawyer-email"
+                                  type="email"
+                                  value={lawyerForm.email}
+                                  onChange={(e) => handleLawyerFormChange('email', e.target.value)}
+                                  placeholder="your.email@example.com"
+                                  required
+                                />
+                              </div>
+                              
+                              <div>
+                                <Label htmlFor="lawyer-name">Full Name *</Label>
+                                <Input
+                                  id="lawyer-name"
+                                  type="text"
+                                  value={lawyerForm.fullName}
+                                  onChange={(e) => handleLawyerFormChange('fullName', e.target.value)}
+                                  placeholder="John Doe"
+                                  required
+                                />
+                              </div>
+                              
+                              <div>
+                                <Label htmlFor="lawyer-firm">Law Firm/Organization</Label>
+                                <Input
+                                  id="lawyer-firm"
+                                  type="text"
+                                  value={lawyerForm.lawFirm}
+                                  onChange={(e) => handleLawyerFormChange('lawFirm', e.target.value)}
+                                  placeholder="ABC Law Firm"
+                                />
+                              </div>
+                              
+                              <div>
+                                <Label htmlFor="lawyer-specializations">Specializations</Label>
+                                <Input
+                                  id="lawyer-specializations"
+                                  type="text"
+                                  value={lawyerForm.specializations}
+                                  onChange={(e) => handleLawyerFormChange('specializations', e.target.value)}
+                                  placeholder="Corporate Law, Criminal Defense, etc."
+                                />
+                              </div>
+                              
+                              <div>
+                                <Label htmlFor="lawyer-message">Message/Credentials</Label>
+                                <Textarea
+                                  id="lawyer-message"
+                                  value={lawyerForm.message}
+                                  onChange={(e) => handleLawyerFormChange('message', e.target.value)}
+                                  placeholder="Brief description of your experience and why you'd like to join..."
+                                  rows={3}
+                                />
+                              </div>
+                            </div>
+                            
+                            <Button 
+                              type="submit"
+                              className="w-full"
+                              disabled={lawyerFormLoading}
+                            >
+                              {lawyerFormLoading ? "Submitting Request..." : "Submit Lawyer Access Request"}
+                            </Button>
+                            
+                            <p className="text-xs text-muted-foreground text-center">
+                              * Required fields. 
+                              <Button
+                                type="button"
+                                variant="link"
+                                className="text-xs p-0 ml-1 h-auto"
+                                onClick={() => setLawyerMode('signin')}
+                              >
+                                Already approved? Sign in
+                              </Button>
+                            </p>
+                          </form>
+                        )}
+                      </div>
                     )}
                   </div>
                 </TabsContent>
