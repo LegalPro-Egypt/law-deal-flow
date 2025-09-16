@@ -107,22 +107,28 @@ const Intake = () => {
             targetCase = specificCase;
           }
         } else {
-          // Look for latest draft case
-          const { data: draftCases } = await supabase
+          // Look for latest case (draft or submitted for editing/review)
+          const { data: latestCases } = await supabase
             .from('cases')
             .select('*')
             .eq('user_id', user.id)
-            .eq('status', 'draft')
+            .in('status', ['draft', 'submitted'])
             .order('updated_at', { ascending: false })
             .limit(1);
 
-          if (draftCases && draftCases.length > 0) {
-            targetCase = draftCases[0];
+          if (latestCases && latestCases.length > 0) {
+            targetCase = latestCases[0];
           }
         }
 
         if (targetCase) {
           const draftData = (targetCase.draft_data as any) || {};
+          
+          // Clear any stale state before loading new case
+          setExtractedCaseData(null);
+          setPersonalData(null);
+          setDocuments([]);
+          setDocumentsComplete(false);
           
           // Set case data
           setCaseId(targetCase.id);

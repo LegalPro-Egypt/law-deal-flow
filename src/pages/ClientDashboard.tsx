@@ -259,7 +259,8 @@ const ClientDashboard = () => {
         description: "Your case is ready for review and submission.",
       });
 
-      navigate('/intake');
+      // Navigate to intake with the specific case ID for review
+      navigate(`/intake?case=${activeCase.id}`);
     } catch (error) {
       console.error('Error updating case step:', error);
       toast({
