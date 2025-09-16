@@ -7,6 +7,7 @@ interface Profile {
   first_name?: string;
   last_name?: string;
   email: string;
+  is_active?: boolean;
 }
 
 export const useAuth = () => {
@@ -32,7 +33,7 @@ export const useAuth = () => {
               console.log('useAuth: Fetching profile for user', session.user.id);
               const { data: profileData, error } = await supabase
                 .from('profiles')
-                .select('role, first_name, last_name, email')
+                .select('role, first_name, last_name, email, is_active')
                 .eq('user_id', session.user.id)
                 .single();
               
@@ -74,7 +75,7 @@ export const useAuth = () => {
             console.log('useAuth: Fetching initial profile for user', session.user.id);
             const { data: profileData, error: profileError } = await supabase
               .from('profiles')
-              .select('role, first_name, last_name, email')
+              .select('role, first_name, last_name, email, is_active')
               .eq('user_id', session.user.id)
               .single();
               
