@@ -79,9 +79,12 @@ const AdminDashboard = () => {
   const [lawyerToDelete, setLawyerToDelete] = useState<string | null>(null);
   const [showLawyerDeleteConfirm, setShowLawyerDeleteConfirm] = useState(false);
   const [expandedImage, setExpandedImage] = useState<{url: string; title: string} | null>(null);
+  const [freeChats, setFreeChats] = useState<any[]>([]);
+  const [loadingFreeChats, setLoadingFreeChats] = useState(false);
 
   useEffect(() => {
     fetchAllLawyers();
+    fetchFreeChats();
   }, []);
 
   const fetchAllLawyers = async () => {
@@ -170,6 +173,45 @@ const AdminDashboard = () => {
       setCardUrls(urlMap);
     } catch (error: any) {
       console.error('Error fetching lawyers:', error);
+    }
+  };
+
+  const fetchFreeChats = async () => {
+    setLoadingFreeChats(true);
+    try {
+      const { data: conversations, error } = await supabase
+        .from('conversations')
+        .select('*')
+        .is('user_id', null)
+        .eq('mode', 'intake')
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+      if (error) throw error;
+
+      const convs = conversations || [];
+      const ids = convs.map((c: any) => c.id);
+      let messagesByConv: Record<string, any[]> = {};
+
+      if (ids.length > 0) {
+        const { data: msgs } = await supabase
+          .from('messages')
+          .select('id, role, content, created_at, conversation_id')
+          .in('conversation_id', ids)
+          .order('created_at', { ascending: true });
+
+        (msgs || []).forEach((m: any) => {
+          if (!messagesByConv[m.conversation_id]) messagesByConv[m.conversation_id] = [];
+          messagesByConv[m.conversation_id].push(m);
+        });
+      }
+
+      const enriched = convs.map((c: any) => ({ ...c, messages: messagesByConv[c.id] || [] }));
+      setFreeChats(enriched);
+    } catch (e) {
+      console.error('Error fetching free chats:', e);
+    } finally {
+      setLoadingFreeChats(false);
     }
   };
 
@@ -515,8 +557,9 @@ const AdminDashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="intakes" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="intakes">AI Intakes</TabsTrigger>
+            <TabsTrigger value="free-chats">Free user chat history</TabsTrigger>
             <TabsTrigger value="cases">Cases</TabsTrigger>
             <TabsTrigger value="lawyers">
               Lawyers {stats.pendingVerifications > 0 && (

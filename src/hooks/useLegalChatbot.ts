@@ -69,13 +69,16 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
       console.log('Initializing conversation...', { userId, caseId, mode: state.mode });
       
       // Create conversation record - for intake mode, allow anonymous users
+      const isAnonymous = !userId;
+      const effectiveMode = isAnonymous ? 'intake' : state.mode; // Anonymous conversations must use 'intake' to satisfy RLS
+
       const { data: conversation, error } = await supabase
         .from('conversations')
         .insert({
-          user_id: state.mode === 'intake' ? userId || null : userId, // Allow null for intake mode
+          user_id: effectiveMode === 'intake' ? (userId || null) : userId,
           case_id: caseId,
           session_id: crypto.randomUUID(),
-          mode: state.mode,
+          mode: effectiveMode,
           language: state.language,
           status: 'active',
         })
