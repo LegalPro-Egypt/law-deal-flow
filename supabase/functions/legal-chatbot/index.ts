@@ -33,9 +33,12 @@ serve(async (req) => {
   }
 
   try {
-    const { message, conversation_id, mode = 'intake', language = 'en', caseId, lawyerId } = await req.json();
+    const { message, conversation_id, conversationId, mode = 'intake', language = 'en', caseId, lawyerId } = await req.json();
+    
+    // Handle both conversation_id and conversationId for compatibility
+    const effectiveConversationId = conversation_id || conversationId;
 
-    console.log('Legal Chatbot Request:', { message, conversation_id, mode, language });
+    console.log('Legal Chatbot Request:', { message, conversation_id: effectiveConversationId, mode, language });
 
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openAIApiKey) {
@@ -51,12 +54,12 @@ serve(async (req) => {
     let chatHistory: ChatMessage[] = [];
     
     // If we have a conversation_id, fetch existing messages
-    if (conversation_id) {
-      console.log('Fetching existing messages for conversation:', conversation_id);
+    if (effectiveConversationId) {
+      console.log('Fetching existing messages for conversation:', effectiveConversationId);
       const { data: existingMessages } = await supabase
         .from('messages')
         .select('role, content')
-        .eq('conversation_id', conversation_id)
+        .eq('conversation_id', effectiveConversationId)
         .order('created_at', { ascending: true });
       
       if (existingMessages && existingMessages.length > 0) {
@@ -80,8 +83,8 @@ serve(async (req) => {
         .single();
       
       if (!convError && newConversation) {
-        conversation_id = newConversation.id;
-        console.log('Created new conversation:', conversation_id);
+        effectiveConversationId = newConversation.id;
+        console.log('Created new conversation:', effectiveConversationId);
       }
     }
 
@@ -249,7 +252,7 @@ serve(async (req) => {
                   await supabase
                     .from('conversations')
                     .update({ metadata: newMeta })
-                    .eq('id', conversation_id);
+                    .eq('id', effectiveConversationId);
                 } else {
                   // Authenticated user: create new draft case
                   const legalAnalysis = {
@@ -297,7 +300,7 @@ serve(async (req) => {
                     await supabase
                       .from('conversations')
                       .update({ case_id: caseId })
-                      .eq('id', conversation_id);
+                      .eq('id', effectiveConversationId);
                   }
                 }
               } else {
@@ -342,17 +345,17 @@ serve(async (req) => {
     }
 
     // Save conversation to database if conversation_id provided
-    if (conversation_id) {
-      console.log('Saving messages to conversation:', conversation_id);
+    if (effectiveConversationId) {
+      console.log('Saving messages to conversation:', effectiveConversationId);
       await supabase.from('messages').insert([
         {
-          conversation_id: conversation_id,
+          conversation_id: effectiveConversationId,
           role: 'user',
           content: message,
           metadata: { timestamp: new Date().toISOString() }
         },
         {
-          conversation_id: conversation_id,
+          conversation_id: effectiveConversationId,
           role: 'assistant',
           content: aiResponse,
           metadata: { 
@@ -370,8 +373,8 @@ serve(async (req) => {
         extractedData: mode === 'intake' ? extractedData : undefined,
         needsPersonalDetails: mode === 'intake' ? extractedData?.needsPersonalDetails : false,
         nextQuestions: mode === 'intake' ? nextQuestions : undefined,
-        conversation_id: conversation_id,
-        conversationId: conversation_id // backward compatibility
+        conversation_id: effectiveConversationId,
+        conversationId: effectiveConversationId // backward compatibility
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
