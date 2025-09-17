@@ -14,6 +14,11 @@ const Landing = () => {
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
+    // Scroll to top when component mounts
+    window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
     // Check if user explicitly wants to view homepage (bypass auto-redirect)
     const forceHomepage = searchParams.get('force') === 'true';
     
