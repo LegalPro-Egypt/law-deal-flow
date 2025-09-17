@@ -176,22 +176,6 @@ const handleSendMessage = async () => {
             </div>
           </div>
           
-          {/* Status Info - Compact */}
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <div className="flex items-center gap-1">
-              {conversationId ? (
-                <CheckCircle2 className="h-3 w-3 text-green-600" />
-              ) : (
-                <Clock className="h-3 w-3" />
-              )}
-              {conversationId ? 'Connected' : 'Connecting...'}
-            </div>
-            {mode === 'intake' && extractedData && extractedData.category && (
-              <Badge variant="outline" className="text-xs py-0 px-1">
-                {extractedData.category}
-              </Badge>
-            )}
-          </div>
         </div>
 
         {/* Desktop Header */}
