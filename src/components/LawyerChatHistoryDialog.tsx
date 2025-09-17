@@ -236,8 +236,8 @@ export const LawyerChatHistoryDialog = ({
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="max-w-6xl max-h-[90vh] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="max-w-6xl h-[90vh] overflow-hidden p-0 flex flex-col gap-0">
+        <DialogHeader className="shrink-0 border-b px-6 py-4">
           <DialogTitle className="flex items-center gap-2">
             <Scale className="h-5 w-5" />
             {lawyerName} - Profile & AI Chat History
@@ -258,14 +258,14 @@ export const LawyerChatHistoryDialog = ({
           </div>
         </DialogHeader>
 
-        <Tabs defaultValue="profile" className="flex-1 flex flex-col">
-          <TabsList className="grid w-full grid-cols-2">
+        <Tabs defaultValue="profile" className="flex-1 min-h-0 flex flex-col overflow-hidden">
+          <TabsList className="shrink-0 px-6 grid w-full grid-cols-2">
             <TabsTrigger value="profile">Profile & Questionnaire</TabsTrigger>
             <TabsTrigger value="chat">AI Chat History</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="profile" className="flex-1">
-            <ScrollArea className="flex-1 pr-6">
+          <TabsContent value="profile" className="flex-1 min-h-0 flex flex-col">
+            <ScrollArea className="flex-1 min-h-0 px-6 py-6">
               {loading ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -545,8 +545,8 @@ export const LawyerChatHistoryDialog = ({
             </ScrollArea>
           </TabsContent>
 
-          <TabsContent value="chat" className="flex-1">
-            <ScrollArea className="flex-1 pr-6">
+          <TabsContent value="chat" className="flex-1 min-h-0 flex flex-col">
+            <ScrollArea className="flex-1 min-h-0 px-6 py-6">
               {loading ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
