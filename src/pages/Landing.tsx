@@ -250,7 +250,7 @@ const Landing = () => {
               </p>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
+            <div className="grid grid-cols-3 gap-4 sm:gap-8">
               <div className="text-center sm:text-left">
                 <h3 className="font-semibold mb-3">Services</h3>
                 <ul className="space-y-1 text-muted-foreground text-sm">
