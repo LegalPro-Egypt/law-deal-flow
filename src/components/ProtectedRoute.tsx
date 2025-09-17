@@ -23,9 +23,9 @@ export const ProtectedRoute = ({
         return;
       }
 
-      if (requiredRole && role !== requiredRole) {
-        // Redirect to appropriate dashboard based on actual role
-        navigate(`/${role || 'auth'}`);
+      if (requiredRole && role && role !== requiredRole) {
+        // Only redirect if we have a known role that doesn't match
+        navigate(`/${role}`);
         return;
       }
     }
@@ -54,7 +54,8 @@ export const ProtectedRoute = ({
     );
   }
 
-  if (!isAuthenticated || (requiredRole && role !== requiredRole)) {
+  // Don't render if not authenticated or if role is required but doesn't match
+  if (!isAuthenticated || (requiredRole && role && role !== requiredRole)) {
     return null;
   }
 

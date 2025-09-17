@@ -128,73 +128,43 @@ const Auth = () => {
       
       // Handle successful sign in - but only redirect if NOT in reset mode and NOT forced to stay
       if (event === 'SIGNED_IN' && session && !resetMode && !forceStay) {
-        console.log('SIGNED_IN event - redirecting to dashboard');
-        setTimeout(async () => {
-          try {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('role')
-              .eq('user_id', session.user.id)
-              .single();
-            
-            const role = profile?.role || 'client';
-            
-            // Remove all auth-related parameters from URL
-            const url = new URL(window.location.href);
-            url.searchParams.delete('force');
-            url.searchParams.delete('access_token');
-            url.searchParams.delete('refresh_token');
-            url.searchParams.delete('token_type');
-            url.searchParams.delete('type');
-            window.history.replaceState({}, '', url.toString());
-            
-            // Navigate to appropriate dashboard
-            navigate(`/${role}`, { replace: true });
-          } catch (error) {
-            console.error('Error fetching profile after sign in:', error);
-            navigate('/client', { replace: true }); // Fallback to client dashboard
-          }
-        }, 0);
+        console.log('SIGNED_IN event - will redirect once profile is loaded');
+        // Let useAuth handle the profile loading and redirect logic
+        setTimeout(() => {
+          // Remove all auth-related parameters from URL
+          const url = new URL(window.location.href);
+          url.searchParams.delete('force');
+          url.searchParams.delete('access_token');
+          url.searchParams.delete('refresh_token');
+          url.searchParams.delete('token_type');
+          url.searchParams.delete('type');
+          window.history.replaceState({}, '', url.toString());
+          
+          // Navigate to client dashboard (useAuth will create profile if needed)
+          navigate('/client', { replace: true });
+        }, 100);
       }
       
       // Handle token exchange for invitations (but not password recovery)
       if (event === 'TOKEN_REFRESHED' && session && !resetMode && !forceStay) {
-        console.log('Token refreshed, checking for new user setup...');
-        // This happens after invitation acceptance
-        setTimeout(async () => {
-          try {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('role')
-              .eq('user_id', session.user.id)
-              .single();
-            
-            const role = profile?.role || 'lawyer'; // Default to lawyer for invitations
-            
-            // Remove auth parameters and redirect
-            const url = new URL(window.location.href);
-            url.searchParams.delete('access_token');
-            url.searchParams.delete('refresh_token');
-            url.searchParams.delete('token_type');
-            url.searchParams.delete('type');
-            window.history.replaceState({}, '', url.toString());
-            
-            navigate(`/${role}`, { replace: true });
-            
-            toast({
-              title: "Welcome!",
-              description: "Your account has been activated. Please complete your profile setup.",
-            });
-          } catch (error) {
-            console.error('Error setting up new user:', error);
-            // If no profile exists, show a message to contact admin
-            toast({
-              title: "Account Setup Needed",
-              description: "Your invitation was accepted but profile setup is incomplete. Please contact admin.",
-              variant: "destructive",
-            });
-          }
-        }, 1000);
+        console.log('Token refreshed, will redirect based on role');
+        // This happens after invitation acceptance - let useAuth handle profile logic
+        setTimeout(() => {
+          // Remove auth parameters and redirect to client (useAuth will handle role-based redirect)
+          const url = new URL(window.location.href);
+          url.searchParams.delete('access_token');
+          url.searchParams.delete('refresh_token');
+          url.searchParams.delete('token_type');
+          url.searchParams.delete('type');
+          window.history.replaceState({}, '', url.toString());
+          
+          navigate('/client', { replace: true });
+          
+          toast({
+            title: "Welcome!",
+            description: "Your account has been activated.",
+          });
+        }, 100);
       }
     });
     
@@ -204,16 +174,7 @@ const Auth = () => {
       
       // If user is logged in and not in reset mode and not forced to stay, redirect
       if (session && !resetMode && !forceStay) {
-        // Get user profile to determine role and redirect
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('user_id', session.user.id)
-          .single();
-        
-        const role = profile?.role || 'client';
-        
-        console.log('Auth redirecting to:', redirectTo === 'intake' ? '/intake' : `/${role}`);
+        console.log('Auth redirecting authenticated user to client (useAuth will handle profile/role)');
         
         // Remove force parameter from URL since we're redirecting
         if (forceStay) {
@@ -222,11 +183,11 @@ const Auth = () => {
           window.history.replaceState({}, '', url.toString());
         }
         
-        // Redirect to intended page or default dashboard
+        // Redirect to intended page or default dashboard - let useAuth handle role determination
         if (redirectTo === 'intake') {
           navigate('/intake', { replace: true });
         } else {
-          navigate(`/${role}`, { replace: true });
+          navigate('/client', { replace: true });
         }
       } else if (forceStay) {
         console.log('Auth staying on page due to force=true (no session or in reset mode)');

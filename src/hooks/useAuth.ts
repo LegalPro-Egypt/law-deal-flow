@@ -30,14 +30,36 @@ export const useAuth = () => {
                 .from('profiles')
                 .select('*')
                 .eq('user_id', session.user.id)
-                .single();
+                .maybeSingle();
               
               if (error) {
                 console.error('useAuth: Profile fetch error:', error);
                 setProfile(null);
-              } else {
+              } else if (profileData) {
                 console.log('useAuth: Profile loaded:', profileData);
                 setProfile(profileData);
+              } else {
+                // No profile exists, create a default client profile
+                console.log('useAuth: No profile found, creating default client profile');
+                const { data: newProfile, error: createError } = await supabase
+                  .from('profiles')
+                  .insert({
+                    user_id: session.user.id,
+                    email: session.user.email || '',
+                    role: 'client',
+                    first_name: session.user.user_metadata?.first_name || '',
+                    last_name: session.user.user_metadata?.last_name || ''
+                  })
+                  .select()
+                  .single();
+                
+                if (createError) {
+                  console.error('useAuth: Profile creation error:', createError);
+                  setProfile(null);
+                } else {
+                  console.log('useAuth: Profile created:', newProfile);
+                  setProfile(newProfile);
+                }
               }
             } catch (error) {
               console.error('useAuth: Profile fetch exception:', error);
@@ -72,14 +94,36 @@ export const useAuth = () => {
               .from('profiles')
               .select('*')
               .eq('user_id', session.user.id)
-              .single();
+              .maybeSingle();
               
             if (profileError) {
               console.error('useAuth: Initial profile fetch error:', profileError);
               setProfile(null);
-            } else {
+            } else if (profileData) {
               console.log('useAuth: Initial profile loaded:', profileData);
               setProfile(profileData);
+            } else {
+              // No profile exists, create a default client profile
+              console.log('useAuth: No initial profile found, creating default client profile');
+              const { data: newProfile, error: createError } = await supabase
+                .from('profiles')
+                .insert({
+                  user_id: session.user.id,
+                  email: session.user.email || '',
+                  role: 'client',
+                  first_name: session.user.user_metadata?.first_name || '',
+                  last_name: session.user.user_metadata?.last_name || ''
+                })
+                .select()
+                .single();
+              
+              if (createError) {
+                console.error('useAuth: Initial profile creation error:', createError);
+                setProfile(null);
+              } else {
+                console.log('useAuth: Initial profile created:', newProfile);
+                setProfile(newProfile);
+              }
             }
           } catch (error) {
             console.error('useAuth: Initial profile fetch exception:', error);
