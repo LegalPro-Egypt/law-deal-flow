@@ -28,6 +28,7 @@ export const PublicLegalChat: React.FC<PublicLegalChatProps> = ({ className }) =
   const [inputMessage, setInputMessage] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const didInitAutoScroll = useRef(false);
 
   const {
     messages,
@@ -46,9 +47,13 @@ export const PublicLegalChat: React.FC<PublicLegalChatProps> = ({ className }) =
     }
   }, [conversationId, initializeConversation]);
 
-  // Auto-scroll to bottom
+  // Auto-scroll to bottom (skip on initial welcome message)
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (!didInitAutoScroll.current) {
+      didInitAutoScroll.current = true;
+      return;
+    }
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, [messages]);
 
   const handleSendMessage = async () => {

@@ -41,6 +41,7 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = ({
   const [inputMessage, setInputMessage] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const didInitAutoScroll = useRef(false);
   const { toast } = useToast();
 
   const {
@@ -70,9 +71,13 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = ({
     }
   }, [conversationId, userId, caseId, initializeConversation, mode]);
 
-  // Auto-scroll to bottom
+  // Auto-scroll to bottom (skip on initial welcome message)
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (!didInitAutoScroll.current) {
+      didInitAutoScroll.current = true;
+      return;
+    }
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, [messages]);
 
   // Call onCaseDataExtracted when case data is extracted
