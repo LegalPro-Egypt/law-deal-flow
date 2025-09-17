@@ -12,18 +12,16 @@ interface ChatMessage {
   content: string;
 }
 
-interface LegalKnowledge {
-  category: string;
-  title: string;
-  content: string;
-  law_reference?: string;
-}
-
 interface CaseData {
   category?: string;
   urgency?: string;
-  entities?: any;
-  nextQuestions?: string[];
+  entities?: {
+    parties?: string[];
+    dates?: string[];
+    location?: string;
+  };
+  personalDetailsNeeded?: boolean;
+  summary?: string;
 }
 
 serve(async (req) => {
@@ -33,7 +31,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, conversation_id, mode = 'intake', language = 'en', caseId, lawyerId } = await req.json();
+    const { message, conversation_id, mode = 'intake', language = 'en' } = await req.json();
 
     console.log('Legal Chatbot Request:', { message, conversation_id, mode, language });
 
@@ -66,48 +64,15 @@ serve(async (req) => {
         }));
         console.log('Loaded chat history with', chatHistory.length, 'messages');
       }
-    } else if (mode === 'qa_lawyer') {
-      // For lawyer Q&A mode, create a new conversation
-      console.log('Creating new conversation for lawyer Q&A');
-      const { data: newConversation, error: convError } = await supabase
-        .from('conversations')
-        .insert({
-          mode: 'qa_lawyer',
-          language: language || 'en',
-          user_id: lawyerId || null
-        })
-        .select()
-        .single();
-      
-      if (!convError && newConversation) {
-        conversation_id = newConversation.id;
-        console.log('Created new conversation:', conversation_id);
-      }
     }
 
-    // Fetch relevant legal knowledge based on message content
-    const { data: legalKnowledge } = await supabase
-      .from('legal_knowledge')
-      .select('*')
-      .eq('language', language === 'ar' ? 'ar' : 'en')
-      .or(`content.ilike.%${message}%,title.ilike.%${message}%,keywords.cs.{${extractKeywords(message)}}`)
-      .limit(5);
-
-    // Fetch case categories for intake mode
-    const { data: categories } = await supabase
-      .from('case_categories')
-      .select('*')
-      .eq('is_active', true);
-
-    // Build system prompt based on mode
+    // Build simple system prompt based on mode
     let systemPrompt = '';
     
-    if (mode === 'qa' || mode === 'qa_lawyer') {
-      systemPrompt = mode === 'qa_lawyer' 
-        ? buildLawyerQASystemPrompt(language, legalKnowledge || [])
-        : buildQASystemPrompt(language, legalKnowledge || []);
+    if (mode === 'qa') {
+      systemPrompt = buildQASystemPrompt(language);
     } else {
-      systemPrompt = buildIntakeSystemPrompt(language, categories || [], legalKnowledge || []);
+      systemPrompt = buildIntakeSystemPrompt(language);
     }
 
     // Prepare messages for OpenAI
@@ -129,8 +94,8 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages: messages,
-        max_tokens: 600,
-        temperature: 0.8,
+        max_tokens: 800,
+        temperature: 0.9,
         functions: mode === 'intake' ? getIntakeFunctions() : undefined,
         function_call: mode === 'intake' ? 'auto' : undefined,
       }),
@@ -147,40 +112,11 @@ serve(async (req) => {
         ? 'Entschuldigung, ich habe momentan technische Schwierigkeiten. Bitte teilen Sie mit: Ihren vollständigen Namen, beste E-Mail-Adresse, Telefonnummer und eine kurze Beschreibung Ihres Rechtsfalls, damit ich Ihnen helfen kann.'
         : 'I apologize, but I\'m experiencing temporary technical difficulties. Please share: your full name, best email address, phone number, and a brief description of your legal matter so I can assist you.';
       
-      // Return a graceful fallback instead of throwing error
-      aiResponse = fallbackMessage;
-      
-      // Save conversation to database if conversation_id provided
-      if (conversation_id) {
-        await supabase.from('messages').insert([
-          {
-            conversation_id: conversation_id,
-            role: 'user',
-            content: message,
-            metadata: { timestamp: new Date().toISOString() }
-          },
-          {
-            conversation_id: conversation_id,
-            role: 'assistant',
-            content: aiResponse,
-            metadata: { 
-              timestamp: new Date().toISOString(),
-              mode,
-              fallback: true,
-              openai_error: errorText
-            }
-          }
-        ]);
-      }
-
       return new Response(
         JSON.stringify({ 
-          response: aiResponse,
+          response: fallbackMessage,
           extractedData: undefined,
-          needsPersonalDetails: false,
-          nextQuestions: undefined,
-          conversation_id: conversation_id,
-          conversationId: conversation_id // backward compatibility
+          conversation_id: conversation_id
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -192,13 +128,14 @@ serve(async (req) => {
     let aiResponse = openAIData.choices[0].message.content;
     if (!aiResponse) {
       aiResponse = language === 'ar'
-        ? 'تم استلام معلوماتك. سأقوم الآن بطرح بعض الأسئلة لتوضيح التفاصيل.'
+        ? 'شكراً لك، سأقوم الآن بطرح بعض الأسئلة لتوضيح التفاصيل.'
         : language === 'de'
-        ? 'Ihre Informationen wurden empfangen. Ich stelle nun einige Fragen, um Details zu klären.'
-        : 'Thanks, I will now ask a few questions to clarify the details.';
+        ? 'Danke, ich stelle nun einige Fragen, um Details zu klären.'
+        : 'Thank you, I will now ask a few questions to clarify the details.';
     }
+
     let extractedData: CaseData = {};
-    let nextQuestions: string[] = [];
+
     // Handle function calls in intake mode
     if (openAIData.choices[0].message.function_call && mode === 'intake') {
       const functionCall = openAIData.choices[0].message.function_call;
@@ -215,116 +152,48 @@ serve(async (req) => {
               // Get conversation to check if it already has a case linked
               const { data: conversation } = await supabase
                 .from('conversations')
-                .select('case_id, user_id, metadata')
+                .select('case_id, user_id')
                 .eq('id', conversation_id)
                 .single();
 
-              // Generate client response summary
-              const clientSummary = await generateClientResponseSummary(
-                chatHistory, 
-                aiResponse, 
-                extractedData, 
-                language, 
-                conversation_id, 
-                supabase
-              );
-
               let caseId = conversation?.case_id;
 
-              if (!caseId) {
-                if (!conversation?.user_id) {
-                  // Anonymous conversation: store draft in conversation metadata instead of creating a case
-                  const newMeta = {
-                    ...(conversation?.metadata || {}),
-                    extractedData,
-                    clientSummary,
-                    draft: {
-                      currentStep: 1,
-                      lastUpdated: new Date().toISOString()
-                    }
-                  };
+              if (!caseId && conversation?.user_id) {
+                // Create new draft case for authenticated user
+                const { data: newCase, error: caseError } = await supabase
+                  .from('cases')
+                  .insert({
+                    user_id: conversation.user_id,
+                    title: extractedData.category || 'New Legal Case',
+                    description: extractedData.summary || 'Case created from AI intake conversation',
+                    category: extractedData.category || 'General',
+                    urgency: extractedData.urgency || 'medium',
+                    status: 'draft',
+                    step: 1,
+                    language: language || 'en',
+                    jurisdiction: 'egypt',
+                    extracted_entities: extractedData.entities || {}
+                  })
+                  .select()
+                  .single();
+
+                if (!caseError && newCase) {
+                  caseId = newCase.id;
+                  // Link conversation to the case
                   await supabase
                     .from('conversations')
-                    .update({ metadata: newMeta })
+                    .update({ case_id: caseId })
                     .eq('id', conversation_id);
-                } else {
-                  // Authenticated user: create new draft case
-                  const legalAnalysis = {
-                    legal_issues: extractedData.legal_issues || [],
-                    legal_classification: extractedData.legal_classification || {},
-                    violation_types: extractedData.violation_types || [],
-                    legal_remedies_sought: extractedData.legal_remedies_sought || [],
-                    legal_complexity: extractedData.legal_complexity || 'moderate',
-                    analysis_timestamp: new Date().toISOString()
-                  };
-
-                  const { data: newCase, error: caseError } = await supabase
-                    .from('cases')
-                    .insert({
-                      user_id: conversation.user_id,
-                      title: extractedData.category || 'Draft Case',
-                      description: 'Case created from AI intake conversation',
-                      category: extractedData.category || 'General',
-                      subcategory: extractedData.subcategory,
-                      urgency: extractedData.urgency || 'medium',
-                      status: 'draft',
-                      step: 1,
-                      language: language || 'en',
-                      jurisdiction: 'egypt',
-                      extracted_entities: extractedData.entities || {},
-                      legal_analysis: legalAnalysis,
-                      case_complexity_score: extractedData.legal_complexity === 'simple' ? 1 : 
-                                           extractedData.legal_complexity === 'moderate' ? 2 : 3,
-                      applicable_laws: extractedData.legal_classification?.applicable_statutes || [],
-                      client_responses_summary: clientSummary,
-                      draft_data: {
-                        extractedData,
-                        currentStep: 1,
-                        lastUpdated: new Date().toISOString()
-                      }
-                    })
-                    .select()
-                    .single();
-
-                  if (caseError) {
-                    console.error('Error creating draft case:', caseError);
-                  } else {
-                    caseId = newCase.id;
-                    // Link conversation to the case
-                    await supabase
-                      .from('conversations')
-                      .update({ case_id: caseId })
-                      .eq('id', conversation_id);
-                  }
                 }
-              } else {
+              } else if (caseId) {
                 // Update existing draft case
-                const legalAnalysis = {
-                  legal_issues: extractedData.legal_issues || [],
-                  legal_classification: extractedData.legal_classification || {},
-                  violation_types: extractedData.violation_types || [],
-                  legal_remedies_sought: extractedData.legal_remedies_sought || [],
-                  legal_complexity: extractedData.legal_complexity || 'moderate',
-                  analysis_timestamp: new Date().toISOString()
-                };
-
                 await supabase
                   .from('cases')
                   .update({
                     category: extractedData.category || 'General',
-                    subcategory: extractedData.subcategory,
                     urgency: extractedData.urgency || 'medium',
                     extracted_entities: extractedData.entities || {},
-                    legal_analysis: legalAnalysis,
-                    case_complexity_score: extractedData.legal_complexity === 'simple' ? 1 : 
-                                         extractedData.legal_complexity === 'moderate' ? 2 : 3,
-                    applicable_laws: extractedData.legal_classification?.applicable_statutes || [],
-                    client_responses_summary: clientSummary,
-                    draft_data: {
-                      extractedData,
-                      currentStep: 1,
-                      lastUpdated: new Date().toISOString()
-                    }
+                    description: extractedData.summary || 'Updated from AI conversation'
                   })
                   .eq('id', caseId);
               }
@@ -365,8 +234,7 @@ serve(async (req) => {
       JSON.stringify({ 
         response: aiResponse,
         extractedData: mode === 'intake' ? extractedData : undefined,
-        needsPersonalDetails: mode === 'intake' ? extractedData?.needsPersonalDetails : false,
-        nextQuestions: mode === 'intake' ? nextQuestions : undefined,
+        needsPersonalDetails: mode === 'intake' ? extractedData?.personalDetailsNeeded : false,
         conversation_id: conversation_id,
         conversationId: conversation_id // backward compatibility
       }),
@@ -385,298 +253,103 @@ serve(async (req) => {
   }
 });
 
-/**
- * Generate client response summary from conversation
- */
-async function generateClientResponseSummary(
-  chatHistory: ChatMessage[],
-  latestResponse: string,
-  extractedData: any,
-  language: string,
-  conversationId: string,
-  supabase: any
-): Promise<any> {
-  try {
-    // Get user messages from the conversation
-    const { data: messages } = await supabase
-      .from('messages')
-      .select('content, role')
-      .eq('conversation_id', conversationId)
-      .eq('role', 'user')
-      .order('created_at', { ascending: true });
+function buildQASystemPrompt(language: string): string {
+  const prompts = {
+    en: "You are a helpful AI assistant that provides general legal information about Egyptian law. You are friendly and informative but always emphasize that you're not providing legal advice and users should consult with a qualified lawyer for their specific situation.",
+    ar: "أنت مساعد ذكي مفيد يقدم معلومات قانونية عامة حول القانون المصري. أنت ودود ومفيد لكن تؤكد دائماً أنك لا تقدم استشارة قانونية وأن المستخدمين يجب أن يستشيروا محامي مؤهل لحالتهم المحددة.",
+    de: "Sie sind ein hilfreicher KI-Assistent, der allgemeine Rechtsinformationen zum ägyptischen Recht bereitstellt. Sie sind freundlich und informativ, betonen aber immer, dass Sie keine Rechtsberatung geben und Benutzer einen qualifizierten Anwalt für ihre spezielle Situation konsultieren sollten."
+  };
 
-    const userMessages = messages?.map(msg => msg.content).join('\n') || 
-                        chatHistory.filter(msg => msg.role === 'user').map(msg => msg.content).join('\n');
-
-    const summaryPrompt = `Based on the following client responses during legal intake, create a concise summary for admin review.
-
-Client responses:
-${userMessages}
-
-Latest AI response: ${latestResponse}
-
-Create a JSON summary with the following structure:
-{
-  "summary": "A readable summary of the client's legal issue and key points",
-  "key_points": ["Important point 1", "Important point 2"],
-  "urgency_indicators": ["Why this case is urgent/not urgent"],
-  "client_goals": "What the client wants to achieve",
-  "mentioned_documents": ["Documents the client mentioned or will provide"],
-  "timeline_mentioned": "Any dates or deadlines mentioned by the client",
-  "parties_involved": ["Other parties mentioned in the case"],
-  "language": "${language}"
+  return prompts[language as keyof typeof prompts] || prompts.en;
 }
 
-Keep the summary concise but comprehensive for admin review.`;
+function buildIntakeSystemPrompt(language: string): string {
+  const prompts = {
+    en: `You are a friendly AI assistant helping people with legal case intake. Your goal is to:
 
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: 'You are a legal assistant that creates case summaries from client intake conversations.' },
-          { role: 'user', content: summaryPrompt }
-        ],
-        temperature: 0.3,
-        max_tokens: 1000
-      }),
-    });
+1. Greet users warmly and collect basic information: full name, email, phone number, preferred language, and consent for data processing
+2. Ask natural, empathetic questions to understand their legal situation
+3. Categorize their case (e.g., "Marriage/Divorce", "Visas/Residency", "Real Estate", "Business Law", "Criminal Law", etc.)
+4. Extract key information like parties involved, important dates, location, and urgency level
+5. Create a case summary for admin review
 
-    if (response.ok) {
-      const data = await response.json();
-      const summaryText = data.choices[0].message.content;
-      
-      try {
-        return JSON.parse(summaryText);
-      } catch (parseError) {
-        console.error('Failed to parse summary JSON:', parseError);
-        return {
-          summary: summaryText,
-          key_points: [],
-          urgency_indicators: [],
-          client_goals: "",
-          mentioned_documents: [],
-          timeline_mentioned: "",
-          parties_involved: [],
-          language: language
-        };
-      }
-    } else {
-      console.error('Failed to generate client summary:', response.statusText);
-      return {
-        summary: "Summary generation failed",
-        key_points: [],
-        urgency_indicators: [],
-        client_goals: "",
-        mentioned_documents: [],
-        timeline_mentioned: "",
-        parties_involved: [],
-        language: language
-      };
-    }
-  } catch (error) {
-    console.error('Error generating client response summary:', error);
-    return {
-      summary: "Error generating summary",
-      key_points: [],
-      urgency_indicators: [],
-      client_goals: "",
-      mentioned_documents: [],
-      timeline_mentioned: "",
-      parties_involved: [],
-      language: language
-    };
-  }
+Be conversational and supportive. Ask one or two questions at a time. When you have enough information, use the extract_case_data function.
+
+IMPORTANT DISCLAIMER: Always remind users that you're not providing legal advice, only gathering information for lawyers to review.`,
+
+    ar: `أنت مساعد ذكي ودود تساعد الناس في استقبال القضايا القانونية. هدفك هو:
+
+1. الترحيب بالمستخدمين بحرارة وجمع المعلومات الأساسية: الاسم الكامل، البريد الإلكتروني، رقم الهاتف، اللغة المفضلة، والموافقة على معالجة البيانات
+2. طرح أسئلة طبيعية ومتفهمة لفهم وضعهم القانوني
+3. تصنيف قضيتهم (مثل "الزواج/الطلاق"، "التأشيرات/الإقامة"، "العقارات"، "قانون الأعمال"، "القانون الجنائي"، إلخ)
+4. استخراج المعلومات الرئيسية مثل الأطراف المعنية، التواريخ المهمة، الموقع، ومستوى الإلحاح
+5. إنشاء ملخص للقضية لمراجعة الإدارة
+
+كن محادثاً وداعماً. اطرح سؤالاً أو سؤالين في المرة الواحدة. عندما تحصل على معلومات كافية، استخدم وظيفة extract_case_data.
+
+تنبيه مهم: ذكّر المستخدمين دائماً أنك لا تقدم استشارة قانونية، بل تجمع المعلومات فقط للمحامين لمراجعتها.`,
+
+    de: `Sie sind ein freundlicher KI-Assistent, der Menschen bei der rechtlichen Fallaufnahme hilft. Ihr Ziel ist es:
+
+1. Benutzer herzlich zu begrüßen und grundlegende Informationen zu sammeln: vollständiger Name, E-Mail, Telefonnummer, bevorzugte Sprache und Einwilligung zur Datenverarbeitung
+2. Natürliche, einfühlsame Fragen zu stellen, um ihre rechtliche Situation zu verstehen
+3. Ihren Fall zu kategorisieren (z.B. "Ehe/Scheidung", "Visa/Aufenthalt", "Immobilien", "Wirtschaftsrecht", "Strafrecht", etc.)
+4. Wichtige Informationen wie beteiligte Parteien, wichtige Daten, Ort und Dringlichkeitsstufe zu extrahieren
+5. Eine Fallzusammenfassung für die Administratorprüfung zu erstellen
+
+Seien Sie gesprächig und unterstützend. Stellen Sie ein oder zwei Fragen zur Zeit. Wenn Sie genügend Informationen haben, verwenden Sie die extract_case_data-Funktion.
+
+WICHTIGER HAFTUNGSAUSSCHLUSS: Erinnern Sie Benutzer immer daran, dass Sie keine Rechtsberatung geben, sondern nur Informationen für Anwälte zur Überprüfung sammeln.`
+  };
+
+  return prompts[language as keyof typeof prompts] || prompts.en;
 }
 
-function extractKeywords(text: string): string {
-  const keywords = text.toLowerCase()
-    .split(/\s+/)
-    .filter(word => word.length > 3)
-    .slice(0, 5)
-    .join(',');
-  return keywords;
-}
-
-function buildLawyerQASystemPrompt(language: string, legalKnowledge: LegalKnowledge[]): string {
-  const knowledgeContext = legalKnowledge.map(kb => 
-    `${kb.title}: ${kb.content} (Reference: ${kb.law_reference || 'N/A'})`
-  ).join('\n\n');
-
-  return `You are Lexa, a specialized AI legal assistant for practicing lawyers in Egypt. You provide accurate, detailed legal information and analysis to help lawyers in their professional practice.
-
-IMPORTANT GUIDELINES:
-- You are assisting qualified legal professionals who understand legal nuance
-- Provide detailed, technical legal analysis and case law references
-- Reference specific Egyptian laws, articles, and regulations when applicable
-- Discuss legal strategies, precedents, and practice considerations
-- You can provide more advanced legal insights since you're helping licensed professionals
-- Always clarify when information may need verification from recent updates
-
-EGYPTIAN LEGAL CONTEXT:
-${knowledgeContext}
-
-PROFESSIONAL ASSISTANCE:
-- Help with legal research and case analysis
-- Provide insights on Egyptian legal procedures and requirements
-- Discuss potential legal strategies and approaches
-- Reference relevant case law and precedents when available
-- Assist with document drafting considerations
-- Explain complex legal concepts and their applications
-
-LANGUAGE: Respond in ${language === 'ar' ? 'Arabic' : language === 'de' ? 'German' : 'English'}
-
-Remember: You're assisting licensed legal professionals, so you can provide more detailed analysis while still recommending verification of current laws and regulations.`;
-}
-
-
-function buildQASystemPrompt(language: string, legalKnowledge: LegalKnowledge[]): string {
-  const knowledgeContext = legalKnowledge.map(kb => 
-    `${kb.title}: ${kb.content} (Reference: ${kb.law_reference || 'N/A'})`
-  ).join('\n\n');
-
-  return `You are Lexa, an AI legal assistant specializing in Egyptian law. You provide accurate, helpful legal information based on Egyptian jurisdiction.
-
-IMPORTANT GUIDELINES:
-- You are NOT providing legal advice, only legal information
-- Always recommend consulting with a qualified Egyptian lawyer for specific legal advice
-- Reference specific Egyptian laws and articles when applicable
-- Provide clear, concise explanations
-- If unsure about any legal point, state that clearly
-
-EGYPTIAN LEGAL CONTEXT:
-${knowledgeContext}
-
-LANGUAGE: Respond in ${language === 'ar' ? 'Arabic' : language === 'de' ? 'German' : 'English'}
-
-Always include appropriate disclaimers about not providing legal advice and the need to consult qualified lawyers for specific situations.`;
-}
-
-function buildIntakeSystemPrompt(language: string, categories: any[], legalKnowledge: LegalKnowledge[]): string {
-  const categoryContext = categories.map(cat => 
-    `${cat.name}: ${cat.description}`
-  ).join('\n');
-
-  const welcomeMessage = language === 'ar' 
-    ? 'مرحباً! أنا ليكسا، مساعدة قانونية ذكية. سأساعدك في فهم حالتك القانونية من خلال محادثة ودية. دعنا نبدأ!'
-    : language === 'de'
-    ? 'Hallo! Ich bin Lexa, eine KI-Rechtsassistentin. Ich helfe Ihnen dabei, Ihren rechtlichen Fall durch ein freundliches Gespräch zu verstehen. Lassen Sie uns anfangen!'
-    : 'Hello! I\'m Lexa, an AI legal assistant. I\'ll help you understand your legal case through a friendly conversation. Let\'s get started!';
-
-  return `You are Lexa, a warm and intelligent AI legal intake assistant. Your job is to have natural, empathetic conversations with people who need legal help.
-
-${welcomeMessage}
-
-AVAILABLE CASE CATEGORIES:
-${categoryContext}
-
-YOUR APPROACH:
-• Start with a warm greeting and ask how you can help
-• Listen carefully to their situation and ask natural follow-up questions
-• Be empathetic and understanding - legal issues can be stressful
-• Ask one question at a time to avoid overwhelming them
-• Use simple, friendly language (no legal jargon unless necessary)
-• Show that you understand their concerns
-
-CONVERSATION FLOW:
-1. Greet warmly and ask how you can help today
-2. Listen to their initial description of the problem
-3. Ask natural follow-up questions to understand better
-4. Once you understand their case (after 2-3 exchanges), extract the basic case data
-5. Set needsPersonalDetails to true when ready to collect contact info
-6. Continue asking helpful questions to complete their case information
-
-WHEN TO EXTRACT DATA:
-Use the extract_case_data function when you have enough information to:
-- Identify what type of legal issue it is (category)
-- Understand the basic situation
-- Determine how urgent it might be
-- Extract key people, dates, and details they've mentioned
-
-IMPORTANT REMINDERS:
-• You're gathering information, NOT giving legal advice
-• Always be warm and supportive - people sharing legal problems are often stressed
-• Keep the conversation natural and flowing
-• Don't rush to categorize - let them tell their story first
-• Set needsPersonalDetails to true when you need their contact information (the system will show a form)
-
-LANGUAGE: Respond in ${language === 'ar' ? 'Arabic' : language === 'de' ? 'German' : 'English'}
-
-Remember: You're here to help people feel heard and understood while gathering the information needed to connect them with the right legal help.`;
-}
-
-function getIntakeFunctions() {
-  return [
-    {
-      name: 'extract_case_data',
-      description: 'Extract basic case information when you understand the client\'s situation',
-      parameters: {
-        type: 'object',
-        properties: {
-          category: {
-            type: 'string',
-            description: 'Main case category (e.g., Family Law, Immigration Law, Real Estate Law, Employment Law, etc.)',
-          },
-          subcategory: {
-            type: 'string',
-            description: 'More specific type if known (e.g., Divorce, Work Visa, Property Dispute)',
-          },
-          urgency: {
-            type: 'string',
-            enum: ['low', 'medium', 'high', 'urgent'],
-            description: 'How urgent this case seems based on deadlines or time-sensitive issues',
-          },
-          entities: {
-            type: 'object',
-            properties: {
-              parties: {
-                type: 'array',
-                items: { type: 'string' },
-                description: 'People or organizations involved (names mentioned)',
-              },
-              dates: {
-                type: 'array',
-                items: { type: 'string' },
-                description: 'Important dates mentioned',
-              },
-              amounts: {
-                type: 'array',
-                items: { type: 'string' },
-                description: 'Money amounts mentioned',
-              },
-              locations: {
-                type: 'array',
-                items: { type: 'string' },
-                description: 'Places mentioned that are relevant to the case',
-              },
-              documents: {
-                type: 'array',
-                items: { type: 'string' },
-                description: 'Documents they mentioned having or needing',
-              },
-            },
-          },
-          caseSummary: {
-            type: 'string',
-            description: 'Brief, friendly summary of their situation in plain language',
-          },
-          needsPersonalDetails: {
-            type: 'boolean',
-            description: 'Set to true when ready to collect their contact information (name, email, phone)',
-          },
-          nextQuestions: {
-            type: 'array',
-            items: { type: 'string' },
-            description: 'Helpful follow-up questions to ask them next (if any)',
-          },
+function getIntakeFunctions(): any[] {
+  return [{
+    name: 'extract_case_data',
+    description: 'Extract and structure case information from the conversation',
+    parameters: {
+      type: 'object',
+      properties: {
+        category: {
+          type: 'string',
+          description: 'Legal case category (e.g., Marriage/Divorce, Visas/Residency, Real Estate, Business Law, Criminal Law)',
         },
-        required: ['category', 'urgency', 'caseSummary'],
+        urgency: {
+          type: 'string',
+          enum: ['low', 'medium', 'high', 'emergency'],
+          description: 'Urgency level of the case',
+        },
+        entities: {
+          type: 'object',
+          properties: {
+            parties: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Names of parties involved in the case',
+            },
+            dates: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Important dates mentioned',
+            },
+            location: {
+              type: 'string',
+              description: 'Location or jurisdiction relevant to the case',
+            }
+          }
+        },
+        summary: {
+          type: 'string',
+          description: 'Brief summary of the legal matter for admin review',
+        },
+        personalDetailsNeeded: {
+          type: 'boolean',
+          description: 'Whether personal contact details still need to be collected',
+        }
       },
-    },
-  ];
+      required: ['category', 'urgency', 'summary']
+    }
+  }];
 }
