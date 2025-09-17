@@ -625,7 +625,6 @@ You: "I understand you had a car accident in Cairo last month with the other dri
 
 Remember: Work through the 8-point checklist systematically, skip answered questions, and extract data efficiently.`;
 }
-}
 
 function getIntakeFunctions() {
   return [
