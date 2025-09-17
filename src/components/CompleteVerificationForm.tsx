@@ -35,12 +35,12 @@ const verificationSchema = z.object({
   teamSize: z.coerce.number().min(1, "Team size must be at least 1"),
   consultationRate: z.coerce.number().min(1, "Consultation rate is required"),
   consultationStructure: z.string().min(1, "Please select consultation structure"),
-  visaRenewalRate: z.coerce.number().optional(),
-  workPermitRate: z.coerce.number().optional(),
-  marriageRegistrationRate: z.coerce.number().optional(),
-  propertyContractRate: z.coerce.number().optional(),
-  businessRegistrationRate: z.coerce.number().optional(),
-  divorceFilingRate: z.coerce.number().optional(),
+  visaRenewalRate: z.coerce.number().min(1, "Visa renewal rate is required"),
+  workPermitRate: z.coerce.number().min(1, "Work permit rate is required"),
+  marriageRegistrationRate: z.coerce.number().min(1, "Marriage registration rate is required"),
+  propertyContractRate: z.coerce.number().min(1, "Property contract rate is required"),
+  businessRegistrationRate: z.coerce.number().min(1, "Business registration rate is required"),
+  divorceFilingRate: z.coerce.number().min(1, "Divorce filing rate is required"),
   notableAchievements: z.string().optional(),
   officePhone: z.string().min(1, "Office phone number is required"),
   privateMobile: z.string().min(1, "Private mobile number is required"), 
@@ -720,7 +720,7 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
             </div>
 
             <div className="space-y-4">
-              <h4 className="font-medium">Legal Service Rates (Optional - Approximate flat fees in EGP)</h4>
+              <h4 className="font-medium">Legal Service Rates (Required - Average flat fees in EGP)</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {legalServices.map((service) => (
                   <div key={service.key}>
@@ -728,10 +728,15 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
                     <Input
                       id={service.field}
                       type="number"
-                      min="0"
-                      placeholder="Approximate flat fee (optional)"
+                      min="1"
+                      placeholder="Average flat fee in EGP"
                       {...form.register(service.field as keyof VerificationData)}
                     />
+                    {form.formState.errors[service.field as keyof VerificationData] && (
+                      <p className="text-sm text-destructive mt-1">
+                        {form.formState.errors[service.field as keyof VerificationData]?.message}
+                      </p>
+                    )}
                   </div>
                 ))}
               </div>
