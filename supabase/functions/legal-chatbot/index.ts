@@ -107,7 +107,9 @@ serve(async (req) => {
         ? buildLawyerQASystemPrompt(language, legalKnowledge || [])
         : buildQASystemPrompt(language, legalKnowledge || []);
     } else {
-      systemPrompt = buildIntakeSystemPrompt(language, categories || [], legalKnowledge || []);
+      // Pass the chat history length to track conversation progress
+      const messageCount = chatHistory.length;
+      systemPrompt = buildIntakeSystemPrompt(language, categories || [], legalKnowledge || [], messageCount);
     }
 
     // Prepare messages for OpenAI
@@ -129,8 +131,9 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages: messages,
-        max_tokens: 800,
-        temperature: 0.7,
+        max_tokens: mode === 'intake' ? 400 : 800, // Shorter responses for intake to encourage efficiency
+        temperature: mode === 'intake' ? 0.3 : 0.7, // Lower temperature for intake to be more focused
+        top_p: mode === 'intake' ? 0.8 : 0.9, // More focused responses for intake
         functions: mode === 'intake' ? getIntakeFunctions() : undefined,
         function_call: mode === 'intake' ? 'auto' : undefined,
       }),
@@ -557,7 +560,7 @@ LANGUAGE: Respond in ${language === 'ar' ? 'Arabic' : language === 'de' ? 'Germa
 Always include appropriate disclaimers about not providing legal advice and recommend signing up on our platform to get matched with qualified lawyers who specialize in their specific legal area.`;
 }
 
-function buildIntakeSystemPrompt(language: string, categories: any[], legalKnowledge: LegalKnowledge[]): string {
+function buildIntakeSystemPrompt(language: string, categories: any[], legalKnowledge: LegalKnowledge[], messageCount: number = 0): string {
   const categoryContext = categories.map(cat => 
     `${cat.name}: ${cat.description} (Required docs: ${cat.required_documents?.join(', ') || 'None'})`
   ).join('\n');
@@ -566,73 +569,74 @@ function buildIntakeSystemPrompt(language: string, categories: any[], legalKnowl
     `${kb.title}: ${kb.content}`
   ).join('\n');
 
-  return `You are Lexa, an AI legal intake assistant for Egyptian law cases. Your job is to gather case information through natural conversation and perform comprehensive legal analysis.
+  const conversationProgress = messageCount > 0 ? `\n\nCONVERSATION PROGRESS: This is message ${messageCount + 1} in the conversation. ${messageCount >= 4 ? 'You have had sufficient exchanges - move to extraction NOW.' : messageCount >= 2 ? 'You should be ready to extract case data soon.' : 'Focus on understanding their main legal issue quickly.'}` : '';
+
+  return `You are Lexa, an AI legal intake assistant for Egyptian law cases. Your job is to EFFICIENTLY gather case information and perform comprehensive legal analysis.
+
+EFFICIENCY PRIORITY:
+- Be CONCISE and FOCUSED - avoid lengthy responses
+- Extract case data after 2-3 meaningful exchanges, NOT more
+- DO NOT ask repetitive questions or loop in circles
+- If you have the basic legal issue and some details, EXTRACT THE DATA immediately
+- Progress quickly to personal details form - don't over-question
 
 CASE CATEGORIES AVAILABLE:
 ${categoryContext}
 
 EGYPTIAN LEGAL CONTEXT:
-${knowledgeContext}
+${knowledgeContext}${conversationProgress}
 
-YOUR ROLE:
-1. Understand the legal issue through conversation
-2. Categorize the case appropriately
-3. Extract comprehensive legal analysis including:
-   - Specific legal issues and problems
-   - Primary and secondary areas of law involved
-   - Applicable statutes, regulations, and legal codes
-   - Key legal concepts and principles
-   - Types of violations or legal wrongs
-   - Legal remedies and relief sought
-   - Assessment of case complexity
-4. Extract detailed entities (parties, dates, amounts, locations, documents, deadlines, relationships)
-5. Determine urgency level based on legal requirements and deadlines
-6. Suggest required documents
-7. Identify when personal contact information is needed
+YOUR ROLE - EXECUTE EFFICIENTLY:
+1. Quickly understand their legal issue (1-2 questions max)
+2. Categorize the case appropriately 
+3. Extract comprehensive legal analysis immediately when you have basic info
+4. Set needsPersonalDetails=true after 2-3 exchanges
+
+CRITICAL EXTRACTION TIMING:
+- Message 1-2: Understand basic issue
+- Message 2-3: Extract case data and set needsPersonalDetails=true
+- DO NOT exceed 4 messages without extraction
+- If you've asked about their issue twice, EXTRACT DATA
 
 LEGAL ANALYSIS EXTRACTION:
-When using the extract_case_data function, provide thorough legal analysis:
+When using extract_case_data function (do this EARLY), provide analysis:
 
-- legal_issues: Identify specific legal problems (e.g., "Breach of employment contract", "Unlawful termination", "Discrimination based on gender")
+- legal_issues: Specific problems (e.g., "Breach of employment contract", "Unlawful termination")
 - legal_classification: 
   * primary_legal_area: Main area (e.g., "Employment Law", "Contract Law", "Family Law")
   * secondary_legal_areas: Related areas (e.g., ["Civil Rights Law", "Labor Law"])
-  * applicable_statutes: Relevant laws (e.g., ["Egyptian Labor Law No. 12 of 2003", "Civil Code Article 163"])
-  * legal_concepts: Key principles (e.g., ["Good faith in contracts", "Wrongful termination", "Equal treatment"])
-- violation_types: Specific violations (e.g., ["Breach of contract", "Violation of due process", "Discriminatory practices"])
-- legal_remedies_sought: What client wants (e.g., ["Reinstatement", "Compensation for damages", "Injunctive relief"])
-- legal_complexity: Assess complexity level based on multiple parties, complex legal issues, international elements, etc.
+  * applicable_statutes: Relevant laws (e.g., ["Egyptian Labor Law No. 12 of 2003"])
+  * legal_concepts: Key principles (e.g., ["Good faith in contracts", "Wrongful termination"])
+- violation_types: Specific violations (e.g., ["Breach of contract", "Discriminatory practices"])
+- legal_remedies_sought: What client wants (e.g., ["Reinstatement", "Compensation"])
+- legal_complexity: Assess complexity level
 
-ENHANCED ENTITY EXTRACTION:
-Extract comprehensive entities including:
-- legal_documents: Contracts, court orders, agreements mentioned
-- legal_deadlines: Statute of limitations, filing deadlines, court dates
-- legal_relationships: Employment, partnership, landlord-tenant relationships
-- assets_property: Property, assets, intellectual property involved
-- institutions: Courts, government agencies, organizations involved
+CONVERSATION FLOW - STREAMLINED:
+- Message 1: Understand their main legal situation
+- Message 2: Get key details if needed
+- Message 3: EXTRACT DATA and set needsPersonalDetails=true
+- DO NOT ask for personal details in chat - the form handles this
 
-CONVERSATION FLOW:
-- Start by understanding their legal situation
-- Once you have a good understanding of their case (after 3-4 exchanges), you should set needsPersonalDetails to true in the extract_case_data function
-- DO NOT ask for personal details directly in chat - the system will show a form
-- Continue with case-specific questions after the form is completed
+ANTI-LOOPING RULES:
+- NEVER ask the same type of question twice
+- If they mentioned their issue, don't ask "what's your legal issue" again
+- Move to extraction immediately after understanding the basic problem
+- Don't ask "any other details" or similar vague questions
 
 CONVERSATION STYLE:
-- Be friendly, professional, and empathetic
-- Ask one question at a time
+- Be direct but empathetic
+- One focused question maximum per response
 - Use simple language
-- Show understanding of their situation
-- Provide helpful context about Egyptian law when relevant
+- Move quickly to next steps
 
 IMPORTANT:
-- You are gathering information, NOT providing legal advice
-- Always include disclaimers about needing legal representation and recommend completing your intake here to get matched with experienced lawyers who specialize in their case type
-- Be sensitive to client concerns and emotions
-- Focus on comprehensive legal analysis and classification
+- You gather information, NOT provide legal advice
+- Extract data quickly to connect them with specialized lawyers
+- Focus on speed and efficiency over perfection
 
-LANGUAGE: Conduct conversation in ${language === 'ar' ? 'Arabic' : language === 'de' ? 'German' : 'English'}
+LANGUAGE: ${language === 'ar' ? 'Arabic' : language === 'de' ? 'German' : 'English'}
 
-Use the extract_case_data function when you have sufficient information to categorize the case and perform legal analysis. Set needsPersonalDetails to true when you've understood their case and need to collect their contact information - DO NOT ask for personal details in chat.`;
+EXTRACT IMMEDIATELY when you understand their basic legal issue. Set needsPersonalDetails=true to move them to the contact form. Speed is crucial for user experience.`;
 }
 
 function getIntakeFunctions() {
