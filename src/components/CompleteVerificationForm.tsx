@@ -25,7 +25,10 @@ import {
   Phone,
   Video,
   MapPin,
-  Globe
+  Globe,
+  Building,
+  MessageSquare,
+  User
 } from "lucide-react";
 
 const verificationSchema = z.object({
@@ -44,6 +47,11 @@ const verificationSchema = z.object({
   employmentLawRate: z.coerce.number().optional(),
   personalInjuryRate: z.coerce.number().optional(),
   notableAchievements: z.string().optional(),
+  officePhone: z.string().min(1, "Office phone number is required"),
+  privateMobile: z.string().min(1, "Private mobile number is required"), 
+  whatsappNumber: z.string().optional(),
+  officeAddress: z.string().min(1, "Office address is required"),
+  spokenLanguages: z.array(z.string()).min(1, "Please select at least one language"),
 });
 
 type VerificationData = z.infer<typeof verificationSchema>;
@@ -75,6 +83,19 @@ const professionalMemberships = [
   "Egyptian Society for International Law",
 ];
 
+const availableLanguages = [
+  "Arabic",
+  "English", 
+  "French",
+  "German",
+  "Spanish",
+  "Italian",
+  "Turkish",
+  "Russian",
+  "Chinese",
+  "Japanese",
+];
+
 const legalAreas = [
   { key: "familyLaw", label: "Family Law", field: "familyLawRate" },
   { key: "criminalLaw", label: "Criminal Law", field: "criminalLawRate" },
@@ -91,11 +112,14 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lawyerCardFront, setLawyerCardFront] = useState<File | null>(null);
   const [lawyerCardBack, setLawyerCardBack] = useState<File | null>(null);
+  const [profilePicture, setProfilePicture] = useState<File | null>(null);
   const [uploadingFront, setUploadingFront] = useState(false);
   const [uploadingBack, setUploadingBack] = useState(false);
+  const [uploadingProfile, setUploadingProfile] = useState(false);
   const [selectedConsultationMethods, setSelectedConsultationMethods] = useState<string[]>(["in-person"]);
   const [selectedPaymentStructures, setSelectedPaymentStructures] = useState<string[]>(["hourly"]);
   const [selectedMemberships, setSelectedMemberships] = useState<string[]>([]);
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(["Arabic", "English"]);
 
   const form = useForm<VerificationData>({
     resolver: zodResolver(verificationSchema),
@@ -107,6 +131,11 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
       supportStaffCount: initialData?.supportStaffCount || 0,
       consultationRate: initialData?.consultationRate || 500,
       consultationStructure: initialData?.consultationStructure || "hourly",
+      officePhone: initialData?.officePhone || "",
+      privateMobile: initialData?.privateMobile || "",
+      whatsappNumber: initialData?.whatsappNumber || "",
+      officeAddress: initialData?.officeAddress || "",
+      spokenLanguages: initialData?.spokenLanguages || ["Arabic", "English"],
       ...initialData,
     },
   });
@@ -157,6 +186,52 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
     return signedUrlData.signedUrl;
   };
 
+  const uploadProfilePicture = async (file: File) => {
+    console.log(`Starting upload for profile picture:`, { fileName: file.name, fileSize: file.size, fileType: file.type });
+    
+    if (!user?.id) {
+      throw new Error('User ID not available');
+    }
+
+    // Validate file
+    if (!file.type.includes('image')) {
+      throw new Error('Invalid file type. Please upload an image file.');
+    }
+
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit for profile pictures
+      throw new Error('File size too large. Please upload an image smaller than 5MB.');
+    }
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user.id}/profile/picture.${fileExt}`;
+    
+    console.log(`Uploading profile picture to path: ${fileName}`);
+    
+    const { error: uploadError } = await supabase.storage
+      .from('lawyer-documents')
+      .upload(fileName, file, { upsert: true });
+
+    if (uploadError) {
+      console.error(`Profile picture upload error:`, uploadError);
+      throw new Error(`Profile picture upload failed: ${uploadError.message}`);
+    }
+
+    console.log(`Profile picture upload successful, generating signed URL...`);
+
+    // Use signed URL for private bucket
+    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+      .from('lawyer-documents')
+      .createSignedUrl(fileName, 86400); // 24 hours
+
+    if (signedUrlError || !signedUrlData?.signedUrl) {
+      console.error(`Profile picture signed URL error:`, signedUrlError);
+      throw new Error(`Failed to generate signed URL for profile picture: ${signedUrlError?.message || 'Unknown error'}`);
+    }
+
+    console.log(`Profile picture signed URL generated successfully`);
+    return signedUrlData.signedUrl;
+  };
+
   const handleConsultationMethodChange = (methodId: string, checked: boolean) => {
     if (checked) {
       setSelectedConsultationMethods(prev => [...prev, methodId]);
@@ -181,6 +256,14 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
     }
   };
 
+  const handleLanguageChange = (language: string, checked: boolean) => {
+    if (checked) {
+      setSelectedLanguages(prev => [...prev, language]);
+    } else {
+      setSelectedLanguages(prev => prev.filter(l => l !== language));
+    }
+  };
+
   const onSubmit = async (data: VerificationData) => {
     console.log('Starting verification submission...', { 
       userID: user?.id,
@@ -200,10 +283,15 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
       return;
     }
 
-    if (!lawyerCardFront || !lawyerCardBack) {
+    if (!lawyerCardFront || !lawyerCardBack || !profilePicture) {
+      const missing = [];
+      if (!lawyerCardFront) missing.push('front side of lawyer card');
+      if (!lawyerCardBack) missing.push('back side of lawyer card');
+      if (!profilePicture) missing.push('profile picture');
+      
       toast({
         title: "Missing Files",
-        description: `Please upload ${!lawyerCardFront ? 'front' : ''} ${!lawyerCardFront && !lawyerCardBack ? 'and ' : ''}${!lawyerCardBack ? 'back' : ''} of your lawyer card.`,
+        description: `Please upload: ${missing.join(', ')}.`,
         variant: "destructive",
       });
       return;
@@ -218,6 +306,15 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
       return;
     }
 
+    if (selectedLanguages.length === 0) {
+      toast({
+        title: "Languages Required",
+        description: "Please select at least one language you speak.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -226,9 +323,10 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
       // Show upload progress
       setUploadingFront(true);
       setUploadingBack(true);
+      setUploadingProfile(true);
 
-      // Upload lawyer card front and back with detailed error handling
-      let lawyerCardFrontUrl, lawyerCardBackUrl;
+      // Upload lawyer card front and back and profile picture with detailed error handling
+      let lawyerCardFrontUrl, lawyerCardBackUrl, profilePictureUrl;
       
       try {
         lawyerCardFrontUrl = await uploadFile(lawyerCardFront, 'front');
@@ -248,6 +346,16 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
         setUploadingBack(false);
         console.error('Back card upload failed:', error);
         throw new Error(`Back card upload failed: ${error.message}`);
+      }
+
+      try {
+        profilePictureUrl = await uploadProfilePicture(profilePicture);
+        setUploadingProfile(false);
+        console.log('Profile picture uploaded successfully');
+      } catch (error) {
+        setUploadingProfile(false);
+        console.error('Profile picture upload failed:', error);
+        throw new Error(`Profile picture upload failed: ${error.message}`);
       }
 
       console.log('Both files uploaded, updating profile...');
@@ -287,11 +395,16 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
           team_breakdown: teamBreakdown,
           lawyer_card_front_url: lawyerCardFrontUrl,
           lawyer_card_back_url: lawyerCardBackUrl,
+          profile_picture_url: profilePictureUrl,
           pricing_structure: pricingStructure,
           consultation_methods: selectedConsultationMethods,
           payment_structures: selectedPaymentStructures,
           professional_memberships: selectedMemberships,
           notable_achievements: data.notableAchievements || null,
+          office_phone: data.officePhone,
+          private_phone: data.privateMobile,
+          office_address: data.officeAddress,
+          languages: selectedLanguages,
           verification_status: "pending_complete",
           updated_at: new Date().toISOString(),
         })
@@ -316,6 +429,7 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
       // Reset upload states on error
       setUploadingFront(false);
       setUploadingBack(false);
+      setUploadingProfile(false);
       
       // Show detailed error message
       const errorMessage = error.message || "Failed to submit verification. Please try again.";
@@ -483,6 +597,139 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
                 </p>
               </div>
             </div>
+          </div>
+
+          {/* Profile Picture Section */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Camera className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-semibold">Profile Picture</h3>
+            </div>
+            
+            <div>
+              <Label className="block text-sm font-medium text-gray-700 mb-4">
+                Professional Photo *
+              </Label>
+              <MobileFileInput
+                onFileSelect={(files) => {
+                  const file = files?.[0];
+                  console.log('Profile picture selected:', file?.name, file?.size);
+                  setProfilePicture(file || null);
+                }}
+                accept=".jpg,.jpeg,.png"
+                buttonText="Upload Profile Picture"
+                hasFiles={!!profilePicture}
+                disabled={uploadingProfile}
+                className="w-full max-w-md"
+              />
+              {uploadingProfile && (
+                <p className="text-sm text-blue-600 mt-1 flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Uploading profile picture...
+                </p>
+              )}
+              {profilePicture && !uploadingProfile && (
+                <p className="text-sm text-green-600 mt-1">
+                  ✓ {profilePicture.name} ({(profilePicture.size / 1024 / 1024).toFixed(2)} MB)
+                </p>
+              )}
+              <p className="text-sm text-gray-500 mt-2">
+                Upload a professional headshot photo (JPG, PNG). Max 5MB.
+              </p>
+            </div>
+          </div>
+
+          {/* Contact Information Section */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Phone className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-semibold">Contact Information</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="officePhone">Office Phone Number *</Label>
+                <Input
+                  id="officePhone"
+                  type="tel"
+                  placeholder="+20 2 1234 5678"
+                  {...form.register("officePhone")}
+                />
+                {form.formState.errors.officePhone && (
+                  <p className="text-sm text-destructive mt-1">
+                    {form.formState.errors.officePhone.message}
+                  </p>
+                )}
+              </div>
+              
+              <div>
+                <Label htmlFor="privateMobile">Private Mobile Number *</Label>
+                <Input
+                  id="privateMobile"
+                  type="tel"
+                  placeholder="+20 10 1234 5678"
+                  {...form.register("privateMobile")}
+                />
+                {form.formState.errors.privateMobile && (
+                  <p className="text-sm text-destructive mt-1">
+                    {form.formState.errors.privateMobile.message}
+                  </p>
+                )}
+              </div>
+              
+              <div>
+                <Label htmlFor="whatsappNumber">WhatsApp Number (Optional)</Label>
+                <Input
+                  id="whatsappNumber"
+                  type="tel"
+                  placeholder="+20 10 1234 5678"
+                  {...form.register("whatsappNumber")}
+                />
+              </div>
+              
+              <div className="md:col-span-2">
+                <Label htmlFor="officeAddress">Office Address *</Label>
+                <Textarea
+                  id="officeAddress"
+                  placeholder="Complete office address including street, district, city, and governorate"
+                  rows={3}
+                  {...form.register("officeAddress")}
+                />
+                {form.formState.errors.officeAddress && (
+                  <p className="text-sm text-destructive mt-1">
+                    {form.formState.errors.officeAddress.message}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Languages Section */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Globe className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-semibold">Languages Spoken</h3>
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {availableLanguages.map((language) => (
+                <div key={language} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={language}
+                    checked={selectedLanguages.includes(language)}
+                    onCheckedChange={(checked) => 
+                      handleLanguageChange(language, checked as boolean)
+                    }
+                  />
+                  <Label htmlFor={language}>{language}</Label>
+                </div>
+              ))}
+            </div>
+            {selectedLanguages.length === 0 && (
+              <p className="text-sm text-destructive">
+                Please select at least one language you speak.
+              </p>
+            )}
           </div>
 
           {/* Pricing Structure Section */}
