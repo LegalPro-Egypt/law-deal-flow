@@ -151,53 +151,46 @@ const handleSendMessage = async () => {
 
   return (
     <Card className={`flex flex-col h-full max-w-4xl mx-auto scroll-anchor-none ${className}`}>
-      <CardHeader className="flex-shrink-0 pb-3 sm:pb-4">
-        {/* Mobile Header */}
+      <CardHeader className="flex-shrink-0 pb-2 sm:pb-4">
+        {/* Mobile Header - Compact */}
         <div className="block sm:hidden">
-          <div className="flex items-center justify-between mb-3">
-            <CardTitle className="flex items-center gap-2 text-base">
+          <div className="flex items-center justify-between mb-2">
+            <CardTitle className="flex items-center gap-2 text-sm">
               <Scale className="h-4 w-4 text-primary" />
-              Lexa — LegalPro
+              Lexa
             </CardTitle>
-            <Badge variant={mode === 'qa' ? 'default' : 'secondary'} className="text-xs">
-              {mode === 'qa' ? 'Q&A' : 'Intake'}
-            </Badge>
-          </div>
-          
-          <div className="flex items-center justify-between gap-2">
-            {/* Language Selector */}
-            <div className="flex items-center gap-1">
-              <Languages className="h-4 w-4 text-muted-foreground" />
+            <div className="flex items-center gap-2">
+              <Badge variant={mode === 'qa' ? 'default' : 'secondary'} className="text-xs px-1 py-0.5">
+                {mode === 'qa' ? 'Q&A' : 'Intake'}
+              </Badge>
+              {/* Compact Language Selector */}
               <select
                 value={language}
                 onChange={(e) => setLanguage(e.target.value as 'en' | 'ar' | 'de')}
-                className="text-xs border rounded px-2 py-1 bg-background"
+                className="text-xs border rounded px-1 py-0.5 bg-background w-14"
               >
-                <option value="en">English</option>
-                <option value="ar">العربية</option>
-                <option value="de">Deutsch</option>
+                <option value="en">EN</option>
+                <option value="ar">AR</option>
+                <option value="de">DE</option>
               </select>
             </div>
-
-            {/* Mode Switch */}
-            <div className="flex rounded-md border">
-              <Button
-                variant={mode === 'qa' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => switchMode('qa')}
-                className="rounded-r-none text-xs px-2 py-1"
-              >
-                Q&A
-              </Button>
-              <Button
-                variant={mode === 'intake' ? 'default' : mode === 'qa' ? 'outline' : 'ghost'}
-                size="sm"
-                onClick={() => switchMode('intake')}
-                className="rounded-l-none text-xs px-2 py-1"
-              >
-                Intake
-              </Button>
+          </div>
+          
+          {/* Status Info - Compact */}
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1">
+              {conversationId ? (
+                <CheckCircle2 className="h-3 w-3 text-green-600" />
+              ) : (
+                <Clock className="h-3 w-3" />
+              )}
+              {conversationId ? 'Connected' : 'Connecting...'}
             </div>
+            {mode === 'intake' && extractedData && extractedData.category && (
+              <Badge variant="outline" className="text-xs py-0 px-1">
+                {extractedData.category}
+              </Badge>
+            )}
           </div>
         </div>
 
@@ -278,9 +271,9 @@ const handleSendMessage = async () => {
       <Separator />
 
       <CardContent className="flex-1 flex flex-col p-2 sm:p-4 min-h-0">
-        {/* Messages Area */}
-        <ScrollArea className="flex-1 pr-2 sm:pr-4">
-          <div className="space-y-3 sm:space-y-4 pb-4">
+        {/* Messages Area - Optimized for mobile */}
+        <ScrollArea className="flex-1 pr-1 sm:pr-4 min-h-[300px] max-h-full">
+          <div className="space-y-2 sm:space-y-4 pb-2 sm:pb-4">
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -293,16 +286,16 @@ const handleSendMessage = async () => {
                 </div>
                 
                 <div
-                  className={`max-w-[85%] sm:max-w-[80%] rounded-lg px-3 py-2 sm:px-4 sm:py-3 ${
+                  className={`max-w-[85%] sm:max-w-[80%] rounded-lg px-2 py-2 sm:px-4 sm:py-3 ${
                     message.role === 'user'
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-muted text-foreground'
                   }`}
                 >
-                  <div className="text-xs sm:text-sm leading-relaxed">
+                  <div className="text-sm sm:text-sm leading-relaxed">
                     {formatMessageContent(message.content)}
                   </div>
-                  <div className="text-xs opacity-70 mt-1 sm:mt-2">
+                  <div className="text-xs opacity-70 mt-1">
                     {message.timestamp.toLocaleTimeString()}
                   </div>
                 </div>
