@@ -557,7 +557,7 @@ const AdminDashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="intakes" className="space-y-6">
-          <TabsList className="w-full flex overflow-x-auto scrollbar-hide snap-x snap-mandatory">
+          <TabsList className="w-full flex overflow-x-auto scrollbar-hide snap-x snap-mandatory pl-4 pr-4">
             <TabsTrigger value="intakes" className="flex-shrink-0 min-w-fit snap-center">AI Intakes</TabsTrigger>
             <TabsTrigger value="free-chats" className="flex-shrink-0 min-w-fit snap-center">Free user chat history</TabsTrigger>
             <TabsTrigger value="cases" className="flex-shrink-0 min-w-fit snap-center">Cases</TabsTrigger>
