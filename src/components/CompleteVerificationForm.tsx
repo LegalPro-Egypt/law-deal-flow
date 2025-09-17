@@ -33,10 +33,6 @@ import {
 
 const verificationSchema = z.object({
   teamSize: z.coerce.number().min(1, "Team size must be at least 1"),
-  partnersCount: z.coerce.number().min(0, "Partners count cannot be negative"),
-  associatesCount: z.coerce.number().min(0, "Associates count cannot be negative"),
-  paralegalsCount: z.coerce.number().min(0, "Paralegals count cannot be negative"),
-  supportStaffCount: z.coerce.number().min(0, "Support staff count cannot be negative"),
   consultationRate: z.coerce.number().min(1, "Consultation rate is required"),
   consultationStructure: z.string().min(1, "Please select consultation structure"),
   visaRenewalRate: z.coerce.number().optional(),
@@ -123,10 +119,6 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
     resolver: zodResolver(verificationSchema),
     defaultValues: {
       teamSize: initialData?.teamSize || 1,
-      partnersCount: initialData?.partnersCount || 0,
-      associatesCount: initialData?.associatesCount || 0,
-      paralegalsCount: initialData?.paralegalsCount || 0,
-      supportStaffCount: initialData?.supportStaffCount || 0,
       consultationRate: initialData?.consultationRate || 500,
       consultationStructure: initialData?.consultationStructure || "hourly",
       officePhone: initialData?.officePhone || "",
@@ -360,10 +352,6 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
 
       // Prepare team breakdown
       const teamBreakdown = {
-        partners: data.partnersCount,
-        associates: data.associatesCount,
-        paralegals: data.paralegalsCount,
-        supportStaff: data.supportStaffCount,
         total: data.teamSize,
       };
 
@@ -476,46 +464,6 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
                     {form.formState.errors.teamSize.message}
                   </p>
                 )}
-              </div>
-
-              <div>
-                <Label htmlFor="partnersCount">Partners</Label>
-                <Input
-                  id="partnersCount"
-                  type="number"
-                  min="0"
-                  {...form.register("partnersCount")}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="associatesCount">Associates</Label>
-                <Input
-                  id="associatesCount"
-                  type="number"
-                  min="0"
-                  {...form.register("associatesCount")}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="paralegalsCount">Paralegals</Label>
-                <Input
-                  id="paralegalsCount"
-                  type="number"
-                  min="0"
-                  {...form.register("paralegalsCount")}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="supportStaffCount">Support Staff</Label>
-                <Input
-                  id="supportStaffCount"
-                  type="number"
-                  min="0"
-                  {...form.register("supportStaffCount")}
-                />
               </div>
             </div>
           </div>
