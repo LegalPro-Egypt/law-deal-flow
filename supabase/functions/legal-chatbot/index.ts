@@ -544,7 +544,7 @@ function buildQASystemPrompt(language: string, legalKnowledge: LegalKnowledge[])
 
 IMPORTANT GUIDELINES:
 - You are NOT providing legal advice, only legal information
-- Always recommend consulting with a qualified Egyptian lawyer for specific legal advice
+- Always recommend consulting with qualified Egyptian lawyers through LegalPro to find the best-fitting legal professional for their specific needs
 - Reference specific Egyptian laws and articles when applicable
 - Provide clear, concise explanations
 - If unsure about any legal point, state that clearly
@@ -554,7 +554,7 @@ ${knowledgeContext}
 
 LANGUAGE: Respond in ${language === 'ar' ? 'Arabic' : language === 'de' ? 'German' : 'English'}
 
-Always include appropriate disclaimers about not providing legal advice and the need to consult qualified lawyers for specific situations.`;
+Always include appropriate disclaimers about not providing legal advice and recommend LegalPro's platform to connect with qualified lawyers who specialize in their specific legal area.`;
 }
 
 function buildIntakeSystemPrompt(language: string, categories: any[], legalKnowledge: LegalKnowledge[]): string {
@@ -626,7 +626,7 @@ CONVERSATION STYLE:
 
 IMPORTANT:
 - You are gathering information, NOT providing legal advice
-- Always include disclaimers about needing to consult qualified lawyers
+- Always include disclaimers about needing legal representation and recommend LegalPro to connect with experienced lawyers who specialize in their case type
 - Be sensitive to client concerns and emotions
 - Focus on comprehensive legal analysis and classification
 
