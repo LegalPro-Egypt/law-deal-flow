@@ -129,41 +129,69 @@ const Auth = () => {
       // Handle successful sign in - but only redirect if NOT in reset mode and NOT forced to stay
       if (event === 'SIGNED_IN' && session && !resetMode && !forceStay) {
         console.log('SIGNED_IN event - will redirect once profile is loaded');
-        // Let useAuth handle the profile loading and redirect logic
-        setTimeout(() => {
-          // Remove all auth-related parameters from URL
-          const url = new URL(window.location.href);
-          url.searchParams.delete('force');
-          url.searchParams.delete('access_token');
-          url.searchParams.delete('refresh_token');
-          url.searchParams.delete('token_type');
-          url.searchParams.delete('type');
-          window.history.replaceState({}, '', url.toString());
-          
-          // Navigate to client dashboard (useAuth will create profile if needed)
-          navigate('/client', { replace: true });
+        setTimeout(async () => {
+          try {
+            // Get user profile to determine role-based redirect
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('user_id', session.user.id)
+              .single();
+            
+            const role = profile?.role || (session.user.email === 'dankevforster@gmail.com' ? 'admin' : 'client');
+            
+            // Remove all auth-related parameters from URL
+            const url = new URL(window.location.href);
+            url.searchParams.delete('force');
+            url.searchParams.delete('access_token');
+            url.searchParams.delete('refresh_token');
+            url.searchParams.delete('token_type');
+            url.searchParams.delete('type');
+            window.history.replaceState({}, '', url.toString());
+            
+            // Navigate to role-based dashboard
+            navigate(`/${role}`, { replace: true });
+          } catch (error) {
+            console.error('Error determining redirect role:', error);
+            const fallbackRole = session.user.email === 'dankevforster@gmail.com' ? 'admin' : 'client';
+            navigate(`/${fallbackRole}`, { replace: true });
+          }
         }, 100);
       }
       
       // Handle token exchange for invitations (but not password recovery)
       if (event === 'TOKEN_REFRESHED' && session && !resetMode && !forceStay) {
         console.log('Token refreshed, will redirect based on role');
-        // This happens after invitation acceptance - let useAuth handle profile logic
-        setTimeout(() => {
-          // Remove auth parameters and redirect to client (useAuth will handle role-based redirect)
-          const url = new URL(window.location.href);
-          url.searchParams.delete('access_token');
-          url.searchParams.delete('refresh_token');
-          url.searchParams.delete('token_type');
-          url.searchParams.delete('type');
-          window.history.replaceState({}, '', url.toString());
-          
-          navigate('/client', { replace: true });
-          
-          toast({
-            title: "Welcome!",
-            description: "Your account has been activated.",
-          });
+        setTimeout(async () => {
+          try {
+            // Get user profile to determine role-based redirect
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('user_id', session.user.id)
+              .single();
+            
+            const role = profile?.role || (session.user.email === 'dankevforster@gmail.com' ? 'admin' : 'client');
+            
+            // Remove auth parameters and redirect based on role
+            const url = new URL(window.location.href);
+            url.searchParams.delete('access_token');
+            url.searchParams.delete('refresh_token');
+            url.searchParams.delete('token_type');
+            url.searchParams.delete('type');
+            window.history.replaceState({}, '', url.toString());
+            
+            navigate(`/${role}`, { replace: true });
+            
+            toast({
+              title: "Welcome!",
+              description: "Your account has been activated.",
+            });
+          } catch (error) {
+            console.error('Error determining redirect role:', error);
+            const fallbackRole = session.user.email === 'dankevforster@gmail.com' ? 'admin' : 'client';
+            navigate(`/${fallbackRole}`, { replace: true });
+          }
         }, 100);
       }
     });
@@ -183,11 +211,25 @@ const Auth = () => {
           window.history.replaceState({}, '', url.toString());
         }
         
-        // Redirect to intended page or default dashboard - let useAuth handle role determination
+        // Redirect to intended page or role-based dashboard
         if (redirectTo === 'intake') {
           navigate('/intake', { replace: true });
         } else {
-          navigate('/client', { replace: true });
+          // Determine role for redirect
+          try {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('user_id', session.user.id)
+              .single();
+            
+            const role = profile?.role || (session.user.email === 'dankevforster@gmail.com' ? 'admin' : 'client');
+            navigate(`/${role}`, { replace: true });
+          } catch (error) {
+            console.error('Error determining redirect role:', error);
+            const fallbackRole = session.user.email === 'dankevforster@gmail.com' ? 'admin' : 'client';
+            navigate(`/${fallbackRole}`, { replace: true });
+          }
         }
       } else if (forceStay) {
         console.log('Auth staying on page due to force=true (no session or in reset mode)');
@@ -365,6 +407,7 @@ const Auth = () => {
           }
         } catch (error) {
           console.error('Error redirecting after password reset:', error);
+          // Fallback to client dashboard if role determination fails
           navigate('/client', { replace: true });
         }
       }, 1000);
@@ -704,13 +747,31 @@ const Auth = () => {
                       
                       {/* Email Authentication Form */}
                       <EmailAuthForm 
-                        onSuccess={() => {
+                        onSuccess={async () => {
                           const urlParams = new URLSearchParams(window.location.search);
                           const redirectTo = urlParams.get('redirect');
                           if (redirectTo === 'intake') {
                             navigate('/intake', { replace: true });
                           } else {
-                            navigate('/client', { replace: true });
+                            // Determine role for redirect after successful auth
+                            setTimeout(async () => {
+                              try {
+                                const { data: { session } } = await supabase.auth.getSession();
+                                if (session) {
+                                  const { data: profile } = await supabase
+                                    .from('profiles')
+                                    .select('role')
+                                    .eq('user_id', session.user.id)
+                                    .single();
+                                  
+                                  const role = profile?.role || (session.user.email === 'dankevforster@gmail.com' ? 'admin' : 'client');
+                                  navigate(`/${role}`, { replace: true });
+                                }
+                              } catch (error) {
+                                console.error('Error determining redirect role:', error);
+                                navigate('/client', { replace: true });
+                              }
+                            }, 500);
                           }
                         }}
                       />
