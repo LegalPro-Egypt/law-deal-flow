@@ -195,138 +195,213 @@ export const LawyerDetailsDialog = ({ lawyerId, isOpen, onClose }: LawyerDetails
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              {lawyer.first_name} {lawyer.last_name}
-            </DialogTitle>
-            <DialogDescription>
-              Lawyer Profile and Q&A Activity History
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Lawyer Profile Information */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Profile Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">{lawyer.email}</span>
+        <DialogContent className="max-w-5xl w-[95vw] h-[95vh] p-0">
+          <div className="flex flex-col h-full">
+            <DialogHeader className="px-6 py-4 border-b shrink-0">
+              <DialogTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                {lawyer.first_name} {lawyer.last_name} - Profile & AI Chat History
+              </DialogTitle>
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <User className="h-3 w-3" />
+                  <span>{lawyer.is_verified ? 'verified' : 'unverified'}</span>
                 </div>
-                
-                {lawyer.phone && (
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">{lawyer.phone}</span>
-                  </div>
-                )}
-
-                {lawyer.law_firm && (
-                  <div className="flex items-center gap-2">
-                    <Building className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">{lawyer.law_firm}</span>
-                  </div>
-                )}
-
-                {lawyer.years_experience && (
-                  <div className="flex items-center gap-2">
-                    <Award className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">{lawyer.years_experience} years experience</span>
-                  </div>
-                )}
-
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">Joined: {formatDate(lawyer.created_at)}</span>
+                <div className="flex items-center gap-1">
+                  <MessageSquare className="h-3 w-3" />
+                  <span>{conversations.length} conversations</span>
                 </div>
-
-                <div className="flex items-center gap-2">
-                  <Badge variant={lawyer.is_verified ? "default" : "secondary"}>
-                    {lawyer.is_verified ? "Verified" : "Unverified"}
-                  </Badge>
-                  <Badge variant={lawyer.is_active ? "default" : "destructive"}>
-                    {lawyer.is_active ? "Active" : "Inactive"}
-                  </Badge>
+                <div className="flex items-center gap-1">
+                  <MessageSquare className="h-3 w-3" />
+                  <span>{conversations.reduce((total, conv) => total + conv.messages_count, 0)} total messages</span>
                 </div>
+              </div>
+            </DialogHeader>
 
-                {lawyer.specializations && lawyer.specializations.length > 0 && (
-                  <div>
-                    <p className="text-sm font-medium mb-2">Specializations:</p>
-                    <div className="flex flex-wrap gap-1">
-                      {lawyer.specializations.map((spec, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
-                          {spec}
-                        </Badge>
-                      ))}
+            <ScrollArea className="flex-1 px-6">
+              <div className="py-6 space-y-8">
+                {/* Profile Information Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <User className="h-5 w-5 text-primary" />
+                    <h3 className="text-lg font-semibold">Basic Information</h3>
+                  </div>
+                  
+                  <div className="grid sm:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Full Name</label>
+                        <p className="text-sm">{lawyer.first_name} {lawyer.last_name}</p>
+                      </div>
+                      
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Email</label>
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-3 w-3 text-muted-foreground" />
+                          <p className="text-sm">{lawyer.email}</p>
+                        </div>
+                      </div>
+                      
+                      {lawyer.phone && (
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Office Phone</label>
+                          <div className="flex items-center gap-2">
+                            <Phone className="h-3 w-3 text-muted-foreground" />
+                            <p className="text-sm">{lawyer.phone}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="space-y-3">
+                      {lawyer.law_firm && (
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Law Firm</label>
+                          <div className="flex items-center gap-2">
+                            <Building className="h-3 w-3 text-muted-foreground" />
+                            <p className="text-sm">{lawyer.law_firm}</p>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {lawyer.years_experience && (
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Years of Experience</label>
+                          <div className="flex items-center gap-2">
+                            <Award className="h-3 w-3 text-muted-foreground" />
+                            <p className="text-sm">{lawyer.years_experience} years</p>
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Member Since</label>
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-3 w-3 text-muted-foreground" />
+                          <p className="text-sm">{formatDate(lawyer.created_at)}</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                )}
 
-                {lawyer.jurisdictions && lawyer.jurisdictions.length > 0 && (
-                  <div>
-                    <p className="text-sm font-medium mb-2">Jurisdictions:</p>
-                    <div className="flex flex-wrap gap-1">
-                      {lawyer.jurisdictions.map((jurisdiction, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
-                          {jurisdiction}
-                        </Badge>
-                      ))}
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium text-muted-foreground">Status</label>
+                    <div className="flex gap-2">
+                      <Badge variant={lawyer.is_active ? "default" : "secondary"}>
+                        {lawyer.is_active ? "Active" : "Inactive"}
+                      </Badge>
+                      <Badge variant={lawyer.is_verified ? "default" : "secondary"}>
+                        {lawyer.is_verified ? "Verified" : "Unverified"}
+                      </Badge>
                     </div>
                   </div>
-                )}
+                </div>
 
-                {lawyer.bio && (
-                  <div>
-                    <p className="text-sm font-medium mb-2">Bio:</p>
-                    <p className="text-sm text-muted-foreground">{lawyer.bio}</p>
+                <Separator />
+
+                {/* Professional Information Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Building className="h-5 w-5 text-primary" />
+                    <h3 className="text-lg font-semibold">Professional Information</h3>
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                  
+                  <div className="grid sm:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      {lawyer.specializations && lawyer.specializations.length > 0 && (
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground mb-2 block">Specializations</label>
+                          <div className="flex flex-wrap gap-1">
+                            {lawyer.specializations.map((spec, index) => (
+                              <Badge key={index} variant="outline" className="text-xs">
+                                {spec}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
-            {/* Q&A Conversation History */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5" />
-                  Q&A Conversations ({conversations.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-[400px]">
+                      {lawyer.bar_admissions && lawyer.bar_admissions.length > 0 && (
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground mb-2 block">Bar Admissions</label>
+                          <div className="flex flex-wrap gap-1">
+                            {lawyer.bar_admissions.map((admission, index) => (
+                              <Badge key={index} variant="outline" className="text-xs">
+                                {admission}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="space-y-4">
+                      {lawyer.jurisdictions && lawyer.jurisdictions.length > 0 && (
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground mb-2 block">Jurisdictions</label>
+                          <div className="flex flex-wrap gap-1">
+                            {lawyer.jurisdictions.map((jurisdiction, index) => (
+                              <Badge key={index} variant="outline" className="text-xs">
+                                {jurisdiction}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {lawyer.bio && (
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground mb-2 block">Bio</label>
+                          <p className="text-sm text-muted-foreground leading-relaxed">{lawyer.bio}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* AI Chat History Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <MessageSquare className="h-5 w-5 text-primary" />
+                    <h3 className="text-lg font-semibold">AI Chat History</h3>
+                  </div>
+                  
                   {conversations.length === 0 ? (
-                    <div className="text-center py-8">
-                      <MessageSquare className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                      <p className="text-sm text-muted-foreground">No conversations yet</p>
+                    <div className="text-center py-12">
+                      <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-muted-foreground">No AI conversations yet</p>
+                      <p className="text-sm text-muted-foreground mt-1">This lawyer hasn't used the AI assistant</p>
                     </div>
                   ) : (
-                    <div className="space-y-4">
+                    <div className="grid gap-4">
                       {conversations.map((conversation) => (
-                        <Card key={conversation.id} className="p-4">
-                          <div className="flex items-start justify-between mb-2">
+                        <Card key={conversation.id} className="p-4 hover:shadow-sm transition-shadow">
+                          <div className="flex items-start justify-between mb-3">
                             <div className="flex items-center gap-2">
-                              <Badge variant="outline" className="text-xs">
-                                {conversation.session_id.slice(0, 8)}...
+                              <Badge variant="outline" className="text-xs font-mono">
+                                {conversation.session_id.slice(0, 12)}...
                               </Badge>
                               <Badge variant="secondary" className="text-xs">
                                 {conversation.language.toUpperCase()}
+                              </Badge>
+                              <Badge variant={conversation.status === 'active' ? 'default' : 'secondary'} className="text-xs">
+                                {conversation.status}
                               </Badge>
                             </div>
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => fetchConversationMessages(conversation.id)}
+                              className="h-8"
                             >
                               <Eye className="h-3 w-3 mr-1" />
-                              View
+                              View Messages
                             </Button>
                           </div>
                           
-                          <div className="space-y-2 text-sm">
+                          <div className="grid sm:grid-cols-3 gap-4 text-sm">
                             <div className="flex items-center gap-2 text-muted-foreground">
                               <MessageSquare className="h-3 w-3" />
                               <span>{conversation.messages_count} messages</span>
@@ -337,19 +412,25 @@ export const LawyerDetailsDialog = ({ lawyerId, isOpen, onClose }: LawyerDetails
                               <span>{formatDate(conversation.created_at)}</span>
                             </div>
 
-                            {conversation.last_message && (
-                              <div className="text-xs text-muted-foreground">
-                                Last: {truncateText(conversation.last_message, 60)}
-                              </div>
-                            )}
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Clock className="h-3 w-3" />
+                              <span>Updated: {formatDate(conversation.updated_at)}</span>
+                            </div>
                           </div>
+
+                          {conversation.last_message && (
+                            <div className="mt-3 p-2 bg-muted/50 rounded text-xs">
+                              <span className="text-muted-foreground">Last message: </span>
+                              <span>{truncateText(conversation.last_message, 120)}</span>
+                            </div>
+                          )}
                         </Card>
                       ))}
                     </div>
                   )}
-                </ScrollArea>
-              </CardContent>
-            </Card>
+                </div>
+              </div>
+            </ScrollArea>
           </div>
         </DialogContent>
       </Dialog>
