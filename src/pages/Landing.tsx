@@ -64,7 +64,7 @@ const Landing = () => {
             <h1 className="text-4xl sm:text-6xl font-bold mb-6">
               Connect with Vetted Lawyers{" "}
               <RotatingWords 
-                words={["Quickly", "Securely", "Confidently", "Easily"]}
+                words={["Quickly", "Securely", "Confidently", "Seamlessly"]}
                 className="text-accent"
               />
             </h1>
