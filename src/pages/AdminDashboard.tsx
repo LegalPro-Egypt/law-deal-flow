@@ -557,19 +557,23 @@ const AdminDashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="intakes" className="space-y-6">
-          <TabsList className="w-full flex overflow-x-auto scrollbar-hide snap-x snap-mandatory pl-4 pr-4">
-            <TabsTrigger value="intakes" className="flex-shrink-0 min-w-fit snap-center">AI Intakes</TabsTrigger>
-            <TabsTrigger value="free-chats" className="flex-shrink-0 min-w-fit snap-center">Free user chat history</TabsTrigger>
-            <TabsTrigger value="cases" className="flex-shrink-0 min-w-fit snap-center">Cases</TabsTrigger>
-            <TabsTrigger value="lawyers" className="flex-shrink-0 min-w-fit snap-center">
-              Lawyers {stats.pendingVerifications > 0 && (
-                <Badge variant="destructive" className="ml-1 text-xs">
-                  {stats.pendingVerifications}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="requests" className="flex-shrink-0 min-w-fit snap-center">Lawyer Requests</TabsTrigger>
-          </TabsList>
+          <div className="-mx-4 px-4">
+            <div className="overflow-x-auto scrollbar-hide">
+              <TabsList className="w-max flex gap-1 snap-x snap-mandatory">
+                <TabsTrigger value="intakes" className="flex-shrink-0 min-w-fit snap-start">AI Intakes</TabsTrigger>
+                <TabsTrigger value="free-chats" className="flex-shrink-0 min-w-fit snap-center">Free user chat history</TabsTrigger>
+                <TabsTrigger value="cases" className="flex-shrink-0 min-w-fit snap-center">Cases</TabsTrigger>
+                <TabsTrigger value="lawyers" className="flex-shrink-0 min-w-fit snap-center">
+                  Lawyers {stats.pendingVerifications > 0 && (
+                    <Badge variant="destructive" className="ml-1 text-xs">
+                      {stats.pendingVerifications}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="requests" className="flex-shrink-0 min-w-fit snap-end">Lawyer Requests</TabsTrigger>
+              </TabsList>
+            </div>
+          </div>
 
           {/* AI Intakes Tab */}
           <TabsContent value="intakes" className="space-y-6">
