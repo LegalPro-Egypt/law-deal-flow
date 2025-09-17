@@ -62,7 +62,7 @@ const Landing = () => {
           <div className="max-w-4xl mx-auto text-center animate-fade-in">
             <h1 className="text-4xl sm:text-6xl font-bold mb-6">
               Connect with Vetted Lawyers{" "}
-              <span className="text-accent sm:block md:inline sm:mt-2 md:mt-0">Instantly</span>
+              <span className="text-accent">Instantly</span>
             </h1>
             <p className="text-xl sm:text-2xl text-gray-200 mb-8 max-w-3xl mx-auto">
               AI-powered intake, secure messaging, and transparent pricing. 
