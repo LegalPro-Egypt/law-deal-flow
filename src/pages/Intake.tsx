@@ -385,10 +385,10 @@ const Intake = () => {
       {/* Header */}
       <header className="border-b bg-background/95 backdrop-blur sticky top-0 z-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-12 sm:h-16">
+          <div className="flex items-center justify-between h-14 sm:h-16">
             <Link to="/" className="flex items-center space-x-2">
-              <Scale className="h-5 w-5 sm:h-8 sm:w-8 text-primary" />
-              <span className="text-base sm:text-xl font-bold">LegalPro</span>
+              <Scale className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+              <span className="text-lg sm:text-xl font-bold">LegalPro</span>
             </Link>
             <Link to="/" className="inline-flex items-center text-muted-foreground hover:text-primary transition-colors">
               <ArrowLeft className="h-4 w-4 mr-1 sm:mr-2" />
@@ -402,9 +402,9 @@ const Intake = () => {
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 max-w-4xl">
         {/* Progress Header */}
         <div className="mb-4 sm:mb-8">
-          {/* Mobile Progress Steps - Compact */}
-          <div className="block sm:hidden mb-2">
-            <div className="flex items-center justify-between px-1">
+          {/* Mobile Progress Steps */}
+          <div className="block sm:hidden mb-4">
+            <div className="flex items-center justify-between px-2">
               {[
                 { number: 1, label: 'Chat', icon: MessageSquare },
                 { number: 2, label: 'Details', icon: User },
@@ -412,7 +412,7 @@ const Intake = () => {
                 { number: 4, label: 'Review', icon: FileText }
               ].map((step, index) => (
                 <div key={step.number} className="flex flex-col items-center">
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium relative ${
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium relative ${
                     (currentStep > step.number) || 
                     (currentStep === step.number && !showPersonalForm) ||
                     (step.number === 2 && personalData) ||
@@ -421,14 +421,14 @@ const Intake = () => {
                       : 'bg-muted text-muted-foreground'
                   }`}>
                     {((currentStep > step.number) || (step.number === 2 && personalData)) ? (
-                      <CheckCircle className="h-3 w-3" />
+                      <CheckCircle className="h-4 w-4" />
                     ) : (
-                      <step.icon className="h-3 w-3" />
+                      <step.icon className="h-4 w-4" />
                     )}
                   </div>
-                  <span className="text-xs mt-0.5 text-center">{step.label}</span>
+                  <span className="text-xs mt-1 text-center">{step.label}</span>
                   {index < 3 && (
-                    <div className={`absolute top-3 left-1/2 w-12 h-0.5 ${
+                    <div className={`absolute top-4 left-1/2 w-16 h-0.5 ${
                       (currentStep > step.number) || (step.number === 1 && personalData)
                         ? 'bg-primary' : 'bg-muted'
                     }`} style={{ transform: 'translateX(50%)' }} />
@@ -513,7 +513,7 @@ const Intake = () => {
 
         {/* Step 1: AI Chat Interface */}
         {currentStep === 1 && !showPersonalForm && (
-          <div className="flex flex-col h-[calc(100vh-220px)] sm:h-[calc(100vh-320px)] min-h-[500px] max-h-[700px]">
+          <div className="flex flex-col h-[calc(100vh-280px)] sm:h-[calc(100vh-320px)] min-h-[400px] max-h-[600px]">
             <LegalChatbot 
               mode="intake"
               userId={user?.id}

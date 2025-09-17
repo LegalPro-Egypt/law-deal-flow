@@ -33,12 +33,9 @@ serve(async (req) => {
   }
 
   try {
-    const { message, conversation_id, conversationId, mode = 'intake', language = 'en', caseId, lawyerId } = await req.json();
-    
-    // Handle both conversation_id and conversationId for compatibility
-    const effectiveConversationId = conversation_id || conversationId;
+    const { message, conversation_id, mode = 'intake', language = 'en', caseId, lawyerId } = await req.json();
 
-    console.log('Legal Chatbot Request:', { message, conversation_id: effectiveConversationId, mode, language });
+    console.log('Legal Chatbot Request:', { message, conversation_id, mode, language });
 
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openAIApiKey) {
@@ -54,12 +51,12 @@ serve(async (req) => {
     let chatHistory: ChatMessage[] = [];
     
     // If we have a conversation_id, fetch existing messages
-    if (effectiveConversationId) {
-      console.log('Fetching existing messages for conversation:', effectiveConversationId);
+    if (conversation_id) {
+      console.log('Fetching existing messages for conversation:', conversation_id);
       const { data: existingMessages } = await supabase
         .from('messages')
         .select('role, content')
-        .eq('conversation_id', effectiveConversationId)
+        .eq('conversation_id', conversation_id)
         .order('created_at', { ascending: true });
       
       if (existingMessages && existingMessages.length > 0) {
@@ -83,8 +80,8 @@ serve(async (req) => {
         .single();
       
       if (!convError && newConversation) {
-        effectiveConversationId = newConversation.id;
-        console.log('Created new conversation:', effectiveConversationId);
+        conversation_id = newConversation.id;
+        console.log('Created new conversation:', conversation_id);
       }
     }
 
@@ -110,9 +107,7 @@ serve(async (req) => {
         ? buildLawyerQASystemPrompt(language, legalKnowledge || [])
         : buildQASystemPrompt(language, legalKnowledge || []);
     } else {
-      // Pass the chat history length to track conversation progress
-      const messageCount = chatHistory.length;
-      systemPrompt = buildIntakeSystemPrompt(language, categories || [], legalKnowledge || [], messageCount);
+      systemPrompt = buildIntakeSystemPrompt(language, categories || [], legalKnowledge || []);
     }
 
     // Prepare messages for OpenAI
@@ -136,7 +131,6 @@ serve(async (req) => {
         messages: messages,
         max_tokens: 800,
         temperature: 0.7,
-        top_p: 0.9,
         functions: mode === 'intake' ? getIntakeFunctions() : undefined,
         function_call: mode === 'intake' ? 'auto' : undefined,
       }),
@@ -252,7 +246,7 @@ serve(async (req) => {
                   await supabase
                     .from('conversations')
                     .update({ metadata: newMeta })
-                    .eq('id', effectiveConversationId);
+                    .eq('id', conversation_id);
                 } else {
                   // Authenticated user: create new draft case
                   const legalAnalysis = {
@@ -300,7 +294,7 @@ serve(async (req) => {
                     await supabase
                       .from('conversations')
                       .update({ case_id: caseId })
-                      .eq('id', effectiveConversationId);
+                      .eq('id', conversation_id);
                   }
                 }
               } else {
@@ -345,17 +339,17 @@ serve(async (req) => {
     }
 
     // Save conversation to database if conversation_id provided
-    if (effectiveConversationId) {
-      console.log('Saving messages to conversation:', effectiveConversationId);
+    if (conversation_id) {
+      console.log('Saving messages to conversation:', conversation_id);
       await supabase.from('messages').insert([
         {
-          conversation_id: effectiveConversationId,
+          conversation_id: conversation_id,
           role: 'user',
           content: message,
           metadata: { timestamp: new Date().toISOString() }
         },
         {
-          conversation_id: effectiveConversationId,
+          conversation_id: conversation_id,
           role: 'assistant',
           content: aiResponse,
           metadata: { 
@@ -373,8 +367,8 @@ serve(async (req) => {
         extractedData: mode === 'intake' ? extractedData : undefined,
         needsPersonalDetails: mode === 'intake' ? extractedData?.needsPersonalDetails : false,
         nextQuestions: mode === 'intake' ? nextQuestions : undefined,
-        conversation_id: effectiveConversationId,
-        conversationId: effectiveConversationId // backward compatibility
+        conversation_id: conversation_id,
+        conversationId: conversation_id // backward compatibility
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -514,49 +508,86 @@ function buildLawyerQASystemPrompt(language: string, legalKnowledge: LegalKnowle
     `${kb.title}: ${kb.content} (Reference: ${kb.law_reference || 'N/A'})`
   ).join('\n\n');
 
-  return `Hi there! I'm Lexa, your AI legal assistant specializing in Egyptian law. I'm here to help you with detailed legal research and analysis for your practice.
+  return `You are Lexa, a specialized AI legal assistant for practicing lawyers in Egypt. You provide accurate, detailed legal information and analysis to help lawyers in their professional practice.
 
-Since you're a qualified legal professional, I can dive deep into the technical aspects of Egyptian law with you. I'll help you explore legal strategies, reference specific statutes and regulations, and discuss case precedents that might be relevant to your work.
+IMPORTANT GUIDELINES:
+- You are assisting qualified legal professionals who understand legal nuance
+- Provide detailed, technical legal analysis and case law references
+- Reference specific Egyptian laws, articles, and regulations when applicable
+- Discuss legal strategies, precedents, and practice considerations
+- You can provide more advanced legal insights since you're helping licensed professionals
+- Always clarify when information may need verification from recent updates
 
-Here's what I have access to regarding Egyptian legal context:
+EGYPTIAN LEGAL CONTEXT:
 ${knowledgeContext}
 
-I'm here to assist you with:
-• Detailed legal research and case analysis - let's dig into the specifics together
-• Egyptian legal procedures and requirements - I'll walk you through what you need to know
-• Potential legal strategies and approaches - we can explore different angles for your cases
-• Case law and precedents - I'll reference relevant decisions when they're available
-• Document drafting considerations - I can help you think through the key elements
-• Complex legal concepts - let me break these down in practical terms
+PROFESSIONAL ASSISTANCE:
+- Help with legal research and case analysis
+- Provide insights on Egyptian legal procedures and requirements
+- Discuss potential legal strategies and approaches
+- Reference relevant case law and precedents when available
+- Assist with document drafting considerations
+- Explain complex legal concepts and their applications
 
-I'll respond in ${language === 'ar' ? 'Arabic' : language === 'de' ? 'German' : 'English'} and always aim to give you thorough, professional insights.
+LANGUAGE: Respond in ${language === 'ar' ? 'Arabic' : language === 'de' ? 'German' : 'English'}
 
-Just remember, while I can provide detailed analysis based on my knowledge, it's always worth double-checking current laws and recent updates - the legal landscape can shift, and you know how important it is to stay current.
-
-What legal matter can I help you explore today?`;
+Remember: You're assisting licensed legal professionals, so you can provide more detailed analysis while still recommending verification of current laws and regulations.`;
 }
 
+function buildLawyerQASystemPrompt(language: string, legalKnowledge: LegalKnowledge[]): string {
+  const knowledgeContext = legalKnowledge.map(kb => 
+    `${kb.title}: ${kb.content} (Reference: ${kb.law_reference || 'N/A'})`
+  ).join('\n\n');
+
+  return `You are Lexa, a specialized AI legal assistant for practicing lawyers in Egypt. You provide accurate, detailed legal information and analysis to help lawyers in their professional practice.
+
+IMPORTANT GUIDELINES:
+- You are assisting qualified legal professionals who understand legal nuance
+- Provide detailed, technical legal analysis and case law references
+- Reference specific Egyptian laws, articles, and regulations when applicable
+- Discuss legal strategies, precedents, and practice considerations
+- You can provide more advanced legal insights since you're helping licensed professionals
+- Always clarify when information may need verification from recent updates
+
+EGYPTIAN LEGAL CONTEXT:
+${knowledgeContext}
+
+PROFESSIONAL ASSISTANCE:
+- Help with legal research and case analysis
+- Provide insights on Egyptian legal procedures and requirements
+- Discuss potential legal strategies and approaches
+- Reference relevant case law and precedents when available
+- Assist with document drafting considerations
+- Explain complex legal concepts and their applications
+
+LANGUAGE: Respond in ${language === 'ar' ? 'Arabic' : language === 'de' ? 'German' : 'English'}
+
+Remember: You're assisting licensed legal professionals, so you can provide more detailed analysis while still recommending verification of current laws and regulations.`;
+}
 
 function buildQASystemPrompt(language: string, legalKnowledge: LegalKnowledge[]): string {
   const knowledgeContext = legalKnowledge.map(kb => 
     `${kb.title}: ${kb.content} (Reference: ${kb.law_reference || 'N/A'})`
   ).join('\n\n');
 
-  return `Hello! I'm Lexa, your friendly AI legal assistant who specializes in Egyptian law. I'm here to help you understand legal concepts and navigate legal questions - think of me as your knowledgeable friend who happens to know a lot about Egyptian law.
+  return `You are Lexa, an AI legal assistant specializing in Egyptian law. You provide accurate, helpful legal information based on Egyptian jurisdiction.
 
-Just to be clear upfront: I provide legal information to help you understand your situation better, but I'm not giving you legal advice. For that, you'll want to connect with one of the qualified Egyptian lawyers here on LegalPro - they can give you personalized guidance that fits your specific circumstances perfectly.
+IMPORTANT GUIDELINES:
+- You are NOT providing legal advice, only legal information
+- Always recommend consulting with a qualified Egyptian lawyer for specific legal advice
+- Reference specific Egyptian laws and articles when applicable
+- Provide clear, concise explanations
+- If unsure about any legal point, state that clearly
 
-Here's what I know about Egyptian legal matters:
+EGYPTIAN LEGAL CONTEXT:
 ${knowledgeContext}
 
-I'll explain things in ${language === 'ar' ? 'Arabic' : language === 'de' ? 'German' : 'English'} and try to break down complex legal concepts in a way that makes sense. If I'm not certain about something, I'll let you know rather than guessing.
+LANGUAGE: Respond in ${language === 'ar' ? 'Arabic' : language === 'de' ? 'German' : 'English'}
 
-The great thing about our platform is that I can help you understand the basics, and then when you're ready, you can easily get matched with specialized lawyers who know exactly how to handle your specific legal area. They'll be able to give you the personalized advice and representation you need.
-
-What legal question can I help you understand today?`;
+Always include appropriate disclaimers about not providing legal advice and the need to consult qualified lawyers for specific situations.`;
 }
 
-function buildIntakeSystemPrompt(language: string, categories: any[], legalKnowledge: LegalKnowledge[], messageCount: number = 0): string {
+function buildIntakeSystemPrompt(language: string, categories: any[], legalKnowledge: LegalKnowledge[]): string {
   const categoryContext = categories.map(cat => 
     `${cat.name}: ${cat.description} (Required docs: ${cat.required_documents?.join(', ') || 'None'})`
   ).join('\n');
@@ -565,124 +596,83 @@ function buildIntakeSystemPrompt(language: string, categories: any[], legalKnowl
     `${kb.title}: ${kb.content}`
   ).join('\n');
 
-  const languageInstructions = language === 'ar' ? 
-    'Respond in Arabic' : 
-    language === 'de' ? 
-    'Respond in German' : 
-    'Respond in English';
+  return `You are Lexa, an AI legal intake assistant for Egyptian law cases. Your job is to gather case information through natural conversation and perform comprehensive legal analysis.
 
-  return `You are Lexa, a helpful and intelligent AI legal assistant specializing in case intake. ${languageInstructions}. You have a warm, professional personality and excel at gathering case information through natural conversation.
-
-YOUR APPROACH:
-- Be conversational, empathetic, and genuinely helpful
-- Listen carefully to what clients share and ask thoughtful follow-up questions
-- Gather information naturally through intelligent dialogue, not rigid questioning
-- Use your judgment to determine what information is most important to collect
-- Make clients feel heard and understood while efficiently collecting case details
-
-INFORMATION TO GATHER:
-Through natural conversation, try to understand:
-- What legal issue they're facing (the main problem)
-- Key people or entities involved 
-- When events occurred (timeline and dates)
-- Where things happened (location/jurisdiction)
-- What actions they've already taken
-- What outcome they're hoping for
-- How urgent the situation is
-- Any other relevant details that might help
-
-HOW TO CONDUCT THE CONVERSATION:
-- Start by understanding their main concern
-- Ask follow-up questions based on what they tell you
-- Show that you're listening by acknowledging their responses
-- Naturally guide the conversation to fill in important gaps
-- Use your intelligence to prioritize what's most important to know
-- Extract case data when you have sufficient information for a meaningful case profile
-
-CONVERSATION STYLE:
-- Be warm but professional
-- Ask one question at a time to avoid overwhelming them
-- Acknowledge their responses before moving to new topics
-- Use natural language - you can format responses if it helps clarity
-- Be flexible and adaptive based on what they share
-
-CASE CATEGORIES:
+CASE CATEGORIES AVAILABLE:
 ${categoryContext}
 
 EGYPTIAN LEGAL CONTEXT:
 ${knowledgeContext}
 
-Remember: You're here to help people through what might be stressful situations. Be the intelligent, caring assistant they need while efficiently gathering the information required for their case.`;
+YOUR ROLE:
+1. Understand the legal issue through conversation
+2. Categorize the case appropriately
+3. Extract comprehensive legal analysis including:
+   - Specific legal issues and problems
+   - Primary and secondary areas of law involved
+   - Applicable statutes, regulations, and legal codes
+   - Key legal concepts and principles
+   - Types of violations or legal wrongs
+   - Legal remedies and relief sought
+   - Assessment of case complexity
+4. Extract detailed entities (parties, dates, amounts, locations, documents, deadlines, relationships)
+5. Determine urgency level based on legal requirements and deadlines
+6. Suggest required documents
+7. Identify when personal contact information is needed
+
+LEGAL ANALYSIS EXTRACTION:
+When using the extract_case_data function, provide thorough legal analysis:
+
+- legal_issues: Identify specific legal problems (e.g., "Breach of employment contract", "Unlawful termination", "Discrimination based on gender")
+- legal_classification: 
+  * primary_legal_area: Main area (e.g., "Employment Law", "Contract Law", "Family Law")
+  * secondary_legal_areas: Related areas (e.g., ["Civil Rights Law", "Labor Law"])
+  * applicable_statutes: Relevant laws (e.g., ["Egyptian Labor Law No. 12 of 2003", "Civil Code Article 163"])
+  * legal_concepts: Key principles (e.g., ["Good faith in contracts", "Wrongful termination", "Equal treatment"])
+- violation_types: Specific violations (e.g., ["Breach of contract", "Violation of due process", "Discriminatory practices"])
+- legal_remedies_sought: What client wants (e.g., ["Reinstatement", "Compensation for damages", "Injunctive relief"])
+- legal_complexity: Assess complexity level based on multiple parties, complex legal issues, international elements, etc.
+
+ENHANCED ENTITY EXTRACTION:
+Extract comprehensive entities including:
+- legal_documents: Contracts, court orders, agreements mentioned
+- legal_deadlines: Statute of limitations, filing deadlines, court dates
+- legal_relationships: Employment, partnership, landlord-tenant relationships
+- assets_property: Property, assets, intellectual property involved
+- institutions: Courts, government agencies, organizations involved
+
+CONVERSATION FLOW:
+- Start by understanding their legal situation
+- Once you have a good understanding of their case (after 3-4 exchanges), you should set needsPersonalDetails to true in the extract_case_data function
+- DO NOT ask for personal details directly in chat - the system will show a form
+- Continue with case-specific questions after the form is completed
+
+CONVERSATION STYLE:
+- Be friendly, professional, and empathetic
+- Ask one question at a time
+- Use simple language
+- Show understanding of their situation
+- Provide helpful context about Egyptian law when relevant
+
+IMPORTANT:
+- You are gathering information, NOT providing legal advice
+- Always include disclaimers about needing to consult qualified lawyers
+- Be sensitive to client concerns and emotions
+- Focus on comprehensive legal analysis and classification
+
+LANGUAGE: Conduct conversation in ${language === 'ar' ? 'Arabic' : language === 'de' ? 'German' : 'English'}
+
+Use the extract_case_data function when you have sufficient information to categorize the case and perform legal analysis. Set needsPersonalDetails to true when you've understood their case and need to collect their contact information - DO NOT ask for personal details in chat.`;
 }
 
 function getIntakeFunctions() {
   return [
     {
       name: 'extract_case_data',
-      description: 'Extract structured case data using the 8-step framework when sufficient information is gathered',
+      description: 'Extract structured case data and legal analysis when sufficient information is gathered',
       parameters: {
         type: 'object',
         properties: {
-          // 1. Issue Description
-          issue_description: {
-            type: 'string',
-            description: 'Brief description of the legal problem (Step 1)',
-          },
-          // 2. Parties Involved  
-          parties_involved: {
-            type: 'array',
-            items: { type: 'string' },
-            description: 'Who are the parties - plaintiff, defendant, witnesses, etc. (Step 2)',
-          },
-          // 3. Timeline
-          timeline: {
-            type: 'object',
-            properties: {
-              incident_date: { type: 'string', description: 'When did it happen' },
-              is_ongoing: { type: 'boolean', description: 'Is the issue ongoing' },
-              key_dates: { 
-                type: 'array', 
-                items: { type: 'string' },
-                description: 'Important dates in chronological order'
-              }
-            },
-            description: 'Timeline information (Step 3)',
-          },
-          // 4. Location
-          location: {
-            type: 'object',
-            properties: {
-              city: { type: 'string', description: 'City where incident occurred' },
-              specific_location: { type: 'string', description: 'Specific location if relevant' },
-              jurisdiction: { type: 'string', description: 'Legal jurisdiction' }
-            },
-            description: 'Location information (Step 4)',
-          },
-          // 5. Actions Taken
-          actions_taken: {
-            type: 'array',
-            items: { type: 'string' },
-            description: 'What has the client already done - police reports, complaints, legal actions (Step 5)',
-          },
-          // 6. Desired Outcome
-          desired_outcome: {
-            type: 'array',
-            items: { type: 'string' },
-            description: 'What does the client want to achieve - compensation, resolution, etc. (Step 6)',
-          },
-          // 7. Urgency Level
-          urgency_level: {
-            type: 'string',
-            enum: ['low', 'medium', 'high', 'urgent'],
-            description: 'How time-sensitive is this matter (Step 7)',
-          },
-          // 8. Additional Notes
-          additional_notes: {
-            type: 'string',
-            description: 'Any other relevant information not covered in previous steps (Step 8)',
-          },
-          
-          // Legacy/Required fields for system compatibility
           category: {
             type: 'string',
             description: 'Primary case category (Family Law, Immigration Law, Real Estate Law, etc.)',
@@ -694,7 +684,7 @@ function getIntakeFunctions() {
           urgency: {
             type: 'string',
             enum: ['low', 'medium', 'high', 'urgent'],
-            description: 'Case urgency (maps to urgency_level)',
+            description: 'Case urgency based on timeline and legal requirements',
           },
           entities: {
             type: 'object',
@@ -702,39 +692,64 @@ function getIntakeFunctions() {
               parties: {
                 type: 'array',
                 items: { type: 'string' },
-                description: 'Names of parties involved (maps to parties_involved)',
+                description: 'Names of parties involved',
               },
               dates: {
                 type: 'array',
                 items: { type: 'string' },
-                description: 'Important dates mentioned (maps to timeline)',
-              },
-              locations: {
-                type: 'array',
-                items: { type: 'string' },
-                description: 'Relevant locations (maps to location)',
-              },
-              legal_documents: {
-                type: 'array',
-                items: { type: 'string' },
-                description: 'Contracts, agreements, court orders mentioned',
-              },
-              legal_deadlines: {
-                type: 'array',
-                items: { type: 'string' },
-                description: 'Statute of limitations, court dates, filing deadlines',
+                description: 'Important dates mentioned',
               },
               amounts: {
                 type: 'array',
                 items: { type: 'string' },
                 description: 'Financial amounts mentioned',
               },
+              locations: {
+                type: 'array',
+                items: { type: 'string' },
+                description: 'Relevant locations or jurisdictions',
+              },
+              legal_documents: {
+                type: 'array',
+                items: { type: 'string' },
+                description: 'Contracts, agreements, court orders, legal documents mentioned',
+              },
+              legal_deadlines: {
+                type: 'array',
+                items: { type: 'string' },
+                description: 'Statute of limitations, court dates, filing deadlines',
+              },
+              legal_relationships: {
+                type: 'array',
+                items: { type: 'string' },
+                description: 'Legal relationships like employer-employee, landlord-tenant, etc.',
+              },
+              assets_property: {
+                type: 'array',
+                items: { type: 'string' },
+                description: 'Property, assets, intellectual property involved',
+              },
+              institutions: {
+                type: 'array',
+                items: { type: 'string' },
+                description: 'Courts, government agencies, organizations involved',
+              },
             },
+          },
+          requiredDocuments: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Documents needed for this type of case',
+          },
+          nextQuestions: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Follow-up questions to gather more specific information',
           },
           legal_issues: {
             type: 'array',
             items: { type: 'string' },
-            description: 'Specific legal problems identified in the case',
+            description: 'Specific legal problems and issues identified in the case',
           },
           legal_classification: {
             type: 'object',
@@ -777,10 +792,10 @@ function getIntakeFunctions() {
           },
           needsPersonalDetails: {
             type: 'boolean',
-            description: 'Set to true when ready to collect personal contact information',
+            description: 'Set to true when you need to collect personal contact information (name, email, phone, address)',
           },
         },
-        required: ['issue_description', 'category', 'urgency_level', 'urgency', 'needsPersonalDetails'],
+        required: ['category', 'urgency'],
       },
     },
   ];

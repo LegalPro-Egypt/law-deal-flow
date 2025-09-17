@@ -69,16 +69,13 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
       console.log('Initializing conversation...', { userId, caseId, mode: state.mode });
       
       // Create conversation record - for intake mode, allow anonymous users
-      const isAnonymous = !userId;
-      const effectiveMode = isAnonymous ? 'intake' : state.mode; // Anonymous conversations must use 'intake' to satisfy RLS
-
       const { data: conversation, error } = await supabase
         .from('conversations')
         .insert({
-          user_id: effectiveMode === 'intake' ? (userId || null) : userId,
+          user_id: state.mode === 'intake' ? userId || null : userId, // Allow null for intake mode
           case_id: caseId,
           session_id: crypto.randomUUID(),
-          mode: effectiveMode,
+          mode: state.mode,
           language: state.language,
           status: 'active',
         })
@@ -137,7 +134,7 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
       const { data, error } = await supabase.functions.invoke('legal-chatbot', {
         body: {
           message: content,
-          conversation_id: state.conversationId,
+          conversationId: state.conversationId,
           mode: state.mode,
           language: state.language,
           chatHistory: state.messages.slice(-10).map(m => ({
@@ -162,23 +159,13 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
         metadata: data.extractedData,
       };
 
-      setState(prev => {
-        // Count user messages to determine if we should automatically progress
-        const userMessageCount = [...prev.messages, userMessage].filter(m => m.role === 'user').length;
-        const shouldForcePersonalDetails = state.mode === 'intake' && userMessageCount >= 4 && !prev.needsPersonalDetails;
-        
-        // Check if we have basic extracted data (category or legal_issues) to progress earlier
-        const hasBasicData = data.extractedData && (data.extractedData.category || data.extractedData.legal_issues?.length > 0);
-        const shouldProgressEarly = state.mode === 'intake' && userMessageCount >= 2 && hasBasicData && !prev.needsPersonalDetails;
-
-        return {
-          ...prev,
-          messages: [...prev.messages, aiMessage],
-          isLoading: false,
-          extractedData: data.extractedData || prev.extractedData,
-          needsPersonalDetails: data.needsPersonalDetails || shouldForcePersonalDetails || shouldProgressEarly || prev.needsPersonalDetails,
-        };
-      });
+      setState(prev => ({
+        ...prev,
+        messages: [...prev.messages, aiMessage],
+        isLoading: false,
+        extractedData: data.extractedData || prev.extractedData,
+        needsPersonalDetails: data.needsPersonalDetails || prev.needsPersonalDetails,
+      }));
 
       // Get case ID from response or fetch it from conversation
       if (data.conversationId && !caseId) {

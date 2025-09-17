@@ -195,8 +195,8 @@ export const LawyerDetailsDialog = ({ lawyerId, isOpen, onClose }: LawyerDetails
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-5xl w-[95vw] h-[95vh] overflow-hidden p-0 flex flex-col gap-0">
-          <DialogHeader className="shrink-0 border-b px-6 py-4">
+        <DialogContent className="max-w-5xl w-[95vw] h-[95vh] p-0 flex flex-col">
+          <DialogHeader className="px-6 py-4 border-b shrink-0">
             <DialogTitle className="flex items-center gap-2">
               <User className="h-5 w-5" />
               {lawyer.first_name} {lawyer.last_name} - Profile & AI Chat History
@@ -472,7 +472,7 @@ export const LawyerDetailsDialog = ({ lawyerId, isOpen, onClose }: LawyerDetails
                   </div>
                   {index < conversationMessages.length - 1 && <Separator />}
                 </div>
-               ))}
+              ))}
             </div>
           </ScrollArea>
         </DialogContent>

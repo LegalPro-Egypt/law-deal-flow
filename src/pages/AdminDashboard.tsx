@@ -79,12 +79,9 @@ const AdminDashboard = () => {
   const [lawyerToDelete, setLawyerToDelete] = useState<string | null>(null);
   const [showLawyerDeleteConfirm, setShowLawyerDeleteConfirm] = useState(false);
   const [expandedImage, setExpandedImage] = useState<{url: string; title: string} | null>(null);
-  const [freeChats, setFreeChats] = useState<any[]>([]);
-  const [loadingFreeChats, setLoadingFreeChats] = useState(false);
 
   useEffect(() => {
     fetchAllLawyers();
-    fetchFreeChats();
   }, []);
 
   const fetchAllLawyers = async () => {
@@ -173,45 +170,6 @@ const AdminDashboard = () => {
       setCardUrls(urlMap);
     } catch (error: any) {
       console.error('Error fetching lawyers:', error);
-    }
-  };
-
-  const fetchFreeChats = async () => {
-    setLoadingFreeChats(true);
-    try {
-      const { data: conversations, error } = await supabase
-        .from('conversations')
-        .select('*')
-        .is('user_id', null)
-        .eq('mode', 'intake')
-        .order('created_at', { ascending: false })
-        .limit(100);
-
-      if (error) throw error;
-
-      const convs = conversations || [];
-      const ids = convs.map((c: any) => c.id);
-      let messagesByConv: Record<string, any[]> = {};
-
-      if (ids.length > 0) {
-        const { data: msgs } = await supabase
-          .from('messages')
-          .select('id, role, content, created_at, conversation_id')
-          .in('conversation_id', ids)
-          .order('created_at', { ascending: true });
-
-        (msgs || []).forEach((m: any) => {
-          if (!messagesByConv[m.conversation_id]) messagesByConv[m.conversation_id] = [];
-          messagesByConv[m.conversation_id].push(m);
-        });
-      }
-
-      const enriched = convs.map((c: any) => ({ ...c, messages: messagesByConv[c.id] || [] }));
-      setFreeChats(enriched);
-    } catch (e) {
-      console.error('Error fetching free chats:', e);
-    } finally {
-      setLoadingFreeChats(false);
     }
   };
 
@@ -447,7 +405,7 @@ const AdminDashboard = () => {
             <div className="flex items-center justify-between h-16">
               <Link to="/?force=true" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
                 <Scale className="h-8 w-8 text-primary" />
-                <span className="text-xl font-bold">LegalPro</span>
+                <span className="text-xl font-bold">LegalConnect</span>
                 <Badge variant="destructive" className="ml-2">Admin Portal</Badge>
               </Link>
               <Button variant="ghost" size="sm" onClick={handleSignOut}>
@@ -473,27 +431,26 @@ const AdminDashboard = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b bg-background/95 backdrop-blur sticky top-0 z-50">
-        <div className="container mx-auto px-2 sm:px-4 lg:px-6 xl:px-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <Link to="/?force=true" className="flex items-center space-x-1 sm:space-x-2 hover:opacity-80 transition-opacity">
-              <Scale className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
-              <span className="text-lg sm:text-xl font-bold hidden xs:block">LegalPro</span>
-              <Badge variant="destructive" className="ml-1 sm:ml-2 text-xs">Admin</Badge>
+            <Link to="/?force=true" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
+              <Scale className="h-8 w-8 text-primary" />
+              <span className="text-xl font-bold">LegalConnect</span>
+              <Badge variant="destructive" className="ml-2">Admin Portal</Badge>
             </Link>
-            <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-xs sm:text-sm">
-              <LogOut className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">Sign Out</span>
-              <span className="sm:hidden">Out</span>
+            <Button variant="ghost" size="sm" onClick={handleSignOut}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign Out
             </Button>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-4 sm:py-8 max-w-4xl">
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Stats Overview */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-6 sm:mb-8">
+        <div className="grid md:grid-cols-5 gap-4 mb-8">
           <Card className="bg-gradient-card shadow-card">
-            <CardContent className="p-4 sm:p-6">
+            <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Total Cases</p>
@@ -505,7 +462,7 @@ const AdminDashboard = () => {
           </Card>
           
           <Card className="bg-gradient-card shadow-card">
-            <CardContent className="p-4 sm:p-6">
+            <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Active Cases</p>
@@ -517,7 +474,7 @@ const AdminDashboard = () => {
           </Card>
 
           <Card className="bg-gradient-card shadow-card">
-            <CardContent className="p-4 sm:p-6">
+            <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Pending Intakes</p>
@@ -529,7 +486,7 @@ const AdminDashboard = () => {
           </Card>
 
           <Card className="bg-gradient-card shadow-card">
-            <CardContent className="p-4 sm:p-6">
+            <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Total Lawyers</p>
@@ -541,7 +498,7 @@ const AdminDashboard = () => {
           </Card>
 
           <Card className="bg-gradient-card shadow-card border-primary">
-            <CardContent className="p-4 sm:p-6">
+            <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Pending Reviews</p>
@@ -558,30 +515,25 @@ const AdminDashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="intakes" className="space-y-6">
-          <div className="-mx-4 px-4">
-            <div className="overflow-x-auto scrollbar-hide">
-              <TabsList className="w-max flex gap-1 snap-x snap-mandatory">
-                <TabsTrigger value="intakes" className="flex-shrink-0 min-w-fit snap-start">AI Intakes</TabsTrigger>
-                <TabsTrigger value="free-chats" className="flex-shrink-0 min-w-fit snap-center">Free user chat history</TabsTrigger>
-                <TabsTrigger value="cases" className="flex-shrink-0 min-w-fit snap-center">Cases</TabsTrigger>
-                <TabsTrigger value="lawyers" className="flex-shrink-0 min-w-fit snap-center">
-                  Lawyers {stats.pendingVerifications > 0 && (
-                    <Badge variant="destructive" className="ml-1 text-xs">
-                      {stats.pendingVerifications}
-                    </Badge>
-                  )}
-                </TabsTrigger>
-                <TabsTrigger value="requests" className="flex-shrink-0 min-w-fit snap-end">Lawyer Requests</TabsTrigger>
-              </TabsList>
-            </div>
-          </div>
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="intakes">AI Intakes</TabsTrigger>
+            <TabsTrigger value="cases">Cases</TabsTrigger>
+            <TabsTrigger value="lawyers">
+              Lawyers {stats.pendingVerifications > 0 && (
+                <Badge variant="destructive" className="ml-1 text-xs">
+                  {stats.pendingVerifications}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="requests">Lawyer Requests</TabsTrigger>
+          </TabsList>
 
           {/* AI Intakes Tab */}
           <TabsContent value="intakes" className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <h2 className="text-xl sm:text-2xl font-bold">AI Intake Conversations</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">AI Intake Conversations</h2>
               <div className="flex items-center space-x-2">
-                <div className="relative flex-1 sm:flex-none sm:w-64">
+                <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input 
                     className="pl-10" 
@@ -613,8 +565,8 @@ const AdminDashboard = () => {
                     >
                       <XCircle className="h-4 w-4" />
                     </Button>
-                    <CardContent className="p-4 sm:p-6">
-                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+                    <CardContent className="p-6">
+                      <div className="grid lg:grid-cols-3 gap-6">
                         {/* Intake Info */}
                         <div>
                           <div className="flex items-center justify-between mb-2 pr-8">
@@ -673,128 +625,25 @@ const AdminDashboard = () => {
             )}
           </TabsContent>
 
-          {/* Free User Chat History Tab */}
-          <TabsContent value="free-chats" className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <h2 className="text-xl sm:text-2xl font-bold">Free User Chat History</h2>
-              <div className="flex items-center space-x-2">
-                <div className="relative flex-1 sm:flex-none sm:w-64">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    className="pl-10" 
-                    placeholder="Search free chats..." 
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {loadingFreeChats ? (
-              <div className="grid gap-4">
-                {[...Array(3)].map((_, i) => (
-                  <Skeleton key={i} className="h-32" />
-                ))}
-              </div>
-            ) : freeChats.length === 0 ? (
-              <Card className="bg-gradient-card shadow-card">
-                <CardContent className="p-8 text-center">
-                  <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No free user chats</h3>
-                  <p className="text-muted-foreground">Anonymous user conversations will appear here</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid gap-4">
-                {freeChats
-                  .filter(chat => 
-                    searchTerm === "" || 
-                    chat.session_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    (chat.messages && chat.messages.some((msg: any) => 
-                      msg.content.toLowerCase().includes(searchTerm.toLowerCase())
-                    ))
-                  )
-                  .map((chat) => (
-                  <Card key={chat.id} className="bg-gradient-card shadow-card">
-                    <CardContent className="p-4 sm:p-6">
-                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-                        {/* Chat Info */}
-                        <div>
-                          <div className="flex items-center justify-between mb-2">
-                            <Badge variant="outline">Session: {chat.session_id.slice(0, 8)}...</Badge>
-                            <Badge variant="secondary">{chat.language.toUpperCase()}</Badge>
-                          </div>
-                          <p className="text-sm text-muted-foreground mb-2">
-                            Started: {formatDate(chat.created_at)}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            Status: {chat.status}
-                          </p>
-                          <div className="flex items-center mt-2">
-                            <MessageSquare className="h-4 w-4 mr-1 text-muted-foreground" />
-                            <span className="text-xs">{chat.messages?.length || 0} messages</span>
-                          </div>
-                        </div>
-
-                        {/* Messages Preview */}
-                        <div>
-                          <h4 className="font-medium mb-2 text-sm">Latest Messages</h4>
-                          <div className="space-y-1 text-xs max-h-20 overflow-y-auto">
-                            {chat.messages?.slice(-2).map((msg: any, idx: number) => (
-                              <p key={idx} className="truncate">
-                                <span className="font-medium capitalize">{msg.role}:</span> {msg.content.slice(0, 80)}...
-                              </p>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex flex-col space-y-2">
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="justify-start"
-                            onClick={() => handleViewConversation(chat.id)}
-                          >
-                            <Eye className="h-4 w-4 mr-2" />
-                            View Conversation
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            className="bg-gradient-primary justify-start"
-                            onClick={() => handleCreateCase(chat.id)}
-                          >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Create Case
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
           {/* Cases Tab */}
           <TabsContent value="cases" className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <h2 className="text-xl sm:text-2xl font-bold">Cases</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">Cases</h2>
               <div className="flex items-center space-x-2">
-                <div className="relative flex-1 sm:flex-none sm:w-64">
+                <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input className="pl-10" placeholder="Search cases..." />
                 </div>
-                <Button variant="outline" size="sm" className="px-2 sm:px-3">
-                  <Filter className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Filter</span>
+                <Button variant="outline" size="sm">
+                  <Filter className="h-4 w-4 mr-2" />
+                  Filter
                 </Button>
               </div>
             </div>
 
             {cases.length === 0 ? (
               <Card className="bg-gradient-card shadow-card">
-                <CardContent className="p-6 sm:p-8 text-center">
+                <CardContent className="p-8 text-center">
                   <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-semibold mb-2">No cases yet</h3>
                   <p className="text-muted-foreground">Cases created from AI intakes will appear here</p>
@@ -816,9 +665,16 @@ const AdminDashboard = () => {
                       caseItem.status === 'submitted' ? 'border-primary border-2' : ''
                     }`}
                   >
-                    <CardContent className="p-4 sm:p-6">
-...
-                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+                    <CardContent className="p-6">
+                      {caseItem.status === 'submitted' && (
+                        <div className="mb-4">
+                          <Badge className="bg-primary text-primary-foreground">
+                            <AlertCircle className="h-3 w-3 mr-1" />
+                            Needs Review
+                          </Badge>
+                        </div>
+                      )}
+                      <div className="grid lg:grid-cols-3 gap-6">
                         {/* Case Info */}
                         <div>
                           <div className="flex items-center justify-between mb-2">

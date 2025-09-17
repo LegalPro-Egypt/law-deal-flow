@@ -236,8 +236,8 @@ export const LawyerChatHistoryDialog = ({
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="max-w-6xl h-[100dvh] overflow-auto">
-        <div className="sticky top-0 bg-background border-b px-6 py-4 z-10">
+      <DialogContent className="max-w-6xl max-h-[90vh] flex flex-col">
+        <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Scale className="h-5 w-5" />
             {lawyerName} - Profile & AI Chat History
@@ -256,17 +256,16 @@ export const LawyerChatHistoryDialog = ({
               {getTotalMessages()} total messages
             </div>
           </div>
-        </div>
+        </DialogHeader>
 
-        <Tabs defaultValue="profile" className="flex-1">
-          <div className="sticky top-[120px] bg-background border-b z-10">
-            <TabsList className="px-6 grid w-full grid-cols-2">
-              <TabsTrigger value="profile">Profile & Questionnaire</TabsTrigger>
-              <TabsTrigger value="chat">AI Chat History</TabsTrigger>
-            </TabsList>
-          </div>
+        <Tabs defaultValue="profile" className="flex-1 flex flex-col">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="profile">Profile & Questionnaire</TabsTrigger>
+            <TabsTrigger value="chat">AI Chat History</TabsTrigger>
+          </TabsList>
 
-          <TabsContent value="profile" className="px-6 py-6">
+          <TabsContent value="profile" className="flex-1">
+            <ScrollArea className="flex-1 pr-6">
               {loading ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -543,9 +542,11 @@ export const LawyerChatHistoryDialog = ({
                   </Card>
                 </div>
               )}
+            </ScrollArea>
           </TabsContent>
 
-          <TabsContent value="chat" className="px-6 py-6">
+          <TabsContent value="chat" className="flex-1">
+            <ScrollArea className="flex-1 pr-6">
               {loading ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -634,6 +635,7 @@ export const LawyerChatHistoryDialog = ({
                   ))}
                 </div>
               )}
+            </ScrollArea>
           </TabsContent>
         </Tabs>
       </DialogContent>

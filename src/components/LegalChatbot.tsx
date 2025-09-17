@@ -41,8 +41,6 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = ({
   const [inputMessage, setInputMessage] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const didInitAutoScroll = useRef(false);
-  const hasInteracted = useRef(false);
   const { toast } = useToast();
 
   const {
@@ -72,15 +70,10 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = ({
     }
   }, [conversationId, userId, caseId, initializeConversation, mode]);
 
-// Auto-scroll to bottom (skip on initial welcome message and until user interacts)
-useEffect(() => {
-  if (!hasInteracted.current) return;
-  if (!didInitAutoScroll.current) {
-    didInitAutoScroll.current = true;
-    return;
-  }
-  bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}, [messages]);
+  // Auto-scroll to bottom
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   // Call onCaseDataExtracted when case data is extracted
   useEffect(() => {
@@ -100,20 +93,18 @@ useEffect(() => {
     }
   }, [hookCaseId, onCaseCreated]);
 
-const handleSendMessage = async () => {
-  if (!inputMessage.trim() || isLoading) return;
-  
-  hasInteracted.current = true;
-  
-  const message = inputMessage.trim();
-  setInputMessage('');
-  await sendMessage(message);
-  
-  // Focus input after sending
-  setTimeout(() => {
-    inputRef.current?.focus();
-  }, 100);
-};
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim() || isLoading) return;
+    
+    const message = inputMessage.trim();
+    setInputMessage('');
+    await sendMessage(message);
+    
+    // Focus input after sending
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 100);
+  };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -150,32 +141,55 @@ const handleSendMessage = async () => {
   };
 
   return (
-    <Card className={`flex flex-col h-full max-w-4xl mx-auto scroll-anchor-none ${className}`}>
-      <CardHeader className="flex-shrink-0 pb-2 sm:pb-4">
-        {/* Mobile Header - Compact */}
+    <Card className={`flex flex-col h-full max-w-4xl mx-auto ${className}`}>
+      <CardHeader className="flex-shrink-0 pb-3 sm:pb-4">
+        {/* Mobile Header */}
         <div className="block sm:hidden">
-          <div className="flex items-center justify-between mb-2">
-            <CardTitle className="flex items-center gap-2 text-sm">
+          <div className="flex items-center justify-between mb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
               <Scale className="h-4 w-4 text-primary" />
-              Lexa
+              Lexa — LegalPro
             </CardTitle>
-            <div className="flex items-center gap-2">
-              <Badge variant={mode === 'qa' ? 'default' : 'secondary'} className="text-xs px-1 py-0.5">
-                {mode === 'qa' ? 'Q&A' : 'Intake'}
-              </Badge>
-              {/* Compact Language Selector */}
+            <Badge variant={mode === 'qa' ? 'default' : 'secondary'} className="text-xs">
+              {mode === 'qa' ? 'Q&A' : 'Intake'}
+            </Badge>
+          </div>
+          
+          <div className="flex items-center justify-between gap-2">
+            {/* Language Selector */}
+            <div className="flex items-center gap-1">
+              <Languages className="h-4 w-4 text-muted-foreground" />
               <select
                 value={language}
                 onChange={(e) => setLanguage(e.target.value as 'en' | 'ar' | 'de')}
-                className="text-xs border rounded px-1 py-0.5 bg-background w-14"
+                className="text-xs border rounded px-2 py-1 bg-background"
               >
-                <option value="en">EN</option>
-                <option value="ar">AR</option>
-                <option value="de">DE</option>
+                <option value="en">English</option>
+                <option value="ar">العربية</option>
+                <option value="de">Deutsch</option>
               </select>
             </div>
+
+            {/* Mode Switch */}
+            <div className="flex rounded-md border">
+              <Button
+                variant={mode === 'qa' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => switchMode('qa')}
+                className="rounded-r-none text-xs px-2 py-1"
+              >
+                Q&A
+              </Button>
+              <Button
+                variant={mode === 'intake' ? 'default' : mode === 'qa' ? 'outline' : 'ghost'}
+                size="sm"
+                onClick={() => switchMode('intake')}
+                className="rounded-l-none text-xs px-2 py-1"
+              >
+                Intake
+              </Button>
+            </div>
           </div>
-          
         </div>
 
         {/* Desktop Header */}
@@ -255,9 +269,9 @@ const handleSendMessage = async () => {
       <Separator />
 
       <CardContent className="flex-1 flex flex-col p-2 sm:p-4 min-h-0">
-        {/* Messages Area - Optimized for mobile */}
-        <ScrollArea className="flex-1 pr-1 sm:pr-4 min-h-[300px] max-h-full">
-          <div className="space-y-2 sm:space-y-4 pb-2 sm:pb-4">
+        {/* Messages Area */}
+        <ScrollArea className="flex-1 pr-2 sm:pr-4">
+          <div className="space-y-3 sm:space-y-4 pb-4">
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -270,16 +284,16 @@ const handleSendMessage = async () => {
                 </div>
                 
                 <div
-                  className={`max-w-[85%] sm:max-w-[80%] rounded-lg px-2 py-2 sm:px-4 sm:py-3 ${
+                  className={`max-w-[85%] sm:max-w-[80%] rounded-lg px-3 py-2 sm:px-4 sm:py-3 ${
                     message.role === 'user'
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-muted text-foreground'
                   }`}
                 >
-                  <div className="text-sm sm:text-sm leading-relaxed">
+                  <div className="text-xs sm:text-sm leading-relaxed">
                     {formatMessageContent(message.content)}
                   </div>
-                  <div className="text-xs opacity-70 mt-1">
+                  <div className="text-xs opacity-70 mt-1 sm:mt-2">
                     {message.timestamp.toLocaleTimeString()}
                   </div>
                 </div>

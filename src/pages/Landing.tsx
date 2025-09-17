@@ -1,22 +1,15 @@
-import { useEffect, useLayoutEffect } from "react";
+import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Scale, Shield, MessageSquare, Users, Clock, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { PublicLegalChat } from "@/components/PublicLegalChat";
-import { RotatingWords } from "@/components/RotatingWords";
 
 const Landing = () => {
   const { isAuthenticated, role, loading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-
-  useLayoutEffect(() => {
-    // Scroll to top before initial paint
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-  }, []);
 
   useEffect(() => {
     // Check if user explicitly wants to view homepage (bypass auto-redirect)
@@ -68,10 +61,7 @@ const Landing = () => {
           <div className="max-w-4xl mx-auto text-center animate-fade-in">
             <h1 className="text-4xl sm:text-6xl font-bold mb-6">
               Connect with Vetted Lawyers{" "}
-              <RotatingWords 
-                words={["Quickly", "Securely", "Confidently", "Seamlessly"]}
-                className="text-accent"
-              />
+              <span className="text-accent sm:block sm:mt-2">Instantly</span>
             </h1>
             <p className="text-xl sm:text-2xl text-gray-200 mb-8 max-w-3xl mx-auto">
               AI-powered intake, secure messaging, and transparent pricing. 
@@ -90,21 +80,6 @@ const Landing = () => {
               </Link>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Public Legal Q&A Section */}
-      <section className="py-20 bg-background">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Free Legal Q&A</h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Get instant answers about Egyptian law from our AI legal assistant. 
-              No signup required — ask your legal questions right now.
-            </p>
-          </div>
-          
-          <PublicLegalChat className="animate-slide-up" />
         </div>
       </section>
 
@@ -239,44 +214,41 @@ const Landing = () => {
       {/* Footer */}
       <footer className="bg-card border-t py-12">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="space-y-8">
-            <div className="text-center sm:text-left">
-              <div className="flex items-center justify-center sm:justify-start space-x-2 mb-4">
+          <div className="grid md:grid-cols-4 gap-8">
+            <div>
+              <div className="flex items-center space-x-2 mb-4">
                 <Scale className="h-6 w-6 text-primary" />
                 <span className="font-bold">LegalPro</span>
               </div>
-              <p className="text-muted-foreground max-w-md mx-auto sm:mx-0">
+              <p className="text-muted-foreground">
                 Professional legal services with Lexa AI-powered matching and secure payment protection.
               </p>
             </div>
-            
-            <div className="grid grid-cols-3 gap-4 sm:gap-8">
-              <div className="text-center sm:text-left">
-                <h3 className="font-semibold mb-3">Services</h3>
-                <ul className="space-y-1 text-muted-foreground text-sm">
-                  <li>Family Law</li>
-                  <li>Immigration</li>
-                  <li>Real Estate</li>
-                  <li>Corporate Law</li>
-                </ul>
-              </div>
-              <div className="text-center sm:text-left">
-                <h3 className="font-semibold mb-3">Support</h3>
-                <ul className="space-y-1 text-muted-foreground text-sm">
-                  <li>Help Center</li>
-                  <li>Contact Us</li>
-                  <li>Privacy Policy</li>
-                  <li>Terms of Service</li>
-                </ul>
-              </div>
-              <div className="text-center sm:text-left">
-                <h3 className="font-semibold mb-3">Languages</h3>
-                <ul className="space-y-1 text-muted-foreground text-sm">
-                  <li>English</li>
-                  <li>العربية</li>
-                  <li>Deutsch</li>
-                </ul>
-              </div>
+            <div>
+              <h3 className="font-semibold mb-4">Services</h3>
+              <ul className="space-y-2 text-muted-foreground">
+                <li>Family Law</li>
+                <li>Immigration</li>
+                <li>Real Estate</li>
+                <li>Corporate Law</li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-4">Support</h3>
+              <ul className="space-y-2 text-muted-foreground">
+                <li>Help Center</li>
+                <li>Contact Us</li>
+                <li>Privacy Policy</li>
+                <li>Terms of Service</li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-4">Languages</h3>
+              <ul className="space-y-2 text-muted-foreground">
+                <li>English</li>
+                <li>العربية</li>
+                <li>Deutsch</li>
+              </ul>
             </div>
           </div>
           <div className="mt-8 pt-8 border-t text-center text-muted-foreground">
