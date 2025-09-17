@@ -672,6 +672,109 @@ const AdminDashboard = () => {
             )}
           </TabsContent>
 
+          {/* Free User Chat History Tab */}
+          <TabsContent value="free-chats" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">Free User Chat History</h2>
+              <div className="flex items-center space-x-2">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    className="pl-10" 
+                    placeholder="Search free chats..." 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {loadingFreeChats ? (
+              <div className="grid gap-4">
+                {[...Array(3)].map((_, i) => (
+                  <Skeleton key={i} className="h-32" />
+                ))}
+              </div>
+            ) : freeChats.length === 0 ? (
+              <Card className="bg-gradient-card shadow-card">
+                <CardContent className="p-8 text-center">
+                  <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No free user chats</h3>
+                  <p className="text-muted-foreground">Anonymous user conversations will appear here</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4">
+                {freeChats
+                  .filter(chat => 
+                    searchTerm === "" || 
+                    chat.session_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    (chat.messages && chat.messages.some((msg: any) => 
+                      msg.content.toLowerCase().includes(searchTerm.toLowerCase())
+                    ))
+                  )
+                  .map((chat) => (
+                  <Card key={chat.id} className="bg-gradient-card shadow-card">
+                    <CardContent className="p-6">
+                      <div className="grid lg:grid-cols-3 gap-6">
+                        {/* Chat Info */}
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <Badge variant="outline">Session: {chat.session_id.slice(0, 8)}...</Badge>
+                            <Badge variant="secondary">{chat.language.toUpperCase()}</Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-2">
+                            Started: {formatDate(chat.created_at)}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Status: {chat.status}
+                          </p>
+                          <div className="flex items-center mt-2">
+                            <MessageSquare className="h-4 w-4 mr-1 text-muted-foreground" />
+                            <span className="text-xs">{chat.messages?.length || 0} messages</span>
+                          </div>
+                        </div>
+
+                        {/* Messages Preview */}
+                        <div>
+                          <h4 className="font-medium mb-2 text-sm">Latest Messages</h4>
+                          <div className="space-y-1 text-xs max-h-20 overflow-y-auto">
+                            {chat.messages?.slice(-2).map((msg: any, idx: number) => (
+                              <p key={idx} className="truncate">
+                                <span className="font-medium capitalize">{msg.role}:</span> {msg.content.slice(0, 80)}...
+                              </p>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex flex-col space-y-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="justify-start"
+                            onClick={() => handleViewConversation(chat.id)}
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Conversation
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            className="bg-gradient-primary justify-start"
+                            onClick={() => handleCreateCase(chat.id)}
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Create Case
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
           {/* Cases Tab */}
           <TabsContent value="cases" className="space-y-6">
             <div className="flex items-center justify-between">
