@@ -195,31 +195,30 @@ export const LawyerDetailsDialog = ({ lawyerId, isOpen, onClose }: LawyerDetails
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-5xl w-[95vw] h-[95vh] p-0">
-          <div className="flex flex-col h-full">
-            <DialogHeader className="px-6 py-4 border-b shrink-0">
-              <DialogTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                {lawyer.first_name} {lawyer.last_name} - Profile & AI Chat History
-              </DialogTitle>
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <User className="h-3 w-3" />
-                  <span>{lawyer.is_verified ? 'verified' : 'unverified'}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <MessageSquare className="h-3 w-3" />
-                  <span>{conversations.length} conversations</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <MessageSquare className="h-3 w-3" />
-                  <span>{conversations.reduce((total, conv) => total + conv.messages_count, 0)} total messages</span>
-                </div>
+        <DialogContent className="max-w-5xl w-[95vw] h-[95vh] p-0 flex flex-col">
+          <DialogHeader className="px-6 py-4 border-b shrink-0">
+            <DialogTitle className="flex items-center gap-2">
+              <User className="h-5 w-5" />
+              {lawyer.first_name} {lawyer.last_name} - Profile & AI Chat History
+            </DialogTitle>
+            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <User className="h-3 w-3" />
+                <span>{lawyer.is_verified ? 'verified' : 'unverified'}</span>
               </div>
-            </DialogHeader>
+              <div className="flex items-center gap-1">
+                <MessageSquare className="h-3 w-3" />
+                <span>{conversations.length} conversations</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <MessageSquare className="h-3 w-3" />
+                <span>{conversations.reduce((total, conv) => total + conv.messages_count, 0)} total messages</span>
+              </div>
+            </div>
+          </DialogHeader>
 
-            <ScrollArea className="flex-1 px-6">
-              <div className="py-6 space-y-8">
+          <ScrollArea className="flex-1 min-h-0">
+            <div className="px-6 py-6 space-y-8">
                 {/* Profile Information Section */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 mb-4">
@@ -428,10 +427,9 @@ export const LawyerDetailsDialog = ({ lawyerId, isOpen, onClose }: LawyerDetails
                       ))}
                     </div>
                   )}
-                </div>
               </div>
-            </ScrollArea>
-          </div>
+            </div>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
 
