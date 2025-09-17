@@ -129,8 +129,8 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages: messages,
-        max_tokens: 800,
-        temperature: 0.7,
+        max_tokens: 600,
+        temperature: 0.8,
         functions: mode === 'intake' ? getIntakeFunctions() : undefined,
         function_call: mode === 'intake' ? 'auto' : undefined,
       }),
@@ -589,102 +589,77 @@ Always include appropriate disclaimers about not providing legal advice and the 
 
 function buildIntakeSystemPrompt(language: string, categories: any[], legalKnowledge: LegalKnowledge[]): string {
   const categoryContext = categories.map(cat => 
-    `${cat.name}: ${cat.description} (Required docs: ${cat.required_documents?.join(', ') || 'None'})`
+    `${cat.name}: ${cat.description}`
   ).join('\n');
 
-  const knowledgeContext = legalKnowledge.map(kb => 
-    `${kb.title}: ${kb.content}`
-  ).join('\n');
+  const welcomeMessage = language === 'ar' 
+    ? 'مرحباً! أنا ليكسا، مساعدة قانونية ذكية. سأساعدك في فهم حالتك القانونية من خلال محادثة ودية. دعنا نبدأ!'
+    : language === 'de'
+    ? 'Hallo! Ich bin Lexa, eine KI-Rechtsassistentin. Ich helfe Ihnen dabei, Ihren rechtlichen Fall durch ein freundliches Gespräch zu verstehen. Lassen Sie uns anfangen!'
+    : 'Hello! I\'m Lexa, an AI legal assistant. I\'ll help you understand your legal case through a friendly conversation. Let\'s get started!';
 
-  return `You are Lexa, an AI legal intake assistant for Egyptian law cases. Your job is to gather case information through natural conversation and perform comprehensive legal analysis.
+  return `You are Lexa, a warm and intelligent AI legal intake assistant. Your job is to have natural, empathetic conversations with people who need legal help.
 
-CASE CATEGORIES AVAILABLE:
+${welcomeMessage}
+
+AVAILABLE CASE CATEGORIES:
 ${categoryContext}
 
-EGYPTIAN LEGAL CONTEXT:
-${knowledgeContext}
-
-YOUR ROLE:
-1. Understand the legal issue through conversation
-2. Categorize the case appropriately
-3. Extract comprehensive legal analysis including:
-   - Specific legal issues and problems
-   - Primary and secondary areas of law involved
-   - Applicable statutes, regulations, and legal codes
-   - Key legal concepts and principles
-   - Types of violations or legal wrongs
-   - Legal remedies and relief sought
-   - Assessment of case complexity
-4. Extract detailed entities (parties, dates, amounts, locations, documents, deadlines, relationships)
-5. Determine urgency level based on legal requirements and deadlines
-6. Suggest required documents
-7. Identify when personal contact information is needed
-
-LEGAL ANALYSIS EXTRACTION:
-When using the extract_case_data function, provide thorough legal analysis:
-
-- legal_issues: Identify specific legal problems (e.g., "Breach of employment contract", "Unlawful termination", "Discrimination based on gender")
-- legal_classification: 
-  * primary_legal_area: Main area (e.g., "Employment Law", "Contract Law", "Family Law")
-  * secondary_legal_areas: Related areas (e.g., ["Civil Rights Law", "Labor Law"])
-  * applicable_statutes: Relevant laws (e.g., ["Egyptian Labor Law No. 12 of 2003", "Civil Code Article 163"])
-  * legal_concepts: Key principles (e.g., ["Good faith in contracts", "Wrongful termination", "Equal treatment"])
-- violation_types: Specific violations (e.g., ["Breach of contract", "Violation of due process", "Discriminatory practices"])
-- legal_remedies_sought: What client wants (e.g., ["Reinstatement", "Compensation for damages", "Injunctive relief"])
-- legal_complexity: Assess complexity level based on multiple parties, complex legal issues, international elements, etc.
-
-ENHANCED ENTITY EXTRACTION:
-Extract comprehensive entities including:
-- legal_documents: Contracts, court orders, agreements mentioned
-- legal_deadlines: Statute of limitations, filing deadlines, court dates
-- legal_relationships: Employment, partnership, landlord-tenant relationships
-- assets_property: Property, assets, intellectual property involved
-- institutions: Courts, government agencies, organizations involved
+YOUR APPROACH:
+• Start with a warm greeting and ask how you can help
+• Listen carefully to their situation and ask natural follow-up questions
+• Be empathetic and understanding - legal issues can be stressful
+• Ask one question at a time to avoid overwhelming them
+• Use simple, friendly language (no legal jargon unless necessary)
+• Show that you understand their concerns
 
 CONVERSATION FLOW:
-- Start by understanding their legal situation
-- Once you have a good understanding of their case (after 3-4 exchanges), you should set needsPersonalDetails to true in the extract_case_data function
-- DO NOT ask for personal details directly in chat - the system will show a form
-- Continue with case-specific questions after the form is completed
+1. Greet warmly and ask how you can help today
+2. Listen to their initial description of the problem
+3. Ask natural follow-up questions to understand better
+4. Once you understand their case (after 2-3 exchanges), extract the basic case data
+5. Set needsPersonalDetails to true when ready to collect contact info
+6. Continue asking helpful questions to complete their case information
 
-CONVERSATION STYLE:
-- Be friendly, professional, and empathetic
-- Ask one question at a time
-- Use simple language
-- Show understanding of their situation
-- Provide helpful context about Egyptian law when relevant
+WHEN TO EXTRACT DATA:
+Use the extract_case_data function when you have enough information to:
+- Identify what type of legal issue it is (category)
+- Understand the basic situation
+- Determine how urgent it might be
+- Extract key people, dates, and details they've mentioned
 
-IMPORTANT:
-- You are gathering information, NOT providing legal advice
-- Always include disclaimers about needing to consult qualified lawyers
-- Be sensitive to client concerns and emotions
-- Focus on comprehensive legal analysis and classification
+IMPORTANT REMINDERS:
+• You're gathering information, NOT giving legal advice
+• Always be warm and supportive - people sharing legal problems are often stressed
+• Keep the conversation natural and flowing
+• Don't rush to categorize - let them tell their story first
+• Set needsPersonalDetails to true when you need their contact information (the system will show a form)
 
-LANGUAGE: Conduct conversation in ${language === 'ar' ? 'Arabic' : language === 'de' ? 'German' : 'English'}
+LANGUAGE: Respond in ${language === 'ar' ? 'Arabic' : language === 'de' ? 'German' : 'English'}
 
-Use the extract_case_data function when you have sufficient information to categorize the case and perform legal analysis. Set needsPersonalDetails to true when you've understood their case and need to collect their contact information - DO NOT ask for personal details in chat.`;
+Remember: You're here to help people feel heard and understood while gathering the information needed to connect them with the right legal help.`;
 }
 
 function getIntakeFunctions() {
   return [
     {
       name: 'extract_case_data',
-      description: 'Extract structured case data and legal analysis when sufficient information is gathered',
+      description: 'Extract basic case information when you understand the client\'s situation',
       parameters: {
         type: 'object',
         properties: {
           category: {
             type: 'string',
-            description: 'Primary case category (Family Law, Immigration Law, Real Estate Law, etc.)',
+            description: 'Main case category (e.g., Family Law, Immigration Law, Real Estate Law, Employment Law, etc.)',
           },
           subcategory: {
             type: 'string',
-            description: 'Specific subcategory if applicable',
+            description: 'More specific type if known (e.g., Divorce, Work Visa, Property Dispute)',
           },
           urgency: {
             type: 'string',
             enum: ['low', 'medium', 'high', 'urgent'],
-            description: 'Case urgency based on timeline and legal requirements',
+            description: 'How urgent this case seems based on deadlines or time-sensitive issues',
           },
           entities: {
             type: 'object',
@@ -692,7 +667,7 @@ function getIntakeFunctions() {
               parties: {
                 type: 'array',
                 items: { type: 'string' },
-                description: 'Names of parties involved',
+                description: 'People or organizations involved (names mentioned)',
               },
               dates: {
                 type: 'array',
@@ -702,100 +677,35 @@ function getIntakeFunctions() {
               amounts: {
                 type: 'array',
                 items: { type: 'string' },
-                description: 'Financial amounts mentioned',
+                description: 'Money amounts mentioned',
               },
               locations: {
                 type: 'array',
                 items: { type: 'string' },
-                description: 'Relevant locations or jurisdictions',
+                description: 'Places mentioned that are relevant to the case',
               },
-              legal_documents: {
+              documents: {
                 type: 'array',
                 items: { type: 'string' },
-                description: 'Contracts, agreements, court orders, legal documents mentioned',
-              },
-              legal_deadlines: {
-                type: 'array',
-                items: { type: 'string' },
-                description: 'Statute of limitations, court dates, filing deadlines',
-              },
-              legal_relationships: {
-                type: 'array',
-                items: { type: 'string' },
-                description: 'Legal relationships like employer-employee, landlord-tenant, etc.',
-              },
-              assets_property: {
-                type: 'array',
-                items: { type: 'string' },
-                description: 'Property, assets, intellectual property involved',
-              },
-              institutions: {
-                type: 'array',
-                items: { type: 'string' },
-                description: 'Courts, government agencies, organizations involved',
+                description: 'Documents they mentioned having or needing',
               },
             },
           },
-          requiredDocuments: {
-            type: 'array',
-            items: { type: 'string' },
-            description: 'Documents needed for this type of case',
+          caseSummary: {
+            type: 'string',
+            description: 'Brief, friendly summary of their situation in plain language',
+          },
+          needsPersonalDetails: {
+            type: 'boolean',
+            description: 'Set to true when ready to collect their contact information (name, email, phone)',
           },
           nextQuestions: {
             type: 'array',
             items: { type: 'string' },
-            description: 'Follow-up questions to gather more specific information',
-          },
-          legal_issues: {
-            type: 'array',
-            items: { type: 'string' },
-            description: 'Specific legal problems and issues identified in the case',
-          },
-          legal_classification: {
-            type: 'object',
-            properties: {
-              primary_legal_area: {
-                type: 'string',
-                description: 'Main area of law (Contract Law, Tort Law, Criminal Law, etc.)',
-              },
-              secondary_legal_areas: {
-                type: 'array',
-                items: { type: 'string' },
-                description: 'Related or secondary legal areas involved',
-              },
-              applicable_statutes: {
-                type: 'array',
-                items: { type: 'string' },
-                description: 'Relevant laws, statutes, regulations, and legal codes',
-              },
-              legal_concepts: {
-                type: 'array',
-                items: { type: 'string' },
-                description: 'Key legal principles, doctrines, and concepts involved',
-              },
-            },
-          },
-          violation_types: {
-            type: 'array',
-            items: { type: 'string' },
-            description: 'Specific legal violations, breaches, or wrongs identified',
-          },
-          legal_remedies_sought: {
-            type: 'array',
-            items: { type: 'string' },
-            description: 'Legal relief, remedies, or outcomes the client is seeking',
-          },
-          legal_complexity: {
-            type: 'string',
-            enum: ['simple', 'moderate', 'complex'],
-            description: 'Assessment of the legal complexity of the case',
-          },
-          needsPersonalDetails: {
-            type: 'boolean',
-            description: 'Set to true when you need to collect personal contact information (name, email, phone, address)',
+            description: 'Helpful follow-up questions to ask them next (if any)',
           },
         },
-        required: ['category', 'urgency'],
+        required: ['category', 'urgency', 'caseSummary'],
       },
     },
   ];
