@@ -39,13 +39,12 @@ const verificationSchema = z.object({
   supportStaffCount: z.coerce.number().min(0, "Support staff count cannot be negative"),
   consultationRate: z.coerce.number().min(1, "Consultation rate is required"),
   consultationStructure: z.string().min(1, "Please select consultation structure"),
-  familyLawRate: z.coerce.number().optional(),
-  criminalLawRate: z.coerce.number().optional(),
-  corporateLawRate: z.coerce.number().optional(),
-  realEstateLawRate: z.coerce.number().optional(),
-  immigrationLawRate: z.coerce.number().optional(),
-  employmentLawRate: z.coerce.number().optional(),
-  personalInjuryRate: z.coerce.number().optional(),
+  visaRenewalRate: z.coerce.number().optional(),
+  workPermitRate: z.coerce.number().optional(),
+  marriageRegistrationRate: z.coerce.number().optional(),
+  propertyContractRate: z.coerce.number().optional(),
+  businessRegistrationRate: z.coerce.number().optional(),
+  divorceFilingRate: z.coerce.number().optional(),
   notableAchievements: z.string().optional(),
   officePhone: z.string().min(1, "Office phone number is required"),
   privateMobile: z.string().min(1, "Private mobile number is required"), 
@@ -96,14 +95,13 @@ const availableLanguages = [
   "Japanese",
 ];
 
-const legalAreas = [
-  { key: "familyLaw", label: "Family Law", field: "familyLawRate" },
-  { key: "criminalLaw", label: "Criminal Law", field: "criminalLawRate" },
-  { key: "corporateLaw", label: "Corporate Law", field: "corporateLawRate" },
-  { key: "realEstateLaw", label: "Real Estate Law", field: "realEstateLawRate" },
-  { key: "immigrationLaw", label: "Immigration Law", field: "immigrationLawRate" },
-  { key: "employmentLaw", label: "Employment Law", field: "employmentLawRate" },
-  { key: "personalInjury", label: "Personal Injury", field: "personalInjuryRate" },
+const legalServices = [
+  { key: "visaRenewal", label: "Visa Renewal/Extension", field: "visaRenewalRate" },
+  { key: "workPermit", label: "Work Permit Application", field: "workPermitRate" },
+  { key: "marriageRegistration", label: "Marriage Registration/Certificate", field: "marriageRegistrationRate" },
+  { key: "propertyContract", label: "Property Purchase/Rental Agreement", field: "propertyContractRate" },
+  { key: "businessRegistration", label: "Business Registration/License", field: "businessRegistrationRate" },
+  { key: "divorceFiling", label: "Divorce Proceedings (Mixed Marriage)", field: "divorceFilingRate" },
 ];
 
 export function CompleteVerificationForm({ onComplete, initialData }: CompleteVerificationFormProps) {
@@ -375,12 +373,12 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
           rate: data.consultationRate,
           structure: data.consultationStructure,
         },
-        services: legalAreas.reduce((acc, area) => {
-          const rate = data[area.field as keyof VerificationData] as number;
+        services: legalServices.reduce((acc, service) => {
+          const rate = data[service.field as keyof VerificationData] as number;
           if (rate && rate > 0) {
-            acc[area.key] = {
+            acc[service.key] = {
               rate,
-              label: area.label,
+              label: service.label,
             };
           }
           return acc;
@@ -776,15 +774,15 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
             <div className="space-y-4">
               <h4 className="font-medium">Legal Service Rates (Optional - Approximate flat fees in EGP)</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {legalAreas.map((area) => (
-                  <div key={area.key}>
-                    <Label htmlFor={area.field}>{area.label}</Label>
+                {legalServices.map((service) => (
+                  <div key={service.key}>
+                    <Label htmlFor={service.field}>{service.label}</Label>
                     <Input
-                      id={area.field}
+                      id={service.field}
                       type="number"
                       min="0"
                       placeholder="Approximate flat fee (optional)"
-                      {...form.register(area.field as keyof VerificationData)}
+                      {...form.register(service.field as keyof VerificationData)}
                     />
                   </div>
                 ))}
