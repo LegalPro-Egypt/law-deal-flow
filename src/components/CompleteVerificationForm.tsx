@@ -47,6 +47,10 @@ const verificationSchema = z.object({
   whatsappNumber: z.string().optional(),
   officeAddress: z.string().min(1, "Office address is required"),
   spokenLanguages: z.array(z.string()).min(1, "Please select at least one language"),
+  lawFirm: z.string().optional(),
+  licenseNumber: z.string().min(1, "License number is required"),
+  yearsExperience: z.coerce.number().min(0, "Years of experience must be 0 or greater").optional(),
+  barAdmissionsInput: z.string().optional(),
 });
 
 type VerificationData = z.infer<typeof verificationSchema>;
@@ -91,6 +95,21 @@ const availableLanguages = [
   "Japanese",
 ];
 
+const specializationOptions = [
+  "Immigration Law",
+  "Family Law", 
+  "Business Law",
+  "Real Estate Law",
+  "Labor Law",
+  "Criminal Law",
+  "Civil Law",
+  "Tax Law",
+  "Intellectual Property Law",
+  "Administrative Law",
+  "Commercial Law",
+  "Maritime Law",
+];
+
 const legalServices = [
   { key: "visaRenewal", label: "Visa Renewal/Extension", field: "visaRenewalRate" },
   { key: "workPermit", label: "Work Permit Application", field: "workPermitRate" },
@@ -114,6 +133,7 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
   const [selectedPaymentStructures, setSelectedPaymentStructures] = useState<string[]>(["hourly"]);
   const [selectedMemberships, setSelectedMemberships] = useState<string[]>([]);
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(["Arabic", "English"]);
+  const [selectedSpecializations, setSelectedSpecializations] = useState<string[]>([]);
 
   const form = useForm<VerificationData>({
     resolver: zodResolver(verificationSchema),
@@ -126,6 +146,10 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
       whatsappNumber: initialData?.whatsappNumber || "",
       officeAddress: initialData?.officeAddress || "",
       spokenLanguages: initialData?.spokenLanguages || ["Arabic", "English"],
+      lawFirm: initialData?.lawFirm || "",
+      licenseNumber: initialData?.licenseNumber || "",
+      yearsExperience: initialData?.yearsExperience || undefined,
+      barAdmissionsInput: initialData?.barAdmissionsInput || "",
       ...initialData,
     },
   });
@@ -254,6 +278,14 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
     }
   };
 
+  const handleSpecializationChange = (specialization: string, checked: boolean) => {
+    if (checked) {
+      setSelectedSpecializations(prev => [...prev, specialization]);
+    } else {
+      setSelectedSpecializations(prev => prev.filter(s => s !== specialization));
+    }
+  };
+
   const onSubmit = async (data: VerificationData) => {
     console.log('Starting verification submission...', { 
       userID: user?.id,
@@ -373,6 +405,12 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
         }, {} as Record<string, any>),
       };
 
+      // Prepare bar admissions array
+      const barAdmissions = (data.barAdmissionsInput || "")
+        .split(",")
+        .map(s => s.trim())
+        .filter(Boolean);
+
       // Update profile with complete verification data
       const { error } = await supabase
         .from("profiles")
@@ -391,6 +429,11 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
           private_phone: data.privateMobile,
           office_address: data.officeAddress,
           languages: selectedLanguages,
+          law_firm: data.lawFirm || null,
+          license_number: data.licenseNumber,
+          years_experience: data.yearsExperience ?? null,
+          specializations: selectedSpecializations,
+          bar_admissions: barAdmissions.length ? barAdmissions : null,
           verification_status: "pending_complete",
           updated_at: new Date().toISOString(),
         })
@@ -646,6 +689,87 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
                     {form.formState.errors.officeAddress.message}
                   </p>
                 )}
+              </div>
+            </div>
+          </div>
+
+          {/* Legal Practice Section */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Building className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-semibold">Legal Practice Information</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="lawFirm">Law Firm/Practice Name</Label>
+                <Input
+                  id="lawFirm"
+                  placeholder="Enter your law firm or practice name"
+                  {...form.register("lawFirm")}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="licenseNumber">License Number *</Label>
+                <Input
+                  id="licenseNumber"
+                  placeholder="Enter your bar license number"
+                  {...form.register("licenseNumber")}
+                />
+                {form.formState.errors.licenseNumber && (
+                  <p className="text-sm text-destructive mt-1">
+                    {form.formState.errors.licenseNumber.message}
+                  </p>
+                )}
+              </div>
+              
+              <div>
+                <Label htmlFor="yearsExperience">Years of Experience</Label>
+                <Input
+                  id="yearsExperience"
+                  type="number"
+                  min="0"
+                  placeholder="Number of years practicing law"
+                  {...form.register("yearsExperience")}
+                />
+                {form.formState.errors.yearsExperience && (
+                  <p className="text-sm text-destructive mt-1">
+                    {form.formState.errors.yearsExperience.message}
+                  </p>
+                )}
+              </div>
+              
+              <div>
+                <Label htmlFor="barAdmissionsInput">Bar Admissions</Label>
+                <Input
+                  id="barAdmissionsInput"
+                  placeholder="e.g. Egyptian Bar Association, Cairo Bar"
+                  {...form.register("barAdmissionsInput")}
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  Enter multiple admissions separated by commas
+                </p>
+              </div>
+            </div>
+            
+            <div>
+              <Label className="text-base font-medium">Legal Specializations</Label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-3">
+                {specializationOptions.map((specialization) => (
+                  <div key={specialization} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={specialization}
+                      checked={selectedSpecializations.includes(specialization)}
+                      onCheckedChange={(checked) => 
+                        handleSpecializationChange(specialization, checked as boolean)
+                      }
+                    />
+                    <Label htmlFor={specialization} className="text-sm">
+                      {specialization}
+                    </Label>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
