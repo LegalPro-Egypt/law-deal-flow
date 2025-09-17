@@ -103,40 +103,56 @@ const AdminDashboard = () => {
         console.log(`Processing lawyer ${lawyer.id} - Front URL: ${lawyer.lawyer_card_front_url}, Back URL: ${lawyer.lawyer_card_back_url}`);
 
         if (lawyer.lawyer_card_front_url) {
-          try {
-            const { data: frontUrl, error: frontError } = await supabase.storage
-              .from('lawyer-documents')
-              .createSignedUrl(lawyer.lawyer_card_front_url, 60 * 60 * 24); // 24 hours
-            
-            if (frontError) {
-              console.error(`Error fetching front card URL for lawyer ${lawyer.id}:`, frontError);
+          // Check if the URL is already a signed URL (contains 'storage/v1/object/sign')
+          if (lawyer.lawyer_card_front_url.includes('storage/v1/object/sign')) {
+            // Use the existing signed URL directly
+            urls.front = lawyer.lawyer_card_front_url;
+            console.log(`Using existing signed front URL for lawyer ${lawyer.id}`);
+          } else {
+            // Generate a new signed URL from the file path
+            try {
+              const { data: frontUrl, error: frontError } = await supabase.storage
+                .from('lawyer-documents')
+                .createSignedUrl(lawyer.lawyer_card_front_url, 60 * 60 * 24); // 24 hours
+              
+              if (frontError) {
+                console.error(`Error fetching front card URL for lawyer ${lawyer.id}:`, frontError);
+              }
+              
+              if (frontUrl?.signedUrl) {
+                urls.front = frontUrl.signedUrl;
+                console.log(`Successfully fetched front URL for lawyer ${lawyer.id}`);
+              }
+            } catch (error) {
+              console.error(`Exception fetching front card URL for lawyer ${lawyer.id}:`, error);
             }
-            
-            if (frontUrl?.signedUrl) {
-              urls.front = frontUrl.signedUrl;
-              console.log(`Successfully fetched front URL for lawyer ${lawyer.id}`);
-            }
-          } catch (error) {
-            console.error(`Exception fetching front card URL for lawyer ${lawyer.id}:`, error);
           }
         }
 
         if (lawyer.lawyer_card_back_url) {
-          try {
-            const { data: backUrl, error: backError } = await supabase.storage
-              .from('lawyer-documents')
-              .createSignedUrl(lawyer.lawyer_card_back_url, 60 * 60 * 24); // 24 hours
-            
-            if (backError) {
-              console.error(`Error fetching back card URL for lawyer ${lawyer.id}:`, backError);
+          // Check if the URL is already a signed URL (contains 'storage/v1/object/sign')
+          if (lawyer.lawyer_card_back_url.includes('storage/v1/object/sign')) {
+            // Use the existing signed URL directly
+            urls.back = lawyer.lawyer_card_back_url;
+            console.log(`Using existing signed back URL for lawyer ${lawyer.id}`);
+          } else {
+            // Generate a new signed URL from the file path
+            try {
+              const { data: backUrl, error: backError } = await supabase.storage
+                .from('lawyer-documents')
+                .createSignedUrl(lawyer.lawyer_card_back_url, 60 * 60 * 24); // 24 hours
+              
+              if (backError) {
+                console.error(`Error fetching back card URL for lawyer ${lawyer.id}:`, backError);
+              }
+              
+              if (backUrl?.signedUrl) {
+                urls.back = backUrl.signedUrl;
+                console.log(`Successfully fetched back URL for lawyer ${lawyer.id}`);
+              }
+            } catch (error) {
+              console.error(`Exception fetching back card URL for lawyer ${lawyer.id}:`, error);
             }
-            
-            if (backUrl?.signedUrl) {
-              urls.back = backUrl.signedUrl;
-              console.log(`Successfully fetched back URL for lawyer ${lawyer.id}`);
-            }
-          } catch (error) {
-            console.error(`Exception fetching back card URL for lawyer ${lawyer.id}:`, error);
           }
         }
 
