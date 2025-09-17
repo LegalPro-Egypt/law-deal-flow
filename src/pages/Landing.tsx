@@ -6,6 +6,7 @@ import { Scale, Shield, MessageSquare, Users, Clock, Check } from "lucide-react"
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { PublicLegalChat } from "@/components/PublicLegalChat";
+import { RotatingWords } from "@/components/RotatingWords";
 
 const Landing = () => {
   const { isAuthenticated, role, loading } = useAuth();
@@ -62,7 +63,10 @@ const Landing = () => {
           <div className="max-w-4xl mx-auto text-center animate-fade-in">
             <h1 className="text-4xl sm:text-6xl font-bold mb-6">
               Connect with Vetted Lawyers{" "}
-              <span className="text-accent">Instantly</span>
+              <RotatingWords 
+                words={["Quickly", "Securely", "Confidently", "Easily"]}
+                className="text-accent"
+              />
             </h1>
             <p className="text-xl sm:text-2xl text-gray-200 mb-8 max-w-3xl mx-auto">
               AI-powered intake, secure messaging, and transparent pricing. 
