@@ -42,6 +42,7 @@ import {
   Globe
 } from "lucide-react";
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Separator } from "@/components/ui/separator";
 import { LawyerRequestsManager } from "@/components/LawyerRequestsManager";
@@ -77,6 +78,7 @@ const AdminDashboard = () => {
   const [expandedLawyers, setExpandedLawyers] = useState<Set<string>>(new Set());
   const [lawyerToDelete, setLawyerToDelete] = useState<string | null>(null);
   const [showLawyerDeleteConfirm, setShowLawyerDeleteConfirm] = useState(false);
+  const [expandedImage, setExpandedImage] = useState<{url: string; title: string} | null>(null);
 
   useEffect(() => {
     fetchAllLawyers();
@@ -939,17 +941,18 @@ const AdminDashboard = () => {
                       <p className="text-xs font-medium text-muted-foreground">Front Side</p>
                       {lawyer.lawyer_card_front_url && cardUrls[lawyer.id]?.front ? (
                         <div className="relative group">
-                          <img 
-                            src={cardUrls[lawyer.id].front}
-                            alt="Lawyer Card Front"
-                            className="w-full h-24 object-cover rounded border shadow-sm transition-transform group-hover:scale-105"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                              const fallback = target.nextElementSibling as HTMLElement;
-                              if (fallback) fallback.style.display = 'flex';
-                            }}
-                          />
+                           <img 
+                             src={cardUrls[lawyer.id].front}
+                             alt="Lawyer Card Front"
+                             className="w-full h-24 object-cover rounded border shadow-sm transition-transform group-hover:scale-105 cursor-pointer"
+                             onClick={() => setExpandedImage({url: cardUrls[lawyer.id].front!, title: `${lawyer.first_name} ${lawyer.last_name} - Lawyer Card (Front)`})}
+                             onError={(e) => {
+                               const target = e.target as HTMLImageElement;
+                               target.style.display = 'none';
+                               const fallback = target.nextElementSibling as HTMLElement;
+                               if (fallback) fallback.style.display = 'flex';
+                             }}
+                           />
                           <div className="w-full h-24 bg-muted/50 rounded border flex items-center justify-center text-xs text-muted-foreground hidden">
                             <div className="text-center">
                               <FileImage className="h-4 w-4 mx-auto mb-1" />
@@ -979,17 +982,18 @@ const AdminDashboard = () => {
                       <p className="text-xs font-medium text-muted-foreground">Back Side</p>
                       {lawyer.lawyer_card_back_url && cardUrls[lawyer.id]?.back ? (
                         <div className="relative group">
-                          <img 
-                            src={cardUrls[lawyer.id].back}
-                            alt="Lawyer Card Back"
-                            className="w-full h-24 object-cover rounded border shadow-sm transition-transform group-hover:scale-105"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                              const fallback = target.nextElementSibling as HTMLElement;
-                              if (fallback) fallback.style.display = 'flex';
-                            }}
-                          />
+                           <img 
+                             src={cardUrls[lawyer.id].back}
+                             alt="Lawyer Card Back"
+                             className="w-full h-24 object-cover rounded border shadow-sm transition-transform group-hover:scale-105 cursor-pointer"
+                             onClick={() => setExpandedImage({url: cardUrls[lawyer.id].back!, title: `${lawyer.first_name} ${lawyer.last_name} - Lawyer Card (Back)`})}
+                             onError={(e) => {
+                               const target = e.target as HTMLImageElement;
+                               target.style.display = 'none';
+                               const fallback = target.nextElementSibling as HTMLElement;
+                               if (fallback) fallback.style.display = 'flex';
+                             }}
+                           />
                           <div className="w-full h-24 bg-muted/50 rounded border flex items-center justify-center text-xs text-muted-foreground hidden">
                             <div className="text-center">
                               <FileImage className="h-4 w-4 mx-auto mb-1" />
@@ -1036,17 +1040,18 @@ const AdminDashboard = () => {
                       <p className="text-xs font-medium text-muted-foreground">Profile Picture</p>
                       {lawyer.profile_picture_url ? (
                         <div className="relative group">
-                          <img 
-                            src={lawyer.profile_picture_url}
-                            alt="Profile Picture"
-                            className="w-16 h-16 object-cover rounded-full border-2 border-border shadow-sm transition-transform group-hover:scale-105"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                              const fallback = target.nextElementSibling as HTMLElement;
-                              if (fallback) fallback.style.display = 'flex';
-                            }}
-                          />
+                           <img 
+                             src={lawyer.profile_picture_url}
+                             alt="Profile Picture"
+                             className="w-16 h-16 object-cover rounded-full border-2 border-border shadow-sm transition-transform group-hover:scale-105 cursor-pointer"
+                             onClick={() => setExpandedImage({url: lawyer.profile_picture_url!, title: `${lawyer.first_name} ${lawyer.last_name} - Profile Picture`})}
+                             onError={(e) => {
+                               const target = e.target as HTMLImageElement;
+                               target.style.display = 'none';
+                               const fallback = target.nextElementSibling as HTMLElement;
+                               if (fallback) fallback.style.display = 'flex';
+                             }}
+                           />
                           <div className="w-16 h-16 bg-muted/50 rounded-full border-2 border-border flex items-center justify-center text-xs text-muted-foreground hidden">
                             <User className="h-6 w-6" />
                           </div>
@@ -1523,6 +1528,22 @@ const AdminDashboard = () => {
             setSelectedLawyerId(null);
           }}
         />
+
+        {/* Image Expansion Dialog */}
+        <Dialog open={!!expandedImage} onOpenChange={() => setExpandedImage(null)}>
+          <DialogContent className="max-w-4xl w-full p-6">
+            <DialogHeader>
+              <DialogTitle>{expandedImage?.title}</DialogTitle>
+            </DialogHeader>
+            <div className="flex justify-center">
+              <img 
+                src={expandedImage?.url}
+                alt={expandedImage?.title}
+                className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-lg"
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
