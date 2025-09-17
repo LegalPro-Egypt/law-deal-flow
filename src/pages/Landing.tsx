@@ -230,41 +230,44 @@ const Landing = () => {
       {/* Footer */}
       <footer className="bg-card border-t py-12">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center space-x-2 mb-4">
+          <div className="space-y-8">
+            <div className="text-center sm:text-left">
+              <div className="flex items-center justify-center sm:justify-start space-x-2 mb-4">
                 <Scale className="h-6 w-6 text-primary" />
                 <span className="font-bold">LegalPro</span>
               </div>
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground max-w-md mx-auto sm:mx-0">
                 Professional legal services with Lexa AI-powered matching and secure payment protection.
               </p>
             </div>
-            <div>
-              <h3 className="font-semibold mb-4">Services</h3>
-              <ul className="space-y-2 text-muted-foreground">
-                <li>Family Law</li>
-                <li>Immigration</li>
-                <li>Real Estate</li>
-                <li>Corporate Law</li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4">Support</h3>
-              <ul className="space-y-2 text-muted-foreground">
-                <li>Help Center</li>
-                <li>Contact Us</li>
-                <li>Privacy Policy</li>
-                <li>Terms of Service</li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4">Languages</h3>
-              <ul className="space-y-2 text-muted-foreground">
-                <li>English</li>
-                <li>العربية</li>
-                <li>Deutsch</li>
-              </ul>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
+              <div className="text-center sm:text-left">
+                <h3 className="font-semibold mb-3">Services</h3>
+                <ul className="space-y-1 text-muted-foreground text-sm">
+                  <li>Family Law</li>
+                  <li>Immigration</li>
+                  <li>Real Estate</li>
+                  <li>Corporate Law</li>
+                </ul>
+              </div>
+              <div className="text-center sm:text-left">
+                <h3 className="font-semibold mb-3">Support</h3>
+                <ul className="space-y-1 text-muted-foreground text-sm">
+                  <li>Help Center</li>
+                  <li>Contact Us</li>
+                  <li>Privacy Policy</li>
+                  <li>Terms of Service</li>
+                </ul>
+              </div>
+              <div className="text-center sm:text-left">
+                <h3 className="font-semibold mb-3">Languages</h3>
+                <ul className="space-y-1 text-muted-foreground text-sm">
+                  <li>English</li>
+                  <li>العربية</li>
+                  <li>Deutsch</li>
+                </ul>
+              </div>
             </div>
           </div>
           <div className="mt-8 pt-8 border-t text-center text-muted-foreground">
