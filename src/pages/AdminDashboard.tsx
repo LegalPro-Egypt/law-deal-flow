@@ -473,26 +473,27 @@ const AdminDashboard = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b bg-background/95 backdrop-blur sticky top-0 z-50">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto px-2 sm:px-4 lg:px-6 xl:px-8">
           <div className="flex items-center justify-between h-16">
-            <Link to="/?force=true" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-              <Scale className="h-8 w-8 text-primary" />
-              <span className="text-xl font-bold">LegalConnect</span>
-              <Badge variant="destructive" className="ml-2">Admin Portal</Badge>
+            <Link to="/?force=true" className="flex items-center space-x-1 sm:space-x-2 hover:opacity-80 transition-opacity">
+              <Scale className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+              <span className="text-lg sm:text-xl font-bold hidden xs:block">LegalConnect</span>
+              <Badge variant="destructive" className="ml-1 sm:ml-2 text-xs">Admin</Badge>
             </Link>
-            <Button variant="ghost" size="sm" onClick={handleSignOut}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
+            <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-xs sm:text-sm">
+              <LogOut className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Sign Out</span>
+              <span className="sm:hidden">Out</span>
             </Button>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="container mx-auto px-4 py-4 sm:py-8 max-w-4xl">
         {/* Stats Overview */}
-        <div className="grid md:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-6 sm:mb-8">
           <Card className="bg-gradient-card shadow-card">
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Total Cases</p>
@@ -504,7 +505,7 @@ const AdminDashboard = () => {
           </Card>
           
           <Card className="bg-gradient-card shadow-card">
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Active Cases</p>
@@ -516,7 +517,7 @@ const AdminDashboard = () => {
           </Card>
 
           <Card className="bg-gradient-card shadow-card">
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Pending Intakes</p>
@@ -528,7 +529,7 @@ const AdminDashboard = () => {
           </Card>
 
           <Card className="bg-gradient-card shadow-card">
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Total Lawyers</p>
@@ -540,7 +541,7 @@ const AdminDashboard = () => {
           </Card>
 
           <Card className="bg-gradient-card shadow-card border-primary">
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Pending Reviews</p>
@@ -577,10 +578,10 @@ const AdminDashboard = () => {
 
           {/* AI Intakes Tab */}
           <TabsContent value="intakes" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold">AI Intake Conversations</h2>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <h2 className="text-xl sm:text-2xl font-bold">AI Intake Conversations</h2>
               <div className="flex items-center space-x-2">
-                <div className="relative">
+                <div className="relative flex-1 sm:flex-none sm:w-64">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input 
                     className="pl-10" 
@@ -612,8 +613,8 @@ const AdminDashboard = () => {
                     >
                       <XCircle className="h-4 w-4" />
                     </Button>
-                    <CardContent className="p-6">
-                      <div className="grid lg:grid-cols-3 gap-6">
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
                         {/* Intake Info */}
                         <div>
                           <div className="flex items-center justify-between mb-2 pr-8">
@@ -674,10 +675,10 @@ const AdminDashboard = () => {
 
           {/* Free User Chat History Tab */}
           <TabsContent value="free-chats" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold">Free User Chat History</h2>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <h2 className="text-xl sm:text-2xl font-bold">Free User Chat History</h2>
               <div className="flex items-center space-x-2">
-                <div className="relative">
+                <div className="relative flex-1 sm:flex-none sm:w-64">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input 
                     className="pl-10" 
@@ -715,8 +716,8 @@ const AdminDashboard = () => {
                   )
                   .map((chat) => (
                   <Card key={chat.id} className="bg-gradient-card shadow-card">
-                    <CardContent className="p-6">
-                      <div className="grid lg:grid-cols-3 gap-6">
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
                         {/* Chat Info */}
                         <div>
                           <div className="flex items-center justify-between mb-2">
@@ -777,23 +778,23 @@ const AdminDashboard = () => {
 
           {/* Cases Tab */}
           <TabsContent value="cases" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold">Cases</h2>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <h2 className="text-xl sm:text-2xl font-bold">Cases</h2>
               <div className="flex items-center space-x-2">
-                <div className="relative">
+                <div className="relative flex-1 sm:flex-none sm:w-64">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input className="pl-10" placeholder="Search cases..." />
                 </div>
-                <Button variant="outline" size="sm">
-                  <Filter className="h-4 w-4 mr-2" />
-                  Filter
+                <Button variant="outline" size="sm" className="px-2 sm:px-3">
+                  <Filter className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Filter</span>
                 </Button>
               </div>
             </div>
 
             {cases.length === 0 ? (
               <Card className="bg-gradient-card shadow-card">
-                <CardContent className="p-8 text-center">
+                <CardContent className="p-6 sm:p-8 text-center">
                   <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-semibold mb-2">No cases yet</h3>
                   <p className="text-muted-foreground">Cases created from AI intakes will appear here</p>
@@ -815,16 +816,9 @@ const AdminDashboard = () => {
                       caseItem.status === 'submitted' ? 'border-primary border-2' : ''
                     }`}
                   >
-                    <CardContent className="p-6">
-                      {caseItem.status === 'submitted' && (
-                        <div className="mb-4">
-                          <Badge className="bg-primary text-primary-foreground">
-                            <AlertCircle className="h-3 w-3 mr-1" />
-                            Needs Review
-                          </Badge>
-                        </div>
-                      )}
-                      <div className="grid lg:grid-cols-3 gap-6">
+                    <CardContent className="p-4 sm:p-6">
+...
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
                         {/* Case Info */}
                         <div>
                           <div className="flex items-center justify-between mb-2">
