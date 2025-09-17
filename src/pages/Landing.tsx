@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Scale, Shield, MessageSquare, Users, Clock, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { PublicLegalChat } from "@/components/PublicLegalChat";
 
 const Landing = () => {
   const { isAuthenticated, role, loading } = useAuth();
@@ -80,6 +81,21 @@ const Landing = () => {
               </Link>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Public Legal Q&A Section */}
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Free Legal Q&A</h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Get instant answers about Egyptian law from our AI legal assistant. 
+              No signup required — ask your legal questions right now.
+            </p>
+          </div>
+          
+          <PublicLegalChat className="animate-slide-up" />
         </div>
       </section>
 
