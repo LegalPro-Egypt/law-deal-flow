@@ -915,128 +915,203 @@ const AdminDashboard = () => {
                                   Lawyer Card Documents
                                 </h4>
                                 
-                                {cardUrls[lawyer.id]?.front || cardUrls[lawyer.id]?.back ? (
-                                  <div className="grid grid-cols-2 gap-3">
-                                    {/* Front Card */}
-                                    {cardUrls[lawyer.id]?.front ? (
-                                      <div className="space-y-2">
-                                        <p className="text-xs font-medium text-muted-foreground">Front Side</p>
-                                        <div className="relative group">
-                                          <img 
-                                            src={cardUrls[lawyer.id].front}
-                                            alt="Lawyer Card Front"
-                                            className="w-full h-24 object-cover rounded border shadow-sm transition-transform group-hover:scale-105"
-                                            onError={(e) => {
-                                              const target = e.target as HTMLImageElement;
-                                              target.style.display = 'none';
-                                              const fallback = target.nextElementSibling as HTMLElement;
-                                              if (fallback) fallback.style.display = 'flex';
-                                            }}
-                                          />
-                                          <div className="w-full h-24 bg-muted/50 rounded border flex items-center justify-center text-xs text-muted-foreground hidden">
-                                            Image unavailable
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ) : (
-                                      <div className="space-y-2">
-                                        <p className="text-xs font-medium text-muted-foreground">Front Side</p>
-                                        <div className="w-full h-24 bg-muted/30 rounded border-2 border-dashed flex items-center justify-center text-xs text-muted-foreground">
-                                          Not provided
-                                        </div>
-                                      </div>
-                                    )}
+                {/* Check if lawyer has card URLs in database first */}
+                {lawyer.lawyer_card_front_url || lawyer.lawyer_card_back_url ? (
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Front Card */}
+                    <div className="space-y-2">
+                      <p className="text-xs font-medium text-muted-foreground">Front Side</p>
+                      {lawyer.lawyer_card_front_url && cardUrls[lawyer.id]?.front ? (
+                        <div className="relative group">
+                          <img 
+                            src={cardUrls[lawyer.id].front}
+                            alt="Lawyer Card Front"
+                            className="w-full h-24 object-cover rounded border shadow-sm transition-transform group-hover:scale-105"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              const fallback = target.nextElementSibling as HTMLElement;
+                              if (fallback) fallback.style.display = 'flex';
+                            }}
+                          />
+                          <div className="w-full h-24 bg-muted/50 rounded border flex items-center justify-center text-xs text-muted-foreground hidden">
+                            <div className="text-center">
+                              <FileImage className="h-4 w-4 mx-auto mb-1" />
+                              <span>Failed to load</span>
+                            </div>
+                          </div>
+                        </div>
+                      ) : lawyer.lawyer_card_front_url ? (
+                        <div className="w-full h-24 bg-amber-50 rounded border-2 border-amber-200 flex items-center justify-center text-xs text-amber-700">
+                          <div className="text-center">
+                            <FileImage className="h-4 w-4 mx-auto mb-1" />
+                            <span>File uploaded, processing...</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="w-full h-24 bg-muted/30 rounded border-2 border-dashed border-muted-foreground/30 flex items-center justify-center text-xs text-muted-foreground">
+                          <div className="text-center">
+                            <FileImage className="h-4 w-4 mx-auto mb-1" />
+                            <span>Not uploaded</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
 
-                                    {/* Back Card */}
-                                    {cardUrls[lawyer.id]?.back ? (
-                                      <div className="space-y-2">
-                                        <p className="text-xs font-medium text-muted-foreground">Back Side</p>
-                                        <div className="relative group">
-                                          <img 
-                                            src={cardUrls[lawyer.id].back}
-                                            alt="Lawyer Card Back"
-                                            className="w-full h-24 object-cover rounded border shadow-sm transition-transform group-hover:scale-105"
-                                            onError={(e) => {
-                                              const target = e.target as HTMLImageElement;
-                                              target.style.display = 'none';
-                                              const fallback = target.nextElementSibling as HTMLElement;
-                                              if (fallback) fallback.style.display = 'flex';
-                                            }}
-                                          />
-                                          <div className="w-full h-24 bg-muted/50 rounded border flex items-center justify-center text-xs text-muted-foreground hidden">
-                                            Image unavailable
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ) : (
-                                      <div className="space-y-2">
-                                        <p className="text-xs font-medium text-muted-foreground">Back Side</p>
-                                        <div className="w-full h-24 bg-muted/30 rounded border-2 border-dashed flex items-center justify-center text-xs text-muted-foreground">
-                                          Not provided
-                                        </div>
-                                      </div>
-                                    )}
-                                  </div>
-                                ) : (
-                                  <div className="text-center py-6 text-muted-foreground bg-muted/30 rounded border-2 border-dashed">
-                                    <FileImage className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
-                                    <p className="text-sm font-medium">No lawyer card documents uploaded</p>
-                                    <p className="text-xs mt-1">Required documents are missing</p>
-                                  </div>
-                                )}
+                    {/* Back Card */}
+                    <div className="space-y-2">
+                      <p className="text-xs font-medium text-muted-foreground">Back Side</p>
+                      {lawyer.lawyer_card_back_url && cardUrls[lawyer.id]?.back ? (
+                        <div className="relative group">
+                          <img 
+                            src={cardUrls[lawyer.id].back}
+                            alt="Lawyer Card Back"
+                            className="w-full h-24 object-cover rounded border shadow-sm transition-transform group-hover:scale-105"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              const fallback = target.nextElementSibling as HTMLElement;
+                              if (fallback) fallback.style.display = 'flex';
+                            }}
+                          />
+                          <div className="w-full h-24 bg-muted/50 rounded border flex items-center justify-center text-xs text-muted-foreground hidden">
+                            <div className="text-center">
+                              <FileImage className="h-4 w-4 mx-auto mb-1" />
+                              <span>Failed to load</span>
+                            </div>
+                          </div>
+                        </div>
+                      ) : lawyer.lawyer_card_back_url ? (
+                        <div className="w-full h-24 bg-amber-50 rounded border-2 border-amber-200 flex items-center justify-center text-xs text-amber-700">
+                          <div className="text-center">
+                            <FileImage className="h-4 w-4 mx-auto mb-1" />
+                            <span>File uploaded, processing...</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="w-full h-24 bg-muted/30 rounded border-2 border-dashed border-muted-foreground/30 flex items-center justify-center text-xs text-muted-foreground">
+                          <div className="text-center">
+                            <FileImage className="h-4 w-4 mx-auto mb-1" />
+                            <span>Not uploaded</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-6 text-muted-foreground bg-red-50 rounded border-2 border-red-200">
+                    <FileImage className="h-8 w-8 mx-auto mb-2 text-red-400" />
+                    <p className="text-sm font-medium text-red-700">No lawyer card documents found</p>
+                    <p className="text-xs mt-1 text-red-600">Lawyer has not uploaded their card documents yet</p>
+                  </div>
+                )}
                               </div>
 
-                              {/* Personal Information */}
-                              <div className="bg-background p-4 rounded-lg border">
-                                <h4 className="font-semibold text-sm mb-4 flex items-center gap-2">
-                                  <User className="h-4 w-4" />
-                                  Personal Information
-                                </h4>
-                                <div className="space-y-3 text-sm">
-                                  <div className="grid grid-cols-2 gap-3">
-                                    <div>
-                                      <p className="text-xs font-medium text-muted-foreground">Full Name</p>
-                                      <p>{lawyer.first_name} {lawyer.last_name}</p>
-                                    </div>
-                                    <div>
-                                      <p className="text-xs font-medium text-muted-foreground">Email</p>
-                                      <p className="truncate">{lawyer.email}</p>
-                                    </div>
-                                  </div>
-                                  {(lawyer.private_phone || lawyer.office_phone) && (
-                                    <div className="grid grid-cols-2 gap-3">
-                                      {lawyer.private_phone && (
-                                        <div>
-                                          <p className="text-xs font-medium text-muted-foreground">Private Phone</p>
-                                          <p>{lawyer.private_phone}</p>
-                                        </div>
-                                      )}
-                                      {lawyer.office_phone && (
-                                        <div>
-                                          <p className="text-xs font-medium text-muted-foreground">Office Phone</p>
-                                          <p>{lawyer.office_phone}</p>
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
-                                  {lawyer.office_address && (
-                                    <div>
-                                      <p className="text-xs font-medium text-muted-foreground">Office Address</p>
-                                      <p>{lawyer.office_address}</p>
-                                    </div>
-                                  )}
-                                  {lawyer.languages && lawyer.languages.length > 0 && (
-                                    <div>
-                                      <p className="text-xs font-medium text-muted-foreground mb-2">Languages</p>
-                                      <div className="flex flex-wrap gap-1">
-                                        {lawyer.languages.map((language: string, index: number) => (
-                                          <Badge key={index} variant="secondary" className="text-xs">
-                                            {language}
-                                          </Badge>
-                                        ))}
-                                      </div>
-                                    </div>
-                                  )}
+              {/* Personal Information */}
+              <div className="bg-background p-4 rounded-lg border">
+                <h4 className="font-semibold text-sm mb-4 flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  Personal Information
+                </h4>
+                <div className="space-y-4 text-sm">
+                  {/* Profile Picture */}
+                  <div className="flex items-center space-x-4">
+                    <div className="space-y-2">
+                      <p className="text-xs font-medium text-muted-foreground">Profile Picture</p>
+                      {lawyer.profile_picture_url ? (
+                        <div className="relative group">
+                          <img 
+                            src={lawyer.profile_picture_url}
+                            alt="Profile Picture"
+                            className="w-16 h-16 object-cover rounded-full border-2 border-border shadow-sm transition-transform group-hover:scale-105"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              const fallback = target.nextElementSibling as HTMLElement;
+                              if (fallback) fallback.style.display = 'flex';
+                            }}
+                          />
+                          <div className="w-16 h-16 bg-muted/50 rounded-full border-2 border-border flex items-center justify-center text-xs text-muted-foreground hidden">
+                            <User className="h-6 w-6" />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="w-16 h-16 bg-muted/30 rounded-full border-2 border-dashed border-muted-foreground/30 flex items-center justify-center">
+                          <User className="h-6 w-6 text-muted-foreground/50" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground">Full Name</p>
+                          <p>{lawyer.first_name || 'Not provided'} {lawyer.last_name || ''}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground">Email</p>
+                          <p className="truncate">{lawyer.email}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    {lawyer.private_phone && (
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground">Private Phone</p>
+                        <p>{lawyer.private_phone}</p>
+                      </div>
+                    )}
+                    {lawyer.office_phone && (
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground">Office Phone</p>
+                        <p>{lawyer.office_phone}</p>
+                      </div>
+                    )}
+                    {!lawyer.private_phone && !lawyer.office_phone && (
+                      <div className="col-span-2">
+                        <p className="text-xs font-medium text-muted-foreground">Phone Numbers</p>
+                        <p className="text-xs text-muted-foreground">Not provided</p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {lawyer.office_address ? (
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground">Office Address</p>
+                      <p>{lawyer.office_address}</p>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground">Office Address</p>
+                      <p className="text-xs text-muted-foreground">Not provided</p>
+                    </div>
+                  )}
+                  
+                  {lawyer.birth_date && (
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground">Date of Birth</p>
+                      <p>{new Date(lawyer.birth_date).toLocaleDateString()}</p>
+                    </div>
+                  )}
+                  
+                  {lawyer.languages && lawyer.languages.length > 0 ? (
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-2">Languages</p>
+                      <div className="flex flex-wrap gap-1">
+                        {lawyer.languages.map((language: string, index: number) => (
+                          <Badge key={index} variant="secondary" className="text-xs">
+                            {language}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground">Languages</p>
+                      <p className="text-xs text-muted-foreground">Not specified</p>
+                    </div>
+                  )}
                                 </div>
                               </div>
 
@@ -1054,59 +1129,101 @@ const AdminDashboard = () => {
 
                             {/* Right Column - Professional Details */}
                             <div className="space-y-6">
-                              {/* Legal Practice */}
-                              <div className="bg-background p-4 rounded-lg border">
-                                <h4 className="font-semibold text-sm mb-4 flex items-center gap-2">
-                                  <Scale className="h-4 w-4" />
-                                  Legal Practice
-                                </h4>
-                                <div className="space-y-4 text-sm">
-                                  {lawyer.law_firm && (
-                                    <div>
-                                      <p className="text-xs font-medium text-muted-foreground">Law Firm</p>
-                                      <p>{lawyer.law_firm}</p>
-                                    </div>
-                                  )}
-                                  {lawyer.specializations && lawyer.specializations.length > 0 && (
-                                    <div>
-                                      <p className="text-xs font-medium text-muted-foreground mb-2">Specializations</p>
-                                      <div className="flex flex-wrap gap-1">
-                                        {lawyer.specializations.map((spec: string, index: number) => (
-                                          <Badge key={index} variant="outline" className="text-xs">
-                                            {spec}
-                                          </Badge>
-                                        ))}
-                                      </div>
-                                    </div>
-                                  )}
-                                  <div className="grid grid-cols-2 gap-3">
-                                    {lawyer.years_experience && (
-                                      <div>
-                                        <p className="text-xs font-medium text-muted-foreground">Experience</p>
-                                        <p>{lawyer.years_experience} years</p>
-                                      </div>
-                                    )}
-                                    {lawyer.license_number && (
-                                      <div>
-                                        <p className="text-xs font-medium text-muted-foreground">License Number</p>
-                                        <p>{lawyer.license_number}</p>
-                                      </div>
-                                    )}
-                                  </div>
-                                  {lawyer.bar_admissions && lawyer.bar_admissions.length > 0 && (
-                                    <div>
-                                      <p className="text-xs font-medium text-muted-foreground mb-2">Bar Admissions</p>
-                                      <div className="flex flex-wrap gap-1">
-                                        {lawyer.bar_admissions.map((admission: string, index: number) => (
-                                          <Badge key={index} variant="secondary" className="text-xs">
-                                            {admission}
-                                          </Badge>
-                                        ))}
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
+              {/* Legal Practice */}
+              <div className="bg-background p-4 rounded-lg border">
+                <h4 className="font-semibold text-sm mb-4 flex items-center gap-2">
+                  <Scale className="h-4 w-4" />
+                  Legal Practice
+                </h4>
+                <div className="space-y-4 text-sm">
+                  {lawyer.law_firm ? (
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground">Law Firm</p>
+                      <p>{lawyer.law_firm}</p>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground">Law Firm</p>
+                      <p className="text-xs text-muted-foreground">Not specified</p>
+                    </div>
+                  )}
+                  
+                  {lawyer.specializations && lawyer.specializations.length > 0 ? (
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-2">Specializations</p>
+                      <div className="flex flex-wrap gap-1">
+                        {lawyer.specializations.map((spec: string, index: number) => (
+                          <Badge key={index} variant="outline" className="text-xs">
+                            {spec}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground">Specializations</p>
+                      <p className="text-xs text-muted-foreground">Not specified</p>
+                    </div>
+                  )}
+
+                  {lawyer.jurisdictions && lawyer.jurisdictions.length > 0 && (
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-2">Jurisdictions</p>
+                      <div className="flex flex-wrap gap-1">
+                        {lawyer.jurisdictions.map((jurisdiction: string, index: number) => (
+                          <Badge key={index} variant="outline" className="text-xs">
+                            {jurisdiction}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    {lawyer.years_experience ? (
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground">Experience</p>
+                        <p>{lawyer.years_experience} years</p>
+                      </div>
+                    ) : (
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground">Experience</p>
+                        <p className="text-xs text-muted-foreground">Not specified</p>
+                      </div>
+                    )}
+                    
+                    {lawyer.license_number ? (
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground">License Number</p>
+                        <p>{lawyer.license_number}</p>
+                      </div>
+                    ) : (
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground">License Number</p>
+                        <p className="text-xs text-muted-foreground">Not provided</p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {lawyer.bar_admissions && lawyer.bar_admissions.length > 0 ? (
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-2">Bar Admissions</p>
+                      <div className="flex flex-wrap gap-1">
+                        {lawyer.bar_admissions.map((admission: string, index: number) => (
+                          <Badge key={index} variant="secondary" className="text-xs">
+                            {admission}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground">Bar Admissions</p>
+                      <p className="text-xs text-muted-foreground">Not specified</p>
+                    </div>
+                  )}
+                </div>
+              </div>
 
                               {/* Team Structure */}
                               {(lawyer.team_size || lawyer.team_breakdown) && (
