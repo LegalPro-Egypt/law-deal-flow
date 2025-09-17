@@ -96,28 +96,47 @@ const AdminDashboard = () => {
 
       // Fetch signed URLs for lawyer cards for pending lawyers
       const pendingLawyers = lawyers?.filter(l => l.verification_status === 'pending_complete') || [];
+      console.log('Fetching signed URLs for pending lawyers:', pendingLawyers.length);
+      
       const urlPromises = pendingLawyers.map(async (lawyer) => {
         const urls: { front?: string; back?: string } = {};
+        console.log(`Processing lawyer ${lawyer.id} - Front URL: ${lawyer.lawyer_card_front_url}, Back URL: ${lawyer.lawyer_card_back_url}`);
 
         if (lawyer.lawyer_card_front_url) {
           try {
-            const { data: frontUrl } = await supabase.storage
+            const { data: frontUrl, error: frontError } = await supabase.storage
               .from('lawyer-documents')
               .createSignedUrl(lawyer.lawyer_card_front_url, 60 * 60 * 24); // 24 hours
-            if (frontUrl?.signedUrl) urls.front = frontUrl.signedUrl;
+            
+            if (frontError) {
+              console.error(`Error fetching front card URL for lawyer ${lawyer.id}:`, frontError);
+            }
+            
+            if (frontUrl?.signedUrl) {
+              urls.front = frontUrl.signedUrl;
+              console.log(`Successfully fetched front URL for lawyer ${lawyer.id}`);
+            }
           } catch (error) {
-            console.error('Error fetching front card URL:', error);
+            console.error(`Exception fetching front card URL for lawyer ${lawyer.id}:`, error);
           }
         }
 
         if (lawyer.lawyer_card_back_url) {
           try {
-            const { data: backUrl } = await supabase.storage
+            const { data: backUrl, error: backError } = await supabase.storage
               .from('lawyer-documents')
               .createSignedUrl(lawyer.lawyer_card_back_url, 60 * 60 * 24); // 24 hours
-            if (backUrl?.signedUrl) urls.back = backUrl.signedUrl;
+            
+            if (backError) {
+              console.error(`Error fetching back card URL for lawyer ${lawyer.id}:`, backError);
+            }
+            
+            if (backUrl?.signedUrl) {
+              urls.back = backUrl.signedUrl;
+              console.log(`Successfully fetched back URL for lawyer ${lawyer.id}`);
+            }
           } catch (error) {
-            console.error('Error fetching back card URL:', error);
+            console.error(`Exception fetching back card URL for lawyer ${lawyer.id}:`, error);
           }
         }
 
@@ -263,13 +282,20 @@ const AdminDashboard = () => {
   };
 
   const toggleLawyerExpansion = (lawyerId: string) => {
+    console.log('Toggling lawyer expansion for ID:', lawyerId);
+    console.log('Current expanded lawyers:', Array.from(expandedLawyers));
+    
     const newExpanded = new Set(expandedLawyers);
     if (newExpanded.has(lawyerId)) {
       newExpanded.delete(lawyerId);
+      console.log('Collapsing lawyer details for:', lawyerId);
     } else {
       newExpanded.add(lawyerId);
+      console.log('Expanding lawyer details for:', lawyerId);
     }
+    
     setExpandedLawyers(newExpanded);
+    console.log('New expanded lawyers:', Array.from(newExpanded));
   };
 
   const handleDeleteLawyer = (lawyerId: string) => {
@@ -808,7 +834,9 @@ const AdminDashboard = () => {
                               <Button 
                                 size="sm" 
                                 variant="outline" 
-                                className="justify-between"
+                                className={`justify-between transition-colors ${
+                                  expandedLawyers.has(lawyer.id) ? 'bg-muted border-primary' : ''
+                                }`}
                                 onClick={() => toggleLawyerExpansion(lawyer.id)}
                               >
                                 <span className="flex items-center">
@@ -871,39 +899,83 @@ const AdminDashboard = () => {
 
                       {/* Expandable Questionnaire Details for Pending Lawyers */}
                       {lawyer.verification_status === 'pending_complete' && expandedLawyers.has(lawyer.id) && (
-                        <div className="mt-6 pt-6 border-t">
+                        <div className="mt-6 pt-6 border-t bg-muted/20 rounded-lg p-4 animate-in slide-in-from-top-2 duration-300">
                           <div className="space-y-6">
+                            {/* Debug Info */}
+                            <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
+                              Debug: Showing questionnaire for lawyer ID: {lawyer.id} | Card URLs available: {JSON.stringify(!!cardUrls[lawyer.id])}
+                            </div>
+
                             {/* Lawyer Cards */}
-                            {(cardUrls[lawyer.id]?.front || cardUrls[lawyer.id]?.back) && (
-                              <div>
-                                <h4 className="font-medium flex items-center gap-2 mb-3">
-                                  <FileImage className="h-4 w-4" />
-                                  Lawyer Card Documents
-                                </h4>
+                            <div>
+                              <h4 className="font-medium flex items-center gap-2 mb-3">
+                                <FileImage className="h-4 w-4" />
+                                Lawyer Card Documents
+                              </h4>
+                              
+                              {!cardUrls[lawyer.id] || (!cardUrls[lawyer.id]?.front && !cardUrls[lawyer.id]?.back) ? (
+                                <div className="text-center py-8 text-muted-foreground bg-muted/30 rounded border-2 border-dashed">
+                                  <FileImage className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
+                                  <p className="text-sm">No lawyer card documents available</p>
+                                  <p className="text-xs mt-1">
+                                    Front URL: {lawyer.lawyer_card_front_url || 'Not provided'}<br/>
+                                    Back URL: {lawyer.lawyer_card_back_url || 'Not provided'}
+                                  </p>
+                                </div>
+                              ) : (
                                 <div className="grid grid-cols-2 gap-4">
-                                  {cardUrls[lawyer.id]?.front && (
+                                  {cardUrls[lawyer.id]?.front ? (
                                     <div>
                                       <p className="text-xs text-muted-foreground mb-2">Front</p>
                                       <img 
                                         src={cardUrls[lawyer.id].front}
                                         alt="Lawyer Card Front"
                                         className="w-full h-32 object-cover rounded border"
+                                        onError={(e) => {
+                                          console.error('Failed to load front card image for lawyer:', lawyer.id);
+                                          (e.target as HTMLImageElement).className = "w-full h-32 object-cover rounded border bg-muted/50 flex items-center justify-center";
+                                          (e.target as HTMLImageElement).style.display = 'none';
+                                          (e.target as HTMLImageElement).nextElementSibling!.textContent = 'Failed to load image';
+                                        }}
                                       />
+                                      <p className="text-xs text-destructive mt-1 hidden">Failed to load image</p>
                                     </div>
-                                  )}
-                                  {cardUrls[lawyer.id]?.back && (
+                                  ) : lawyer.lawyer_card_front_url ? (
+                                    <div>
+                                      <p className="text-xs text-muted-foreground mb-2">Front</p>
+                                      <div className="w-full h-32 bg-muted/50 rounded border flex items-center justify-center">
+                                        <p className="text-xs text-muted-foreground">Image loading failed</p>
+                                      </div>
+                                    </div>
+                                  ) : null}
+                                  
+                                  {cardUrls[lawyer.id]?.back ? (
                                     <div>
                                       <p className="text-xs text-muted-foreground mb-2">Back</p>
                                       <img 
                                         src={cardUrls[lawyer.id].back}
                                         alt="Lawyer Card Back"
                                         className="w-full h-32 object-cover rounded border"
+                                        onError={(e) => {
+                                          console.error('Failed to load back card image for lawyer:', lawyer.id);
+                                          (e.target as HTMLImageElement).className = "w-full h-32 object-cover rounded border bg-muted/50 flex items-center justify-center";
+                                          (e.target as HTMLImageElement).style.display = 'none';
+                                          (e.target as HTMLImageElement).nextElementSibling!.textContent = 'Failed to load image';
+                                        }}
                                       />
+                                      <p className="text-xs text-destructive mt-1 hidden">Failed to load image</p>
                                     </div>
-                                  )}
+                                  ) : lawyer.lawyer_card_back_url ? (
+                                    <div>
+                                      <p className="text-xs text-muted-foreground mb-2">Back</p>
+                                      <div className="w-full h-32 bg-muted/50 rounded border flex items-center justify-center">
+                                        <p className="text-xs text-muted-foreground">Image loading failed</p>
+                                      </div>
+                                    </div>
+                                  ) : null}
                                 </div>
-                              </div>
-                            )}
+                              )}
+                            </div>
 
                             {/* Team Structure */}
                             {(lawyer.team_size || lawyer.team_breakdown) && (
