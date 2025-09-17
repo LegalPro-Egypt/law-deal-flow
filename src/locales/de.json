@@ -1,0 +1,48 @@
+{
+  "footer": {
+    "description": "Verbinden Sie sich mit erfahrenen Anwälten, die sich auf ägyptisches Recht spezialisiert haben. Erhalten Sie Rechtsberatung, Dokumentenhilfe und Fallmanagement auf einer Plattform.",
+    "services": {
+      "title": "Dienstleistungen",
+      "legalConsultation": "Rechtsberatung",
+      "documentReview": "Dokumentenprüfung",
+      "caseManagement": "Fallmanagement",
+      "lawyerNetwork": "Anwaltsnetzwerk"
+    },
+    "support": {
+      "title": "Support",
+      "helpCenter": "Hilfezentrum",
+      "contactUs": "Kontakt",
+      "faq": "FAQ",
+      "legalResources": "Rechtliche Ressourcen"
+    },
+    "languages": {
+      "title": "Sprachen",
+      "english": "English",
+      "arabic": "العربية",
+      "german": "Deutsch"
+    },
+    "copyright": "© 2024 Legal Connect. Alle Rechte vorbehalten."
+  },
+  "hero": {
+    "title": "Ihre rechtliche Reise beginnt hier",
+    "subtitle": "Verbinden Sie sich mit erfahrenen Anwälten und erhalten Sie",
+    "rotatingWords": ["Fachkundige Rechtsberatung", "Dokumentenhilfe", "Fallmanagement", "Vertrauenswürdige Führung"],
+    "getStarted": "Loslegen",
+    "learnMore": "Mehr erfahren"
+  },
+  "features": {
+    "title": "Warum Legal Connect wählen?",
+    "expertAdvice": {
+      "title": "Fachkundige Rechtsberatung",
+      "description": "Verbinden Sie sich mit qualifizierten Anwälten, die sich auf ägyptisches Recht spezialisieren"
+    },
+    "documentAssistance": {
+      "title": "Dokumentenhilfe",
+      "description": "Erhalten Sie Hilfe bei der Vorbereitung und Überprüfung rechtlicher Dokumente"
+    },
+    "caseManagement": {
+      "title": "Fallmanagement",
+      "description": "Verfolgen Sie Ihre Rechtsfälle und kommunizieren Sie mit Ihrem Anwalt"
+    }
+  }
+}

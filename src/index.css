@@ -209,6 +209,35 @@
   .scroll-anchor-none {
     overflow-anchor: none;
   }
+
+  /* RTL language support */
+  [dir="rtl"] {
+    text-align: right;
+  }
+
+  [dir="rtl"] .text-center {
+    text-align: center;
+  }
+
+  [dir="rtl"] .text-left {
+    text-align: right;
+  }
+
+  [dir="rtl"] .text-right {
+    text-align: left;
+  }
+
+  [dir="rtl"] .flex {
+    flex-direction: row-reverse;
+  }
+
+  [dir="rtl"] .justify-start {
+    justify-content: flex-end;
+  }
+
+  [dir="rtl"] .justify-end {
+    justify-content: flex-start;
+  }
 }
 
 @keyframes fadeIn {

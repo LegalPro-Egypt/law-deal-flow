@@ -7,11 +7,15 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { PublicLegalChat } from "@/components/PublicLegalChat";
 import { RotatingWords } from "@/components/RotatingWords";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Landing = () => {
   const { isAuthenticated, role, loading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { t } = useTranslation();
+  const { changeLanguage, isRTL } = useLanguage();
 
   useLayoutEffect(() => {
     // Scroll to top before initial paint
@@ -67,25 +71,23 @@ const Landing = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center animate-fade-in">
             <h1 className="text-4xl sm:text-6xl font-bold mb-6">
-              Connect with Vetted Lawyers{" "}
-              <RotatingWords 
-                words={["Quickly", "Securely", "Confidently", "Seamlessly"]}
-                className="text-accent"
-              />
+              {t('hero.title')}
             </h1>
             <p className="text-xl sm:text-2xl text-gray-200 mb-8 max-w-3xl mx-auto">
-              AI-powered intake, secure messaging, and transparent pricing. 
-              Get legal help the modern way with full payment protection.
+              {t('hero.subtitle')} <RotatingWords 
+                words={t('hero.rotatingWords', { returnObjects: true }) as string[]}
+                className="text-accent"
+              />
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/auth?force=true&redirect=intake">
                 <Button size="lg" className="bg-accent hover:bg-accent-hover text-lg px-8 py-3">
-                  Start Your Case
+                  {t('hero.getStarted')}
                 </Button>
               </Link>
               <Link to="/legal-database">
                 <Button size="lg" variant="secondary" className="bg-white text-primary hover:bg-white/90 text-lg px-8 py-3">
-                  Browse Legal Guides
+                  {t('hero.learnMore')}
                 </Button>
               </Link>
             </div>
@@ -112,7 +114,7 @@ const Landing = () => {
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Why Choose LegalPro?</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">{t('features.title')}</h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Streamlined legal services with built-in protection and transparency
             </p>
@@ -122,18 +124,18 @@ const Landing = () => {
             {[
               {
                 icon: <MessageSquare className="h-8 w-8" />,
-                title: "Lexa AI Intake",
-                description: "Lexa, our AI assistant, collects your case details and matches you with the right specialist"
+                title: t('features.expertAdvice.title'),
+                description: t('features.expertAdvice.description')
               },
               {
                 icon: <Shield className="h-8 w-8" />,
-                title: "Payment Protection", 
-                description: "Secure escrow system with 50% holdback until case delivery and satisfaction"
+                title: t('features.documentAssistance.title'), 
+                description: t('features.documentAssistance.description')
               },
               {
                 icon: <Users className="h-8 w-8" />,
-                title: "Vetted Lawyers",
-                description: "All lawyers are verified professionals with specialization ratings and reviews"
+                title: t('features.caseManagement.title'),
+                description: t('features.caseManagement.description')
               },
               {
                 icon: <Clock className="h-8 w-8" />,
@@ -246,41 +248,62 @@ const Landing = () => {
                 <span className="font-bold">LegalPro</span>
               </div>
               <p className="text-muted-foreground max-w-md mx-auto sm:mx-0">
-                Professional legal services with Lexa AI-powered matching and secure payment protection.
+                {t('footer.description')}
               </p>
             </div>
             
             <div className="grid grid-cols-3 gap-4 sm:gap-8">
               <div className="text-center sm:text-left">
-                <h3 className="font-semibold mb-3">Services</h3>
+                <h3 className="font-semibold mb-3">{t('footer.services.title')}</h3>
                 <ul className="space-y-1 text-muted-foreground text-sm">
-                  <li>Family Law</li>
-                  <li>Immigration</li>
-                  <li>Real Estate</li>
-                  <li>Corporate Law</li>
+                  <li>{t('footer.services.legalConsultation')}</li>
+                  <li>{t('footer.services.documentReview')}</li>
+                  <li>{t('footer.services.caseManagement')}</li>
+                  <li>{t('footer.services.lawyerNetwork')}</li>
                 </ul>
               </div>
               <div className="text-center sm:text-left">
-                <h3 className="font-semibold mb-3">Support</h3>
+                <h3 className="font-semibold mb-3">{t('footer.support.title')}</h3>
                 <ul className="space-y-1 text-muted-foreground text-sm">
-                  <li>Help Center</li>
-                  <li>Contact Us</li>
-                  <li>Privacy Policy</li>
-                  <li>Terms of Service</li>
+                  <li>{t('footer.support.helpCenter')}</li>
+                  <li>{t('footer.support.contactUs')}</li>
+                  <li>{t('footer.support.faq')}</li>
+                  <li>{t('footer.support.legalResources')}</li>
                 </ul>
               </div>
               <div className="text-center sm:text-left">
-                <h3 className="font-semibold mb-3">Languages</h3>
+                <h3 className="font-semibold mb-3">{t('footer.languages.title')}</h3>
                 <ul className="space-y-1 text-muted-foreground text-sm">
-                  <li>English</li>
-                  <li>العربية</li>
-                  <li>Deutsch</li>
+                  <li>
+                    <button 
+                      onClick={() => changeLanguage('en')}
+                      className="hover:text-primary transition-colors cursor-pointer"
+                    >
+                      {t('footer.languages.english')}
+                    </button>
+                  </li>
+                  <li>
+                    <button 
+                      onClick={() => changeLanguage('ar')}
+                      className="hover:text-primary transition-colors cursor-pointer"
+                    >
+                      {t('footer.languages.arabic')}
+                    </button>
+                  </li>
+                  <li>
+                    <button 
+                      onClick={() => changeLanguage('de')}
+                      className="hover:text-primary transition-colors cursor-pointer"
+                    >
+                      {t('footer.languages.german')}
+                    </button>
+                  </li>
                 </ul>
               </div>
             </div>
           </div>
           <div className="mt-8 pt-8 border-t text-center text-muted-foreground">
-            <p>&copy; 2024 LegalPro. All rights reserved.</p>
+            <p>{t('footer.copyright')}</p>
           </div>
         </div>
       </footer>

@@ -1,0 +1,48 @@
+{
+  "footer": {
+    "description": "تواصل مع المحامين المتخصصين في القانون المصري. احصل على استشارات قانونية ومساعدة في الوثائق وإدارة القضايا في منصة واحدة.",
+    "services": {
+      "title": "الخدمات",
+      "legalConsultation": "استشارة قانونية",
+      "documentReview": "مراجعة الوثائق",
+      "caseManagement": "إدارة القضايا",
+      "lawyerNetwork": "شبكة المحامين"
+    },
+    "support": {
+      "title": "الدعم",
+      "helpCenter": "مركز المساعدة",
+      "contactUs": "اتصل بنا",
+      "faq": "الأسئلة الشائعة",
+      "legalResources": "الموارد القانونية"
+    },
+    "languages": {
+      "title": "اللغات",
+      "english": "English",
+      "arabic": "العربية",
+      "german": "Deutsch"
+    },
+    "copyright": "© 2024 Legal Connect. جميع الحقوق محفوظة."
+  },
+  "hero": {
+    "title": "رحلتك القانونية تبدأ هنا",
+    "subtitle": "تواصل مع المحامين المتخصصين واحصل على",
+    "rotatingWords": ["استشارة قانونية متخصصة", "مساعدة في الوثائق", "إدارة القضايا", "إرشاد موثوق"],
+    "getStarted": "ابدأ الآن",
+    "learnMore": "اعرف المزيد"
+  },
+  "features": {
+    "title": "لماذا تختار Legal Connect؟",
+    "expertAdvice": {
+      "title": "استشارة قانونية متخصصة",
+      "description": "تواصل مع محامين مؤهلين متخصصين في القانون المصري"
+    },
+    "documentAssistance": {
+      "title": "مساعدة في الوثائق",
+      "description": "احصل على مساعدة في إعداد ومراجعة الوثائق القانونية"
+    },
+    "caseManagement": {
+      "title": "إدارة القضايا",
+      "description": "تتبع قضاياك القانونية وتواصل مع محاميك"
+    }
+  }
+}
