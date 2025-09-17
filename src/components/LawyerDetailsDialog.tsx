@@ -472,7 +472,7 @@ export const LawyerDetailsDialog = ({ lawyerId, isOpen, onClose }: LawyerDetails
                   </div>
                   {index < conversationMessages.length - 1 && <Separator />}
                 </div>
-              ))}
+               ))}
             </div>
           </ScrollArea>
         </DialogContent>
