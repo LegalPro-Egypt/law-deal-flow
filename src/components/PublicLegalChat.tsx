@@ -29,6 +29,7 @@ export const PublicLegalChat: React.FC<PublicLegalChatProps> = ({ className }) =
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const didInitAutoScroll = useRef(false);
+  const hasInteracted = useRef(false);
 
   const {
     messages,
@@ -40,34 +41,38 @@ export const PublicLegalChat: React.FC<PublicLegalChatProps> = ({ className }) =
     setLanguage,
   } = useLegalChatbot('qa');
 
-  // Initialize conversation for anonymous users
-  useEffect(() => {
-    if (!conversationId) {
-      initializeConversation(); // No userId for anonymous users
-    }
-  }, [conversationId, initializeConversation]);
+// Lazily initialize conversation on user interaction
+const ensureInitialized = async () => {
+  if (!conversationId) {
+    await initializeConversation(); // No userId for anonymous users
+  }
+};
 
-  // Auto-scroll to bottom (skip on initial welcome message)
-  useEffect(() => {
-    if (!didInitAutoScroll.current) {
-      didInitAutoScroll.current = true;
-      return;
-    }
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }, [messages]);
+// Auto-scroll to bottom (only after user interaction; skip initial welcome)
+useEffect(() => {
+  if (!hasInteracted.current) return;
+  if (!didInitAutoScroll.current) {
+    didInitAutoScroll.current = true;
+    return;
+  }
+  bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}, [messages]);
 
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim() || isLoading) return;
-    
-    const message = inputMessage.trim();
-    setInputMessage('');
-    await sendMessage(message);
-    
-    // Focus input after sending
-    setTimeout(() => {
-      inputRef.current?.focus();
-    }, 100);
-  };
+const handleSendMessage = async () => {
+  if (!inputMessage.trim() || isLoading) return;
+  
+  hasInteracted.current = true;
+  await ensureInitialized();
+  
+  const message = inputMessage.trim();
+  setInputMessage('');
+  await sendMessage(message);
+  
+  // Focus input after sending
+  setTimeout(() => {
+    inputRef.current?.focus();
+  }, 100);
+};
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -89,7 +94,7 @@ export const PublicLegalChat: React.FC<PublicLegalChatProps> = ({ className }) =
   };
 
   return (
-    <Card className={`w-full max-w-4xl mx-auto ${className}`}>
+    <Card className={`w-full max-w-4xl mx-auto scroll-anchor-none ${className}`}>
       <CardHeader className="pb-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-2">
@@ -213,12 +218,12 @@ export const PublicLegalChat: React.FC<PublicLegalChatProps> = ({ className }) =
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Ask about Egyptian law, legal procedures, rights..."
-              disabled={isLoading || !conversationId}
+              disabled={isLoading}
               className="flex-1"
             />
             <Button
               onClick={handleSendMessage}
-              disabled={!inputMessage.trim() || isLoading || !conversationId}
+              disabled={!inputMessage.trim() || isLoading}
               size="icon"
               className="flex-shrink-0"
             >

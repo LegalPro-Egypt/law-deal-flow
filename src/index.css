@@ -204,6 +204,11 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;  /* Chrome, Safari and Opera */
   }
+  
+  /* Disable browser scroll anchoring on elements to prevent unexpected page jumps */
+  .scroll-anchor-none {
+    overflow-anchor: none;
+  }
 }
 
 @keyframes fadeIn {

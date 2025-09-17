@@ -42,6 +42,7 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = ({
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const didInitAutoScroll = useRef(false);
+  const hasInteracted = useRef(false);
   const { toast } = useToast();
 
   const {
@@ -71,14 +72,15 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = ({
     }
   }, [conversationId, userId, caseId, initializeConversation, mode]);
 
-  // Auto-scroll to bottom (skip on initial welcome message)
-  useEffect(() => {
-    if (!didInitAutoScroll.current) {
-      didInitAutoScroll.current = true;
-      return;
-    }
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }, [messages]);
+// Auto-scroll to bottom (skip on initial welcome message and until user interacts)
+useEffect(() => {
+  if (!hasInteracted.current) return;
+  if (!didInitAutoScroll.current) {
+    didInitAutoScroll.current = true;
+    return;
+  }
+  bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}, [messages]);
 
   // Call onCaseDataExtracted when case data is extracted
   useEffect(() => {
@@ -98,18 +100,20 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = ({
     }
   }, [hookCaseId, onCaseCreated]);
 
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim() || isLoading) return;
-    
-    const message = inputMessage.trim();
-    setInputMessage('');
-    await sendMessage(message);
-    
-    // Focus input after sending
-    setTimeout(() => {
-      inputRef.current?.focus();
-    }, 100);
-  };
+const handleSendMessage = async () => {
+  if (!inputMessage.trim() || isLoading) return;
+  
+  hasInteracted.current = true;
+  
+  const message = inputMessage.trim();
+  setInputMessage('');
+  await sendMessage(message);
+  
+  // Focus input after sending
+  setTimeout(() => {
+    inputRef.current?.focus();
+  }, 100);
+};
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -146,7 +150,7 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = ({
   };
 
   return (
-    <Card className={`flex flex-col h-full max-w-4xl mx-auto ${className}`}>
+    <Card className={`flex flex-col h-full max-w-4xl mx-auto scroll-anchor-none ${className}`}>
       <CardHeader className="flex-shrink-0 pb-3 sm:pb-4">
         {/* Mobile Header */}
         <div className="block sm:hidden">
