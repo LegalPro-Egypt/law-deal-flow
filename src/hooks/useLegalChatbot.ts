@@ -115,6 +115,20 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
   const sendMessage = useCallback(async (content: string) => {
     if (!content.trim()) return;
 
+    // Get current state to avoid stale closure
+    const currentState = state;
+    
+    // Validate conversation exists
+    if (!currentState.conversationId) {
+      console.error('No conversation ID available');
+      toast({
+        title: "Error",
+        description: "No active conversation. Please refresh and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: 'user',
@@ -129,15 +143,15 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
     }));
 
     try {
-      console.log('Sending message to AI:', { content, conversationId: state.conversationId });
+      console.log('Sending message to AI:', { content, conversationId: currentState.conversationId });
 
       const { data, error } = await supabase.functions.invoke('legal-chatbot', {
         body: {
           message: content,
-          conversationId: state.conversationId,
-          mode: state.mode,
-          language: state.language,
-          chatHistory: state.messages.slice(-10).map(m => ({
+          conversationId: currentState.conversationId,
+          mode: currentState.mode,
+          language: currentState.language,
+          chatHistory: currentState.messages.slice(-10).map(m => ({
             role: m.role,
             content: m.content
           })),
@@ -206,7 +220,7 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
         variant: "destructive",
       });
     }
-  }, [state.conversationId, state.mode, state.language, state.messages, toast]);
+  }, [state, toast, caseId]);
 
   // Switch between Q&A and Intake modes
   const switchMode = useCallback((newMode: 'qa' | 'intake') => {
