@@ -30,8 +30,26 @@ const Intake = () => {
   const handleCaseDataExtracted = (data: any) => {
     setExtractedCaseData(data);
     
-    // Check if AI needs personal details and we don't have them yet
-    if (data.needsPersonalDetails && !personalData) {
+    // Check if AI signals it's ready to move to next step
+    if (data.readyForNextStep && currentStep === 1) {
+      // Show transition message
+      toast({
+        title: "Case Information Gathered",
+        description: "Great! I have enough information about your case. Let's collect your personal details next.",
+      });
+      
+      // Auto-progress to step 2 after a brief delay for better UX
+      setTimeout(() => {
+        if (!personalData) {
+          setShowPersonalForm(true);
+          setCurrentStep(2);
+        } else {
+          // If personal data already exists, skip to documents
+          setCurrentStep(3);
+        }
+      }, 1500);
+    } else if (data.needsPersonalDetails && !personalData) {
+      // Fallback: show personal form if AI explicitly requests it
       setShowPersonalForm(true);
     }
   };
