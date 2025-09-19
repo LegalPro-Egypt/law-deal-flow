@@ -22,7 +22,6 @@ interface CaseData {
   };
   personalDetailsNeeded?: boolean;
   summary?: string;
-  readyForNextStep?: boolean;
 }
 
 serve(async (req) => {
@@ -273,9 +272,8 @@ function buildIntakeSystemPrompt(language: string): string {
 3. Help categorize their case (e.g., "Marriage/Divorce", "Visas/Residency", "Real Estate", "Business Law", "Criminal Law", etc.)
 4. Extract key information like parties involved, important dates, location, and urgency level
 5. Create a case summary for admin review
-6. When you have comprehensive information (category, summary, urgency, key parties/dates), set readyForNextStep to true
 
-Be conversational and supportive. Ask one or two questions at a time. When you have enough information about their legal matter, use the extract_case_data function with readyForNextStep set to true to signal that you're ready to proceed to personal details collection.
+Be conversational and supportive. Ask one or two questions at a time. When you have enough information about their legal matter, use the extract_case_data function.
 
 IMPORTANT DISCLAIMER: Always remind users that you're not providing legal advice, only gathering information for lawyers to review.`,
 
@@ -286,9 +284,8 @@ IMPORTANT DISCLAIMER: Always remind users that you're not providing legal advice
 3. المساعدة في تصنيف قضيتهم (مثل "الزواج/الطلاق"، "التأشيرات/الإقامة"، "العقارات"، "قانون الأعمال"، "القانون الجنائي"، إلخ)
 4. استخراج المعلومات الرئيسية مثل الأطراف المعنية، التواريخ المهمة، الموقع، ومستوى الإلحاح
 5. إنشاء ملخص للقضية لمراجعة الإدارة
-6. عندما تحصل على معلومات شاملة (الفئة، الملخص، الإلحاح، الأطراف/التواريخ الرئيسية)، اضبط readyForNextStep على true
 
-كن محادثاً وداعماً. اطرح سؤالاً أو سؤالين في المرة الواحدة. عندما تحصل على معلومات كافية حول مسألتهم القانونية، استخدم وظيفة extract_case_data مع تعيين readyForNextStep إلى true للإشارة إلى أنك مستعد للانتقال إلى جمع التفاصيل الشخصية.
+كن محادثاً وداعماً. اطرح سؤالاً أو سؤالين في المرة الواحدة. عندما تحصل على معلومات كافية حول مسألتهم القانونية، استخدم وظيفة extract_case_data.
 
 تنبيه مهم: ذكّر المستخدمين دائماً أنك لا تقدم استشارة قانونية، بل تجمع المعلومات فقط للمحامين لمراجعتها.`,
 
@@ -299,9 +296,8 @@ IMPORTANT DISCLAIMER: Always remind users that you're not providing legal advice
 3. Bei der Kategorisierung ihres Falls zu helfen (z.B. "Ehe/Scheidung", "Visa/Aufenthalt", "Immobilien", "Wirtschaftsrecht", "Strafrecht", etc.)
 4. Wichtige Informationen wie beteiligte Parteien, wichtige Daten, Ort und Dringlichkeitsstufe zu extrahieren
 5. Eine Fallzusammenfassung für die Administratorprüfung zu erstellen
-6. Wenn Sie umfassende Informationen haben (Kategorie, Zusammenfassung, Dringlichkeit, wichtige Parteien/Daten), setzen Sie readyForNextStep auf true
 
-Seien Sie gesprächig und unterstützend. Stellen Sie ein oder zwei Fragen zur Zeit. Wenn Sie genügend Informationen über ihre rechtliche Angelegenheit haben, verwenden Sie die extract_case_data-Funktion mit readyForNextStep auf true, um zu signalisieren, dass Sie bereit sind, zur Sammlung persönlicher Daten überzugehen.
+Seien Sie gesprächig und unterstützend. Stellen Sie ein oder zwei Fragen zur Zeit. Wenn Sie genügend Informationen über ihre rechtliche Angelegenheit haben, verwenden Sie die extract_case_data-Funktion.
 
 WICHTIGER HAFTUNGSAUSSCHLUSS: Erinnern Sie Benutzer immer daran, dass Sie keine Rechtsberatung geben, sondern nur Informationen für Anwälte zur Überprüfung sammeln.`
   };
@@ -351,10 +347,6 @@ function getIntakeFunctions(): any[] {
         personalDetailsNeeded: {
           type: 'boolean',
           description: 'Whether personal contact details still need to be collected',
-        },
-        readyForNextStep: {
-          type: 'boolean',
-          description: 'Set to true when sufficient case information has been gathered and ready to proceed to personal details collection',
         }
       },
       required: ['category', 'urgency', 'summary']

@@ -37,7 +37,6 @@ export interface CaseData {
   violation_types?: string[];
   legal_remedies_sought?: string[];
   legal_complexity?: 'simple' | 'moderate' | 'complex';
-  readyForNextStep?: boolean;
 }
 
 export interface ChatbotState {
