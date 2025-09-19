@@ -165,18 +165,12 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
     }));
 
     try {
-      // Build history INCLUDING the just-typed user message
-      const prevMsgs = state.messages; // safe-ish snapshot for slicing; we already appended above
-      const last9 = prevMsgs.slice(-9).map(m => ({ role: m.role, content: m.content }));
-      const historyIncludingLatest = [...last9, { role: 'user' as const, content: trimmed }];
-
       const { data, error } = await supabase.functions.invoke('legal-chatbot', {
         body: {
           message: trimmed,
-          conversationId: activeConversationId,
+          conversation_id: activeConversationId,
           mode: state.mode,
           language: state.language,
-          chatHistory: historyIncludingLatest,
         },
       });
 
@@ -239,7 +233,7 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
         variant: 'destructive',
       });
     }
-  }, [state.mode, state.language, state.messages, toast, caseId]);
+  }, [state.mode, state.language, toast, caseId]);
 
   // Switch between Q&A and Intake modes -> start fresh
   const switchMode = useCallback((newMode: 'qa' | 'intake') => {
