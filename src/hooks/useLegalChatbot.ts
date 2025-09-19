@@ -112,7 +112,7 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
           .insert({ 
             status: 'draft',
             category: 'general',
-            title: 'Draft Case',
+            title: 'New Legal Inquiry',
             user_id: userId || null
           })
           .select('id')

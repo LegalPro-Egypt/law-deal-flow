@@ -13,6 +13,7 @@ import { PersonalDetailsForm, PersonalDetailsData } from "@/components/PersonalD
 import DocumentUpload from "@/components/DocumentUpload";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { generateCaseTitle } from "@/utils/caseUtils";
 import { toast } from "@/hooks/use-toast";
 const Intake = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -287,7 +288,7 @@ const Intake = () => {
             user_id: user.id,
             status: 'draft',
             category: extractedCaseData?.category || 'general',
-            title: extractedCaseData?.title || 'Case Draft'
+            title: generateCaseTitle(extractedCaseData) || 'New Case'
           })
           .select('id')
           .single();
@@ -349,11 +350,15 @@ const Intake = () => {
     }
 
     try {
-      // Update case status to submitted (for admin review)
+      // Generate a meaningful title from the case data
+      const caseTitle = generateCaseTitle(extractedCaseData);
+      
+      // Update case status to submitted and update title
       const { error } = await supabase
         .from('cases')
         .update({ 
           status: 'submitted',
+          title: caseTitle,
           updated_at: new Date().toISOString()
         })
         .eq('id', caseId);
