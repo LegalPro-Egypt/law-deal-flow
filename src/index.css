@@ -82,11 +82,21 @@
     --glow-ai-strong: 0 0 30px hsl(192 100% 75% / 0.8), 0 0 60px hsl(192 100% 75% / 0.4);
     --shadow-glass: 0 8px 32px hsl(0 0% 0% / 0.3);
 
+    /* Premium Trust Signal Design */
+    --trust-primary-bg: 0 0% 100%;
+    --trust-primary-border: 220 13% 91%;
+    --trust-primary-shadow: 0 2px 8px -2px hsl(220 13% 91% / 0.15), 0 1px 3px -1px hsl(220 13% 91% / 0.1);
+    --trust-premium-shadow: 0 4px 16px -4px hsl(224 76% 48% / 0.1), 0 2px 8px -2px hsl(220 13% 91% / 0.08);
+    --trust-icon-bg: linear-gradient(135deg, hsl(224 76% 48%), hsl(224 76% 52%));
+    --trust-icon-shadow: 0 2px 8px hsl(224 76% 48% / 0.25);
+    --trust-hover-shadow: 0 8px 25px -8px hsl(224 76% 48% / 0.15), 0 4px 12px -4px hsl(220 13% 91% / 0.1);
+
     /* Smooth Transitions */
     --transition-all: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-colors: color 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-glow: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-transform: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-trust: all 0.3s cubic-bezier(0.4, 0, 0.1, 1);
 
     --sidebar-background: 0 0% 98%;
 
@@ -158,6 +168,13 @@
     --shadow-elevated: 0 10px 15px -3px hsl(0 0% 0% / 0.3), 0 4px 6px -2px hsl(0 0% 0% / 0.2);
     --shadow-hero: 0 25px 50px -12px hsl(224 76% 48% / 0.4);
     --shadow-glass: 0 8px 32px hsl(0 0% 0% / 0.5);
+
+    /* Dark Mode Trust Signals */
+    --trust-primary-bg: 220 15% 10%;
+    --trust-primary-border: 220 15% 15%;
+    --trust-primary-shadow: 0 2px 8px -2px hsl(0 0% 0% / 0.3), 0 1px 3px -1px hsl(0 0% 0% / 0.2);
+    --trust-premium-shadow: 0 4px 16px -4px hsl(224 76% 48% / 0.2), 0 2px 8px -2px hsl(0 0% 0% / 0.15);
+    --trust-hover-shadow: 0 8px 25px -8px hsl(224 76% 48% / 0.25), 0 4px 12px -4px hsl(0 0% 0% / 0.2);
   }
 }
 
@@ -238,6 +255,28 @@
     background: var(--gradient-glow);
   }
 
+  /* Premium Trust Signal Utilities */
+  .trust-card {
+    background: hsl(var(--trust-primary-bg));
+    border: 1px solid hsl(var(--trust-primary-border));
+    box-shadow: var(--trust-primary-shadow);
+    transition: var(--transition-trust);
+  }
+
+  .trust-card:hover {
+    box-shadow: var(--trust-hover-shadow);
+    transform: translateY(-1px);
+  }
+
+  .trust-card-premium {
+    box-shadow: var(--trust-premium-shadow);
+  }
+
+  .trust-icon {
+    background: var(--trust-icon-bg);
+    box-shadow: var(--trust-icon-shadow);
+  }
+
   /* Animation Utilities */
   .animate-fade-in {
     animation: fadeIn 0.6s ease-out;
@@ -257,6 +296,10 @@
   
   .animate-gradient {
     animation: gradientShift 4s ease-in-out infinite;
+  }
+
+  .animate-trust-entrance {
+    animation: trustEntrance 0.8s cubic-bezier(0.4, 0, 0.1, 1) forwards;
   }
 }
 
@@ -304,5 +347,16 @@
   }
   50% {
     background-position: 100% 50%;
+  }
+}
+
+@keyframes trustEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(24px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }

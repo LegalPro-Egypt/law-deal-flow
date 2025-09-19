@@ -81,35 +81,78 @@ const Landing = () => {
               </Link>
             </div>
             
-            {/* Trust Signals */}
-            <div className="mt-16 max-w-5xl mx-auto">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="flex items-center justify-center space-x-3 bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                  <Shield className="h-6 w-6 text-accent flex-shrink-0" />
-                  <div className="text-center md:text-left">
-                    <div className="font-semibold text-white">Verified Lawyers</div>
-                    <div className="text-sm text-white/80">4.6+ Stars on Google Reviews</div>
+            {/* Premium Trust Signals */}
+            <div className="mt-20 max-w-6xl mx-auto">
+              {/* Primary Trust Signal */}
+              <div className="mb-12 animate-trust-entrance">
+                <div className="trust-card trust-card-premium rounded-2xl p-8 md:p-10 max-w-4xl mx-auto">
+                  <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+                    <div className="trust-icon rounded-2xl p-4 flex-shrink-0">
+                      <Shield className="h-8 w-8 text-white" />
+                    </div>
+                    <div className="text-center md:text-left flex-grow">
+                      <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
+                        <h3 className="text-2xl font-bold text-foreground">Verified Legal Experts</h3>
+                        <div className="flex items-center gap-1">
+                          <Star className="h-5 w-5 text-accent fill-current" />
+                          <span className="text-lg font-semibold text-foreground">4.6+</span>
+                        </div>
+                      </div>
+                      <p className="text-muted-foreground text-lg leading-relaxed">All our lawyers maintain 4.6+ star ratings on Google Reviews with verified client testimonials and proven track records.</p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-center justify-center space-x-3 bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                  <Lock className="h-6 w-6 text-accent flex-shrink-0" />
-                  <div className="text-center md:text-left">
-                    <div className="font-semibold text-white">Secure Payments</div>
-                    <div className="text-sm text-white/80">Bank-Level Security</div>
+              </div>
+
+              {/* Secondary Trust Signals */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+                <div className="trust-card rounded-xl p-6 animate-trust-entrance" style={{animationDelay: '0.2s'}}>
+                  <div className="flex items-start gap-4">
+                    <div className="trust-icon rounded-xl p-3 flex-shrink-0">
+                      <Lock className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-semibold text-foreground mb-1">Bank-Level Security</h4>
+                      <p className="text-muted-foreground">256-bit encryption protects all client communications and sensitive legal documents.</p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-center justify-center space-x-3 bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                  <Brain className="h-6 w-6 text-accent flex-shrink-0" />
-                  <div className="text-center md:text-left">
-                    <div className="font-semibold text-white">AI-Powered Intake</div>
-                    <div className="text-sm text-white/80">Smart Case Matching</div>
+                <div className="trust-card rounded-xl p-6 animate-trust-entrance" style={{animationDelay: '0.3s'}}>
+                  <div className="flex items-start gap-4">
+                    <div className="trust-icon rounded-xl p-3 flex-shrink-0">
+                      <Brain className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-semibold text-foreground mb-1">AI-Powered Matching</h4>
+                      <p className="text-muted-foreground">Advanced algorithms connect you with lawyers specialized in your specific legal needs.</p>
+                    </div>
                   </div>
                 </div>
               </div>
               
-              <div className="text-center text-white/90 text-sm">
-                <Star className="h-4 w-4 inline mr-1" />
-                1000+ Cases Won • Average Case Resolved in 15 Days
+              {/* Premium Social Proof */}
+              <div className="trust-card rounded-xl p-6 text-center animate-trust-entrance" style={{animationDelay: '0.4s'}}>
+                <div className="flex flex-col md:flex-row items-center justify-center gap-8">
+                  <div className="flex items-center gap-2">
+                    <div className="trust-icon rounded-lg p-2">
+                      <Star className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="text-left">
+                      <div className="text-2xl font-bold text-foreground">1,000+</div>
+                      <div className="text-sm text-muted-foreground">Cases Won</div>
+                    </div>
+                  </div>
+                  <div className="hidden md:block w-px h-8 bg-border"></div>
+                  <div className="flex items-center gap-2">
+                    <div className="trust-icon rounded-lg p-2">
+                      <Clock className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="text-left">
+                      <div className="text-2xl font-bold text-foreground">15 Days</div>
+                      <div className="text-sm text-muted-foreground">Average Resolution</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
