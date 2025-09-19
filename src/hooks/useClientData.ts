@@ -90,8 +90,21 @@ export const useClientData = () => {
       setCases(casesData);
       
       if (casesData.length > 0) {
-        console.log('useClientData: Setting active case:', casesData[0].id);
-        setActiveCase(casesData[0]);
+        // Prioritize cases with more complete data
+        const prioritizedCase = casesData.find(caseItem => {
+          // Check if case has personal details
+          const hasPersonalDetails = !!(
+            (caseItem.client_name && caseItem.client_email) ||
+            (caseItem.draft_data && (caseItem.draft_data as any)?.personalData?.fullName)
+          );
+          // Check if case has meaningful content
+          const hasContent = !!(caseItem.ai_summary || (caseItem.draft_data && Object.keys(caseItem.draft_data).length > 0));
+          
+          return hasPersonalDetails && hasContent;
+        }) || casesData[0]; // Fallback to newest case if none have complete data
+        
+        console.log('useClientData: Setting prioritized active case:', prioritizedCase.id);
+        setActiveCase(prioritizedCase);
       } else {
         console.log('useClientData: No cases found');
         setActiveCase(null);
@@ -213,6 +226,67 @@ export const useClientData = () => {
     }
   };
 
+  // Function to consolidate personal details from draft_data to main case columns
+  const consolidatePersonalDetails = async (caseId: string) => {
+    if (!user) return false;
+    
+    try {
+      const { data: caseData } = await supabase
+        .from('cases')
+        .select('*')
+        .eq('id', caseId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (!caseData || !caseData.draft_data) return false;
+
+      const draftPersonalData = (caseData.draft_data as any)?.personalData;
+      if (!draftPersonalData) return false;
+
+      // Check if main columns are missing but draft_data has the info
+      const needsConsolidation = (
+        !caseData.client_name && draftPersonalData.fullName
+      ) || (
+        !caseData.client_email && draftPersonalData.email
+      ) || (
+        !caseData.client_phone && draftPersonalData.phone
+      );
+
+      if (needsConsolidation) {
+        const updateData: any = {};
+        
+        if (!caseData.client_name && draftPersonalData.fullName) {
+          updateData.client_name = draftPersonalData.fullName;
+        }
+        if (!caseData.client_email && draftPersonalData.email) {
+          updateData.client_email = draftPersonalData.email;
+        }
+        if (!caseData.client_phone && draftPersonalData.phone) {
+          updateData.client_phone = draftPersonalData.phone;
+        }
+        if (!caseData.language && draftPersonalData.preferredLanguage) {
+          updateData.language = draftPersonalData.preferredLanguage;
+        }
+
+        const { error } = await supabase
+          .from('cases')
+          .update(updateData)
+          .eq('id', caseId)
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+
+        console.log('Personal details consolidated successfully');
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error('Error consolidating personal details:', error);
+      return false;
+    }
+  };
+
   useEffect(() => {
     const loadData = async () => {
       if (user) {
@@ -237,6 +311,10 @@ export const useClientData = () => {
     if (activeCase) {
       fetchMessages(activeCase.id);
       fetchDocuments(activeCase.id);
+      
+      // Try to consolidate personal details if they're missing from main columns
+      // but exist in draft_data
+      consolidatePersonalDetails(activeCase.id);
     }
   }, [activeCase]);
 
@@ -300,6 +378,7 @@ export const useClientData = () => {
     setActiveCase,
     sendMessage,
     refreshData,
-    continueDraftCase
+    continueDraftCase,
+    consolidatePersonalDetails
   };
 };

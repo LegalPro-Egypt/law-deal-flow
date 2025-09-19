@@ -60,12 +60,32 @@ const ClientDashboard = () => {
     
     setDeletingCase(true);
     try {
+      // Add extra validation before deletion
+      const { data: caseToDelete, error: fetchError } = await supabase
+        .from('cases')
+        .select('id, user_id, status')
+        .eq('id', activeCase.id)
+        .single();
+
+      if (fetchError || !caseToDelete) {
+        throw new Error('Case not found or access denied');
+      }
+
+      if (caseToDelete.status !== 'draft') {
+        throw new Error('Only draft cases can be deleted');
+      }
+
       const { error } = await supabase
         .from('cases')
         .delete()
-        .eq('id', activeCase.id);
+        .eq('id', activeCase.id)
+        .eq('user_id', caseToDelete.user_id)
+        .eq('status', 'draft');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw new Error(`Failed to delete case: ${error.message}`);
+      }
 
       toast({
         title: "Draft Case Deleted",
@@ -74,11 +94,22 @@ const ClientDashboard = () => {
 
       // Refresh the cases list
       await refreshData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting case:', error);
+      
+      // Provide more specific error messages
+      let errorMessage = "Failed to delete the draft case. Please try again.";
+      if (error.message?.includes('access denied') || error.message?.includes('policy')) {
+        errorMessage = "You don't have permission to delete this case.";
+      } else if (error.message?.includes('Only draft cases')) {
+        errorMessage = "Only draft cases can be deleted.";
+      } else if (error.message?.includes('Case not found')) {
+        errorMessage = "Case not found. It may have already been deleted.";
+      }
+      
       toast({
         title: "Error",
-        description: "Failed to delete the draft case. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -667,6 +698,28 @@ const ClientDashboard = () => {
 
           {/* Personal Details Tab */}
           <TabsContent value="details" className="space-y-6">
+            {/* Missing Personal Details Alert */}
+            {activeCase?.status === 'draft' && !stepCompletion.step2 && (
+              <Card className="border-warning bg-warning/5">
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-3">
+                    <AlertCircle className="h-5 w-5 text-warning" />
+                    <div className="flex-1">
+                      <h4 className="font-medium text-warning">Personal Details Missing</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Your personal details are required to complete your case setup.
+                      </p>
+                    </div>
+                    <Button asChild size="sm">
+                      <Link to={`/intake?case=${activeCase.id}&edit=personal`}>
+                        Fill Details
+                      </Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <Card className="bg-gradient-card shadow-card">
               <CardHeader>
                 <CardTitle>Personal Information</CardTitle>
