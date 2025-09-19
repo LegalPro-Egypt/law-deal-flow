@@ -650,7 +650,9 @@ const Intake = () => {
                   <div className="space-y-3">
                     <div>
                       <Label className="text-sm font-medium">Category</Label>
-                      <p className="text-sm text-muted-foreground">Family Law / Marriage & Divorce</p>
+                      <p className="text-sm text-muted-foreground">
+                        {extractedCaseData?.category || 'Not specified'}
+                      </p>
                     </div>
                     <div>
                       <Label className="text-sm font-medium">Jurisdiction</Label>
@@ -698,9 +700,7 @@ const Intake = () => {
                 <h4 className="font-medium mb-4">Case Description</h4>
                 <Card className="p-4 bg-muted">
                   <p className="text-sm">
-                    Based on our conversation, you're seeking legal assistance with divorce proceedings. 
-                    The AI has identified key aspects including asset division, child custody considerations, 
-                    and timeline requirements. Your case has been categorized as Family Law with medium urgency.
+                    {extractedCaseData?.summary || 'Case summary will be generated based on your conversation with the AI chatbot.'}
                   </p>
                 </Card>
               </div>
@@ -709,12 +709,14 @@ const Intake = () => {
               <div>
                 <h4 className="font-medium mb-4">Uploaded Documents</h4>
                 <div className="space-y-2">
-                  {["Marriage Certificate.pdf", "Financial Statement.pdf", "ID Card.jpg"].map((doc, index) => (
+                  {documents.length > 0 ? documents.map((doc, index) => (
                     <div key={index} className="flex items-center justify-between p-2 bg-muted rounded">
-                      <span className="text-sm">{doc}</span>
+                      <span className="text-sm">{doc.name}</span>
                       <Badge variant="outline">Uploaded</Badge>
                     </div>
-                  ))}
+                  )) : (
+                    <p className="text-sm text-muted-foreground">No documents uploaded yet.</p>
+                  )}
                 </div>
               </div>
 
