@@ -64,9 +64,29 @@
     --shadow-elevated: 0 10px 15px -3px hsl(220 13% 91% / 0.1), 0 4px 6px -2px hsl(220 13% 91% / 0.05);
     --shadow-hero: 0 25px 50px -12px hsl(224 76% 48% / 0.25);
 
+    /* Futuristic AI Colors */
+    --ai-primary: 192 100% 75%;
+    --ai-primary-glow: 192 100% 85%;
+    --ai-secondary: 280 100% 70%;
+    --ai-accent: 45 100% 75%;
+    --ai-glass: 220 15% 15% / 0.1;
+    --ai-glass-border: 192 100% 75% / 0.2;
+    
+    /* Futuristic Gradients */
+    --gradient-ai: linear-gradient(135deg, hsl(192 100% 75%), hsl(280 100% 70%));
+    --gradient-glass: linear-gradient(135deg, hsl(220 15% 15% / 0.1), hsl(192 100% 75% / 0.1));
+    --gradient-glow: radial-gradient(circle, hsl(192 100% 75% / 0.3) 0%, transparent 70%);
+    
+    /* AI Glows & Effects */
+    --glow-ai: 0 0 20px hsl(192 100% 75% / 0.5), 0 0 40px hsl(192 100% 75% / 0.3);
+    --glow-ai-strong: 0 0 30px hsl(192 100% 75% / 0.8), 0 0 60px hsl(192 100% 75% / 0.4);
+    --shadow-glass: 0 8px 32px hsl(0 0% 0% / 0.3);
+
     /* Smooth Transitions */
     --transition-all: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-colors: color 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-glow: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-transform: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
     --sidebar-background: 0 0% 98%;
 
@@ -126,10 +146,18 @@
     --gradient-hero: linear-gradient(135deg, hsl(220 15% 8%) 0%, hsl(220 15% 5%) 100%);
     --gradient-card: linear-gradient(145deg, hsl(220 15% 10%) 0%, hsl(220 15% 12%) 100%);
     
+    /* Enhanced Dark Mode AI Colors */
+    --ai-glass: 192 100% 75% / 0.08;
+    --ai-glass-border: 192 100% 75% / 0.3;
+    --gradient-glass: linear-gradient(135deg, hsl(192 100% 75% / 0.1), hsl(280 100% 70% / 0.08));
+    --glow-ai: 0 0 25px hsl(192 100% 75% / 0.6), 0 0 50px hsl(192 100% 75% / 0.3);
+    --glow-ai-strong: 0 0 35px hsl(192 100% 75% / 0.9), 0 0 70px hsl(192 100% 75% / 0.5);
+
     /* Dark Mode Shadows */
     --shadow-card: 0 4px 6px -1px hsl(0 0% 0% / 0.3), 0 2px 4px -1px hsl(0 0% 0% / 0.2);
     --shadow-elevated: 0 10px 15px -3px hsl(0 0% 0% / 0.3), 0 4px 6px -2px hsl(0 0% 0% / 0.2);
     --shadow-hero: 0 25px 50px -12px hsl(224 76% 48% / 0.4);
+    --shadow-glass: 0 8px 32px hsl(0 0% 0% / 0.5);
   }
 }
 
@@ -186,6 +214,30 @@
     box-shadow: var(--shadow-hero);
   }
 
+  /* Futuristic Glass Effects */
+  .glass-morphism {
+    background: var(--gradient-glass);
+    backdrop-filter: blur(12px);
+    border: 1px solid hsl(var(--ai-glass-border));
+    box-shadow: var(--shadow-glass);
+  }
+  
+  .ai-glow {
+    box-shadow: var(--glow-ai);
+  }
+  
+  .ai-glow-strong {
+    box-shadow: var(--glow-ai-strong);
+  }
+  
+  .gradient-ai {
+    background: var(--gradient-ai);
+  }
+  
+  .gradient-glow {
+    background: var(--gradient-glow);
+  }
+
   /* Animation Utilities */
   .animate-fade-in {
     animation: fadeIn 0.6s ease-out;
@@ -193,6 +245,18 @@
 
   .animate-slide-up {
     animation: slideUp 0.6s ease-out;
+  }
+  
+  .animate-pulse-glow {
+    animation: pulseGlow 2s ease-in-out infinite;
+  }
+  
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+  
+  .animate-gradient {
+    animation: gradientShift 4s ease-in-out infinite;
   }
 }
 
@@ -213,5 +277,32 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: var(--glow-ai);
+  }
+  50% {
+    box-shadow: var(--glow-ai-strong);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes gradientShift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
   }
 }
