@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Scale, Shield, MessageSquare, Users, Clock, Check } from "lucide-react";
+import { Scale, Shield, MessageSquare, Users, Clock, Check, Lock, Brain, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { HomepageChatbot } from "@/components/HomepageChatbot";
@@ -79,6 +79,38 @@ const Landing = () => {
                   Browse Legal Guides
                 </Button>
               </Link>
+            </div>
+            
+            {/* Trust Signals */}
+            <div className="mt-16 max-w-5xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className="flex items-center justify-center space-x-3 bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                  <Shield className="h-6 w-6 text-accent flex-shrink-0" />
+                  <div className="text-center md:text-left">
+                    <div className="font-semibold text-white">Verified Lawyers</div>
+                    <div className="text-sm text-white/80">4.6+ Stars on Google Reviews</div>
+                  </div>
+                </div>
+                <div className="flex items-center justify-center space-x-3 bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                  <Lock className="h-6 w-6 text-accent flex-shrink-0" />
+                  <div className="text-center md:text-left">
+                    <div className="font-semibold text-white">Secure Payments</div>
+                    <div className="text-sm text-white/80">Bank-Level Security</div>
+                  </div>
+                </div>
+                <div className="flex items-center justify-center space-x-3 bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                  <Brain className="h-6 w-6 text-accent flex-shrink-0" />
+                  <div className="text-center md:text-left">
+                    <div className="font-semibold text-white">AI-Powered Intake</div>
+                    <div className="text-sm text-white/80">Smart Case Matching</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="text-center text-white/90 text-sm">
+                <Star className="h-4 w-4 inline mr-1" />
+                1000+ Cases Won • Average Case Resolved in 15 Days
+              </div>
             </div>
           </div>
         </div>
