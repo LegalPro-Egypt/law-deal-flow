@@ -48,6 +48,7 @@ export interface ChatbotState {
   language: 'en' | 'ar' | 'de';
   extractedData: CaseData | null;
   needsPersonalDetails: boolean;
+  anonymousSessionId?: string | null;
 }
 
 export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
@@ -61,6 +62,7 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
     language: 'en',
     extractedData: null,
     needsPersonalDetails: false,
+    anonymousSessionId: null,
   });
 
   // Refs to avoid stale closures for IDs
@@ -90,9 +92,33 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
       const newConversationId = conversation.id as string;
       conversationIdRef.current = newConversationId;
 
+      // For anonymous Q&A sessions, create an anonymous session entry
+      let anonymousSessionId = null;
+      if (!userId && state.mode === 'qa') {
+        const { data: anonymousSession, error: anonymousError } = await supabase
+          .from('anonymous_qa_sessions')
+          .insert({
+            session_id: sessionId,
+            conversation_id: newConversationId,
+            language: state.language,
+            status: 'active',
+            total_messages: 1, // welcome message
+            last_activity: new Date().toISOString()
+          })
+          .select('id')
+          .single();
+
+        if (anonymousError) {
+          console.error('Error creating anonymous session:', anonymousError);
+        } else {
+          anonymousSessionId = anonymousSession.id;
+        }
+      }
+
       setState(prev => ({
         ...prev,
         conversationId: newConversationId,
+        anonymousSessionId,
         messages: [{
           id: crypto.randomUUID(),
           role: 'assistant',
@@ -105,7 +131,7 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
       const effectiveCaseId = conversation.case_id ?? initialCaseId ?? null;
       if (effectiveCaseId) {
         setCaseId(effectiveCaseId);
-      } else {
+      } else if (state.mode === 'intake' && userId) {
         // Optional: create a draft case immediately so saveCaseStep works
         const { data: draftCase, error: caseErr } = await supabase
           .from('cases')
@@ -165,6 +191,29 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
       isLoading: true,
     }));
 
+    // Update anonymous session metadata if applicable
+    if (state.anonymousSessionId) {
+      const messageCount = state.messages.length + 1; // +1 for the message we just added
+      const updateData: any = {
+        total_messages: messageCount,
+        last_activity: new Date().toISOString()
+      };
+
+      // Store first message preview if this is the first user message
+      if (messageCount === 2) { // 1 welcome + 1 user message
+        updateData.first_message_preview = trimmed.substring(0, 100);
+      }
+
+      try {
+        await supabase
+          .from('anonymous_qa_sessions')
+          .update(updateData)
+          .eq('id', state.anonymousSessionId);
+      } catch (err) {
+        console.error('Error updating anonymous session:', err);
+      }
+    }
+
     try {
       const { data, error } = await supabase.functions.invoke('legal-chatbot', {
         body: {
@@ -205,6 +254,21 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
         if (conv?.case_id) setCaseId(conv.case_id);
       }
 
+      // Update anonymous session with final message count
+      if (state.anonymousSessionId) {
+        try {
+          await supabase
+            .from('anonymous_qa_sessions')
+            .update({
+              total_messages: state.messages.length + 2, // +2 for user and AI messages
+              last_activity: new Date().toISOString()
+            })
+            .eq('id', state.anonymousSessionId);
+        } catch (err) {
+          console.error('Error updating anonymous session final count:', err);
+        }
+      }
+
       setState(prev => ({
         ...prev,
         messages: [...prev.messages, aiMessage],
@@ -234,7 +298,7 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
         variant: 'destructive',
       });
     }
-  }, [state.mode, state.language, toast, caseId]);
+  }, [state.mode, state.language, state.messages.length, state.anonymousSessionId, toast, caseId]);
 
   // Switch between Q&A and Intake modes -> start fresh
   const switchMode = useCallback((newMode: 'qa' | 'intake') => {
@@ -243,6 +307,7 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
       ...prev,
       mode: newMode,
       conversationId: null,
+      anonymousSessionId: null,
       messages: [{
         id: crypto.randomUUID(),
         role: 'assistant',
@@ -262,6 +327,7 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
       ...prev,
       language,
       conversationId: null,
+      anonymousSessionId: null,
       messages: [{
         id: crypto.randomUUID(),
         role: 'assistant',
@@ -280,6 +346,7 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
     setState(prev => ({
       ...prev,
       conversationId: null,
+      anonymousSessionId: null,
       messages: [{
         id: crypto.randomUUID(),
         role: 'assistant',

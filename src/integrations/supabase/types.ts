@@ -14,6 +14,59 @@ export type Database = {
   }
   public: {
     Tables: {
+      anonymous_qa_sessions: {
+        Row: {
+          conversation_id: string | null
+          created_at: string
+          first_message_preview: string | null
+          id: string
+          ip_address: string | null
+          language: string
+          last_activity: string | null
+          session_id: string
+          status: string
+          total_messages: number | null
+          updated_at: string
+          user_agent: string | null
+        }
+        Insert: {
+          conversation_id?: string | null
+          created_at?: string
+          first_message_preview?: string | null
+          id?: string
+          ip_address?: string | null
+          language?: string
+          last_activity?: string | null
+          session_id: string
+          status?: string
+          total_messages?: number | null
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Update: {
+          conversation_id?: string | null
+          created_at?: string
+          first_message_preview?: string | null
+          id?: string
+          ip_address?: string | null
+          language?: string
+          last_activity?: string | null
+          session_id?: string
+          status?: string
+          total_messages?: number | null
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anonymous_qa_sessions_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_categories: {
         Row: {
           applicable_laws: string[] | null

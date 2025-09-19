@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Scale, Shield, MessageSquare, Users, Clock, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { HomepageChatbot } from "@/components/HomepageChatbot";
 
 const Landing = () => {
   const { isAuthenticated, role, loading } = useAuth();
@@ -82,6 +83,9 @@ const Landing = () => {
           </div>
         </div>
       </section>
+
+      {/* Anonymous Q&A Chatbot Section */}
+      <HomepageChatbot />
 
       {/* Features Section */}
       <section className="py-20 bg-muted/30">

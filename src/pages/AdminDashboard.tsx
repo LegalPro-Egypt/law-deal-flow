@@ -51,6 +51,7 @@ import { ConversationDialog } from "@/components/ConversationDialog";
 import { InviteLawyerDialog } from "@/components/InviteLawyerDialog";
 import { LawyerDetailsDialog } from "@/components/LawyerDetailsDialog";
 import { LawyerChatHistoryDialog } from "@/components/LawyerChatHistoryDialog";
+import AnonymousQAManager from "@/components/AnonymousQAManager";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -515,18 +516,23 @@ const AdminDashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="intakes" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="intakes">AI Intakes</TabsTrigger>
-            <TabsTrigger value="cases">Cases</TabsTrigger>
-            <TabsTrigger value="lawyers">
-              Lawyers {stats.pendingVerifications > 0 && (
-                <Badge variant="destructive" className="ml-1 text-xs">
-                  {stats.pendingVerifications}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="requests">Lawyer Requests</TabsTrigger>
-          </TabsList>
+          <div className="border-b">
+            <div className="flex overflow-x-auto scrollbar-hide">
+              <TabsList className="grid grid-cols-5 min-w-fit">
+                <TabsTrigger value="intakes" className="whitespace-nowrap">AI Intakes</TabsTrigger>
+                <TabsTrigger value="cases" className="whitespace-nowrap">Cases</TabsTrigger>
+                <TabsTrigger value="lawyers" className="whitespace-nowrap">
+                  Lawyers {stats.pendingVerifications > 0 && (
+                    <Badge variant="destructive" className="ml-1 text-xs">
+                      {stats.pendingVerifications}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="requests" className="whitespace-nowrap">Lawyer Requests</TabsTrigger>
+                <TabsTrigger value="anonymous-qa" className="whitespace-nowrap">Anonymous Q&A</TabsTrigger>
+              </TabsList>
+            </div>
+          </div>
 
           {/* AI Intakes Tab */}
           <TabsContent value="intakes" className="space-y-6">
@@ -1399,6 +1405,11 @@ const AdminDashboard = () => {
           {/* Lawyer Requests Tab */}
           <TabsContent value="requests" className="space-y-6">
             <LawyerRequestsManager />
+          </TabsContent>
+
+          {/* Anonymous Q&A Tab */}
+          <TabsContent value="anonymous-qa" className="space-y-6">
+            <AnonymousQAManager />
           </TabsContent>
         </Tabs>
 
