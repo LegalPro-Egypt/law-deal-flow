@@ -10,7 +10,9 @@ import {
   User, 
   Scale, 
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Sparkles,
+  Star
 } from 'lucide-react';
 import { useLegalChatbot, ChatMessage } from '@/hooks/useLegalChatbot';
 import { Link } from 'react-router-dom';
@@ -105,7 +107,11 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
           <div className="text-center mb-8">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
               Get Free Legal Answers with{" "}
-              <span className="text-primary">Lexa AI</span>
+              <span className="text-primary relative inline-flex items-center gap-2">
+                <Sparkles className="h-6 w-6 text-primary/70 animate-pulse absolute -top-2 -left-3" />
+                Lexa AI
+                <Star className="h-5 w-5 text-primary/70 animate-pulse absolute -top-1 -right-2" />
+              </span>
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
               Ask our AI legal assistant about Egyptian law • No signup required • 
@@ -123,7 +129,10 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
                     <Scale className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <CardTitle className="text-lg text-white">Lexa Legal Assistant</CardTitle>
+                    <CardTitle className="text-lg text-white flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-white/80 animate-pulse" />
+                      Lexa Legal Assistant
+                    </CardTitle>
                     <p className="text-sm text-white/80">Egyptian Law Expert • Available 24/7</p>
                   </div>
                 </div>
@@ -183,13 +192,15 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
                   {/* Loading indicator */}
                   {isLoading && (
                     <div className="flex items-start gap-3 animate-fade-in">
-                      <div className="flex-shrink-0 w-8 h-8 bg-muted border border-border rounded-full flex items-center justify-center">
+                      <div className="flex-shrink-0 w-8 h-8 bg-muted border border-border rounded-full flex items-center justify-center relative">
                         <Bot className="h-4 w-4 text-primary" />
+                        <Sparkles className="h-2 w-2 text-primary/60 animate-pulse absolute -top-0.5 -right-0.5" />
                       </div>
                       <div className="bg-muted border border-border rounded-lg px-4 py-3">
                         <div className="flex items-center gap-2">
                           <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                          <span className="text-sm text-muted-foreground">
+                          <span className="text-sm text-muted-foreground flex items-center gap-1">
+                            <Sparkles className="h-3 w-3 text-primary/60 animate-pulse" />
                             Lexa is thinking...
                           </span>
                         </div>
