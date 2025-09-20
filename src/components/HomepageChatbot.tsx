@@ -21,7 +21,7 @@ interface HomepageChatbotProps {
 
 export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) => {
   const [inputMessage, setInputMessage] = useState('');
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [hasInteracted, setHasInteracted] = useState(false);
 
@@ -45,7 +45,13 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
   // Auto-scroll to bottom when messages change (only after user interaction)
   useEffect(() => {
     if (hasInteracted && messages.length > 0) {
-      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+      const scrollArea = scrollAreaRef.current;
+      if (scrollArea) {
+        const viewport = scrollArea.querySelector('[data-radix-scroll-area-viewport]');
+        if (viewport) {
+          viewport.scrollTop = viewport.scrollHeight;
+        }
+      }
     }
   }, [messages, hasInteracted]);
 
@@ -142,7 +148,7 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
 
             <CardContent className="p-0">
               {/* Messages Area with professional styling */}
-              <ScrollArea className="h-96">
+              <ScrollArea ref={scrollAreaRef} className="h-96">
                 <div className="space-y-4 p-6">
                   {messages.map((message, index) => (
                     <div
@@ -194,9 +200,6 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
                       </div>
                     </div>
                   )}
-                  
-                  {/* Auto-scroll anchor */}
-                  <div ref={bottomRef} />
                 </div>
               </ScrollArea>
 
