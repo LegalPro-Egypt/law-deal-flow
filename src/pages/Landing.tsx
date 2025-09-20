@@ -261,7 +261,7 @@ const Landing = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">Ready to Get Started?</h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto text-gray-200">
-            Join thousands of clients who have found legal help through our platform
+            Join LegalPro and benefit from our network of vetted lawyers that have helped thousands of people get justice
           </p>
           <Link to="/auth?redirect=intake">
             <Button size="lg" className="bg-accent hover:bg-accent-hover text-lg px-8 py-3">
