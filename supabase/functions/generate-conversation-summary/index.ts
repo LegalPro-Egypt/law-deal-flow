@@ -17,7 +17,7 @@ serve(async (req) => {
   }
 
   try {
-    const { caseId } = await req.json();
+    const { caseId, clientName } = await req.json();
 
     if (!caseId) {
       throw new Error('Case ID is required');
@@ -119,7 +119,7 @@ serve(async (req) => {
             - The client's primary concerns or goals
             - Any urgent matters or deadlines
             
-            CRITICAL: Write the summary in neutral third-person perspective about the CLIENT. Use phrases like "The client reports...", "The client states...", "The client is concerned about..." instead of second-person language ("you", "your"). This summary is for admin review, not client communication.
+            CRITICAL: Write the summary in neutral third-person perspective about the CLIENT. ${clientName ? `Refer to the client as "${clientName}"` : 'Use "the client"'} instead of second-person language ("you", "your"). This summary is for admin review, not client communication.
             
             Keep the summary factual, clear, and suitable for legal professionals to quickly understand the case.`
           },

@@ -634,14 +634,17 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                     {/* Health Check Info */}
                     <Card className="bg-muted/50">
                       <CardContent className="p-3">
-                        <div className="text-xs text-muted-foreground space-y-1">
-                          <div><strong>Health Check:</strong></div>
-                          <div>Case ID: {caseId}</div>
-                          <div>Message Count: {conversation.length}</div>
-                          {conversation.length > 0 && (
-                            <div>Newest Message: {formatDate(conversation[conversation.length - 1]?.created_at || '')}</div>
-                          )}
-                        </div>
+                         <div className="text-xs text-muted-foreground space-y-1">
+                           <div><strong>Health Check:</strong></div>
+                           <div>Case ID: {caseId}</div>
+                           <div>Message Count: {conversation.length}</div>
+                           {conversation.length > 0 && (
+                             <div>Newest Message: {formatDate(conversation[conversation.length - 1]?.created_at || '')}</div>
+                           )}
+                           {caseDetails?.client_name && (
+                             <div>Client Name: {caseDetails.client_name}</div>
+                           )}
+                         </div>
                       </CardContent>
                     </Card>
 
