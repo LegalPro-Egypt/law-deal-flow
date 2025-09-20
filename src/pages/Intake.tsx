@@ -94,7 +94,7 @@ const Intake = () => {
     setCurrentStep(3);
   };
 
-  // Load existing draft case on mount
+  // Load existing intake case on mount
   useEffect(() => {
     const loadCase = async () => {
       if (!user) {
@@ -130,7 +130,7 @@ const Intake = () => {
             targetCase = specificCase;
           }
         } else {
-          // Look for latest INTAKE case only (not submitted)
+          // Look for latest intake case only (not submitted)
           const { data: latestCases } = await supabase
             .from('cases')
             .select('*')
@@ -334,8 +334,8 @@ const Intake = () => {
         subcategory: extractedCaseData?.subcategory,
         extracted_entities: extractedCaseData?.entities || {},
         ai_summary: extractedCaseData?.summary,
-        // Update draft_data with final consolidated information
-        draft_data: {
+        // Store final information in extracted_entities for consistency
+        client_responses_summary: {
           ...extractedCaseData,
           personalData,
           submittedAt: new Date().toISOString(),

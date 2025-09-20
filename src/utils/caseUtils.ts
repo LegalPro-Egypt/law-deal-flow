@@ -11,7 +11,7 @@ export function generateCaseTitle(caseData: CaseData | null): string {
   if (!caseData) return 'New Case';
   
   // If there's already a meaningful title, use it
-  if (caseData.title && caseData.title !== 'Draft Case' && caseData.title !== 'Case Draft') {
+  if (caseData.title && caseData.title !== 'New Legal Inquiry' && caseData.title !== 'Legal Case') {
     return caseData.title;
   }
   
@@ -49,8 +49,8 @@ export function formatCaseStatus(status: string): string {
   switch (status) {
     case 'submitted':
       return 'Under Review';
-    case 'draft':
-      return 'Draft';
+    case 'intake':
+      return 'In Progress';
     case 'in_progress':
       return 'In Progress';
     case 'completed':

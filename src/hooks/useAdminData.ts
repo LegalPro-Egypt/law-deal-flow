@@ -256,7 +256,7 @@ export const useAdminData = () => {
         extracted_entities: extractedData.entities || {},
         client_responses_summary: clientResponsesSummary,
         jurisdiction: 'egypt',
-        // No need for draft_data in simplified case lifecycle
+        // Simplified case lifecycle - cases are created with intake status
       };
 
       let finalCase;
@@ -287,7 +287,7 @@ export const useAdminData = () => {
           description: "Existing case updated and submitted for review",
         });
       } else {
-        // Create new case only if no existing draft found
+        // Create new case - cases are created directly with submitted status
         const { data: newCase, error: caseError } = await supabase
           .from('cases')
           .insert(caseData)
@@ -473,7 +473,8 @@ export const useAdminData = () => {
         .from('cases')
         .update({ 
           status: 'denied',
-          draft_data: {
+          // Store denial information in extracted_entities for consistency
+          extracted_entities: {
             denialReason: reason,
             deniedAt: new Date().toISOString(),
             deniedBy: 'admin'

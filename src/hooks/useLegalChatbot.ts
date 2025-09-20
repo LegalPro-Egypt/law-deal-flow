@@ -572,8 +572,9 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
     try {
       const updateData: any = {
         step,
-        draft_data: {
-          extractedData: state.extractedData,
+        // Store extracted data in the appropriate fields instead of draft_data
+        extracted_entities: {
+          ...state.extractedData,
           currentStep: step,
           lastUpdated: new Date().toISOString(),
           ...stepData,
