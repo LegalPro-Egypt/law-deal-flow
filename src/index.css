@@ -89,8 +89,8 @@
     --transition-transform: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
     /* Premium Trust Signals */
-    --trust-signal-bg: 0 0% 100%;
-    --trust-signal-border: 0 0% 0% / 0.06;
+    --trust-signal-bg: 0 0% 100% / 0.85;
+    --trust-signal-border: 0 0% 0% / 0.1;
     --trust-signal-shadow-primary: 0 4px 24px rgba(0, 0, 0, 0.08);
     --trust-signal-shadow-secondary: 0 2px 8px rgba(0, 0, 0, 0.04);
     --trust-signal-shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.12);
