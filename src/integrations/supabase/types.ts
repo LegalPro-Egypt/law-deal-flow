@@ -618,6 +618,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_admin_duplicate_cases: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       cleanup_duplicate_draft_cases: {
         Args: Record<PropertyKey, never>
         Returns: undefined

@@ -504,6 +504,29 @@ export const useAdminData = () => {
     }
   };
 
+  const cleanupDuplicateCases = async () => {
+    try {
+      const { error } = await supabase.rpc('cleanup_admin_duplicate_cases');
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: "Duplicate cases cleaned up successfully",
+      });
+      
+      // Refresh data after cleanup
+      await Promise.all([fetchAdminStats(), fetchPendingIntakes(), fetchCases()]);
+    } catch (error: any) {
+      console.error('Error cleaning up duplicate cases:', error);
+      toast({
+        title: "Error",
+        description: `Failed to cleanup duplicate cases: ${error.message}`,
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -512,6 +535,14 @@ export const useAdminData = () => {
         fetchPendingIntakes(),
         fetchCases()
       ]);
+      
+      // Run cleanup on initial load to remove any existing duplicates
+      try {
+        await supabase.rpc('cleanup_admin_duplicate_cases');
+      } catch (error) {
+        console.log('Cleanup failed during initial load:', error);
+      }
+      
       setLoading(false);
     };
 
@@ -527,6 +558,7 @@ export const useAdminData = () => {
     deleteSelectedIntakes,
     denyCaseAndDelete,
     deleteCase,
+    cleanupDuplicateCases,
     refreshData: () => Promise.all([fetchAdminStats(), fetchPendingIntakes(), fetchCases()])
   };
 };
