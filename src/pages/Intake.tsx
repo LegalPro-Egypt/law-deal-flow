@@ -353,14 +353,36 @@ const Intake = () => {
       // Generate a meaningful title from the case data
       const caseTitle = generateCaseTitle(extractedCaseData);
       
-      // Update case status to submitted and update title
+      // Consolidate all data before submission to ensure consistency
+      const updateData = {
+        status: 'submitted',
+        title: caseTitle,
+        updated_at: new Date().toISOString(),
+        // Ensure personal data is in both places for consistency
+        client_name: personalData.fullName,
+        client_email: personalData.email,
+        client_phone: personalData.phone,
+        language: personalData.preferredLanguage || 'en',
+        // Preserve urgency and other extracted data from AI chat
+        urgency: extractedCaseData?.urgency || 'medium',
+        description: extractedCaseData?.description || 'Case submitted through AI intake',
+        category: extractedCaseData?.category || 'general',
+        subcategory: extractedCaseData?.subcategory,
+        extracted_entities: extractedCaseData?.entities || {},
+        ai_summary: extractedCaseData?.summary,
+        // Update draft_data with final consolidated information
+        draft_data: {
+          ...extractedCaseData,
+          personalData,
+          submittedAt: new Date().toISOString(),
+          step: 4
+        }
+      };
+      
+      // Update case with all consolidated data
       const { error } = await supabase
         .from('cases')
-        .update({ 
-          status: 'submitted',
-          title: caseTitle,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', caseId);
 
       if (error) {

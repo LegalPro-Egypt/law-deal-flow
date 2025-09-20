@@ -187,6 +187,37 @@ export const useAdminData = () => {
 
       if (convError) throw convError;
 
+      // Check if there's already a case linked to this conversation or user
+      let existingCase = null;
+      
+      // First check if conversation already has a case_id
+      if (conversation.case_id) {
+        const { data: linkedCase } = await supabase
+          .from('cases')
+          .select('*')
+          .eq('id', conversation.case_id)
+          .single();
+        
+        if (linkedCase) {
+          existingCase = linkedCase;
+        }
+      }
+      
+      // If no linked case, look for draft cases from the same user
+      if (!existingCase && conversation.user_id) {
+        const { data: draftCases } = await supabase
+          .from('cases')
+          .select('*')
+          .eq('user_id', conversation.user_id)
+          .eq('status', 'draft')
+          .order('updated_at', { ascending: false })
+          .limit(1);
+        
+        if (draftCases && draftCases.length > 0) {
+          existingCase = draftCases[0];
+        }
+      }
+
       // Extract case data from conversation metadata or messages
       const metadata = (conversation.metadata as any) || {};
       const extractedData = metadata.extractedData || {};
@@ -198,48 +229,73 @@ export const useAdminData = () => {
         .map(msg => msg.content)
         .join(' ');
 
-      // Create case with extracted data
-      const { data: newCase, error: caseError } = await supabase
-        .from('cases')
-        .insert({
-          user_id: conversation.user_id, // Use actual user_id from conversation
-          title: extractedData.title || extractedData.category || 'Legal Case from AI Intake',
-          description: extractedData.description || conversationText.slice(0, 500) || 'Case created from AI chatbot intake',
-          category: extractedData.category || 'General',
-          subcategory: extractedData.subcategory,
-          urgency: extractedData.urgency || 'medium',
-          client_name: extractedData.client_name || 'Client Name',
-          client_email: extractedData.client_email || 'client@example.com',
-          client_phone: extractedData.client_phone,
-          language: conversation.language,
-          status: 'submitted',
-          ai_summary: extractedData.summary || conversationText.slice(0, 1000),
-          extracted_entities: extractedData.entities || {},
-          jurisdiction: 'egypt'
-        })
-        .select()
-        .single();
+      const caseData = {
+        user_id: conversation.user_id,
+        title: extractedData.title || extractedData.category || 'Legal Case from AI Intake',
+        description: extractedData.description || conversationText.slice(0, 500) || 'Case created from AI chatbot intake',
+        category: extractedData.category || 'General',
+        subcategory: extractedData.subcategory,
+        urgency: extractedData.urgency || 'medium',
+        client_name: extractedData.client_name || existingCase?.client_name || 'Client Name',
+        client_email: extractedData.client_email || existingCase?.client_email || 'client@example.com',
+        client_phone: extractedData.client_phone || existingCase?.client_phone,
+        language: conversation.language,
+        status: 'submitted',
+        ai_summary: extractedData.summary || conversationText.slice(0, 1000),
+        extracted_entities: extractedData.entities || {},
+        jurisdiction: 'egypt',
+        // Preserve draft_data from existing case
+        draft_data: existingCase?.draft_data || {}
+      };
 
-      if (caseError) throw caseError;
+      let finalCase;
 
-      // Update conversation status to mark as completed and link to case
+      if (existingCase) {
+        // Update existing case instead of creating new one
+        const { data: updatedCase, error: updateError } = await supabase
+          .from('cases')
+          .update(caseData)
+          .eq('id', existingCase.id)
+          .select()
+          .single();
+
+        if (updateError) throw updateError;
+        finalCase = updatedCase;
+        
+        toast({
+          title: "Success",
+          description: "Existing case updated and submitted for review",
+        });
+      } else {
+        // Create new case only if no existing draft found
+        const { data: newCase, error: caseError } = await supabase
+          .from('cases')
+          .insert(caseData)
+          .select()
+          .single();
+
+        if (caseError) throw caseError;
+        finalCase = newCase;
+        
+        toast({
+          title: "Success",
+          description: "Case created from intake conversation successfully",
+        });
+      }
+
+      // Update conversation status to mark as completed and link to final case
       await supabase
         .from('conversations')
         .update({ 
           status: 'completed',
-          case_id: newCase.id 
+          case_id: finalCase.id 
         })
         .eq('id', conversationId);
 
       // Refresh data
       await Promise.all([fetchAdminStats(), fetchPendingIntakes(), fetchCases()]);
 
-      toast({
-        title: "Success",
-        description: "Case created from intake conversation successfully",
-      });
-
-      return newCase;
+      return finalCase;
     } catch (error: any) {
       console.error('Error creating case from intake:', error);
       toast({

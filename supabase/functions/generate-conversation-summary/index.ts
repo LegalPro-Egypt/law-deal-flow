@@ -25,8 +25,12 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Fetch conversation messages for the case
-    const { data: conversationData, error: conversationError } = await supabase
+    // Fetch conversation messages for the case - try multiple approaches
+    let conversationData = null;
+    let conversationError = null;
+    
+    // First try to find conversation directly linked to case
+    const { data: linkedConversation, error: linkedError } = await supabase
       .from('conversations')
       .select(`
         id,
@@ -37,7 +41,50 @@ serve(async (req) => {
         )
       `)
       .eq('case_id', caseId)
-      .single();
+      .maybeSingle();
+    
+    if (linkedConversation) {
+      conversationData = linkedConversation;
+    } else {
+      // If no direct link, try to find by user_id and mode
+      const { data: caseInfo } = await supabase
+        .from('cases')
+        .select('user_id')
+        .eq('id', caseId)
+        .single();
+      
+      if (caseInfo?.user_id) {
+        const { data: userConversation, error: userError } = await supabase
+          .from('conversations')
+          .select(`
+            id,
+            messages (
+              role,
+              content,
+              created_at
+            )
+          `)
+          .eq('user_id', caseInfo.user_id)
+          .eq('mode', 'intake')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        if (userConversation) {
+          conversationData = userConversation;
+          
+          // Link this conversation to the case for future reference
+          await supabase
+            .from('conversations')
+            .update({ case_id: caseId })
+            .eq('id', userConversation.id);
+        } else {
+          conversationError = userError || new Error('No conversation found for case');
+        }
+      } else {
+        conversationError = linkedError || new Error('No case found');
+      }
+    }
 
     if (conversationError) {
       throw conversationError;
