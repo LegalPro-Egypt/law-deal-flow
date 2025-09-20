@@ -162,7 +162,38 @@ export const useAdminData = () => {
 
       if (error) throw error;
 
-      setCases(casesData || []);
+      // Filter out duplicate draft cases - prioritize submitted/active cases over drafts
+      const filteredCases = (casesData || []).reduce((acc, currentCase) => {
+        const existingCaseIndex = acc.findIndex(c => 
+          c.user_id === currentCase.user_id && 
+          c.category === currentCase.category &&
+          c.id !== currentCase.id &&
+          Math.abs(new Date(c.created_at).getTime() - new Date(currentCase.created_at).getTime()) < 2 * 60 * 60 * 1000 // Within 2 hours
+        );
+
+        if (existingCaseIndex !== -1) {
+          const existingCase = acc[existingCaseIndex];
+          
+          // Prioritize non-draft cases over draft cases
+          if (currentCase.status !== 'draft' && existingCase.status === 'draft') {
+            acc[existingCaseIndex] = currentCase;
+          } else if (currentCase.status === 'draft' && existingCase.status !== 'draft') {
+            // Keep existing non-draft case, don't add current draft
+            return acc;
+          } else if (currentCase.status === existingCase.status) {
+            // If both same status, keep the newer one
+            if (new Date(currentCase.created_at) > new Date(existingCase.created_at)) {
+              acc[existingCaseIndex] = currentCase;
+            }
+          }
+        } else {
+          acc.push(currentCase);
+        }
+        
+        return acc;
+      }, [] as any[]);
+
+      setCases(filteredCases);
     } catch (error: any) {
       console.error('Error fetching cases:', error);
       toast({
@@ -261,6 +292,15 @@ export const useAdminData = () => {
 
         if (updateError) throw updateError;
         finalCase = updatedCase;
+        
+        // Clean up any other draft cases for this user/category after successful update
+        await supabase
+          .from('cases')
+          .delete()
+          .eq('user_id', conversation.user_id)
+          .eq('status', 'draft')
+          .eq('category', caseData.category)
+          .neq('id', finalCase.id);
         
         toast({
           title: "Success",
