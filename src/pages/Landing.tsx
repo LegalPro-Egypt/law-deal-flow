@@ -164,7 +164,7 @@ const Landing = () => {
               }
             ].map((feature, index) => (
               <Card key={index} className="p-6 card-hover bg-gradient-card animate-slide-up text-center md:text-left">
-                <div className="text-primary mb-4">{feature.icon}</div>
+                <div className="text-primary mb-4 flex justify-center md:justify-start">{feature.icon}</div>
                 <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
                 <p className="text-muted-foreground">{feature.description}</p>
               </Card>
