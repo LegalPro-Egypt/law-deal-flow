@@ -69,7 +69,7 @@ const Landing = () => {
               <Scale className="h-8 w-8 text-primary" />
               <span className="text-xl font-bold">LegalPro</span>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <Link to="/legal-database">
                 <Button variant="ghost">Guides</Button>
               </Link>
