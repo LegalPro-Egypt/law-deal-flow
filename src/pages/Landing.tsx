@@ -274,7 +274,7 @@ const Landing = () => {
       {/* Footer */}
       <footer className="bg-card border-t py-12">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <Scale className="h-6 w-6 text-primary" />
