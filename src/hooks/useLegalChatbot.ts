@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { generateCaseTitle } from '@/utils/caseUtils';
@@ -70,6 +70,107 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
 
   // Refs to avoid stale closures for IDs
   const conversationIdRef = useRef<string | null>(null);
+
+  // Load messages from database for active conversation
+  const loadMessages = useCallback(async (conversationId: string) => {
+    try {
+      console.log('Loading messages for conversation:', conversationId);
+      
+      const { data: messages, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error loading messages:', error);
+        return [];
+      }
+
+      const formattedMessages: ChatMessage[] = messages.map(msg => ({
+        id: msg.id,
+        role: msg.role as 'user' | 'assistant' | 'system',
+        content: msg.content,
+        timestamp: new Date(msg.created_at),
+        metadata: msg.metadata
+      }));
+
+      console.log('Loaded messages:', formattedMessages.length);
+      return formattedMessages;
+    } catch (error) {
+      console.error('Failed to load messages:', error);
+      return [];
+    }
+  }, []);
+
+  // Set up real-time message subscription
+  useEffect(() => {
+    const activeConversationId = conversationIdRef.current ?? state.conversationId ?? globalConversationId;
+    
+    if (!activeConversationId) {
+      return;
+    }
+
+    console.log('Setting up real-time subscription for conversation:', activeConversationId);
+    
+    const channel = supabase
+      .channel('message-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${activeConversationId}`
+        },
+        (payload) => {
+          console.log('New message received:', payload);
+          const newMessage: ChatMessage = {
+            id: payload.new.id,
+            role: payload.new.role as 'user' | 'assistant' | 'system',
+            content: payload.new.content,
+            timestamp: new Date(payload.new.created_at),
+            metadata: payload.new.metadata
+          };
+          
+          setState(prev => ({
+            ...prev,
+            messages: [...prev.messages, newMessage],
+            isLoading: false
+          }));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('Cleaning up real-time subscription');
+      supabase.removeChannel(channel);
+    };
+  }, [state.conversationId, globalConversationId]);
+
+  // Load messages when conversation changes
+  useEffect(() => {
+    const activeConversationId = conversationIdRef.current ?? state.conversationId ?? globalConversationId;
+    
+    if (activeConversationId && state.messages.length === 0) {
+      loadMessages(activeConversationId).then(messages => {
+        // Add welcome message if no messages exist
+        const welcomeMessage: ChatMessage = {
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          content: getWelcomeMessage(state.mode, state.language),
+          timestamp: new Date(),
+        };
+
+        const allMessages = messages.length > 0 ? messages : [welcomeMessage];
+        
+        setState(prev => ({
+          ...prev,
+          messages: allMessages
+        }));
+      });
+    }
+  }, [state.conversationId, globalConversationId, loadMessages, state.mode, state.language, state.messages.length]);
 
   // Create case first and return durable case_id/case_number with idempotency
   const createCase = useCallback(async (userId: string): Promise<{ caseId: string; caseNumber: string } | null> => {
@@ -293,12 +394,30 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
         ...prev,
         conversationId: newConversationId,
         anonymousSessionId,
-        messages: [] // Don't use local messages - read from DB
       }));
 
-      // Welcome message will not be locally written to case_messages.
-      // The server (edge function) persists messages; UI reads from DB via admin views.
-      // Removed local welcome insert to avoid duplicate writes.
+      // Load existing messages from database
+      const existingMessages = await loadMessages(newConversationId);
+      
+      // Add welcome message if no messages exist yet
+      if (existingMessages.length === 0) {
+        const welcomeMessage: ChatMessage = {
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          content: getWelcomeMessage(state.mode, state.language),
+          timestamp: new Date(),
+        };
+        
+        setState(prev => ({
+          ...prev,
+          messages: [welcomeMessage]
+        }));
+      } else {
+        setState(prev => ({
+          ...prev,
+          messages: existingMessages
+        }));
+      }
 
       // Small delay to ensure conversation is committed to database
       // This helps prevent race conditions with the first user message
@@ -382,11 +501,10 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
       timestamp: new Date(),
     };
 
-    // No local write for user message; server-side edge function handles persistence to messages and case_messages.
-
-    // Set loading state only - don't add to local messages (read from DB instead)
+    // Add user message to local state immediately for responsive UI
     setState(prev => ({
       ...prev,
+      messages: [...prev.messages, userMessage],
       isLoading: true,
     }));
 
@@ -437,32 +555,10 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
         metadata: newExtracted || undefined,
       };
 
-      // No local write for AI message; server-side edge function persists the assistant reply to case_messages.
-
-
-      // Sync any returned IDs (legacy support)
-      if (data?.conversationId && data.conversationId !== conversationIdRef.current) {
-        conversationIdRef.current = data.conversationId;
-      }
-
-      // Update anonymous session with final message count
-      if (state.anonymousSessionId) {
-        try {
-          await supabase
-            .from('anonymous_qa_sessions')
-            .update({
-              total_messages: state.messages.length + 2, // +2 for user and AI messages
-              last_activity: new Date().toISOString()
-            })
-            .eq('id', state.anonymousSessionId);
-        } catch (err) {
-          console.error('Error updating anonymous session final count:', err);
-        }
-      }
-
-      // Update state without adding messages to local state (read from DB only)
+      // Add AI message to local state immediately for responsive UI
       setState(prev => ({
         ...prev,
+        messages: [...prev.messages, aiMessage],
         isLoading: false,
         extractedData: newExtracted ? { ...(prev.extractedData || {}), ...newExtracted } : prev.extractedData,
         needsPersonalDetails: needsPD || prev.needsPersonalDetails,
