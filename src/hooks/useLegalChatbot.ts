@@ -207,20 +207,37 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
           throw new Error('Failed to create case');
         }
         effectiveCaseId = caseResult.caseId;
+        
+        // Verify the case exists before proceeding
+        const { data: verifyCase, error: verifyError } = await supabase
+          .from('cases')
+          .select('id')
+          .eq('id', effectiveCaseId)
+          .single();
+          
+        if (verifyError || !verifyCase) {
+          console.error('Case verification failed:', verifyError);
+          throw new Error(`Case ${effectiveCaseId} does not exist after creation`);
+        }
+        
         // Store in global state immediately
         setCaseData(caseResult.caseId, caseResult.caseNumber);
-        console.log('Case created and stored in global state:', caseResult);
+        console.log('Case created and verified:', caseResult);
       }
 
-      // Prepare conversation data with case_id from the start
-      const conversationData = {
+      // Prepare conversation data - only include case_id if we have a valid one
+      const conversationData: any = {
         user_id: userId || null,
-        case_id: effectiveCaseId || null,
         session_id: sessionId,
         mode: state.mode,
         language: state.language,
         status: 'active' as const,
       };
+
+      // Only add case_id if we have a valid one (to avoid foreign key violations)
+      if (effectiveCaseId) {
+        conversationData.case_id = effectiveCaseId;
+      }
 
       console.log('Inserting conversation with data:', conversationData);
 
