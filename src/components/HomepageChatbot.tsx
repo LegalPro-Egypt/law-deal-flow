@@ -23,6 +23,7 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
   const [inputMessage, setInputMessage] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [hasInteracted, setHasInteracted] = useState(false);
 
   const {
     messages,
@@ -41,28 +42,23 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
     }
   }, [conversationId, initializeConversation]);
 
-  // Auto-scroll to bottom when messages change (only if there are messages)
+  // Auto-scroll to bottom when messages change (only after user interaction)
   useEffect(() => {
-    if (messages.length > 0) {
+    if (hasInteracted && messages.length > 0) {
       bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages]);
+  }, [messages, hasInteracted]);
 
-  // Focus input on mount
-  useEffect(() => {
-    setTimeout(() => {
-      inputRef.current?.focus();
-    }, 300);
-  }, []);
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
     
+    setHasInteracted(true);
     const message = inputMessage.trim();
     setInputMessage('');
     await sendMessage(message);
     
-    // Focus input after sending
+    // Focus input after sending (after interaction)
     setTimeout(() => {
       inputRef.current?.focus();
     }, 100);
