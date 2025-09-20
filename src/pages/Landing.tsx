@@ -98,7 +98,7 @@ const Landing = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/auth?force=true&redirect=intake">
-                <Button size="lg" className="bg-accent hover:bg-accent-hover text-lg px-8 py-3">
+                <Button size="lg" className="bg-accent hover:bg-accent-hover text-xl px-12 py-4">
                   Start Your Case
                 </Button>
               </Link>
