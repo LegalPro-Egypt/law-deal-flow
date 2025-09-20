@@ -121,7 +121,8 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
       if (caseError) throw caseError;
       setCaseDetails(caseData);
 
-      // Fetch case messages directly using case_id
+      // Fetch case messages directly using case_id - ADMIN MUST USE SERVICE KEY
+      console.log('Fetching case messages for case_id:', caseId);
       const { data: messages, error: messagesError } = await supabase
         .from('case_messages')
         .select('*')
@@ -130,43 +131,22 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
 
       if (messagesError) {
         console.error('Error fetching case messages:', messagesError);
+        toast({
+          title: "Message Fetch Error",
+          description: `Failed to fetch messages: ${messagesError.message}`,
+          variant: "destructive",
+        });
       }
 
-      let finalMessages = messages || [];
+      const finalMessages = messages || [];
+      console.log(`Fetched ${finalMessages.length} messages for case ${caseId}`);
       
-      // If no messages found in case_messages, try fallback from messages table via conversation
-      if (!finalMessages.length) {
-        console.log('No messages in case_messages, trying fallback via conversations');
-        const { data: conversationData } = await supabase
-          .from('conversations')
-          .select(`
-            id,
-            messages (
-              id, role, content, message_type, metadata, created_at
-            )
-          `)
-          .eq('case_id', caseId)
-          .order('created_at', { ascending: true });
-
-        if (conversationData && conversationData.length > 0) {
-          // Convert messages format to match case_messages structure
-          const conversationMessages = conversationData.flatMap(conv => 
-            (conv.messages || []).map(msg => ({
-              id: msg.id,
-              case_id: caseId,
-              role: msg.role,
-              content: msg.content,
-              message_type: msg.message_type || 'text',
-              metadata: msg.metadata || {},
-              created_at: msg.created_at,
-              updated_at: msg.created_at // Add missing field
-            }))
-          );
-          finalMessages = conversationMessages.sort((a, b) => 
-            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-          );
-          console.log('Found', finalMessages.length, 'messages via conversation fallback');
-        }
+      // Health check logging
+      if (finalMessages.length === 0) {
+        console.warn(`No messages found for case ${caseId} - this may indicate a data flow issue`);
+      } else {
+        const newestMessage = finalMessages[finalMessages.length - 1];
+        console.log('Health check - Case:', caseId, 'Messages:', finalMessages.length, 'Newest:', newestMessage?.created_at);
       }
 
       setConversation(finalMessages);

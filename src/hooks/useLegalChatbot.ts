@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { generateCaseTitle } from '@/utils/caseUtils';
+import { useCaseState } from './useCaseState';
 
 export interface ChatMessage {
   id: string;
@@ -54,6 +55,7 @@ export interface ChatbotState {
 
 export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
   const { toast } = useToast();
+  const { caseId, caseNumber, conversationId: globalConversationId, setCaseData, setConversationId: setGlobalConversationId, clearCase } = useCaseState();
 
   const [state, setState] = useState<ChatbotState>({
     messages: [],
@@ -68,7 +70,60 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
 
   // Refs to avoid stale closures for IDs
   const conversationIdRef = useRef<string | null>(null);
-  const [caseId, setCaseId] = useState<string | null>(null);
+
+  // Create case first and return durable case_id/case_number
+  const createCase = useCallback(async (userId: string): Promise<{ caseId: string; caseNumber: string } | null> => {
+    try {
+      console.log('Creating case for user:', userId);
+      
+      // Generate unique case number
+      const now = new Date();
+      const year = now.getFullYear();
+      const dayOfYear = Math.floor((now.getTime() - new Date(year, 0, 0).getTime()) / 86400000);
+      const hour = now.getHours().toString().padStart(2, '0');
+      const minute = now.getMinutes().toString().padStart(2, '0');
+      const second = now.getSeconds().toString().padStart(2, '0');
+      const randomSuffix = Math.random().toString(36).substring(2, 8).toUpperCase();
+      
+      const uniqueCaseNumber = `CASE-${year}-${dayOfYear.toString().padStart(3, '0')}-${hour}${minute}${second}-${randomSuffix}`;
+      
+      const { data: newCase, error: caseError } = await supabase
+        .from('cases')
+        .insert({ 
+          status: 'draft',
+          category: 'General Consultation',
+          title: 'New Legal Inquiry',
+          user_id: userId,
+          case_number: uniqueCaseNumber,
+          language: state.language,
+          jurisdiction: 'egypt',
+          description: 'Case created from intake conversation'
+        })
+        .select()
+        .single();
+
+      if (caseError) {
+        console.error('Error creating case:', caseError);
+        toast({
+          title: "Case Creation Failed",
+          description: "Failed to create case. Please try again.",
+          variant: "destructive"
+        });
+        return null;
+      }
+
+      console.log('Case created successfully:', newCase.id, newCase.case_number);
+      return { caseId: newCase.id, caseNumber: newCase.case_number };
+    } catch (error) {
+      console.error('Unexpected error creating case:', error);
+      toast({
+        title: "Case Creation Failed",
+        description: "Unexpected error creating case. Please try again.",
+        variant: "destructive"
+      });
+      return null;
+    }
+  }, [state.language, toast]);
 
   // Initialize conversation (optionally with known user/case)
   const initializeConversation = useCallback(async (userId?: string, initialCaseId?: string) => {
@@ -106,11 +161,24 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
       });
       
       const sessionId = crypto.randomUUID();
+      let effectiveCaseId = initialCaseId;
 
-      // Prepare conversation data with explicit null for anonymous users
+      // For intake mode, create case FIRST to get durable case_id
+      if (state.mode === 'intake' && userId && !initialCaseId) {
+        const caseResult = await createCase(userId);
+        if (!caseResult) {
+          throw new Error('Failed to create case');
+        }
+        effectiveCaseId = caseResult.caseId;
+        // Store in global state immediately
+        setCaseData(caseResult.caseId, caseResult.caseNumber);
+        console.log('Case created and stored in global state:', caseResult);
+      }
+
+      // Prepare conversation data with case_id from the start
       const conversationData = {
-        user_id: userId || null, // Explicitly set to null for anonymous users
-        case_id: initialCaseId || null,
+        user_id: userId || null,
+        case_id: effectiveCaseId || null,
         session_id: sessionId,
         mode: state.mode,
         language: state.language,
@@ -142,6 +210,7 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
       console.log('Conversation created successfully:', conversation);
       const newConversationId = conversation.id as string;
       conversationIdRef.current = newConversationId;
+      setGlobalConversationId(newConversationId);
 
       // For anonymous Q&A sessions, create an anonymous session entry
       let anonymousSessionId = null;
@@ -178,91 +247,32 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
         }]
       }));
 
-      // Ensure we have a case id for persistence
-      const effectiveCaseId = conversation.case_id ?? initialCaseId ?? null;
+      // Write welcome message to case_messages if we have a case_id
       if (effectiveCaseId) {
-        setCaseId(effectiveCaseId);
-      } else if (state.mode === 'intake' && userId) {
-        // Create a draft case with retry mechanism for duplicate case_number
-        const createDraftCaseWithRetry = async (retryCount = 0): Promise<void> => {
-          try {
-            // First check if user already has a draft case that can be reused
-            const { data: existingDraft } = await supabase
-              .from('cases')
-              .select('id')
-              .eq('user_id', userId)
-              .eq('status', 'draft')
-              .order('created_at', { ascending: false })
-              .limit(1)
-              .maybeSingle();
+        try {
+          const { error: welcomeError } = await supabase
+            .from('case_messages')
+            .insert({
+              case_id: effectiveCaseId,
+              role: 'assistant',
+              content: getWelcomeMessage(state.mode, state.language),
+              message_type: 'text',
+              metadata: { isWelcomeMessage: true }
+            });
 
-            if (existingDraft?.id) {
-              // Reuse existing draft case
-              setCaseId(existingDraft.id);
-              await supabase.from('conversations').update({ case_id: existingDraft.id }).eq('id', newConversationId);
-              console.log('Reusing existing draft case:', existingDraft.id);
-              return;
-            }
-            
-            // Generate unique case number to prevent duplicates
-            const now = new Date();
-            const year = now.getFullYear();
-            const dayOfYear = Math.floor((now.getTime() - new Date(year, 0, 0).getTime()) / 86400000);
-            const hour = now.getHours().toString().padStart(2, '0');
-            const minute = now.getMinutes().toString().padStart(2, '0');
-            const second = now.getSeconds().toString().padStart(2, '0');
-            const randomSuffix = Math.random().toString(36).substring(2, 8).toUpperCase();
-            
-            const uniqueCaseNumber = `CASE-${year}-${dayOfYear.toString().padStart(3, '0')}-${hour}${minute}${second}-${randomSuffix}`;
-            
-            const { data: draftCase, error: caseErr } = await supabase
-              .from('cases')
-              .insert({ 
-                status: 'draft',
-                category: 'General Consultation',
-                title: 'New Legal Inquiry',
-                user_id: userId,
-                case_number: uniqueCaseNumber,
-                language: state.language,
-                jurisdiction: 'egypt'
-              })
-              .select('id')
-              .single();
-
-            if (caseErr) {
-              // Check if it's a duplicate case_number error and retry
-              if (caseErr.code === '23505' && caseErr.message?.includes('case_number') && retryCount < 3) {
-                console.log(`Duplicate case_number detected, retrying... (${retryCount + 1}/3)`);
-                await new Promise(resolve => setTimeout(resolve, 100 * (retryCount + 1))); // Exponential backoff
-                return createDraftCaseWithRetry(retryCount + 1);
-              }
-              
-              console.error('Error creating draft case:', caseErr);
-              toast({
-                title: "Case Creation Issue",
-                description: "Your conversation started successfully, but we couldn't create a draft case. You can continue chatting normally.",
-                variant: "default"
-              });
-              return;
-            }
-
-            if (draftCase?.id) {
-              setCaseId(draftCase.id);
-              await supabase.from('conversations').update({ case_id: draftCase.id }).eq('id', newConversationId);
-              console.log('Draft case created successfully:', draftCase.id);
-            }
-          } catch (error) {
-            console.error('Unexpected error creating draft case:', error);
+          if (welcomeError) {
+            console.error('Error saving welcome message:', welcomeError);
             toast({
-              title: "Case Creation Issue", 
-              description: "Your conversation started successfully, but we couldn't create a draft case. You can continue chatting normally.",
+              title: "Message Save Warning",
+              description: "Welcome message may not be saved properly.",
               variant: "default"
             });
+          } else {
+            console.log('Welcome message saved to case_messages');
           }
-        };
-
-        // Create draft case asynchronously to not block conversation start
-        createDraftCaseWithRetry();
+        } catch (error) {
+          console.error('Error saving welcome message:', error);
+        }
       }
 
       // Small delay to ensure conversation is committed to database
@@ -311,18 +321,30 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
       
       return null;
     }
-  }, [state.mode, state.language, toast]);
+  }, [state.mode, state.language, toast, createCase, setCaseData, setGlobalConversationId]);
 
   // Send message to AI
   const sendMessage = useCallback(async (content: string) => {
     const trimmed = content?.trim();
     if (!trimmed) return;
 
-    const activeConversationId = conversationIdRef.current ?? state.conversationId;
+    const activeConversationId = conversationIdRef.current ?? state.conversationId ?? globalConversationId;
+    const activeCaseId = caseId;
+    
     if (!activeConversationId) {
       toast({
-        title: 'Error',
+        title: 'Error',  
         description: 'No active conversation. Please start again.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (state.mode === 'intake' && !activeCaseId) {
+      console.error('No case_id available for intake message');
+      toast({
+        title: 'Error',
+        description: 'No active case found. Please start a new case.',
         variant: 'destructive',
       });
       return;
@@ -335,7 +357,42 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
       timestamp: new Date(),
     };
 
-    // Optimistically append user message and set loading
+    // CRITICAL: Write user message to database FIRST before UI update
+    if (state.mode === 'intake' && activeCaseId) {
+      try {
+        console.log('Saving user message to case_messages with case_id:', activeCaseId);
+        const { error: userMsgError } = await supabase
+          .from('case_messages')
+          .insert({
+            case_id: activeCaseId,
+            role: 'user',
+            content: trimmed,
+            message_type: 'text',
+            metadata: {}
+          });
+
+        if (userMsgError) {
+          console.error('CRITICAL: Failed to save user message:', userMsgError);
+          toast({
+            title: 'Message Save Failed',
+            description: 'Failed to save your message. Please try again.',
+            variant: 'destructive',
+          });
+          return;
+        }
+        console.log('User message saved successfully to case_messages');
+      } catch (error) {
+        console.error('CRITICAL: Error saving user message:', error);
+        toast({
+          title: 'Message Save Failed', 
+          description: 'Failed to save your message. Please try again.',
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
+
+    // Now update UI - messages are persisted first
     setState(prev => ({
       ...prev,
       messages: [...prev.messages, userMessage],
@@ -389,20 +446,44 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
         metadata: newExtracted || undefined,
       };
 
-      // If the function returns a conversationId or caseId, sync them
+      // CRITICAL: Write AI message to database IMMEDIATELY
+      if (state.mode === 'intake' && activeCaseId) {
+        try {
+          console.log('Saving AI message to case_messages with case_id:', activeCaseId);
+          const { error: aiMsgError } = await supabase
+            .from('case_messages')
+            .insert({
+              case_id: activeCaseId,
+              role: 'assistant',
+              content: aiText,
+              message_type: 'text',
+              metadata: newExtracted || {}
+            });
+
+          if (aiMsgError) {
+            console.error('CRITICAL: Failed to save AI message:', aiMsgError);
+            toast({
+              title: 'AI Response Save Failed',
+              description: 'AI response received but not saved. Please refresh and try again.',
+              variant: 'destructive',
+            });
+            // Don't return here - still show the message to user
+          } else {
+            console.log('AI message saved successfully to case_messages');
+          }
+        } catch (error) {
+          console.error('CRITICAL: Error saving AI message:', error);
+          toast({
+            title: 'AI Response Save Failed',
+            description: 'AI response received but not saved. Please refresh and try again.',
+            variant: 'destructive',
+          });
+        }
+      }
+
+      // Sync any returned IDs (legacy support)
       if (data?.conversationId && data.conversationId !== conversationIdRef.current) {
         conversationIdRef.current = data.conversationId;
-      }
-      if (data?.caseId && data.caseId !== caseId) {
-        setCaseId(data.caseId);
-      } else if (!caseId && data?.conversationId) {
-        // fallback: fetch case linked to conversation
-        const { data: conv } = await supabase
-          .from('conversations')
-          .select('case_id')
-          .eq('id', data.conversationId)
-          .single();
-        if (conv?.case_id) setCaseId(conv.case_id);
       }
 
       // Update anonymous session with final message count
@@ -462,11 +543,12 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
         variant: 'destructive',
       });
     }
-  }, [state.mode, state.language, state.messages.length, state.anonymousSessionId, toast, caseId]);
+  }, [state.mode, state.language, state.messages.length, state.anonymousSessionId, toast, caseId, globalConversationId]);
 
   // Switch between Q&A and Intake modes -> start fresh
   const switchMode = useCallback((newMode: 'qa' | 'intake') => {
     conversationIdRef.current = null;
+    clearCase(); // Clear global case state
     setState(prev => ({
       ...prev,
       mode: newMode,
@@ -481,12 +563,12 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
       extractedData: null,
       needsPersonalDetails: false,
     }));
-    setCaseId(null);
-  }, []);
+  }, [clearCase]);
 
   // Change language -> start fresh
   const setLanguage = useCallback((language: 'en' | 'ar' | 'de') => {
     conversationIdRef.current = null;
+    clearCase(); // Clear global case state
     setState(prev => ({
       ...prev,
       language,
@@ -501,8 +583,7 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
       extractedData: null,
       needsPersonalDetails: false,
     }));
-    setCaseId(null);
-  }, []);
+  }, [clearCase]);
 
   // Clear conversation -> keep mode/lang, but drop IDs so a new one is created
   const clearConversation = useCallback(() => {
