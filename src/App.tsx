@@ -12,6 +12,9 @@ import LegalArticle from "./pages/LegalArticle";
 import ClientDashboard from "./pages/ClientDashboard";
 import LawyerDashboard from "./pages/LawyerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import HelpCenter from "./pages/HelpCenter";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +35,9 @@ const App = () => (
           } />
           <Route path="/legal-database" element={<LegalDatabase />} />
           <Route path="/legal-database/article/:id" element={<LegalArticle />} />
+          <Route path="/help" element={<HelpCenter />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-of-service" element={<TermsOfService />} />
           <Route path="/client" element={
             <ProtectedRoute requiredRole="client">
               <ClientDashboard />
