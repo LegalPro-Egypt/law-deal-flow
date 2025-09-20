@@ -19,7 +19,7 @@ export const PromotionalPopup: React.FC<PromotionalPopupProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div 
-        className="fixed inset-0 bg-transparent"
+        className="fixed inset-0 bg-black/5"
         onClick={onClose}
       />
       <div className="relative">
