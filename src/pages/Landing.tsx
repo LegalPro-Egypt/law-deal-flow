@@ -70,14 +70,14 @@ const Landing = () => {
               <span className="text-xl font-bold">LegalPro</span>
             </div>
             <div className="flex items-center space-x-1 sm:space-x-4">
-              <Link to="/legal-database">
-                <Button variant="ghost">Guides</Button>
-              </Link>
-              <Link to="/auth?force=true">
+              <Link to="/auth?force=true" className="order-1 sm:order-none">
                 <Button variant="ghost">Sign In</Button>
               </Link>
-              <Link to="/auth?force=true">
+              <Link to="/auth?force=true" className="order-2 sm:order-none">
                 <Button className="bg-gradient-primary shadow-hero">Get Started</Button>
+              </Link>
+              <Link to="/legal-database" className="order-3 sm:order-none">
+                <Button variant="ghost">Guides</Button>
               </Link>
             </div>
           </div>
