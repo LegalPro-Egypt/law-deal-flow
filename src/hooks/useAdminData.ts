@@ -255,10 +255,33 @@ export const useAdminData = () => {
       const messages = conversation.messages || [];
       
       // Generate case summary from conversation
-      const conversationText = messages
-        .filter(msg => msg.role === 'user')
+      const userMessages = messages.filter(msg => msg.role === 'user');
+      const assistantMessages = messages.filter(msg => msg.role === 'assistant');
+      
+      const conversationText = userMessages
         .map(msg => msg.content)
         .join(' ');
+
+      // Generate client responses summary from user messages
+      const clientResponsesSummary = {
+        keyPoints: userMessages.slice(0, 3).map(msg => msg.content.slice(0, 100) + '...'),
+        totalMessages: userMessages.length,
+        mainConcerns: extractedData.concerns || [],
+        goals: extractedData.goals || [],
+        mentionedParties: extractedData.parties || [],
+        timeline: extractedData.timeline || null
+      };
+
+      // Generate legal analysis from extracted data and conversation
+      const legalAnalysis = {
+        identifiedIssues: extractedData.legalIssues || [],
+        classification: extractedData.classification || extractedData.category || 'General',
+        violationTypes: extractedData.violations || [],
+        remediesSought: extractedData.remedies || [],
+        complexity: extractedData.complexity || 'medium',
+        requiredDocuments: extractedData.requiredDocuments || [],
+        nextSteps: extractedData.nextSteps || []
+      };
 
       const caseData = {
         user_id: conversation.user_id,
@@ -274,6 +297,8 @@ export const useAdminData = () => {
         status: 'submitted',
         ai_summary: extractedData.summary || conversationText.slice(0, 1000),
         extracted_entities: extractedData.entities || {},
+        client_responses_summary: clientResponsesSummary,
+        legal_analysis: legalAnalysis,
         jurisdiction: 'egypt',
         // Preserve draft_data from existing case
         draft_data: existingCase?.draft_data || {}
@@ -324,13 +349,23 @@ export const useAdminData = () => {
       }
 
       // Update conversation status to mark as completed and link to final case
-      await supabase
+      const { error: linkError } = await supabase
         .from('conversations')
         .update({ 
           status: 'completed',
           case_id: finalCase.id 
         })
         .eq('id', conversationId);
+
+      if (linkError) {
+        console.error('Failed to link conversation to case:', linkError);
+        // Don't throw error here, case was created successfully
+        toast({
+          title: "Warning",
+          description: "Case created but conversation linking failed. Case data may be incomplete.",
+          variant: "default",
+        });
+      }
 
       // Refresh data
       await Promise.all([fetchAdminStats(), fetchPendingIntakes(), fetchCases()]);
@@ -527,6 +562,79 @@ export const useAdminData = () => {
     }
   };
 
+  const repairCaseConversationLinks = async () => {
+    try {
+      // Find cases without linked conversations
+      const { data: orphanedCases, error: fetchError } = await supabase
+        .from('cases')
+        .select(`
+          *,
+          conversations!inner(id, case_id)
+        `)
+        .is('conversations.case_id', null)
+        .eq('status', 'submitted');
+
+      if (fetchError) throw fetchError;
+
+      if (!orphanedCases || orphanedCases.length === 0) {
+        toast({
+          title: "No repairs needed",
+          description: "All cases have properly linked conversations",
+        });
+        return;
+      }
+
+      let repairedCount = 0;
+
+      // Attempt to link conversations to cases
+      for (const caseItem of orphanedCases) {
+        if (!caseItem.user_id) continue;
+
+        // Find potential conversation around case creation time
+        const caseTime = new Date(caseItem.created_at);
+        const startTime = new Date(caseTime.getTime() - 2 * 60 * 60 * 1000);
+        const endTime = new Date(caseTime.getTime() + 2 * 60 * 60 * 1000);
+
+        const { data: conversation } = await supabase
+          .from('conversations')
+          .select('id')
+          .eq('user_id', caseItem.user_id)
+          .eq('mode', 'intake')
+          .is('case_id', null)
+          .gte('created_at', startTime.toISOString())
+          .lte('created_at', endTime.toISOString())
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (conversation) {
+          await supabase
+            .from('conversations')
+            .update({ case_id: caseItem.id })
+            .eq('id', conversation.id);
+          
+          repairedCount++;
+        }
+      }
+
+      toast({
+        title: "Repair Complete",
+        description: `Repaired ${repairedCount} case-conversation links`,
+      });
+
+      // Refresh data after repair
+      await Promise.all([fetchAdminStats(), fetchPendingIntakes(), fetchCases()]);
+    } catch (error: any) {
+      console.error('Error repairing case-conversation links:', error);
+      toast({
+        title: "Error",
+        description: `Failed to repair case links: ${error.message}`,
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -559,6 +667,7 @@ export const useAdminData = () => {
     denyCaseAndDelete,
     deleteCase,
     cleanupDuplicateCases,
+    repairCaseConversationLinks,
     refreshData: () => Promise.all([fetchAdminStats(), fetchPendingIntakes(), fetchCases()])
   };
 };

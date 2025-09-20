@@ -116,8 +116,9 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
       if (caseError) throw caseError;
       setCaseDetails(caseData);
 
-      // Fetch conversation if linked
-      const { data: conversationData } = await supabase
+      // Try to fetch conversation by case_id first
+      let conversationData = null;
+      const { data: linkedConversation } = await supabase
         .from('conversations')
         .select(`
           id,
@@ -131,8 +132,53 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
         .eq('case_id', caseId)
         .single();
 
+      conversationData = linkedConversation;
+
+      // If no conversation found by case_id, try fallback search by user and timeframe
+      if (!conversationData && caseData.user_id) {
+        console.log('No conversation found by case_id, trying fallback search...');
+        
+        // Search for conversations around case creation time (±2 hours)
+        const caseTime = new Date(caseData.created_at);
+        const startTime = new Date(caseTime.getTime() - 2 * 60 * 60 * 1000); // 2 hours before
+        const endTime = new Date(caseTime.getTime() + 2 * 60 * 60 * 1000); // 2 hours after
+        
+        const { data: fallbackConversation } = await supabase
+          .from('conversations')
+          .select(`
+            id,
+            messages (
+              id,
+              role,
+              content,
+              created_at
+            )
+          `)
+          .eq('user_id', caseData.user_id)
+          .eq('mode', 'intake')
+          .gte('created_at', startTime.toISOString())
+          .lte('created_at', endTime.toISOString())
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (fallbackConversation) {
+          conversationData = fallbackConversation;
+          console.log('Found conversation via fallback search:', fallbackConversation.id);
+          
+          // Attempt to fix the broken link
+          await supabase
+            .from('conversations')
+            .update({ case_id: caseId })
+            .eq('id', fallbackConversation.id);
+        }
+      }
+
       if (conversationData?.messages) {
         setConversation(conversationData.messages);
+      } else {
+        console.log('No conversation found for case:', caseId);
+        setConversation([]);
       }
 
       // Fetch documents
