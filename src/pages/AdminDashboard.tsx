@@ -518,7 +518,7 @@ const AdminDashboard = () => {
         <Tabs defaultValue="intakes" className="space-y-6">
           <div className="border-b">
             <div className="flex overflow-x-auto scrollbar-hide">
-              <TabsList className="grid grid-cols-5 min-w-fit">
+              <TabsList className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 w-full gap-1 sm:gap-2">
                 <TabsTrigger value="intakes" className="whitespace-nowrap">AI Intakes</TabsTrigger>
                 <TabsTrigger value="cases" className="whitespace-nowrap">Cases</TabsTrigger>
                 <TabsTrigger value="lawyers" className="whitespace-nowrap">
