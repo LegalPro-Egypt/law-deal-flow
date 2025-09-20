@@ -39,7 +39,7 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = ({
   className
 }) => {
   const [inputMessage, setInputMessage] = useState('');
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -72,7 +72,15 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = ({
 
   // Auto-scroll to bottom
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messages.length > 0) {
+      const scrollArea = scrollAreaRef.current;
+      if (scrollArea) {
+        const viewport = scrollArea.querySelector('[data-radix-scroll-area-viewport]');
+        if (viewport) {
+          viewport.scrollTop = viewport.scrollHeight;
+        }
+      }
+    }
   }, [messages]);
 
   // Call onCaseDataExtracted when case data is extracted
@@ -270,7 +278,7 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = ({
 
       <CardContent className="flex-1 flex flex-col p-2 sm:p-4 min-h-0">
         {/* Messages Area */}
-        <ScrollArea className="flex-1 pr-2 sm:pr-4">
+        <ScrollArea ref={scrollAreaRef} className="flex-1 pr-2 sm:pr-4">
           <div className="space-y-3 sm:space-y-4 pb-4">
             {messages.map((message) => (
               <div
@@ -316,9 +324,6 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = ({
                 </div>
               </div>
             )}
-            
-            {/* Auto-scroll anchor */}
-            <div ref={bottomRef} />
           </div>
         </ScrollArea>
 
