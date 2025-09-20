@@ -570,8 +570,8 @@ const ClientDashboard = () => {
                       </div>
                     </DialogContent>
                   </Dialog>
-                  {/* Case setup actions - available for all cases */}
-                  {stepCompletion.allComplete ? (
+                  {/* Case setup actions - only show submit for intake status */}
+                  {stepCompletion.allComplete && activeCase.status === 'intake' ? (
                     <Button 
                       className="w-full justify-start bg-gradient-primary" 
                       onClick={handleReviewCase}
@@ -579,7 +579,7 @@ const ClientDashboard = () => {
                       <ArrowRight className="h-4 w-4 mr-2" />
                       Review Case & Submit
                     </Button>
-                  ) : (
+                  ) : !stepCompletion.allComplete ? (
                     <Button 
                       asChild 
                       className="w-full justify-start bg-gradient-primary"
@@ -589,7 +589,7 @@ const ClientDashboard = () => {
                         Continue Setup
                       </Link>
                     </Button>
-                  )}
+                  ) : null}
                   
                   {/* Progress indicators */}
                   <div className="text-xs text-muted-foreground space-y-1">
