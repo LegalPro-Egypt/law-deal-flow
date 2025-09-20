@@ -1,6 +1,5 @@
 import React from "react";
 import { X } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -15,10 +14,16 @@ export const PromotionalPopup: React.FC<PromotionalPopupProps> = ({
   onClose,
   onSignUp,
 }) => {
+  if (!isOpen) return null;
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg z-60 p-0 gap-0 border-0 bg-transparent shadow-none">
-        <Card className="relative bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div 
+        className="fixed inset-0 bg-black/20 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <div className="relative">
+        <Card className="relative bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 shadow-2xl max-w-lg w-full">
           <button
             onClick={onClose}
             className="absolute top-4 right-4 z-10 p-1 rounded-full hover:bg-primary/10 transition-colors"
@@ -28,14 +33,14 @@ export const PromotionalPopup: React.FC<PromotionalPopupProps> = ({
           </button>
           
           <CardContent className="p-8">
-            <DialogHeader className="text-center space-y-4 mb-6">
-              <DialogTitle className="text-2xl font-bold text-primary">
+            <div className="text-center space-y-4 mb-6">
+              <h2 className="text-2xl font-bold text-primary">
                 Get Your First Legal Consultation FREE
-              </DialogTitle>
+              </h2>
               <p className="text-lg text-muted-foreground">
                 Sign up now and get matched with a vetted lawyer for your first case at no cost
               </p>
-            </DialogHeader>
+            </div>
 
             <div className="space-y-4 mb-8">
               <div className="bg-background/50 rounded-lg p-4 border">
@@ -80,7 +85,7 @@ export const PromotionalPopup: React.FC<PromotionalPopupProps> = ({
             </div>
           </CardContent>
         </Card>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 };

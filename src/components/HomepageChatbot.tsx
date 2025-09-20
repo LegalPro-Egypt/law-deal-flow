@@ -41,9 +41,11 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
     }
   }, [conversationId, initializeConversation]);
 
-  // Auto-scroll to bottom when messages change
+  // Auto-scroll to bottom when messages change (only if there are messages)
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messages.length > 0) {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [messages]);
 
   // Focus input on mount
