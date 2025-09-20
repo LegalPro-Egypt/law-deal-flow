@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { cleanupOldAnonymousSessions, validateAdminAccess } from '@/utils/securityCleanup';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -46,6 +48,7 @@ interface Message {
 }
 
 const AnonymousQAManager = () => {
+  const { profile, session } = useAuth();
   const [sessions, setSessions] = useState<AnonymousSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -56,11 +59,17 @@ const AnonymousQAManager = () => {
   const [conversationMessages, setConversationMessages] = useState<Message[]>([]);
   const [conversationLoading, setConversationLoading] = useState(false);
   const [expandedSessions, setExpandedSessions] = useState<Set<string>>(new Set());
+  const [cleanupLoading, setCleanupLoading] = useState(false);
   const { toast } = useToast();
 
+  // Security check - only admins should access this component
+  const hasAdminAccess = validateAdminAccess(profile, session);
+
   useEffect(() => {
-    fetchSessions();
-  }, []);
+    if (hasAdminAccess) {
+      fetchSessions();
+    }
+  }, [hasAdminAccess]);
 
   const fetchSessions = async () => {
     try {
@@ -180,12 +189,59 @@ const AnonymousQAManager = () => {
     return matchesSearch && matchesStatus && matchesLanguage;
   });
 
+  const handleCleanupOldSessions = async () => {
+    setCleanupLoading(true);
+    try {
+      const result = await cleanupOldAnonymousSessions();
+      
+      if (result.success) {
+        toast({
+          title: 'Cleanup Successful',
+          description: result.message,
+        });
+        // Refresh the sessions list
+        await fetchSessions();
+      } else {
+        toast({
+          title: 'Cleanup Failed',
+          description: result.message,
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Cleanup error:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to cleanup old sessions',
+        variant: 'destructive',
+      });
+    } finally {
+      setCleanupLoading(false);
+    }
+  };
+
   const stats = {
     total: sessions.length,
     active: sessions.filter(s => s.status === 'active').length,
     abandoned: sessions.filter(s => s.status === 'abandoned').length,
     upgraded: sessions.filter(s => s.status === 'upgraded_to_intake').length,
   };
+
+  // Security check - don't render if user doesn't have admin access
+  if (!hasAdminAccess) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Card className="max-w-md">
+          <CardContent className="p-6 text-center">
+            <h3 className="text-lg font-medium text-destructive mb-2">Access Denied</h3>
+            <p className="text-muted-foreground">
+              You don't have permission to access anonymous session data.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -202,6 +258,35 @@ const AnonymousQAManager = () => {
 
   return (
     <div className="space-y-6">
+      {/* Privacy Protection Notice */}
+      <Card className="border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20">
+        <CardContent className="p-4">
+          <div className="flex items-start gap-3">
+            <div className="text-yellow-600 mt-1">
+              <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h4 className="font-medium text-yellow-800 dark:text-yellow-200">Privacy Protection Enabled</h4>
+              <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
+                Anonymous sessions are automatically cleaned up after 30 days to protect user privacy. 
+                IP addresses and user agents are no longer collected.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCleanupOldSessions}
+                disabled={cleanupLoading}
+                className="mt-2 border-yellow-300 text-yellow-800 hover:bg-yellow-100 dark:border-yellow-600 dark:text-yellow-200 dark:hover:bg-yellow-900/20"
+              >
+                {cleanupLoading ? 'Cleaning...' : 'Run Cleanup Now'}
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Stats Cards */}
       <div className="grid md:grid-cols-4 gap-4">
         <Card className="bg-gradient-card shadow-card">

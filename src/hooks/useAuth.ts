@@ -36,37 +36,17 @@ export const useAuth = () => {
                 console.error('useAuth: Profile fetch error:', error);
                 setProfile(null);
               } else if (profileData) {
-                // Check if admin email has wrong role and fix it
-                if (session.user.email === 'dankevforster@gmail.com' && profileData.role !== 'admin') {
-                  console.log('useAuth: Correcting admin role');
-                  const { data: updatedProfile, error: updateError } = await supabase
-                    .from('profiles')
-                    .update({ role: 'admin' })
-                    .eq('user_id', session.user.id)
-                    .select()
-                    .single();
-                  
-                  if (updateError) {
-                    console.error('useAuth: Admin role correction error:', updateError);
-                    setProfile(profileData);
-                  } else {
-                    console.log('useAuth: Admin role corrected:', updatedProfile);
-                    setProfile(updatedProfile);
-                  }
-                } else {
-                  console.log('useAuth: Profile loaded:', profileData);
-                  setProfile(profileData);
-                }
+                console.log('useAuth: Profile loaded:', profileData);
+                setProfile(profileData);
               } else {
-                // No profile exists, create a profile with appropriate role
-                const role = session.user.email === 'dankevforster@gmail.com' ? 'admin' : 'client';
-                console.log(`useAuth: No profile found, creating ${role} profile`);
+                // No profile exists, create a profile with client role by default
+                console.log('useAuth: No profile found, creating client profile');
                 const { data: newProfile, error: createError } = await supabase
                   .from('profiles')
                   .insert({
                     user_id: session.user.id,
                     email: session.user.email || '',
-                    role,
+                    role: 'client',
                     first_name: session.user.user_metadata?.first_name || '',
                     last_name: session.user.user_metadata?.last_name || ''
                   })
@@ -120,37 +100,17 @@ export const useAuth = () => {
               console.error('useAuth: Initial profile fetch error:', profileError);
               setProfile(null);
             } else if (profileData) {
-              // Check if admin email has wrong role and fix it
-              if (session.user.email === 'dankevforster@gmail.com' && profileData.role !== 'admin') {
-                console.log('useAuth: Correcting initial admin role');
-                const { data: updatedProfile, error: updateError } = await supabase
-                  .from('profiles')
-                  .update({ role: 'admin' })
-                  .eq('user_id', session.user.id)
-                  .select()
-                  .single();
-                
-                if (updateError) {
-                  console.error('useAuth: Initial admin role correction error:', updateError);
-                  setProfile(profileData);
-                } else {
-                  console.log('useAuth: Initial admin role corrected:', updatedProfile);
-                  setProfile(updatedProfile);
-                }
-              } else {
-                console.log('useAuth: Initial profile loaded:', profileData);
-                setProfile(profileData);
-              }
+              console.log('useAuth: Initial profile loaded:', profileData);
+              setProfile(profileData);
             } else {
-              // No profile exists, create a profile with appropriate role
-              const role = session.user.email === 'dankevforster@gmail.com' ? 'admin' : 'client';
-              console.log(`useAuth: No initial profile found, creating ${role} profile`);
+              // No profile exists, create a profile with client role by default
+              console.log('useAuth: No initial profile found, creating client profile');
               const { data: newProfile, error: createError } = await supabase
                 .from('profiles')
                 .insert({
                   user_id: session.user.id,
                   email: session.user.email || '',
-                  role,
+                  role: 'client',
                   first_name: session.user.user_metadata?.first_name || '',
                   last_name: session.user.user_metadata?.last_name || ''
                 })

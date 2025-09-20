@@ -20,42 +20,36 @@ export type Database = {
           created_at: string
           first_message_preview: string | null
           id: string
-          ip_address: string | null
           language: string
           last_activity: string | null
           session_id: string
           status: string
           total_messages: number | null
           updated_at: string
-          user_agent: string | null
         }
         Insert: {
           conversation_id?: string | null
           created_at?: string
           first_message_preview?: string | null
           id?: string
-          ip_address?: string | null
           language?: string
           last_activity?: string | null
           session_id: string
           status?: string
           total_messages?: number | null
           updated_at?: string
-          user_agent?: string | null
         }
         Update: {
           conversation_id?: string | null
           created_at?: string
           first_message_preview?: string | null
           id?: string
-          ip_address?: string | null
           language?: string
           last_activity?: string | null
           session_id?: string
           status?: string
           total_messages?: number | null
           updated_at?: string
-          user_agent?: string | null
         }
         Relationships: [
           {
@@ -624,8 +618,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_old_anonymous_sessions: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       has_admin_role: {
         Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_original_admin: {
+        Args: { user_email: string }
         Returns: boolean
       }
       migrate_anonymous_conversation: {
