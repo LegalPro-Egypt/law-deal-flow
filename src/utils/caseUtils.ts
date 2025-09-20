@@ -49,6 +49,8 @@ export function formatCaseStatus(status: string): string {
   switch (status) {
     case 'submitted':
       return 'Under Review';
+    case 'lawyer_assigned':
+      return 'Lawyer Proposal Pending';
     case 'intake':
       return 'In Progress';
     case 'in_progress':

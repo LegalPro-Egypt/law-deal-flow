@@ -79,6 +79,8 @@ const ClientDashboard = () => {
         return 'bg-info';
       case 'submitted':
         return 'bg-primary';
+      case 'lawyer_assigned':
+        return 'bg-accent';
       default:
         return 'bg-muted';
     }
@@ -415,7 +417,9 @@ const ClientDashboard = () => {
             <div className="flex items-center space-x-2 mt-4 lg:mt-0">
               <div className={`w-3 h-3 rounded-full ${getStatusColor(activeCase.status)}`} />
               <span className="font-medium capitalize">
-                {activeCase.status === 'submitted' ? 'Under Review' : activeCase.status.replace('_', ' ')}
+                {activeCase.status === 'submitted' ? 'Under Review' : 
+                 activeCase.status === 'lawyer_assigned' ? 'Lawyer Proposal Pending' : 
+                 activeCase.status.replace('_', ' ')}
               </span>
             </div>
           </div>

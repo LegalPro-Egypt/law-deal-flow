@@ -85,7 +85,11 @@ export const AssignLawyerDialog = ({ isOpen, onClose, caseId, caseCategory, onAs
       setAssigning(true);
       const { error } = await supabase
         .from('cases')
-        .update({ assigned_lawyer_id: selectedLawyer, updated_at: new Date().toISOString() })
+        .update({ 
+          assigned_lawyer_id: selectedLawyer, 
+          status: 'lawyer_assigned',
+          updated_at: new Date().toISOString() 
+        })
         .eq('id', caseId);
 
       if (error) throw error;
