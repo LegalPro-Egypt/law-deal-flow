@@ -107,7 +107,7 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
               Get Free Legal Answers with{" "}
               <span className="text-primary">Lexa AI</span>
             </h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+            <p className="text-base sm:text-xl text-muted-foreground max-w-3xl mx-auto">
               Ask our AI legal assistant about Egyptian law • No signup required • 
               Instant answers in multiple languages • Connect with verified lawyers when you need more
             </p>
