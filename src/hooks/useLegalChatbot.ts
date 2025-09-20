@@ -72,6 +72,8 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
   // Initialize conversation (optionally with known user/case)
   const initializeConversation = useCallback(async (userId?: string, initialCaseId?: string) => {
     try {
+      console.log('Initializing conversation with:', { userId, initialCaseId, mode: state.mode, language: state.language });
+      
       const sessionId = crypto.randomUUID();
 
       const { data: conversation, error } = await supabase
@@ -87,8 +89,12 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Conversation creation error:', error);
+        throw error;
+      }
 
+      console.log('Conversation created successfully:', conversation);
       const newConversationId = conversation.id as string;
       conversationIdRef.current = newConversationId;
 
@@ -157,9 +163,23 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
       return newConversationId;
     } catch (err) {
       console.error('Failed to initialize conversation:', err);
+      
+      // Provide more specific error message based on the error type
+      let errorMessage = 'Failed to start conversation. Please try again.';
+      if (err && typeof err === 'object' && 'message' in err) {
+        const errorMsg = (err as any).message;
+        if (errorMsg.includes('policy')) {
+          errorMessage = 'Permission error starting conversation. Please make sure you are logged in.';
+        } else if (errorMsg.includes('network') || errorMsg.includes('connection')) {
+          errorMessage = 'Network error. Please check your connection and try again.';
+        } else {
+          errorMessage = `Failed to start conversation: ${errorMsg}`;
+        }
+      }
+      
       toast({
         title: 'Error',
-        description: 'Failed to start conversation. Please try again.',
+        description: errorMessage,
         variant: 'destructive',
       });
       return null;
