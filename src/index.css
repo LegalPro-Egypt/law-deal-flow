@@ -332,14 +332,35 @@
   
   @media (max-width: 768px) {
     .trust-signals-container {
-      grid-template-columns: 1fr;
-      gap: 1rem;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
       margin-top: 2rem;
     }
     
     .trust-signal-card {
+      padding: 0.75rem;
+      border-radius: 0.5rem;
       height: auto;
-      min-height: 5rem;
+      min-height: 4rem;
+      flex-direction: column;
+      text-align: center;
+      gap: 0.5rem;
+    }
+    
+    .trust-signal-icon {
+      width: 2.5rem;
+      height: 2.5rem;
+    }
+    
+    .trust-signal-content h3 {
+      font-size: 0.75rem;
+      margin: 0;
+      line-height: 1.1;
+    }
+    
+    .trust-signal-content p {
+      font-size: 0.6875rem;
+      line-height: 1.2;
     }
   }
 
