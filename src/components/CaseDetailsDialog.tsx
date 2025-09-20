@@ -235,7 +235,7 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
       case 'assigned': return 'bg-purple-500';
       case 'in_progress': return 'bg-orange-500';
       case 'completed': return 'bg-green-500';
-      case 'draft': return 'bg-gray-500';
+      case 'intake': return 'bg-cyan-500';
       default: return 'bg-gray-500';
     }
   };

@@ -34,8 +34,8 @@ const CaseSelector = ({ cases, activeCase, onCaseSelect }: CaseSelectorProps) =>
         return 'bg-accent';
       case 'completed':
         return 'bg-success';
-      case 'draft':
-        return 'bg-warning';
+      case 'intake':
+        return 'bg-info';
       case 'submitted':
         return 'bg-primary';
       default:

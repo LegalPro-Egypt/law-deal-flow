@@ -60,7 +60,7 @@ const Intake = () => {
     setPersonalData(data);
     setShowPersonalForm(false);
     
-    // Save personal data to both case columns and draft_data
+    // Save personal data to case columns
     if (caseId && user) {
       try {
         const { error } = await supabase
@@ -69,11 +69,7 @@ const Intake = () => {
             client_name: data.fullName,
             client_email: data.email,
             client_phone: data.phone,
-            language: data.preferredLanguage,
-            draft_data: {
-              ...(extractedCaseData || {}),
-              personalData: data
-            }
+            language: data.preferredLanguage
           })
           .eq('id', caseId);
           
@@ -134,12 +130,12 @@ const Intake = () => {
             targetCase = specificCase;
           }
         } else {
-          // Look for latest DRAFT case only (not submitted)
+          // Look for latest INTAKE case only (not submitted)
           const { data: latestCases } = await supabase
             .from('cases')
             .select('*')
             .eq('user_id', user.id)
-            .eq('status', 'draft')
+            .eq('status', 'intake')
             .order('updated_at', { ascending: false })
             .limit(1);
 
@@ -149,8 +145,6 @@ const Intake = () => {
         }
 
         if (targetCase) {
-          const draftData = (targetCase.draft_data as any) || {};
-          
           // Clear any stale state before loading new case
           setExtractedCaseData(null);
           setPersonalData(null);
@@ -160,12 +154,9 @@ const Intake = () => {
           // Set case data
           setCaseId(targetCase.id);
           
-          // Set personal data from case columns or draft_data with proper fallback
+          // Set personal data from case columns
           let personalDetails = null;
-          
-          if (draftData.personalData) {
-            personalDetails = draftData.personalData;
-          } else if (targetCase.client_name || targetCase.client_email || targetCase.client_phone) {
+          if (targetCase.client_name || targetCase.client_email || targetCase.client_phone) {
             personalDetails = {
               fullName: targetCase.client_name,
               email: targetCase.client_email,
@@ -181,8 +172,8 @@ const Intake = () => {
           }
 
           // Set extracted case data
-          if (draftData.extractedData || targetCase.ai_summary) {
-            setExtractedCaseData(draftData.extractedData || { summary: targetCase.ai_summary });
+          if (targetCase.ai_summary) {
+            setExtractedCaseData({ summary: targetCase.ai_summary });
           }
 
           // Fetch documents for this case
@@ -194,12 +185,9 @@ const Intake = () => {
           setDocuments(caseDocuments || []);
 
           // Compute current step based on completion
-          const step1Complete = !!(targetCase.ai_summary || draftData.extractedData);
-          // Check both case columns and draft_data for personal details
-          const step2Complete = !!(
-            (targetCase.client_name && targetCase.client_email && targetCase.client_phone) ||
-            (draftData.personalData?.fullName && draftData.personalData?.email && draftData.personalData?.phone)
-          );
+          const step1Complete = !!(targetCase.ai_summary);
+          // Check case columns for personal details
+          const step2Complete = !!(targetCase.client_name && targetCase.client_email && targetCase.client_phone);
           const requiredCategories = ['identity', 'case'];
           const uploadedCategories = new Set(
             (caseDocuments || [])

@@ -90,7 +90,7 @@ export const useClientData = () => {
       console.log('useClientData: Fetched cases:', casesData.length, casesData);
       setCases(casesData);
       
-      // Set active case - prefer submitted cases over drafts
+      // Set active case - prefer submitted/in_progress cases, then most recent
       if (casesData.length > 0) {
         const submittedCase = casesData.find(c => c.status === 'submitted' || c.status === 'in_progress');
         const activeCase = submittedCase || casesData[0];
@@ -197,25 +197,6 @@ export const useClientData = () => {
     }
   };
 
-  const continueDraftCase = async (caseId: string) => {
-    try {
-      const { data: draftCase } = await supabase
-        .from('cases')
-        .select('*')
-        .eq('id', caseId)
-        .eq('user_id', user?.id)
-        .eq('status', 'draft')
-        .single();
-
-      if (draftCase) {
-        // Navigate to intake page with case data
-        // This will be handled by the parent component
-        return draftCase;
-      }
-    } catch (error) {
-      console.error('Error loading draft case:', error);
-    }
-  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -303,7 +284,6 @@ export const useClientData = () => {
     fetchingCases,
     setActiveCase,
     sendMessage,
-    refreshData,
-    continueDraftCase
+    refreshData
   };
 };

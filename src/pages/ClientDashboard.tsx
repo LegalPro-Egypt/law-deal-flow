@@ -39,7 +39,6 @@ import { downloadPDF, getUserFriendlyDownloadMessage } from "@/utils/pdfDownload
 
 const ClientDashboard = () => {
   const [newMessage, setNewMessage] = useState("");
-  const [deletingCase, setDeletingCase] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const { signOut } = useAuth();
   const navigate = useNavigate();
@@ -55,36 +54,6 @@ const ClientDashboard = () => {
     refreshData
   } = useClientData();
 
-  const handleDeleteDraftCase = async () => {
-    if (!activeCase || activeCase.status !== 'draft') return;
-    
-    setDeletingCase(true);
-    try {
-      const { error } = await supabase
-        .from('cases')
-        .delete()
-        .eq('id', activeCase.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Draft Case Deleted",
-        description: "Your draft case has been deleted successfully.",
-      });
-
-      // Refresh the cases list
-      await refreshData();
-    } catch (error) {
-      console.error('Error deleting case:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete the draft case. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setDeletingCase(false);
-    }
-  };
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !activeCase) return;
@@ -106,8 +75,8 @@ const ClientDashboard = () => {
         return 'bg-accent';
       case 'completed':
         return 'bg-success';
-      case 'draft':
-        return 'bg-warning';
+      case 'intake':
+        return 'bg-info';
       case 'submitted':
         return 'bg-primary';
       default:
@@ -119,15 +88,11 @@ const ClientDashboard = () => {
   const getStepCompletion = () => {
     if (!activeCase) return { step1: false, step2: false, step3: false, allComplete: false };
     
-    // Step 1: Case data exists (either extracted data or AI summary)
-    const step1Complete = !!(activeCase.ai_summary || activeCase.draft_data);
+    // Step 1: Case data exists (AI summary)
+    const step1Complete = !!(activeCase.ai_summary);
     
-    // Step 2: Personal details are filled (check both case columns and draft_data)
-    const draftPersonalData = (activeCase.draft_data as any)?.personalData;
-    const step2Complete = !!(
-      (activeCase.client_name && activeCase.client_email && activeCase.client_phone) ||
-      (draftPersonalData?.fullName && draftPersonalData?.email && draftPersonalData?.phone)
-    );
+    // Step 2: Personal details are filled
+    const step2Complete = !!(activeCase.client_name && activeCase.client_email && activeCase.client_phone);
     
     // Step 3: All required documents are uploaded
     const requiredCategories = ['identity', 'case']; // Based on DocumentUpload component
@@ -449,9 +414,9 @@ const ClientDashboard = () => {
             </div>
             <div className="flex items-center space-x-2 mt-4 lg:mt-0">
               <div className={`w-3 h-3 rounded-full ${getStatusColor(activeCase.status)}`} />
-      <span className="font-medium capitalize">
-        {activeCase.status === 'submitted' ? 'Under Review' : activeCase.status.replace('_', ' ')}
-      </span>
+              <span className="font-medium capitalize">
+                {activeCase.status === 'submitted' ? 'Under Review' : activeCase.status.replace('_', ' ')}
+              </span>
             </div>
           </div>
 
@@ -539,9 +504,9 @@ const ClientDashboard = () => {
                       <div className={`w-3 h-3 rounded-full ${getStatusColor(activeCase.status)}`} />
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
-          <span className="font-medium">
-            Current Status: {activeCase.status === 'submitted' ? 'Under Review' : activeCase.status.replace('_', ' ')}
-          </span>
+                          <span className="font-medium">
+                            Current Status: {activeCase.status === 'submitted' ? 'Under Review' : activeCase.status.replace('_', ' ')}
+                          </span>
                           <span className="text-sm text-muted-foreground">{formatDate(activeCase.updated_at)}</span>
                         </div>
                       </div>
@@ -602,64 +567,54 @@ const ClientDashboard = () => {
                       </div>
                     </DialogContent>
                   </Dialog>
-                  {activeCase.status === 'draft' && (
-                    <>
-                      {stepCompletion.allComplete ? (
-                        <Button 
-                          className="w-full justify-start bg-gradient-primary" 
-                          onClick={handleReviewCase}
-                        >
-                          <ArrowRight className="h-4 w-4 mr-2" />
-                          Review Case & Submit
-                        </Button>
-                      ) : (
-                        <Button asChild className="w-full justify-start" variant="outline">
-                          <Link to={`/intake?case=${activeCase.id}`}>
-                            <FileText className="h-4 w-4 mr-2" />
-                            Continue Case Setup
-                          </Link>
-                        </Button>
-                      )}
-                      
-                      {/* Progress indicators */}
-                      <div className="text-xs text-muted-foreground space-y-1">
-                        <div className="flex items-center gap-2">
-                          {stepCompletion.step1 ? (
-                            <CheckCircle className="h-3 w-3 text-green-600" />
-                          ) : (
-                            <div className="h-3 w-3 rounded-full border border-muted-foreground" />
-                          )}
-                          <span>AI Chat Complete</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {stepCompletion.step2 ? (
-                            <CheckCircle className="h-3 w-3 text-green-600" />
-                          ) : (
-                            <div className="h-3 w-3 rounded-full border border-muted-foreground" />
-                          )}
-                          <span>Personal Details</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {stepCompletion.step3 ? (
-                            <CheckCircle className="h-3 w-3 text-green-600" />
-                          ) : (
-                            <div className="h-3 w-3 rounded-full border border-muted-foreground" />
-                          )}
-                          <span>Required Documents</span>
-                        </div>
-                      </div>
-                      
-                      <Button 
-                        className="w-full justify-start" 
-                        variant="destructive"
-                        onClick={handleDeleteDraftCase}
-                        disabled={deletingCase}
-                      >
-                        <AlertCircle className="h-4 w-4 mr-2" />
-                        Delete Draft Case
-                      </Button>
-                    </>
+                  {/* Case setup actions - available for all cases */}
+                  {stepCompletion.allComplete ? (
+                    <Button 
+                      className="w-full justify-start bg-gradient-primary" 
+                      onClick={handleReviewCase}
+                    >
+                      <ArrowRight className="h-4 w-4 mr-2" />
+                      Review Case & Submit
+                    </Button>
+                  ) : (
+                    <Button 
+                      asChild 
+                      className="w-full justify-start bg-gradient-primary"
+                    >
+                      <Link to={`/intake?case=${activeCase.id}`}>
+                        <ArrowRight className="h-4 w-4 mr-2" />
+                        Continue Setup
+                      </Link>
+                    </Button>
                   )}
+                  
+                  {/* Progress indicators */}
+                  <div className="text-xs text-muted-foreground space-y-1">
+                    <div className="flex items-center gap-2">
+                      {stepCompletion.step1 ? (
+                        <CheckCircle className="h-3 w-3 text-green-600" />
+                      ) : (
+                        <div className="h-3 w-3 rounded-full border border-muted-foreground" />
+                      )}
+                      <span>AI Chat Complete</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {stepCompletion.step2 ? (
+                        <CheckCircle className="h-3 w-3 text-green-600" />
+                      ) : (
+                        <div className="h-3 w-3 rounded-full border border-muted-foreground" />
+                      )}
+                      <span>Personal Details</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {stepCompletion.step3 ? (
+                        <CheckCircle className="h-3 w-3 text-green-600" />
+                      ) : (
+                        <div className="h-3 w-3 rounded-full border border-muted-foreground" />
+                      )}
+                      <span>Required Documents</span>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -679,39 +634,32 @@ const ClientDashboard = () => {
                   <div>
                     <Label className="text-sm font-medium">Full Name</Label>
                     <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
-                      {activeCase?.client_name || 
-                       (activeCase?.draft_data as any)?.personalData?.fullName || 
-                       'Not provided'}
+                      {activeCase?.client_name || 'Not provided'}
                     </p>
                   </div>
                   <div>
                     <Label className="text-sm font-medium">Email</Label>
                     <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
-                      {activeCase?.client_email || 
-                       (activeCase?.draft_data as any)?.personalData?.email || 
-                       'Not provided'}
+                      {activeCase?.client_email || 'Not provided'}
                     </p>
                   </div>
                   <div>
                     <Label className="text-sm font-medium">Phone</Label>
                     <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
-                      {activeCase?.client_phone || 
-                       (activeCase?.draft_data as any)?.personalData?.phone || 
-                       'Not provided'}
+                      {activeCase?.client_phone || 'Not provided'}
                     </p>
                   </div>
                   <div>
                     <Label className="text-sm font-medium">Language</Label>
                     <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
-                      {(activeCase?.language || (activeCase?.draft_data as any)?.personalData?.preferredLanguage) === 'en' && 'English'}
-                      {(activeCase?.language || (activeCase?.draft_data as any)?.personalData?.preferredLanguage) === 'ar' && 'Arabic'}  
-                      {(activeCase?.language || (activeCase?.draft_data as any)?.personalData?.preferredLanguage) === 'de' && 'German'}
-                      {!(activeCase?.language || (activeCase?.draft_data as any)?.personalData?.preferredLanguage) && 'Not specified'}
+                      {activeCase?.language === 'en' && 'English'}
+                      {activeCase?.language === 'ar' && 'Arabic'}  
+                      {activeCase?.language === 'de' && 'German'}
+                      {!activeCase?.language && 'Not specified'}
                     </p>
                   </div>
                 </div>
                 
-                {activeCase?.status === 'draft' && (
                 <div className="pt-4 border-t">
                   <Button asChild variant="outline">
                     <Link to={`/intake?case=${activeCase.id}&edit=personal`}>
@@ -720,7 +668,6 @@ const ClientDashboard = () => {
                     </Link>
                   </Button>
                 </div>
-                )}
               </CardContent>
             </Card>
           </TabsContent>

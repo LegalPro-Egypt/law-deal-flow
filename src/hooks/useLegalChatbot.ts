@@ -110,7 +110,7 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
       const { data: newCase, error: caseError } = await supabase
         .from('cases')
         .insert({ 
-          status: 'draft',
+          status: 'intake',
           category: 'General Consultation',
           title: 'New Legal Inquiry',
           user_id: userId,

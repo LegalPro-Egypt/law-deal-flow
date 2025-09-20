@@ -62,11 +62,11 @@ export const useAdminData = () => {
         .from('cases')
         .select('*', { count: 'exact', head: true });
 
-      // Get active cases (non-draft status)
+      // Get active cases (submitted or in_progress status)
       const { count: activeCases } = await supabase
         .from('cases')
         .select('*', { count: 'exact', head: true })
-        .neq('status', 'draft');
+        .in('status', ['submitted', 'in_progress']);
 
       // Get pending intake conversations (mode=intake, status=active, with user_id - actionable ones only)
       const { count: pendingIntakes } = await supabase
@@ -162,38 +162,8 @@ export const useAdminData = () => {
 
       if (error) throw error;
 
-      // Filter out duplicate draft cases - prioritize submitted/active cases over drafts
-      const filteredCases = (casesData || []).reduce((acc, currentCase) => {
-        const existingCaseIndex = acc.findIndex(c => 
-          c.user_id === currentCase.user_id && 
-          c.category === currentCase.category &&
-          c.id !== currentCase.id &&
-          Math.abs(new Date(c.created_at).getTime() - new Date(currentCase.created_at).getTime()) < 2 * 60 * 60 * 1000 // Within 2 hours
-        );
-
-        if (existingCaseIndex !== -1) {
-          const existingCase = acc[existingCaseIndex];
-          
-          // Prioritize non-draft cases over draft cases
-          if (currentCase.status !== 'draft' && existingCase.status === 'draft') {
-            acc[existingCaseIndex] = currentCase;
-          } else if (currentCase.status === 'draft' && existingCase.status !== 'draft') {
-            // Keep existing non-draft case, don't add current draft
-            return acc;
-          } else if (currentCase.status === existingCase.status) {
-            // If both same status, keep the newer one
-            if (new Date(currentCase.created_at) > new Date(existingCase.created_at)) {
-              acc[existingCaseIndex] = currentCase;
-            }
-          }
-        } else {
-          acc.push(currentCase);
-        }
-        
-        return acc;
-      }, [] as any[]);
-
-      setCases(filteredCases);
+      // All cases are unique due to idempotency constraints - no filtering needed
+      setCases(casesData || []);
     } catch (error: any) {
       console.error('Error fetching cases:', error);
       toast({
@@ -234,18 +204,18 @@ export const useAdminData = () => {
         }
       }
       
-      // If no linked case, look for draft cases from the same user
+      // If no linked case, look for intake cases from the same user
       if (!existingCase && conversation.user_id) {
-        const { data: draftCases } = await supabase
+        const { data: intakeCases } = await supabase
           .from('cases')
           .select('*')
           .eq('user_id', conversation.user_id)
-          .eq('status', 'draft')
+          .eq('status', 'intake')
           .order('updated_at', { ascending: false })
           .limit(1);
         
-        if (draftCases && draftCases.length > 0) {
-          existingCase = draftCases[0];
+        if (intakeCases && intakeCases.length > 0) {
+          existingCase = intakeCases[0];
         }
       }
 
@@ -286,8 +256,7 @@ export const useAdminData = () => {
         extracted_entities: extractedData.entities || {},
         client_responses_summary: clientResponsesSummary,
         jurisdiction: 'egypt',
-        // Preserve draft_data from existing case
-        draft_data: existingCase?.draft_data || {}
+        // No need for draft_data in simplified case lifecycle
       };
 
       let finalCase;
@@ -304,12 +273,12 @@ export const useAdminData = () => {
         if (updateError) throw updateError;
         finalCase = updatedCase;
         
-        // Clean up any other draft cases for this user/category after successful update
+        // Clean up any other intake cases for this user/category after successful update
         await supabase
           .from('cases')
           .delete()
           .eq('user_id', conversation.user_id)
-          .eq('status', 'draft')
+          .eq('status', 'intake')
           .eq('category', caseData.category)
           .neq('id', finalCase.id);
         
