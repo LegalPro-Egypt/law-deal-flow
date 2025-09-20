@@ -571,8 +571,8 @@ const AdminDashboard = () => {
                     >
                       <XCircle className="h-4 w-4" />
                     </Button>
-                    <CardContent className="p-6">
-                      <div className="grid lg:grid-cols-3 gap-6">
+                     <CardContent className="p-4">
+                       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         {/* Intake Info */}
                         <div>
                           <div className="flex items-center justify-between mb-2 pr-8">
@@ -591,37 +591,37 @@ const AdminDashboard = () => {
                           </div>
                         </div>
 
-                        {/* Messages Preview */}
-                        <div>
-                          <h4 className="font-medium mb-2 text-sm">Latest Messages</h4>
-                          <div className="space-y-1 text-xs max-h-20 overflow-y-auto">
-                            {intake.messages?.slice(-2).map((msg, idx) => (
-                              <p key={idx} className="truncate">
-                                <span className="font-medium capitalize">{msg.role}:</span> {msg.content.slice(0, 80)}...
-                              </p>
-                            ))}
-                          </div>
-                        </div>
+                         {/* Messages Preview */}
+                         <div className="min-w-0">
+                           <h4 className="font-medium mb-1 text-sm">Latest Messages</h4>
+                           <div className="space-y-1 text-xs max-h-16 overflow-y-auto">
+                             {intake.messages?.slice(-2).map((msg, idx) => (
+                               <p key={idx} className="truncate text-xs">
+                                 <span className="font-medium capitalize">{msg.role}:</span> {msg.content.slice(0, 60)}...
+                               </p>
+                             ))}
+                           </div>
+                         </div>
 
-                        {/* Actions */}
-                        <div className="flex flex-col space-y-2">
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="justify-start"
-                            onClick={() => handleViewConversation(intake.id)}
-                          >
-                            <Eye className="h-4 w-4 mr-2" />
-                            View Conversation
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            className="bg-gradient-primary justify-start"
-                            onClick={() => handleCreateCase(intake.id)}
-                          >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Create Case
-                          </Button>
+                         {/* Actions */}
+                         <div className="flex flex-col space-y-1">
+                           <Button 
+                             size="sm" 
+                             variant="outline" 
+                             className="justify-start text-xs h-8"
+                             onClick={() => handleViewConversation(intake.id)}
+                           >
+                             <Eye className="h-3 w-3 mr-1" />
+                             View
+                           </Button>
+                           <Button 
+                             size="sm" 
+                             className="bg-gradient-primary justify-start text-xs h-8"
+                             onClick={() => handleCreateCase(intake.id)}
+                           >
+                             <Plus className="h-3 w-3 mr-1" />
+                             Create Case
+                           </Button>
                         </div>
                       </div>
                     </CardContent>
