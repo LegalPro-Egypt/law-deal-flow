@@ -26,6 +26,8 @@ interface Lawyer {
   is_verified: boolean;
   bio?: string;
   languages?: string[];
+  team_size?: number;
+  professional_memberships?: string[];
 }
 
 interface AssignLawyerDialogProps {
@@ -203,29 +205,58 @@ export const AssignLawyerDialog = ({ isOpen, onClose, caseId, caseCategory, onAs
                           </div>
                           
                           <div className="space-y-2 text-sm text-muted-foreground">
-                            {lawyer.law_firm && (
+                            {lawyer.law_firm ? (
                               <div className="flex items-center">
                                 <Briefcase className="h-4 w-4 mr-2" />
                                 <span>{lawyer.law_firm}</span>
                               </div>
+                            ) : (
+                              <div className="flex items-center">
+                                <Briefcase className="h-4 w-4 mr-2" />
+                                <span className="italic">Law firm not specified</span>
+                              </div>
                             )}
                             
-                            {lawyer.years_experience && (
+                            {lawyer.years_experience ? (
                               <div className="flex items-center">
                                 <GraduationCap className="h-4 w-4 mr-2" />
                                 <span>{lawyer.years_experience} years experience</span>
                               </div>
+                            ) : (
+                              <div className="flex items-center">
+                                <GraduationCap className="h-4 w-4 mr-2" />
+                                <span className="italic">Experience not specified</span>
+                              </div>
                             )}
                             
-                            {lawyer.jurisdictions && lawyer.jurisdictions.length > 0 && (
+                            {lawyer.jurisdictions && lawyer.jurisdictions.length > 0 ? (
                               <div className="flex items-center">
                                 <MapPin className="h-4 w-4 mr-2" />
                                 <span>{lawyer.jurisdictions.join(', ')}</span>
                               </div>
+                            ) : (
+                              <div className="flex items-center">
+                                <MapPin className="h-4 w-4 mr-2" />
+                                <span className="italic">Jurisdictions not specified</span>
+                              </div>
+                            )}
+
+                            {lawyer.languages && lawyer.languages.length > 0 && (
+                              <div className="flex items-center">
+                                <Users className="h-4 w-4 mr-2" />
+                                <span>Languages: {lawyer.languages.join(', ')}</span>
+                              </div>
+                            )}
+
+                            {lawyer.team_size && (
+                              <div className="flex items-center">
+                                <Award className="h-4 w-4 mr-2" />
+                                <span>Team size: {lawyer.team_size} members</span>
+                              </div>
                             )}
                           </div>
                           
-                          {lawyer.specializations && lawyer.specializations.length > 0 && (
+                          {lawyer.specializations && lawyer.specializations.length > 0 ? (
                             <div className="mt-3 flex flex-wrap gap-1">
                               {lawyer.specializations.map((spec, index) => (
                                 <Badge 
@@ -240,6 +271,25 @@ export const AssignLawyerDialog = ({ isOpen, onClose, caseId, caseCategory, onAs
                                   {spec}
                                 </Badge>
                               ))}
+                            </div>
+                          ) : (
+                            <div className="mt-3">
+                              <Badge variant="secondary" className="text-xs">
+                                No specializations listed
+                              </Badge>
+                            </div>
+                          )}
+
+                          {lawyer.professional_memberships && lawyer.professional_memberships.length > 0 && (
+                            <div className="mt-3">
+                              <p className="text-xs font-medium text-muted-foreground mb-1">Professional Memberships:</p>
+                              <div className="flex flex-wrap gap-1">
+                                {lawyer.professional_memberships.map((membership, index) => (
+                                  <Badge key={index} variant="outline" className="text-xs">
+                                    {membership}
+                                  </Badge>
+                                ))}
+                              </div>
                             </div>
                           )}
                           
