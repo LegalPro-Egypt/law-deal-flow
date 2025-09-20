@@ -262,6 +262,15 @@ export const useAdminData = () => {
         .map(msg => msg.content)
         .join(' ');
 
+      // Generate comprehensive legal analysis from conversation
+      const legalAnalysisResult = await supabase.functions.invoke('generate-legal-analysis', {
+        body: { 
+          messages: messages,
+          category: extractedData.category || 'General',
+          language: conversation.language || 'en'
+        }
+      });
+
       // Generate client responses summary from user messages
       const clientResponsesSummary = {
         keyPoints: userMessages.slice(0, 3).map(msg => msg.content.slice(0, 100) + '...'),
@@ -272,15 +281,29 @@ export const useAdminData = () => {
         timeline: extractedData.timeline || null
       };
 
-      // Generate legal analysis from extracted data and conversation
-      const legalAnalysis = {
-        identifiedIssues: extractedData.legalIssues || [],
-        classification: extractedData.classification || extractedData.category || 'General',
-        violationTypes: extractedData.violations || [],
-        remediesSought: extractedData.remedies || [],
-        complexity: extractedData.complexity || 'medium',
-        requiredDocuments: extractedData.requiredDocuments || [],
-        nextSteps: extractedData.nextSteps || []
+      // Use generated legal analysis or fallback to basic analysis
+      const legalAnalysis = legalAnalysisResult.data?.legalAnalysis || {
+        caseSummary: extractedData.summary || conversationText.slice(0, 500),
+        applicableLaws: [],
+        recommendedSpecialization: {
+          primaryArea: extractedData.category || 'General Legal',
+          secondaryAreas: [],
+          reasoning: "Based on case category and initial assessment"
+        },
+        legalStrategy: {
+          immediateSteps: ["Consult with qualified lawyer", "Gather relevant documents"],
+          documentation: extractedData.requiredDocuments || [],
+          timeline: "To be determined upon legal consultation",
+          risks: [],
+          opportunities: []
+        },
+        caseComplexity: {
+          level: extractedData.complexity || 'medium',
+          factors: ["Standard legal matter requiring professional assessment"],
+          estimatedCost: "To be determined"
+        },
+        jurisdiction: "egypt",
+        urgency: extractedData.urgency || 'medium'
       };
 
       const caseData = {
