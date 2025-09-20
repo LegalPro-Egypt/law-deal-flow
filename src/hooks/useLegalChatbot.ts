@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
+import { generateCaseTitle } from '@/utils/caseUtils';
 
 export interface ChatMessage {
   id: string;
@@ -159,22 +160,68 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
       if (effectiveCaseId) {
         setCaseId(effectiveCaseId);
       } else if (state.mode === 'intake' && userId) {
-        // Optional: create a draft case immediately so saveCaseStep works
-        const { data: draftCase, error: caseErr } = await supabase
-          .from('cases')
-          .insert({ 
-            status: 'draft',
-            category: 'general',
-            title: 'New Legal Inquiry',
-            user_id: userId || null
-          })
-          .select('id')
-          .single();
+        // Create a draft case with retry mechanism for duplicate case_number
+        const createDraftCaseWithRetry = async (retryCount = 0): Promise<void> => {
+          try {
+            // Generate unique case number to prevent duplicates
+            const now = new Date();
+            const year = now.getFullYear();
+            const dayOfYear = Math.floor((now.getTime() - new Date(year, 0, 0).getTime()) / 86400000);
+            const hour = now.getHours().toString().padStart(2, '0');
+            const minute = now.getMinutes().toString().padStart(2, '0');
+            const second = now.getSeconds().toString().padStart(2, '0');
+            const randomSuffix = Math.random().toString(36).substring(2, 8).toUpperCase();
+            
+            const uniqueCaseNumber = `CASE-${year}-${dayOfYear.toString().padStart(3, '0')}-${hour}${minute}${second}-${randomSuffix}`;
+            
+            const { data: draftCase, error: caseErr } = await supabase
+              .from('cases')
+              .insert({ 
+                status: 'draft',
+                category: 'General Consultation',
+                title: 'New Legal Inquiry',
+                user_id: userId,
+                case_number: uniqueCaseNumber,
+                language: state.language,
+                jurisdiction: 'egypt'
+              })
+              .select('id')
+              .single();
 
-        if (!caseErr && draftCase?.id) {
-          setCaseId(draftCase.id);
-          await supabase.from('conversations').update({ case_id: draftCase.id }).eq('id', newConversationId);
-        }
+            if (caseErr) {
+              // Check if it's a duplicate case_number error and retry
+              if (caseErr.code === '23505' && caseErr.message?.includes('case_number') && retryCount < 3) {
+                console.log(`Duplicate case_number detected, retrying... (${retryCount + 1}/3)`);
+                await new Promise(resolve => setTimeout(resolve, 100 * (retryCount + 1))); // Exponential backoff
+                return createDraftCaseWithRetry(retryCount + 1);
+              }
+              
+              console.error('Error creating draft case:', caseErr);
+              toast({
+                title: "Case Creation Issue",
+                description: "Your conversation started successfully, but we couldn't create a draft case. You can continue chatting normally.",
+                variant: "default"
+              });
+              return;
+            }
+
+            if (draftCase?.id) {
+              setCaseId(draftCase.id);
+              await supabase.from('conversations').update({ case_id: draftCase.id }).eq('id', newConversationId);
+              console.log('Draft case created successfully:', draftCase.id);
+            }
+          } catch (error) {
+            console.error('Unexpected error creating draft case:', error);
+            toast({
+              title: "Case Creation Issue", 
+              description: "Your conversation started successfully, but we couldn't create a draft case. You can continue chatting normally.",
+              variant: "default"
+            });
+          }
+        };
+
+        // Create draft case asynchronously to not block conversation start
+        createDraftCaseWithRetry();
       }
 
       // Small delay to ensure conversation is committed to database
