@@ -61,6 +61,47 @@ export type Database = {
           },
         ]
       }
+      case_analysis: {
+        Row: {
+          analysis_data: Json
+          analysis_type: string
+          case_id: string
+          created_at: string
+          generated_at: string
+          id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          analysis_data: Json
+          analysis_type?: string
+          case_id: string
+          created_at?: string
+          generated_at?: string
+          id?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          analysis_data?: Json
+          analysis_type?: string
+          case_id?: string
+          created_at?: string
+          generated_at?: string
+          id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_analysis_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_categories: {
         Row: {
           applicable_laws: string[] | null
@@ -110,6 +151,47 @@ export type Database = {
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "case_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      case_messages: {
+        Row: {
+          case_id: string
+          content: string
+          created_at: string
+          id: string
+          message_type: string
+          metadata: Json | null
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          case_id: string
+          content: string
+          created_at?: string
+          id?: string
+          message_type?: string
+          metadata?: Json | null
+          role: string
+          updated_at?: string
+        }
+        Update: {
+          case_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          message_type?: string
+          metadata?: Json | null
+          role?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_messages_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
             referencedColumns: ["id"]
           },
         ]

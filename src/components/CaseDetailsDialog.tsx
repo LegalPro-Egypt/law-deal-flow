@@ -66,8 +66,11 @@ interface CaseDetails {
 
 interface ConversationMessage {
   id: string;
+  case_id: string;
   role: string;
   content: string;
+  message_type: string;
+  metadata?: any;
   created_at: string;
 }
 
@@ -89,6 +92,7 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
   const [caseDetails, setCaseDetails] = useState<CaseDetails | null>(null);
   const [conversation, setConversation] = useState<ConversationMessage[]>([]);
   const [documents, setDocuments] = useState<CaseDocument[]>([]);
+  const [caseAnalysis, setCaseAnalysis] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [generatingSummary, setGeneratingSummary] = useState(false);
   const [generatingAnalysis, setGeneratingAnalysis] = useState(false);
@@ -117,71 +121,19 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
       if (caseError) throw caseError;
       setCaseDetails(caseData);
 
-      // Enhanced conversation fetching logic
-      let conversationData = null;
-      let messagesData = [];
-
-      // Method 1: Try to find conversation by case_id
-      const { data: linkedConversation } = await supabase
-        .from('conversations')
+      // Fetch case messages directly using case_id
+      const { data: messages, error: messagesError } = await supabase
+        .from('case_messages')
         .select('*')
         .eq('case_id', caseId)
-        .maybeSingle();
+        .order('created_at', { ascending: true });
 
-      if (linkedConversation) {
-        conversationData = linkedConversation;
+      if (messagesError) {
+        console.error('Error fetching case messages:', messagesError);
+        setConversation([]);
       } else {
-        // Method 2: Find by user_id and intake mode, prioritizing by message count
-        const { data: candidateConversations } = await supabase
-          .from('conversations')
-          .select('*')
-          .eq('user_id', caseData.user_id)
-          .eq('mode', 'intake')
-          .order('created_at', { ascending: false });
-
-        if (candidateConversations && candidateConversations.length > 0) {
-          // For each candidate, count messages and pick the one with most messages
-          let bestConversation = null;
-          let maxMessages = 0;
-
-          for (const conv of candidateConversations) {
-            const { count } = await supabase
-              .from('messages')
-              .select('*', { count: 'exact', head: true })
-              .eq('conversation_id', conv.id);
-
-            if (count && count > maxMessages) {
-              maxMessages = count;
-              bestConversation = conv;
-            }
-          }
-
-          if (bestConversation && maxMessages > 0) {
-            conversationData = bestConversation;
-            
-            // Auto-repair: link the conversation to the case
-            await supabase
-              .from('conversations')
-              .update({ case_id: caseId })
-              .eq('id', conversationData.id);
-          }
-        }
+        setConversation(messages || []);
       }
-
-      if (conversationData) {
-        // Fetch messages for the conversation
-        const { data: messages, error: messagesError } = await supabase
-          .from('messages')
-          .select('*')
-          .eq('conversation_id', conversationData.id)
-          .order('created_at', { ascending: true });
-
-        if (!messagesError) {
-          messagesData = messages || [];
-        }
-      }
-
-      setConversation(messagesData);
 
       // Fetch documents
       const { data: documentsData } = await supabase
@@ -191,6 +143,17 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
         .order('created_at', { ascending: false });
 
       setDocuments(documentsData || []);
+
+      // Fetch case analysis
+      const { data: analysisData } = await supabase
+        .from('case_analysis')
+        .select('*')
+        .eq('case_id', caseId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      setCaseAnalysis(analysisData);
 
     } catch (error: any) {
       console.error('Error fetching case details:', error);
@@ -277,22 +240,24 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
         body: { 
           messages: conversation,
           category: caseDetails?.category || 'General',
-          language: caseDetails?.language || 'en'
+          language: caseDetails?.language || 'en',
+          caseId: caseId
         }
       });
 
       if (error) throw error;
 
-      // Update the case with the generated legal analysis
-      const { error: updateError } = await supabase
-        .from('cases')
-        .update({ legal_analysis: data.legalAnalysis })
-        .eq('id', caseId);
+      // The edge function will save to case_analysis table directly
+      // Refresh the case analysis data
+      const { data: analysisData } = await supabase
+        .from('case_analysis')
+        .select('*')
+        .eq('case_id', caseId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-      if (updateError) throw updateError;
-
-      // Update the local state
-      setCaseDetails(prev => prev ? { ...prev, legal_analysis: data.legalAnalysis } : null);
+      setCaseAnalysis(analysisData);
       
       toast({
         title: "Legal Analysis Generated",
@@ -682,7 +647,7 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                         <Scale className="h-5 w-5" />
                         Legal Analysis & Strategy
                       </CardTitle>
-                      {!caseDetails.legal_analysis && conversation.length > 0 && (
+                      {!caseAnalysis && conversation.length > 0 && (
                         <Button
                           variant="outline"
                           size="sm"
@@ -697,30 +662,30 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    {caseDetails.legal_analysis ? (
+                    {caseAnalysis?.analysis_data ? (
                       <>
                         {/* Case Summary */}
-                        {caseDetails.legal_analysis.caseSummary && (
+                        {caseAnalysis.analysis_data.caseSummary && (
                           <div>
                             <h4 className="font-semibold mb-3 flex items-center gap-2">
                               <FileText className="h-4 w-4 text-primary" />
                               Case Summary
                             </h4>
                             <div className="bg-muted p-4 rounded-lg">
-                              <p className="text-sm">{caseDetails.legal_analysis.caseSummary}</p>
+                              <p className="text-sm">{caseAnalysis.analysis_data.caseSummary}</p>
                             </div>
                           </div>
                         )}
 
                         {/* Applicable Laws */}
-                        {caseDetails.legal_analysis.applicableLaws && caseDetails.legal_analysis.applicableLaws.length > 0 && (
+                        {caseAnalysis.analysis_data.applicableLaws && caseAnalysis.analysis_data.applicableLaws.length > 0 && (
                           <div>
                             <h4 className="font-semibold mb-3 flex items-center gap-2">
                               <BookOpen className="h-4 w-4 text-blue-600" />
                               Applicable Laws & Regulations
                             </h4>
                             <div className="space-y-3">
-                              {caseDetails.legal_analysis.applicableLaws.map((law: any, index: number) => (
+                              {caseAnalysis.analysis_data.applicableLaws.map((law: any, index: number) => (
                                 <div key={index} className="border rounded-lg p-3">
                                   <div className="flex items-center gap-2 mb-2">
                                     <Badge variant="outline">{law.law}</Badge>
@@ -744,7 +709,7 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                         )}
 
                         {/* Recommended Specialization */}
-                        {caseDetails.legal_analysis.recommendedSpecialization && (
+                        {caseAnalysis.analysis_data.recommendedSpecialization && (
                           <div>
                             <h4 className="font-semibold mb-3 flex items-center gap-2">
                               <Users className="h-4 w-4 text-purple-600" />
@@ -755,28 +720,28 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                                 <label className="text-sm font-medium text-muted-foreground">Primary Specialization</label>
                                 <div className="mt-1">
                                   <Badge variant="default" className="text-sm">
-                                    {caseDetails.legal_analysis.recommendedSpecialization.primaryArea}
+                                    {caseAnalysis.analysis_data.recommendedSpecialization.primaryArea}
                                   </Badge>
                                 </div>
                               </div>
                               
-                              {caseDetails.legal_analysis.recommendedSpecialization.secondaryAreas && 
-                               caseDetails.legal_analysis.recommendedSpecialization.secondaryAreas.length > 0 && (
+                              {caseAnalysis.analysis_data.recommendedSpecialization.secondaryAreas && 
+                               caseAnalysis.analysis_data.recommendedSpecialization.secondaryAreas.length > 0 && (
                                 <div>
                                   <label className="text-sm font-medium text-muted-foreground">Secondary Areas</label>
                                   <div className="flex flex-wrap gap-1 mt-1">
-                                    {caseDetails.legal_analysis.recommendedSpecialization.secondaryAreas.map((area: string, index: number) => (
+                                    {caseAnalysis.analysis_data.recommendedSpecialization.secondaryAreas.map((area: string, index: number) => (
                                       <Badge key={index} variant="secondary" className="text-xs">{area}</Badge>
                                     ))}
                                   </div>
                                 </div>
                               )}
                               
-                              {caseDetails.legal_analysis.recommendedSpecialization.reasoning && (
+                              {caseAnalysis.analysis_data.recommendedSpecialization.reasoning && (
                                 <div>
                                   <label className="text-sm font-medium text-muted-foreground">Reasoning</label>
                                   <p className="text-sm text-muted-foreground mt-1">
-                                    {caseDetails.legal_analysis.recommendedSpecialization.reasoning}
+                                    {caseAnalysis.analysis_data.recommendedSpecialization.reasoning}
                                   </p>
                                 </div>
                               )}
@@ -785,19 +750,19 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                         )}
 
                         {/* Legal Strategy */}
-                        {caseDetails.legal_analysis.legalStrategy && (
+                        {caseAnalysis.analysis_data.legalStrategy && (
                           <div>
                             <h4 className="font-semibold mb-3 flex items-center gap-2">
                               <Target className="h-4 w-4 text-green-600" />
                               Legal Strategy & Next Steps
                             </h4>
                             <div className="border rounded-lg p-4 space-y-4">
-                              {caseDetails.legal_analysis.legalStrategy.immediateSteps && 
-                               caseDetails.legal_analysis.legalStrategy.immediateSteps.length > 0 && (
+                              {caseAnalysis.analysis_data.legalStrategy.immediateSteps && 
+                               caseAnalysis.analysis_data.legalStrategy.immediateSteps.length > 0 && (
                                 <div>
                                   <label className="text-sm font-medium text-muted-foreground">Immediate Actions</label>
                                   <ul className="mt-2 space-y-1">
-                                    {caseDetails.legal_analysis.legalStrategy.immediateSteps.map((step: string, index: number) => (
+                                    {caseAnalysis.analysis_data.legalStrategy.immediateSteps.map((step: string, index: number) => (
                                       <li key={index} className="flex items-start gap-2 text-sm">
                                         <span className="text-green-600 mt-1">•</span>
                                         <span>{step}</span>
@@ -807,33 +772,33 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                                 </div>
                               )}
 
-                              {caseDetails.legal_analysis.legalStrategy.documentation && 
-                               caseDetails.legal_analysis.legalStrategy.documentation.length > 0 && (
+                              {caseAnalysis.analysis_data.legalStrategy.documentation && 
+                               caseAnalysis.analysis_data.legalStrategy.documentation.length > 0 && (
                                 <div>
                                   <label className="text-sm font-medium text-muted-foreground">Required Documentation</label>
                                   <div className="flex flex-wrap gap-1 mt-2">
-                                    {caseDetails.legal_analysis.legalStrategy.documentation.map((doc: string, index: number) => (
+                                    {caseAnalysis.analysis_data.legalStrategy.documentation.map((doc: string, index: number) => (
                                       <Badge key={index} variant="outline" className="text-xs">{doc}</Badge>
                                     ))}
                                   </div>
                                 </div>
                               )}
 
-                              {caseDetails.legal_analysis.legalStrategy.timeline && (
+                              {caseAnalysis.analysis_data.legalStrategy.timeline && (
                                 <div>
                                   <label className="text-sm font-medium text-muted-foreground">Expected Timeline</label>
                                   <p className="text-sm text-muted-foreground mt-1">
-                                    {caseDetails.legal_analysis.legalStrategy.timeline}
+                                    {caseAnalysis.analysis_data.legalStrategy.timeline}
                                   </p>
                                 </div>
                               )}
 
-                              {caseDetails.legal_analysis.legalStrategy.risks && 
-                               caseDetails.legal_analysis.legalStrategy.risks.length > 0 && (
+                              {caseAnalysis.analysis_data.legalStrategy.risks && 
+                               caseAnalysis.analysis_data.legalStrategy.risks.length > 0 && (
                                 <div>
                                   <label className="text-sm font-medium text-muted-foreground">Potential Risks</label>
                                   <ul className="mt-2 space-y-1">
-                                    {caseDetails.legal_analysis.legalStrategy.risks.map((risk: string, index: number) => (
+                                    {caseAnalysis.analysis_data.legalStrategy.risks.map((risk: string, index: number) => (
                                       <li key={index} className="flex items-start gap-2 text-sm">
                                         <AlertTriangle className="h-3 w-3 text-orange-500 mt-1 flex-shrink-0" />
                                         <span>{risk}</span>
@@ -843,12 +808,12 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                                 </div>
                               )}
 
-                              {caseDetails.legal_analysis.legalStrategy.opportunities && 
-                               caseDetails.legal_analysis.legalStrategy.opportunities.length > 0 && (
+                              {caseAnalysis.analysis_data.legalStrategy.opportunities && 
+                               caseAnalysis.analysis_data.legalStrategy.opportunities.length > 0 && (
                                 <div>
                                   <label className="text-sm font-medium text-muted-foreground">Favorable Aspects</label>
                                   <ul className="mt-2 space-y-1">
-                                    {caseDetails.legal_analysis.legalStrategy.opportunities.map((opportunity: string, index: number) => (
+                                    {caseAnalysis.analysis_data.legalStrategy.opportunities.map((opportunity: string, index: number) => (
                                       <li key={index} className="flex items-start gap-2 text-sm">
                                         <CheckCircle className="h-3 w-3 text-green-600 mt-1 flex-shrink-0" />
                                         <span>{opportunity}</span>
@@ -862,7 +827,7 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                         )}
 
                         {/* Case Complexity */}
-                        {caseDetails.legal_analysis.caseComplexity && (
+                        {caseAnalysis.analysis_data.caseComplexity && (
                           <div>
                             <h4 className="font-semibold mb-3 flex items-center gap-2">
                               <AlertCircle className="h-4 w-4 text-orange-600" />
@@ -872,26 +837,26 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                               <div className="flex items-center gap-2">
                                 <Badge 
                                   variant={
-                                    caseDetails.legal_analysis.caseComplexity.level === 'low' ? 'secondary' :
-                                    caseDetails.legal_analysis.caseComplexity.level === 'medium' ? 'default' : 'destructive'
+                                    caseAnalysis.analysis_data.caseComplexity.level === 'low' ? 'secondary' :
+                                    caseAnalysis.analysis_data.caseComplexity.level === 'medium' ? 'default' : 'destructive'
                                   }
                                   className="capitalize"
                                 >
-                                  {caseDetails.legal_analysis.caseComplexity.level} Complexity
+                                  {caseAnalysis.analysis_data.caseComplexity.level} Complexity
                                 </Badge>
-                                {caseDetails.legal_analysis.caseComplexity.estimatedCost && (
+                                {caseAnalysis.analysis_data.caseComplexity.estimatedCost && (
                                   <Badge variant="outline">
-                                    {caseDetails.legal_analysis.caseComplexity.estimatedCost}
+                                    {caseAnalysis.analysis_data.caseComplexity.estimatedCost}
                                   </Badge>
                                 )}
                               </div>
 
-                              {caseDetails.legal_analysis.caseComplexity.factors && 
-                               caseDetails.legal_analysis.caseComplexity.factors.length > 0 && (
+                              {caseAnalysis.analysis_data.caseComplexity.factors && 
+                               caseAnalysis.analysis_data.caseComplexity.factors.length > 0 && (
                                 <div>
                                   <label className="text-sm font-medium text-muted-foreground">Complexity Factors</label>
                                   <ul className="mt-2 space-y-1">
-                                    {caseDetails.legal_analysis.caseComplexity.factors.map((factor: string, index: number) => (
+                                    {caseAnalysis.analysis_data.caseComplexity.factors.map((factor: string, index: number) => (
                                       <li key={index} className="flex items-start gap-2 text-sm">
                                         <span className="text-primary mt-1">•</span>
                                         <span>{factor}</span>
@@ -903,7 +868,18 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                             </div>
                           </div>
                         )}
+
+                        {/* Analysis Timestamp */}
+                        <div className="text-sm text-muted-foreground text-center pt-4 border-t">
+                          Analysis generated on {formatDate(caseAnalysis.generated_at)}
+                        </div>
                       </>
+                    ) : caseAnalysis?.status === 'pending' ? (
+                      <div className="text-center py-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                        <h3 className="text-lg font-semibold mb-2">Analysis Pending</h3>
+                        <p className="text-muted-foreground">Legal analysis is being generated...</p>
+                      </div>
                     ) : (
                       <div className="text-center py-8">
                         <Scale className="h-12 w-12 text-muted-foreground mx-auto mb-4" />

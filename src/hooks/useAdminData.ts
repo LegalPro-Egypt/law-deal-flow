@@ -256,79 +256,9 @@ export const useAdminData = () => {
       
       // Generate case summary from conversation
       const userMessages = messages.filter(msg => msg.role === 'user');
-      const assistantMessages = messages.filter(msg => msg.role === 'assistant');
-      
       const conversationText = userMessages
         .map(msg => msg.content)
         .join(' ');
-
-      // Generate comprehensive legal analysis from conversation
-      let legalAnalysis;
-      try {
-        const legalAnalysisResult = await supabase.functions.invoke('generate-legal-analysis', {
-          body: { 
-            messages: messages,
-            category: extractedData.category || 'General',
-            language: conversation.language || 'en'
-          }
-        });
-
-        if (legalAnalysisResult.error) {
-          console.error('Legal analysis generation error:', legalAnalysisResult.error);
-          // Fallback analysis if generation fails
-          legalAnalysis = {
-            caseSummary: extractedData.summary || conversationText.slice(0, 500),
-            applicableLaws: [],
-            recommendedSpecialization: {
-              primaryArea: extractedData.category || 'General Legal',
-              secondaryAreas: [],
-              reasoning: "Based on case category and initial assessment"
-            },
-            legalStrategy: {
-              immediateSteps: ["Consult with qualified lawyer", "Gather relevant documents"],
-              documentation: extractedData.requiredDocuments || [],
-              timeline: "To be determined upon legal consultation",
-              risks: [],
-              opportunities: []
-            },
-            caseComplexity: {
-              level: extractedData.complexity || 'medium',
-              factors: ["Standard legal matter requiring professional assessment"],
-              estimatedCost: "To be determined"
-            },
-            jurisdiction: "egypt",
-            urgency: extractedData.urgency || 'medium'
-          };
-        } else if (legalAnalysisResult.data?.legalAnalysis) {
-          legalAnalysis = legalAnalysisResult.data.legalAnalysis;
-        }
-      } catch (error) {
-        console.error('Failed to generate legal analysis:', error);
-        // Fallback analysis if generation completely fails
-        legalAnalysis = {
-          caseSummary: extractedData.summary || conversationText.slice(0, 500),
-          applicableLaws: [],
-          recommendedSpecialization: {
-            primaryArea: extractedData.category || 'General Legal',
-            secondaryAreas: [],
-            reasoning: "Based on case category and initial assessment"
-          },
-          legalStrategy: {
-            immediateSteps: ["Consult with qualified lawyer", "Gather relevant documents"],
-            documentation: extractedData.requiredDocuments || [],
-            timeline: "To be determined upon legal consultation",
-            risks: [],
-            opportunities: []
-          },
-          caseComplexity: {
-            level: extractedData.complexity || 'medium',
-            factors: ["Standard legal matter requiring professional assessment"],
-            estimatedCost: "To be determined"
-          },
-          jurisdiction: "egypt",
-          urgency: extractedData.urgency || 'medium'
-        };
-      }
 
       // Generate client responses summary from user messages
       const clientResponsesSummary = {
@@ -339,7 +269,6 @@ export const useAdminData = () => {
         mentionedParties: extractedData.parties || [],
         timeline: extractedData.timeline || null
       };
-
 
       const caseData = {
         user_id: conversation.user_id,
@@ -356,7 +285,6 @@ export const useAdminData = () => {
         ai_summary: extractedData.summary || conversationText.slice(0, 1000),
         extracted_entities: extractedData.entities || {},
         client_responses_summary: clientResponsesSummary,
-        legal_analysis: legalAnalysis,
         jurisdiction: 'egypt',
         // Preserve draft_data from existing case
         draft_data: existingCase?.draft_data || {}
@@ -423,6 +351,49 @@ export const useAdminData = () => {
           description: "Case created but conversation linking failed. Case data may be incomplete.",
           variant: "default",
         });
+      }
+
+      // Migrate conversation messages to case_messages table
+      if (messages && messages.length > 0) {
+        console.log('Migrating conversation messages to case_messages');
+        const caseMessages = messages.map(msg => ({
+          case_id: finalCase.id,
+          role: msg.role,
+          content: msg.content,
+          message_type: msg.message_type || 'text',
+          metadata: msg.metadata || {},
+          created_at: msg.created_at
+        }));
+
+        const { error: messagesError } = await supabase
+          .from('case_messages')
+          .insert(caseMessages);
+
+        if (messagesError) {
+          console.error('Failed to migrate messages to case_messages:', messagesError);
+        } else {
+          console.log('Successfully migrated', messages.length, 'messages to case_messages');
+        }
+      }
+
+      // Generate legal analysis in background
+      if (messages && messages.length > 0) {
+        console.log('Triggering background legal analysis generation');
+        try {
+          // Use supabase functions invoke to trigger legal analysis
+          await supabase.functions.invoke('generate-legal-analysis', {
+            body: { 
+              messages: messages,
+              category: finalCase.category,
+              language: finalCase.language,
+              caseId: finalCase.id
+            }
+          });
+          console.log('Legal analysis generation triggered');
+        } catch (analysisError) {
+          console.error('Failed to trigger legal analysis:', analysisError);
+          // Don't throw error - case was created successfully
+        }
       }
 
       // Refresh data
