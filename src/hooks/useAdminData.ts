@@ -347,7 +347,7 @@ export const useAdminData = () => {
         console.error('Failed to link conversation to case:', linkError);
         // Don't throw error here, case was created successfully
         toast({
-          title: "Warning",
+          title: "Warning", 
           description: "Case created but conversation linking failed. Case data may be incomplete.",
           variant: "default",
         });
@@ -593,97 +593,96 @@ export const useAdminData = () => {
 
   const repairCaseConversationLinks = async () => {
     try {
-      // Find cases without linked conversations
-      const { data: orphanedCases, error: fetchError } = await supabase
-        .from('cases')
-        .select(`
-          *,
-          conversations!inner(id, case_id)
-        `)
-        .is('conversations.case_id', null)
-        .eq('status', 'submitted');
+      // Find conversations without case_id that have similar creation time to cases
+      const { data: orphanedConversations } = await supabase
+        .from('conversations')
+        .select('id, user_id, created_at')
+        .eq('mode', 'intake')
+        .is('case_id', null)
+        .not('user_id', 'is', null);
 
-      if (fetchError) throw fetchError;
-
-      if (!orphanedCases || orphanedCases.length === 0) {
+      if (!orphanedConversations || orphanedConversations.length === 0) {
         toast({
-          title: "No repairs needed",
-          description: "All cases have properly linked conversations",
+          title: "Info",
+          description: "No orphaned conversations found to repair",
         });
         return;
       }
 
-      let repairedCount = 0;
-
-      // Attempt to link conversations to cases
-      for (const caseItem of orphanedCases) {
-        if (!caseItem.user_id) continue;
-
-        // Find potential conversation around case creation time
-        const caseTime = new Date(caseItem.created_at);
-        const startTime = new Date(caseTime.getTime() - 2 * 60 * 60 * 1000);
-        const endTime = new Date(caseTime.getTime() + 2 * 60 * 60 * 1000);
-
-        const { data: conversation } = await supabase
-          .from('conversations')
+      let repaired = 0;
+      
+      for (const conversation of orphanedConversations) {
+        // Find matching case by user_id and similar creation time
+        const { data: matchingCases } = await supabase
+          .from('cases')
           .select('id')
-          .eq('user_id', caseItem.user_id)
-          .eq('mode', 'intake')
-          .is('case_id', null)
-          .gte('created_at', startTime.toISOString())
-          .lte('created_at', endTime.toISOString())
+          .eq('user_id', conversation.user_id)
+          .gte('created_at', new Date(new Date(conversation.created_at).getTime() - 2 * 60 * 60 * 1000).toISOString())
+          .lte('created_at', new Date(new Date(conversation.created_at).getTime() + 2 * 60 * 60 * 1000).toISOString())
           .order('created_at', { ascending: false })
-          .limit(1)
-          .single();
+          .limit(1);
 
-        if (conversation) {
+        if (matchingCases && matchingCases.length > 0) {
+          const caseId = matchingCases[0].id;
+          
+          // Link the conversation to the case
           await supabase
             .from('conversations')
-            .update({ case_id: caseItem.id })
+            .update({ case_id: caseId })
             .eq('id', conversation.id);
           
-          repairedCount++;
+          // Migrate messages from this conversation to case_messages
+          const { data: messages } = await supabase
+            .from('messages')
+            .select('*')
+            .eq('conversation_id', conversation.id)
+            .order('created_at', { ascending: true });
+
+          if (messages && messages.length > 0) {
+            const caseMessages = messages.map(msg => ({
+              case_id: caseId,
+              role: msg.role,
+              content: msg.content,  
+              message_type: msg.message_type || 'text',
+              metadata: msg.metadata || {},
+              created_at: msg.created_at
+            }));
+
+            await supabase
+              .from('case_messages')
+              .insert(caseMessages);
+          }
+          
+          repaired++;
         }
       }
 
       toast({
-        title: "Repair Complete",
-        description: `Repaired ${repairedCount} case-conversation links`,
+        title: "Success", 
+        description: `Repaired ${repaired} orphaned conversations and migrated their messages`,
       });
 
-      // Refresh data after repair
-      await Promise.all([fetchAdminStats(), fetchPendingIntakes(), fetchCases()]);
     } catch (error: any) {
       console.error('Error repairing case-conversation links:', error);
       toast({
         title: "Error",
-        description: `Failed to repair case links: ${error.message}`,
+        description: `Failed to repair links: ${error.message}`,
         variant: "destructive",
       });
       throw error;
     }
   };
 
+  // Initialize data on component mount
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      await Promise.all([
-        fetchAdminStats(),
-        fetchPendingIntakes(),
-        fetchCases()
-      ]);
-      
-      // Run cleanup on initial load to remove any existing duplicates
-      try {
-        await supabase.rpc('cleanup_admin_duplicate_cases');
-      } catch (error) {
-        console.log('Cleanup failed during initial load:', error);
-      }
-      
-      setLoading(false);
-    };
+    Promise.all([
+      fetchAdminStats(),
+      fetchPendingIntakes(),
+      fetchCases()
+    ]).finally(() => setLoading(false));
 
-    loadData();
+    // Perform initial cleanup
+    cleanupDuplicateCases().catch(console.error);
   }, []);
 
   return {

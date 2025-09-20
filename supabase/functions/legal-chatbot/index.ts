@@ -215,7 +215,7 @@ serve(async (req) => {
       // First verify the conversation exists and is accessible
       const { data: conversationCheck } = await supabase
         .from('conversations')
-        .select('id, user_id')
+        .select('id, user_id, case_id')
         .eq('id', conversation_id)
         .single();
       
@@ -230,6 +230,7 @@ serve(async (req) => {
       
       while (!saveSuccess && retryCount < maxRetries) {
         try {
+          // Always save to messages table for conversation continuity
           const { error: insertError } = await supabase.from('messages').insert([
             {
               conversation_id: conversation_id,
@@ -259,10 +260,41 @@ serve(async (req) => {
             } else {
               throw insertError;
             }
-          } else {
-            saveSuccess = true;
-            console.log('Messages saved successfully');
           }
+
+          // Also save to case_messages table if conversation has a linked case
+          if (conversationCheck.case_id) {
+            console.log('Also saving messages to case_messages for case:', conversationCheck.case_id);
+            try {
+              await supabase.from('case_messages').insert([
+                {
+                  case_id: conversationCheck.case_id,
+                  role: 'user',
+                  content: message,  
+                  message_type: 'text',
+                  metadata: { timestamp: new Date().toISOString() }
+                },
+                {
+                  case_id: conversationCheck.case_id,
+                  role: 'assistant',
+                  content: aiResponse,
+                  message_type: 'text',
+                  metadata: { 
+                    timestamp: new Date().toISOString(),
+                    mode,
+                    extractedData: mode === 'intake' ? extractedData : undefined
+                  }
+                }
+              ]);
+              console.log('Messages also saved to case_messages successfully');
+            } catch (caseMessageError) {
+              console.error('Failed to save to case_messages, but continuing:', caseMessageError);
+              // Don't fail the whole operation if case_messages save fails
+            }
+          }
+
+          saveSuccess = true;
+          console.log('Messages saved successfully');
         } catch (error) {
           console.error(`Message insert attempt ${retryCount + 1} error:`, error);
           if (retryCount < maxRetries - 1) {

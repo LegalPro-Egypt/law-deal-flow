@@ -130,10 +130,46 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
 
       if (messagesError) {
         console.error('Error fetching case messages:', messagesError);
-        setConversation([]);
-      } else {
-        setConversation(messages || []);
       }
+
+      let finalMessages = messages || [];
+      
+      // If no messages found in case_messages, try fallback from messages table via conversation
+      if (!finalMessages.length) {
+        console.log('No messages in case_messages, trying fallback via conversations');
+        const { data: conversationData } = await supabase
+          .from('conversations')
+          .select(`
+            id,
+            messages (
+              id, role, content, message_type, metadata, created_at
+            )
+          `)
+          .eq('case_id', caseId)
+          .order('created_at', { ascending: true });
+
+        if (conversationData && conversationData.length > 0) {
+          // Convert messages format to match case_messages structure
+          const conversationMessages = conversationData.flatMap(conv => 
+            (conv.messages || []).map(msg => ({
+              id: msg.id,
+              case_id: caseId,
+              role: msg.role,
+              content: msg.content,
+              message_type: msg.message_type || 'text',
+              metadata: msg.metadata || {},
+              created_at: msg.created_at,
+              updated_at: msg.created_at // Add missing field
+            }))
+          );
+          finalMessages = conversationMessages.sort((a, b) => 
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          );
+          console.log('Found', finalMessages.length, 'messages via conversation fallback');
+        }
+      }
+
+      setConversation(finalMessages);
 
       // Fetch documents
       const { data: documentsData } = await supabase
@@ -531,51 +567,77 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
               </TabsContent>
 
               <TabsContent value="conversation" className="space-y-4">
-                {conversation.length > 0 ? (
-                  <div className="space-y-4">
-                    {/* Conversation Statistics */}
-                    <Card>
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">
-                            {conversation.length} messages in conversation
-                          </span>
-                          <span className="text-muted-foreground">
-                            Started: {formatDate(conversation[0]?.created_at)}
-                          </span>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4" />
+                      Conversation History
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={async () => {
+                          const { data: caseMessages } = await supabase
+                            .from('case_messages')
+                            .select('*', { count: 'exact' })
+                            .eq('case_id', caseId);
+                          
+                          const { data: conversationMessages } = await supabase
+                            .from('conversations')
+                            .select(`
+                              id, case_id,
+                              messages (*)
+                            `, { count: 'exact' })
+                            .eq('case_id', caseId);
+
+                          toast({
+                            title: "Debug Info",
+                            description: `case_messages: ${caseMessages?.length || 0}, conversation messages: ${conversationMessages?.flatMap(c => c.messages || []).length || 0}`,
+                          });
+                        }}
+                        className="ml-auto"
+                      >
+                        Test Fetch
+                      </Button>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {conversation.length > 0 ? (
+                      <ScrollArea className="h-96">
+                        <div className="space-y-4">
+                          {conversation.map((message, index) => (
+                            <div
+                              key={message.id || index}
+                              className={`flex ${
+                                message.role === 'user' ? 'justify-end' : 'justify-start'
+                              }`}
+                            >
+                              <div
+                                className={`max-w-[80%] rounded-lg p-3 ${
+                                  message.role === 'user'
+                                    ? 'bg-primary text-primary-foreground'
+                                    : 'bg-muted'
+                                }`}
+                              >
+                                <p className="text-sm">{message.content}</p>
+                                <p className="text-xs opacity-70 mt-1">
+                                  {formatDate(message.created_at)}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                      </CardContent>
-                    </Card>
-                    
-                    {/* Conversation Messages */}
-                    {conversation.map((message, index) => (
-                      <Card key={message.id} className={message.role === 'user' ? 'ml-8' : 'mr-8'}>
-                        <CardContent className="p-4">
-                          <div className="flex items-center gap-2 mb-2">
-                            {message.role === 'user' ? (
-                              <User className="h-4 w-4 text-blue-600" />
-                            ) : (
-                              <MessageSquare className="h-4 w-4 text-green-600" />
-                            )}
-                            <span className="font-medium capitalize">{message.role}</span>
-                            <span className="text-xs text-muted-foreground ml-auto">
-                              {formatDate(message.created_at)}
-                            </span>
-                          </div>
-                          <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <Card>
-                    <CardContent className="p-8 text-center">
-                      <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold mb-2">No conversation found</h3>
-                      <p className="text-muted-foreground">This case doesn't have an associated AI conversation.</p>
-                    </CardContent>
-                  </Card>
-                )}
+                      </ScrollArea>
+                    ) : (
+                      <div className="text-center py-8">
+                        <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                        <p className="text-muted-foreground">No messages yet</p>
+                        <p className="text-sm text-muted-foreground mt-2">
+                          This case doesn't have any recorded messages yet.
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               </TabsContent>
 
               <TabsContent value="documents" className="space-y-4">
