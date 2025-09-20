@@ -163,7 +163,7 @@ const Landing = () => {
                 description: "Real-time updates on your case progress with milestone notifications"
               }
             ].map((feature, index) => (
-              <Card key={index} className="p-6 card-hover bg-gradient-card animate-slide-up">
+              <Card key={index} className="p-6 card-hover bg-gradient-card animate-slide-up text-center md:text-left">
                 <div className="text-primary mb-4">{feature.icon}</div>
                 <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
                 <p className="text-muted-foreground">{feature.description}</p>
