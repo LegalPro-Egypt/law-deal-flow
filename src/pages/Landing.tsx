@@ -274,7 +274,68 @@ const Landing = () => {
       {/* Footer */}
       <footer className="bg-card border-t py-12">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+          {/* Mobile Layout */}
+          <div className="md:hidden">
+            {/* LegalPro section centered on top */}
+            <div className="text-center mb-8">
+              <div className="flex items-center justify-center space-x-2 mb-4">
+                <Scale className="h-6 w-6 text-primary" />
+                <span className="font-bold">LegalPro</span>
+              </div>
+              <p className="text-muted-foreground">
+                Professional legal services with Lexa AI-powered matching and secure payment protection.
+              </p>
+            </div>
+            
+            {/* Other 3 sections in a row */}
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <h3 className="font-semibold mb-4 text-sm">Services</h3>
+                <ul className="space-y-2 text-muted-foreground text-xs">
+                  <li>Family Law</li>
+                  <li>Immigration</li>
+                  <li>Real Estate</li>
+                  <li>Corporate Law</li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-4 text-sm">Support</h3>
+                <ul className="space-y-2 text-muted-foreground text-xs">
+                  <li>
+                    <Link to="/help" className="hover:text-primary transition-colors">
+                      Help Center
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/help" className="hover:text-primary transition-colors">
+                      Contact Us
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/privacy-policy" className="hover:text-primary transition-colors">
+                      Privacy Policy
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/terms-of-service" className="hover:text-primary transition-colors">
+                      Terms of Service
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-4 text-sm">Languages</h3>
+                <ul className="space-y-2 text-muted-foreground text-xs">
+                  <li>English</li>
+                  <li>العربية</li>
+                  <li>Deutsch</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          
+          {/* Desktop Layout */}
+          <div className="hidden md:grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <Scale className="h-6 w-6 text-primary" />
