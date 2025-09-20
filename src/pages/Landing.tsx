@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -6,11 +6,13 @@ import { Scale, Shield, MessageSquare, Users, Clock, Check, Brain, Lock } from "
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { HomepageChatbot } from "@/components/HomepageChatbot";
+import { PromotionalPopup } from "@/components/PromotionalPopup";
 
 const Landing = () => {
   const { isAuthenticated, role, loading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const [showPromoPopup, setShowPromoPopup] = useState(false);
 
   useEffect(() => {
     // Check if user explicitly wants to view homepage (bypass auto-redirect)
@@ -22,6 +24,29 @@ const Landing = () => {
       navigate(`/${targetRole}`, { replace: true });
     }
   }, [isAuthenticated, role, loading, navigate, searchParams]);
+
+  // Show promotional popup for non-authenticated users
+  useEffect(() => {
+    const hasSeenPromo = localStorage.getItem("homepage-promo-dismissed");
+    
+    if (!isAuthenticated && !hasSeenPromo && !loading) {
+      const timer = setTimeout(() => {
+        setShowPromoPopup(true);
+      }, 2500); // Show after 2.5 seconds
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated, loading]);
+
+  const handleClosePromo = () => {
+    setShowPromoPopup(false);
+    localStorage.setItem("homepage-promo-dismissed", "true");
+  };
+
+  const handleSignUpFromPromo = () => {
+    setShowPromoPopup(false);
+    navigate("/auth");
+  };
 
   if (loading) {
     return (
@@ -291,6 +316,13 @@ const Landing = () => {
           </div>
         </div>
       </footer>
+
+      {/* Promotional Popup */}
+      <PromotionalPopup
+        isOpen={showPromoPopup}
+        onClose={handleClosePromo}
+        onSignUp={handleSignUpFromPromo}
+      />
     </div>
   );
 };
