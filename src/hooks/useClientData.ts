@@ -92,8 +92,8 @@ export const useClientData = () => {
       
       // Set active case - prefer submitted/in_progress cases, then most recent
       if (casesData.length > 0) {
-        const submittedCase = casesData.find(c => c.status === 'submitted' || c.status === 'in_progress');
-        const activeCase = submittedCase || casesData[0];
+        const prioritizedCase = casesData.find(c => ['submitted', 'lawyer_assigned', 'in_progress'].includes(c.status));
+        const activeCase = prioritizedCase || casesData[0];
         console.log('useClientData: Setting active case:', activeCase.id);
         setActiveCase(activeCase);
       } else {
@@ -265,6 +265,30 @@ export const useClientData = () => {
       supabase.removeChannel(documentsChannel);
     };
   }, [user, activeCase]);
+
+  // Realtime subscription for cases list (updates status, assignment, etc.)
+  useEffect(() => {
+    if (!user) return;
+    const casesChannel = supabase
+      .channel('client-cases')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'cases',
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          fetchCases();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(casesChannel);
+    };
+  }, [user]);
 
   const refreshData = async () => {
     console.log('useClientData: Manual refresh triggered');

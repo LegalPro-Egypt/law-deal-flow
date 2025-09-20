@@ -128,7 +128,7 @@ const ClientDashboard = () => {
       pdf.text(`Case Number: ${activeCase.case_number}`, 20, 40);
       pdf.text(`Title: ${activeCase.title}`, 20, 50);
       pdf.text(`Category: ${activeCase.category}`, 20, 60);
-      pdf.text(`Status: ${activeCase.status === 'submitted' ? 'Under Review' : activeCase.status}`, 20, 70);
+      pdf.text(`Status: ${formatCaseStatus(activeCase.status)}`, 20, 70);
       pdf.text(`Created: ${formatDate(activeCase.created_at)}`, 20, 80);
       
       // Client Information
@@ -508,7 +508,7 @@ const ClientDashboard = () => {
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
                           <span className="font-medium">
-                            Current Status: {activeCase.status === 'submitted' ? 'Under Review' : activeCase.status.replace('_', ' ')}
+                            Current Status: {formatCaseStatus(activeCase.status)}
                           </span>
                           <span className="text-sm text-muted-foreground">{formatDate(activeCase.updated_at)}</span>
                         </div>
