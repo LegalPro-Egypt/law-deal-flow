@@ -150,6 +150,10 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
         }
       }
 
+      // Small delay to ensure conversation is committed to database
+      // This helps prevent race conditions with the first user message
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       return newConversationId;
     } catch (err) {
       console.error('Failed to initialize conversation:', err);
@@ -279,10 +283,23 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
     } catch (err) {
       console.error('Error sending message:', err);
 
+      // Check if this is the first message in a new conversation
+      const isFirstMessage = state.messages.length === 1; // Only welcome message exists
+      
+      let errorTitle = 'Error';
+      let errorDescription = 'Failed to send message. Please try again.';
+      
+      if (isFirstMessage) {
+        errorTitle = 'Connection Issue';
+        errorDescription = 'There was a connection issue starting your conversation. Please try sending your message again.';
+      }
+
       const errorMessage: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'assistant',
-        content: 'I encountered an error. Please try again or contact support.',
+        content: isFirstMessage 
+          ? 'I encountered a connection issue. Please try sending your message again.' 
+          : 'I encountered an error. Please try again or contact support.',
         timestamp: new Date(),
       };
 
@@ -293,8 +310,8 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
       }));
 
       toast({
-        title: 'Error',
-        description: 'Failed to send message. Please try again.',
+        title: errorTitle,
+        description: errorDescription,
         variant: 'destructive',
       });
     }

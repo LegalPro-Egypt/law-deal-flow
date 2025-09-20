@@ -211,24 +211,68 @@ serve(async (req) => {
     // Save conversation to database if conversation_id provided
     if (conversation_id) {
       console.log('Saving messages to conversation:', conversation_id);
-      await supabase.from('messages').insert([
-        {
-          conversation_id: conversation_id,
-          role: 'user',
-          content: message,
-          metadata: { timestamp: new Date().toISOString() }
-        },
-        {
-          conversation_id: conversation_id,
-          role: 'assistant',
-          content: aiResponse,
-          metadata: { 
-            timestamp: new Date().toISOString(),
-            mode,
-            extractedData: mode === 'intake' ? extractedData : undefined
+      
+      // First verify the conversation exists and is accessible
+      const { data: conversationCheck } = await supabase
+        .from('conversations')
+        .select('id, user_id')
+        .eq('id', conversation_id)
+        .single();
+      
+      if (!conversationCheck) {
+        throw new Error('Conversation not found or not accessible');
+      }
+      
+      // Attempt to save messages with retry logic for race conditions
+      let retryCount = 0;
+      const maxRetries = 3;
+      let saveSuccess = false;
+      
+      while (!saveSuccess && retryCount < maxRetries) {
+        try {
+          const { error: insertError } = await supabase.from('messages').insert([
+            {
+              conversation_id: conversation_id,
+              role: 'user',
+              content: message,
+              metadata: { timestamp: new Date().toISOString() }
+            },
+            {
+              conversation_id: conversation_id,
+              role: 'assistant',
+              content: aiResponse,
+              metadata: { 
+                timestamp: new Date().toISOString(),
+                mode,
+                extractedData: mode === 'intake' ? extractedData : undefined
+              }
+            }
+          ]);
+          
+          if (insertError) {
+            console.error(`Message insert attempt ${retryCount + 1} failed:`, insertError);
+            if (retryCount < maxRetries - 1) {
+              // Wait a bit before retrying
+              await new Promise(resolve => setTimeout(resolve, 100 * (retryCount + 1)));
+              retryCount++;
+              continue;
+            } else {
+              throw insertError;
+            }
+          } else {
+            saveSuccess = true;
+            console.log('Messages saved successfully');
+          }
+        } catch (error) {
+          console.error(`Message insert attempt ${retryCount + 1} error:`, error);
+          if (retryCount < maxRetries - 1) {
+            await new Promise(resolve => setTimeout(resolve, 100 * (retryCount + 1)));
+            retryCount++;
+          } else {
+            throw error;
           }
         }
-      ]);
+      }
     }
 
     return new Response(
