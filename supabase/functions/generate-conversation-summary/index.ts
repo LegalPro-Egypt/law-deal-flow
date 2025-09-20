@@ -119,6 +119,8 @@ serve(async (req) => {
             - The client's primary concerns or goals
             - Any urgent matters or deadlines
             
+            CRITICAL: Write the summary in neutral third-person perspective about the CLIENT. Use phrases like "The client reports...", "The client states...", "The client is concerned about..." instead of second-person language ("you", "your"). This summary is for admin review, not client communication.
+            
             Keep the summary factual, clear, and suitable for legal professionals to quickly understand the case.`
           },
           {

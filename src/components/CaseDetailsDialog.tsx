@@ -103,24 +103,36 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
   useEffect(() => {
     if (isOpen && caseId) {
       fetchCaseDetails();
+      
+      // Set up realtime subscription for case messages
+      const channel = supabase
+        .channel('case-messages-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'case_messages',
+            filter: `case_id=eq.${caseId}`
+          },
+          (payload) => {
+            console.log('Realtime case message update:', payload);
+            // Refetch conversation when messages change
+            fetchConversation();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [isOpen, caseId]);
 
-  const fetchCaseDetails = async () => {
+  const fetchConversation = async () => {
     if (!caseId) return;
     
-    setLoading(true);
     try {
-      // Fetch case details
-      const { data: caseData, error: caseError } = await supabase
-        .from('cases')
-        .select('*')
-        .eq('id', caseId)
-        .single();
-
-      if (caseError) throw caseError;
-      setCaseDetails(caseData);
-
       // Fetch case messages directly using case_id - ADMIN MUST USE SERVICE KEY
       console.log('Fetching case messages for case_id:', caseId);
       const { data: messages, error: messagesError } = await supabase
@@ -150,6 +162,28 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
       }
 
       setConversation(finalMessages);
+    } catch (error: any) {
+      console.error('Error fetching conversation:', error);
+    }
+  };
+
+  const fetchCaseDetails = async () => {
+    if (!caseId) return;
+    
+    setLoading(true);
+    try {
+      // Fetch case details
+      const { data: caseData, error: caseError } = await supabase
+        .from('cases')
+        .select('*')
+        .eq('id', caseId)
+        .single();
+
+      if (caseError) throw caseError;
+      setCaseDetails(caseData);
+
+      // Fetch conversation
+      await fetchConversation();
 
       // Fetch documents
       const { data: documentsData } = await supabase
@@ -263,15 +297,29 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
 
       if (error) throw error;
 
+      // Add delay to ensure database write completes before refetch
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
       // The edge function will save to case_analysis table directly
-      // Refresh the case analysis data
-      const { data: analysisData } = await supabase
-        .from('case_analysis')
-        .select('*')
-        .eq('case_id', caseId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      // Refresh the case analysis data with retry logic
+      let analysisData = null;
+      for (let i = 0; i < 3; i++) {
+        const { data: freshAnalysis } = await supabase
+          .from('case_analysis')
+          .select('*')
+          .eq('case_id', caseId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (freshAnalysis && freshAnalysis.status === 'completed') {
+          analysisData = freshAnalysis;
+          break;
+        }
+        
+        // Wait before retry
+        if (i < 2) await new Promise(resolve => setTimeout(resolve, 1000));
+      }
 
       setCaseAnalysis(analysisData);
       
@@ -677,30 +725,54 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                 <TabsContent value="legal-analysis" className="space-y-4">
                   <div className="flex justify-between items-center">
                     <h3 className="text-lg font-semibold">Legal Analysis</h3>
-                    <Button
-                      onClick={generateLegalAnalysis}
-                      disabled={generatingAnalysis || conversation.length === 0}
-                      size="sm"
-                      variant="outline"
-                    >
-                      {generatingAnalysis ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
-                          Generating...
-                        </>
-                      ) : (
-                        <>
-                          <Scale className="h-4 w-4 mr-2" />
-                          Generate Analysis
-                        </>
-                      )}
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        onClick={fetchCaseDetails}
+                        size="sm"
+                        variant="ghost"
+                      >
+                        Refresh
+                      </Button>
+                      <Button
+                        onClick={generateLegalAnalysis}
+                        disabled={generatingAnalysis || conversation.length === 0}
+                        size="sm"
+                        variant="outline"
+                      >
+                        {generatingAnalysis ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
+                            Generating...
+                          </>
+                        ) : (
+                          <>
+                            <Scale className="h-4 w-4 mr-2" />
+                            Generate Analysis
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   </div>
+
+                  {/* Health Check Info */}
+                  <Card className="bg-muted/50">
+                    <CardContent className="p-3">
+                      <div className="text-xs text-muted-foreground space-y-1">
+                        <div><strong>Legal Analysis Health:</strong></div>
+                        <div>Case ID: {caseId}</div>
+                        {caseAnalysis ? (
+                          <div>Analysis Created: {formatDate(caseAnalysis.created_at)}</div>
+                        ) : (
+                          <div>Status: No analysis available</div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
 
                   {caseAnalysis?.analysis_data ? (
                     <div className="space-y-4">
                       {/* Case Summary */}
-                      {caseAnalysis.analysis_data.case_summary && (
+                      {caseAnalysis.analysis_data.caseSummary && (
                         <Card>
                           <CardHeader>
                             <CardTitle className="flex items-center gap-2">
@@ -709,13 +781,13 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                             </CardTitle>
                           </CardHeader>
                           <CardContent>
-                            <p className="text-sm">{caseAnalysis.analysis_data.case_summary}</p>
+                            <p className="text-sm">{caseAnalysis.analysis_data.caseSummary}</p>
                           </CardContent>
                         </Card>
                       )}
 
                       {/* Applicable Laws */}
-                      {caseAnalysis.analysis_data.applicable_laws && caseAnalysis.analysis_data.applicable_laws.length > 0 && (
+                      {caseAnalysis.analysis_data.applicableLaws && caseAnalysis.analysis_data.applicableLaws.length > 0 && (
                         <Card>
                           <CardHeader>
                             <CardTitle className="flex items-center gap-2">
@@ -724,11 +796,23 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                             </CardTitle>
                           </CardHeader>
                           <CardContent>
-                            <div className="space-y-2">
-                              {caseAnalysis.analysis_data.applicable_laws.map((law: string, index: number) => (
-                                <Badge key={index} variant="outline" className="mr-2">
-                                  {law}
-                                </Badge>
+                            <div className="space-y-3">
+                              {caseAnalysis.analysis_data.applicableLaws.map((law: any, index: number) => (
+                                <div key={index} className="p-3 border rounded-lg">
+                                  <h4 className="font-medium">{law.law}</h4>
+                                  {law.articles && law.articles.length > 0 && (
+                                    <div className="mt-2 flex flex-wrap gap-1">
+                                      {law.articles.map((article: string, i: number) => (
+                                        <Badge key={i} variant="outline" className="text-xs">
+                                          Article {article}
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  )}
+                                  {law.relevance && (
+                                    <p className="text-sm text-muted-foreground mt-2">{law.relevance}</p>
+                                  )}
+                                </div>
                               ))}
                             </div>
                           </CardContent>
@@ -736,7 +820,7 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                       )}
 
                       {/* Legal Strategy */}
-                      {caseAnalysis.analysis_data.legal_strategy && (
+                      {caseAnalysis.analysis_data.legalStrategy && (
                         <Card>
                           <CardHeader>
                             <CardTitle className="flex items-center gap-2">
@@ -744,45 +828,73 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                               Legal Strategy
                             </CardTitle>
                           </CardHeader>
-                          <CardContent>
-                            <p className="text-sm">{caseAnalysis.analysis_data.legal_strategy}</p>
-                          </CardContent>
-                        </Card>
-                      )}
-
-                      {/* Risk Assessment */}
-                      {caseAnalysis.analysis_data.risk_assessment && (
-                        <Card>
-                          <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                              <AlertTriangle className="h-4 w-4" />
-                              Risk Assessment
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <p className="text-sm">{caseAnalysis.analysis_data.risk_assessment}</p>
+                          <CardContent className="space-y-4">
+                            {caseAnalysis.analysis_data.legalStrategy.immediateSteps && (
+                              <div>
+                                <h4 className="font-medium mb-2">Immediate Steps:</h4>
+                                <ul className="list-disc pl-5 space-y-1">
+                                  {caseAnalysis.analysis_data.legalStrategy.immediateSteps.map((step: string, i: number) => (
+                                    <li key={i} className="text-sm">{step}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                            {caseAnalysis.analysis_data.legalStrategy.documentation && (
+                              <div>
+                                <h4 className="font-medium mb-2">Required Documentation:</h4>
+                                <ul className="list-disc pl-5 space-y-1">
+                                  {caseAnalysis.analysis_data.legalStrategy.documentation.map((doc: string, i: number) => (
+                                    <li key={i} className="text-sm">{doc}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                            {caseAnalysis.analysis_data.legalStrategy.timeline && (
+                              <div>
+                                <h4 className="font-medium mb-2">Timeline:</h4>
+                                <p className="text-sm">{caseAnalysis.analysis_data.legalStrategy.timeline}</p>
+                              </div>
+                            )}
                           </CardContent>
                         </Card>
                       )}
 
                       {/* Case Complexity */}
-                      {caseAnalysis.analysis_data.complexity_score && (
+                      {caseAnalysis.analysis_data.caseComplexity && (
                         <Card>
                           <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                               <Shield className="h-4 w-4" />
-                              Case Complexity
+                              Case Complexity Assessment
                             </CardTitle>
                           </CardHeader>
                           <CardContent>
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm">Complexity Score:</span>
-                              <Badge variant={
-                                caseAnalysis.analysis_data.complexity_score > 7 ? 'destructive' :
-                                caseAnalysis.analysis_data.complexity_score > 4 ? 'default' : 'secondary'
-                              }>
-                                {caseAnalysis.analysis_data.complexity_score}/10
-                              </Badge>
+                            <div className="space-y-3">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm">Complexity Level:</span>
+                                <Badge variant={
+                                  caseAnalysis.analysis_data.caseComplexity.level === 'high' ? 'destructive' :
+                                  caseAnalysis.analysis_data.caseComplexity.level === 'medium' ? 'default' : 'secondary'
+                                }>
+                                  {caseAnalysis.analysis_data.caseComplexity.level?.toUpperCase()}
+                                </Badge>
+                              </div>
+                              {caseAnalysis.analysis_data.caseComplexity.estimatedCost && (
+                                <div>
+                                  <span className="text-sm font-medium">Estimated Cost: </span>
+                                  <span className="text-sm">{caseAnalysis.analysis_data.caseComplexity.estimatedCost}</span>
+                                </div>
+                              )}
+                              {caseAnalysis.analysis_data.caseComplexity.factors && caseAnalysis.analysis_data.caseComplexity.factors.length > 0 && (
+                                <div>
+                                  <h4 className="font-medium mb-2">Complexity Factors:</h4>
+                                  <ul className="list-disc pl-5 space-y-1">
+                                    {caseAnalysis.analysis_data.caseComplexity.factors.map((factor: string, i: number) => (
+                                      <li key={i} className="text-sm">{factor}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
                             </div>
                           </CardContent>
                         </Card>
@@ -791,7 +903,9 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                   ) : (
                     <div className="text-center py-8">
                       <Scale className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                      <p className="text-muted-foreground">No legal analysis available</p>
+                      <p className="text-muted-foreground">
+                        {generatingAnalysis ? "Analysis pending..." : "No legal analysis available"}
+                      </p>
                       <p className="text-sm text-muted-foreground mt-2">
                         Click "Generate Analysis" to create a comprehensive legal analysis for this case.
                       </p>

@@ -239,12 +239,7 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
         ...prev,
         conversationId: newConversationId,
         anonymousSessionId,
-        messages: [{
-          id: crypto.randomUUID(),
-          role: 'assistant',
-          content: getWelcomeMessage(prev.mode, prev.language),
-          timestamp: new Date(),
-        }]
+        messages: [] // Don't use local messages - read from DB
       }));
 
       // Write welcome message to case_messages if we have a case_id
@@ -392,10 +387,9 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
       }
     }
 
-    // Now update UI - messages are persisted first
+    // Set loading state only - don't add to local messages (read from DB instead)
     setState(prev => ({
       ...prev,
-      messages: [...prev.messages, userMessage],
       isLoading: true,
     }));
 
@@ -501,9 +495,9 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
         }
       }
 
+      // Update state without adding messages to local state (read from DB only)
       setState(prev => ({
         ...prev,
-        messages: [...prev.messages, aiMessage],
         isLoading: false,
         extractedData: newExtracted ? { ...(prev.extractedData || {}), ...newExtracted } : prev.extractedData,
         needsPersonalDetails: needsPD || prev.needsPersonalDetails,
