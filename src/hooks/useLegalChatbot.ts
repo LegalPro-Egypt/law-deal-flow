@@ -457,7 +457,7 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
               role: 'assistant',
               content: aiText,
               message_type: 'text',
-              metadata: newExtracted || {}
+              metadata: (newExtracted || {}) as any
             });
 
           if (aiMsgError) {
@@ -601,8 +601,7 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
       extractedData: null,
       needsPersonalDetails: false,
     }));
-    setCaseId(null);
-  }, []);
+  }, [clearCase]);
 
   // Mark personal details as completed
   const setPersonalDetailsCompleted = useCallback(() => {
@@ -630,14 +629,15 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
   return {
     ...state,
     caseId,
-    setCaseId,
-    initializeConversation,
+    caseNumber,
     sendMessage,
+    initializeConversation,
     switchMode,
     setLanguage,
     clearConversation,
     setPersonalDetailsCompleted,
     saveCaseStep,
+    createCase,
   };
 };
 

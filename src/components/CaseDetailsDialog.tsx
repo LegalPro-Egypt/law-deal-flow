@@ -383,206 +383,193 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
   if (!isOpen || !caseId) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            Case Details
-            {caseDetails && (
-              <Badge variant="outline">{caseDetails.case_number}</Badge>
-            )}
-          </DialogTitle>
-        </DialogHeader>
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Case Details
+              {caseDetails && (
+                <Badge variant="outline">{caseDetails.case_number}</Badge>
+              )}
+            </DialogTitle>
+          </DialogHeader>
 
-        {loading ? (
-          <div className="flex items-center justify-center h-96">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-muted-foreground">Loading case details...</p>
+          {loading ? (
+            <div className="flex items-center justify-center h-96">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Loading case details...</p>
+              </div>
             </div>
-          </div>
-        ) : caseDetails ? (
-          <Tabs defaultValue="overview" className="h-full">
-            <TabsList className="grid w-full grid-cols-4 h-auto p-1 gap-1">
-              <TabsTrigger value="overview" className="text-xs sm:text-sm px-2 py-2">
-                Overview
-              </TabsTrigger>
-              <TabsTrigger value="conversation" className="text-xs sm:text-sm px-2 py-2">
-                Chat
-              </TabsTrigger>
-              <TabsTrigger value="documents" className="text-xs sm:text-sm px-2 py-2">
-                Files
-              </TabsTrigger>
-              <TabsTrigger value="legal-analysis" className="text-xs sm:text-sm px-2 py-2">
-                Legal Analysis
-              </TabsTrigger>
-            </TabsList>
+          ) : caseDetails ? (
+            <Tabs defaultValue="overview" className="h-full">
+              <TabsList className="grid w-full grid-cols-4 h-auto p-1 gap-1">
+                <TabsTrigger value="overview" className="text-xs sm:text-sm px-2 py-2">
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger value="conversation" className="text-xs sm:text-sm px-2 py-2">
+                  Chat
+                </TabsTrigger>
+                <TabsTrigger value="documents" className="text-xs sm:text-sm px-2 py-2">
+                  Files
+                </TabsTrigger>
+                <TabsTrigger value="legal-analysis" className="text-xs sm:text-sm px-2 py-2">
+                  Legal Analysis
+                </TabsTrigger>
+              </TabsList>
 
-            <ScrollArea className="h-[60vh] mt-4">
-              <TabsContent value="overview" className="space-y-4">
-                {/* Case Status and Priority */}
-                <div className="grid md:grid-cols-3 gap-4">
+              <ScrollArea className="h-[60vh] mt-4">
+                <TabsContent value="overview" className="space-y-4">
+                  {/* Case Status and Priority */}
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-2">
+                          <AlertCircle className="h-4 w-4" />
+                          <span className="text-sm font-medium">Status</span>
+                        </div>
+                        <Badge className={`mt-2 ${getStatusColor(caseDetails.status)}`}>
+                          {caseDetails.status.replace('_', ' ').toUpperCase()}
+                        </Badge>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4" />
+                          <span className="text-sm font-medium">Priority</span>
+                        </div>
+                        <Badge className={`mt-2 ${getUrgencyColor(caseDetails.urgency)}`}>
+                          {caseDetails.urgency.toUpperCase()}
+                        </Badge>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4" />
+                          <span className="text-sm font-medium">Created</span>
+                        </div>
+                        <p className="mt-2 text-sm">{formatDate(caseDetails.created_at)}</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Case Information */}
                   <Card>
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-2">
-                        <AlertCircle className="h-4 w-4" />
-                        <span className="text-sm font-medium">Status</span>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <FileText className="h-4 w-4" />
+                        Case Information
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <h4 className="font-medium">Title</h4>
+                        <p className="text-sm text-muted-foreground">{caseDetails.title}</p>
                       </div>
-                      <Badge className={`mt-2 ${getStatusColor(caseDetails.status)}`}>
-                        {caseDetails.status.replace('_', ' ').toUpperCase()}
-                      </Badge>
+                      <div>
+                        <h4 className="font-medium">Category</h4>
+                        <div className="flex gap-2 mt-1">
+                          <Badge variant="outline">{caseDetails.category}</Badge>
+                          {caseDetails.subcategory && (
+                            <Badge variant="outline">{caseDetails.subcategory}</Badge>
+                          )}
+                        </div>
+                      </div>
+                      <div>
+                        <h4 className="font-medium">Description</h4>
+                        <p className="text-sm text-muted-foreground">{caseDetails.description}</p>
+                      </div>
                     </CardContent>
                   </Card>
 
+                  {/* Client Information */}
                   <Card>
-                    <CardContent className="p-4">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <User className="h-4 w-4" />
+                        Client Information
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
                       <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4" />
-                        <span className="text-sm font-medium">Priority</span>
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">{caseDetails.client_name}</span>
                       </div>
-                      <Badge className={`mt-2 ${getUrgencyColor(caseDetails.urgency)}`}>
-                        {caseDetails.urgency.toUpperCase()}
-                      </Badge>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="p-4">
                       <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4" />
-                        <span className="text-sm font-medium">Created</span>
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">{caseDetails.client_email}</span>
                       </div>
-                      <p className="mt-2 text-sm">{formatDate(caseDetails.created_at)}</p>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Case Information */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      Case Information
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <h4 className="font-medium">Title</h4>
-                      <p className="text-sm text-muted-foreground">{caseDetails.title}</p>
-                    </div>
-                    <div>
-                      <h4 className="font-medium">Category</h4>
-                      <div className="flex gap-2 mt-1">
-                        <Badge variant="outline">{caseDetails.category}</Badge>
-                        {caseDetails.subcategory && (
-                          <Badge variant="outline">{caseDetails.subcategory}</Badge>
-                        )}
-                      </div>
-                    </div>
-                    <div>
-                      <h4 className="font-medium">Description</h4>
-                      <p className="text-sm text-muted-foreground">{caseDetails.description}</p>
-                    </div>
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-medium">AI Summary</h4>
-                        {!caseDetails.ai_summary && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={generateSummary}
-                            disabled={generatingSummary || conversation.length === 0}
-                            className="flex items-center gap-2"
-                          >
-                            <Sparkles className="h-4 w-4" />
-                            {generatingSummary ? 'Generating...' : 'Generate Summary'}
-                          </Button>
-                        )}
-                      </div>
-                      {caseDetails.ai_summary ? (
-                        <p className="text-sm text-muted-foreground mt-2">{caseDetails.ai_summary}</p>
-                      ) : (
-                        <p className="text-sm text-muted-foreground mt-2 italic">
-                          {conversation.length === 0 ? 'No conversation available to summarize' : 'No summary generated yet'}
-                        </p>
+                      {caseDetails.client_phone && (
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm">{caseDetails.client_phone}</span>
+                        </div>
                       )}
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
 
-                {/* Client Information */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <User className="h-4 w-4" />
-                      Client Information
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">Name:</span>
-                      <span>{caseDetails.client_name}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">Email:</span>
-                      <span>{caseDetails.client_email}</span>
-                    </div>
-                    {caseDetails.client_phone && (
-                      <div className="flex items-center gap-2">
-                        <Phone className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">Phone:</span>
-                        <span>{caseDetails.client_phone}</span>
-                      </div>
-                    )}
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">Jurisdiction:</span>
-                      <span className="capitalize">{caseDetails.jurisdiction}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
+                  {/* AI Summary */}
+                  {caseDetails.ai_summary && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Sparkles className="h-4 w-4" />
+                          AI Summary
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm">{caseDetails.ai_summary}</p>
+                      </CardContent>
+                    </Card>
+                  )}
+                </TabsContent>
 
-              <TabsContent value="conversation" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <MessageSquare className="h-4 w-4" />
-                      Conversation History
+                <TabsContent value="conversation" className="space-y-4">
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-lg font-semibold">Conversation History</h3>
                       <Button
-                        variant="outline"
+                        onClick={generateSummary}
+                        disabled={generatingSummary || conversation.length === 0}
                         size="sm"
-                        onClick={async () => {
-                          const { data: caseMessages } = await supabase
-                            .from('case_messages')
-                            .select('*', { count: 'exact' })
-                            .eq('case_id', caseId);
-                          
-                          const { data: conversationMessages } = await supabase
-                            .from('conversations')
-                            .select(`
-                              id, case_id,
-                              messages (*)
-                            `, { count: 'exact' })
-                            .eq('case_id', caseId);
-
-                          toast({
-                            title: "Debug Info",
-                            description: `case_messages: ${caseMessages?.length || 0}, conversation messages: ${conversationMessages?.flatMap(c => c.messages || []).length || 0}`,
-                          });
-                        }}
-                        className="ml-auto"
+                        variant="outline"
                       >
-                        Test Fetch
+                        {generatingSummary ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
+                            Generating...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="h-4 w-4 mr-2" />
+                            Generate AI Summary
+                          </>
+                        )}
                       </Button>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {conversation.length > 0 ? (
-                      <ScrollArea className="h-96">
+                    </div>
+
+                    {/* Health Check Info */}
+                    <Card className="bg-muted/50">
+                      <CardContent className="p-3">
+                        <div className="text-xs text-muted-foreground space-y-1">
+                          <div><strong>Health Check:</strong></div>
+                          <div>Case ID: {caseId}</div>
+                          <div>Message Count: {conversation.length}</div>
+                          {conversation.length > 0 && (
+                            <div>Newest Message: {formatDate(conversation[conversation.length - 1]?.created_at || '')}</div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <ScrollArea className="h-96 border rounded-lg p-4">
+                      {conversation.length > 0 ? (
                         <div className="space-y-4">
                           {conversation.map((message, index) => (
                             <div
@@ -598,364 +585,236 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                                     : 'bg-muted'
                                 }`}
                               >
-                                <p className="text-sm">{message.content}</p>
-                                <p className="text-xs opacity-70 mt-1">
-                                  {formatDate(message.created_at)}
-                                </p>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-xs font-medium">
+                                    {message.role === 'user' ? 'Client' : 'Assistant'}
+                                  </span>
+                                  <span className="text-xs opacity-70">
+                                    {formatDate(message.created_at)}
+                                  </span>
+                                </div>
+                                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                               </div>
                             </div>
                           ))}
                         </div>
-                      </ScrollArea>
-                    ) : (
-                      <div className="text-center py-8">
-                        <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                        <p className="text-muted-foreground">No messages yet</p>
-                        <p className="text-sm text-muted-foreground mt-2">
-                          This case doesn't have any recorded messages yet.
-                        </p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
+                      ) : (
+                        <div className="text-center text-muted-foreground">
+                          <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                          <p>No messages yet</p>
+                          <p className="text-xs mt-1">Messages will appear here once the case is active</p>
+                        </div>
+                      )}
+                    </ScrollArea>
+                  </div>
+                </TabsContent>
 
-              <TabsContent value="documents" className="space-y-4">
-                {documents.length > 0 ? (
-                  <div className="grid gap-4">
-                    {documents.map((doc) => (
-                      <Card key={doc.id}>
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <FileText className="h-8 w-8 text-blue-600" />
-                              <div>
-                                <h4 className="font-medium">{doc.file_name}</h4>
-                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                  <span>{doc.file_type.toUpperCase()}</span>
-                                  <span>•</span>
-                                  <span>{formatFileSize(doc.file_size)}</span>
-                                  <span>•</span>
-                                  <span>{formatDate(doc.created_at)}</span>
+                <TabsContent value="documents" className="space-y-4">
+                  {documents.length > 0 ? (
+                    <div className="grid gap-4">
+                      {documents.map((doc) => (
+                        <Card key={doc.id}>
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <FileText className="h-8 w-8 text-blue-600" />
+                                <div>
+                                  <h4 className="font-medium">{doc.file_name}</h4>
+                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    <span>{doc.file_type.toUpperCase()}</span>
+                                    <span>•</span>
+                                    <span>{formatFileSize(doc.file_size)}</span>
+                                    <span>•</span>
+                                    <span>{formatDate(doc.created_at)}</span>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              {doc.document_category && (
-                                <Badge variant="outline">{doc.document_category}</Badge>
-                              )}
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => viewDocument(doc)}
-                                disabled={loadingStates[`view-${doc.id}`]}
-                                className="flex items-center gap-2"
-                              >
-                                <Eye className="h-4 w-4" />
-                                {loadingStates[`view-${doc.id}`] ? 'Loading...' : 'View'}
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => downloadDocument(doc)}
-                                disabled={loadingStates[`download-${doc.id}`]}
-                                className="flex items-center gap-2"
-                              >
-                                <Download className="h-4 w-4" />
-                                {loadingStates[`download-${doc.id}`] ? 'Loading...' : 'Download'}
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <Card>
-                    <CardContent className="p-8 text-center">
-                      <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold mb-2">No documents uploaded</h3>
-                      <p className="text-muted-foreground">No documents have been uploaded for this case yet.</p>
-                    </CardContent>
-                  </Card>
-                )}
-              </TabsContent>
-
-              <TabsContent value="legal-analysis" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="flex items-center gap-2">
-                        <Scale className="h-5 w-5" />
-                        Legal Analysis & Strategy
-                      </CardTitle>
-                      {!caseAnalysis && conversation.length > 0 && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={generateLegalAnalysis}
-                          disabled={generatingAnalysis}
-                          className="flex items-center gap-2"
-                        >
-                          <Sparkles className="h-4 w-4" />
-                          {generatingAnalysis ? 'Generating...' : 'Generate Analysis'}
-                        </Button>
-                      )}
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    {caseAnalysis?.analysis_data ? (
-                      <>
-                        {/* Case Summary */}
-                        {caseAnalysis.analysis_data.caseSummary && (
-                          <div>
-                            <h4 className="font-semibold mb-3 flex items-center gap-2">
-                              <FileText className="h-4 w-4 text-primary" />
-                              Case Summary
-                            </h4>
-                            <div className="bg-muted p-4 rounded-lg">
-                              <p className="text-sm">{caseAnalysis.analysis_data.caseSummary}</p>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Applicable Laws */}
-                        {caseAnalysis.analysis_data.applicableLaws && caseAnalysis.analysis_data.applicableLaws.length > 0 && (
-                          <div>
-                            <h4 className="font-semibold mb-3 flex items-center gap-2">
-                              <BookOpen className="h-4 w-4 text-blue-600" />
-                              Applicable Laws & Regulations
-                            </h4>
-                            <div className="space-y-3">
-                              {caseAnalysis.analysis_data.applicableLaws.map((law: any, index: number) => (
-                                <div key={index} className="border rounded-lg p-3">
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <Badge variant="outline">{law.law}</Badge>
-                                    {law.articles && law.articles.length > 0 && (
-                                      <div className="flex gap-1">
-                                        {law.articles.map((article: string, idx: number) => (
-                                          <Badge key={idx} variant="secondary" className="text-xs">
-                                            Art. {article}
-                                          </Badge>
-                                        ))}
-                                      </div>
-                                    )}
-                                  </div>
-                                  {law.relevance && (
-                                    <p className="text-sm text-muted-foreground">{law.relevance}</p>
+                              <div className="flex items-center gap-2">
+                                {doc.document_category && (
+                                  <Badge variant="outline">{doc.document_category}</Badge>
+                                )}
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => viewDocument(doc)}
+                                  disabled={loadingStates[`view-${doc.id}`]}
+                                >
+                                  {loadingStates[`view-${doc.id}`] ? (
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                                  ) : (
+                                    <Eye className="h-4 w-4" />
                                   )}
-                                </div>
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => downloadDocument(doc)}
+                                  disabled={loadingStates[`download-${doc.id}`]}
+                                >
+                                  {loadingStates[`download-${doc.id}`] ? (
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                                  ) : (
+                                    <Download className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                      <p className="text-muted-foreground">No documents uploaded</p>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Documents uploaded for this case will appear here.
+                      </p>
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="legal-analysis" className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-semibold">Legal Analysis</h3>
+                    <Button
+                      onClick={generateLegalAnalysis}
+                      disabled={generatingAnalysis || conversation.length === 0}
+                      size="sm"
+                      variant="outline"
+                    >
+                      {generatingAnalysis ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Scale className="h-4 w-4 mr-2" />
+                          Generate Analysis
+                        </>
+                      )}
+                    </Button>
+                  </div>
+
+                  {caseAnalysis?.analysis_data ? (
+                    <div className="space-y-4">
+                      {/* Case Summary */}
+                      {caseAnalysis.analysis_data.case_summary && (
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                              <BookOpen className="h-4 w-4" />
+                              Case Summary
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-sm">{caseAnalysis.analysis_data.case_summary}</p>
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {/* Applicable Laws */}
+                      {caseAnalysis.analysis_data.applicable_laws && caseAnalysis.analysis_data.applicable_laws.length > 0 && (
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                              <Scale className="h-4 w-4" />
+                              Applicable Laws
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-2">
+                              {caseAnalysis.analysis_data.applicable_laws.map((law: string, index: number) => (
+                                <Badge key={index} variant="outline" className="mr-2">
+                                  {law}
+                                </Badge>
                               ))}
                             </div>
-                          </div>
-                        )}
+                          </CardContent>
+                        </Card>
+                      )}
 
-                        {/* Recommended Specialization */}
-                        {caseAnalysis.analysis_data.recommendedSpecialization && (
-                          <div>
-                            <h4 className="font-semibold mb-3 flex items-center gap-2">
-                              <Users className="h-4 w-4 text-purple-600" />
-                              Recommended Legal Specialization
-                            </h4>
-                            <div className="border rounded-lg p-4 space-y-3">
-                              <div>
-                                <label className="text-sm font-medium text-muted-foreground">Primary Specialization</label>
-                                <div className="mt-1">
-                                  <Badge variant="default" className="text-sm">
-                                    {caseAnalysis.analysis_data.recommendedSpecialization.primaryArea}
-                                  </Badge>
-                                </div>
-                              </div>
-                              
-                              {caseAnalysis.analysis_data.recommendedSpecialization.secondaryAreas && 
-                               caseAnalysis.analysis_data.recommendedSpecialization.secondaryAreas.length > 0 && (
-                                <div>
-                                  <label className="text-sm font-medium text-muted-foreground">Secondary Areas</label>
-                                  <div className="flex flex-wrap gap-1 mt-1">
-                                    {caseAnalysis.analysis_data.recommendedSpecialization.secondaryAreas.map((area: string, index: number) => (
-                                      <Badge key={index} variant="secondary" className="text-xs">{area}</Badge>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                              
-                              {caseAnalysis.analysis_data.recommendedSpecialization.reasoning && (
-                                <div>
-                                  <label className="text-sm font-medium text-muted-foreground">Reasoning</label>
-                                  <p className="text-sm text-muted-foreground mt-1">
-                                    {caseAnalysis.analysis_data.recommendedSpecialization.reasoning}
-                                  </p>
-                                </div>
-                              )}
+                      {/* Legal Strategy */}
+                      {caseAnalysis.analysis_data.legal_strategy && (
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                              <Target className="h-4 w-4" />
+                              Legal Strategy
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-sm">{caseAnalysis.analysis_data.legal_strategy}</p>
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {/* Risk Assessment */}
+                      {caseAnalysis.analysis_data.risk_assessment && (
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                              <AlertTriangle className="h-4 w-4" />
+                              Risk Assessment
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-sm">{caseAnalysis.analysis_data.risk_assessment}</p>
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {/* Case Complexity */}
+                      {caseAnalysis.analysis_data.complexity_score && (
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                              <Shield className="h-4 w-4" />
+                              Case Complexity
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm">Complexity Score:</span>
+                              <Badge variant={
+                                caseAnalysis.analysis_data.complexity_score > 7 ? 'destructive' :
+                                caseAnalysis.analysis_data.complexity_score > 4 ? 'default' : 'secondary'
+                              }>
+                                {caseAnalysis.analysis_data.complexity_score}/10
+                              </Badge>
                             </div>
-                          </div>
-                        )}
-
-                        {/* Legal Strategy */}
-                        {caseAnalysis.analysis_data.legalStrategy && (
-                          <div>
-                            <h4 className="font-semibold mb-3 flex items-center gap-2">
-                              <Target className="h-4 w-4 text-green-600" />
-                              Legal Strategy & Next Steps
-                            </h4>
-                            <div className="border rounded-lg p-4 space-y-4">
-                              {caseAnalysis.analysis_data.legalStrategy.immediateSteps && 
-                               caseAnalysis.analysis_data.legalStrategy.immediateSteps.length > 0 && (
-                                <div>
-                                  <label className="text-sm font-medium text-muted-foreground">Immediate Actions</label>
-                                  <ul className="mt-2 space-y-1">
-                                    {caseAnalysis.analysis_data.legalStrategy.immediateSteps.map((step: string, index: number) => (
-                                      <li key={index} className="flex items-start gap-2 text-sm">
-                                        <span className="text-green-600 mt-1">•</span>
-                                        <span>{step}</span>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              )}
-
-                              {caseAnalysis.analysis_data.legalStrategy.documentation && 
-                               caseAnalysis.analysis_data.legalStrategy.documentation.length > 0 && (
-                                <div>
-                                  <label className="text-sm font-medium text-muted-foreground">Required Documentation</label>
-                                  <div className="flex flex-wrap gap-1 mt-2">
-                                    {caseAnalysis.analysis_data.legalStrategy.documentation.map((doc: string, index: number) => (
-                                      <Badge key={index} variant="outline" className="text-xs">{doc}</Badge>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-
-                              {caseAnalysis.analysis_data.legalStrategy.timeline && (
-                                <div>
-                                  <label className="text-sm font-medium text-muted-foreground">Expected Timeline</label>
-                                  <p className="text-sm text-muted-foreground mt-1">
-                                    {caseAnalysis.analysis_data.legalStrategy.timeline}
-                                  </p>
-                                </div>
-                              )}
-
-                              {caseAnalysis.analysis_data.legalStrategy.risks && 
-                               caseAnalysis.analysis_data.legalStrategy.risks.length > 0 && (
-                                <div>
-                                  <label className="text-sm font-medium text-muted-foreground">Potential Risks</label>
-                                  <ul className="mt-2 space-y-1">
-                                    {caseAnalysis.analysis_data.legalStrategy.risks.map((risk: string, index: number) => (
-                                      <li key={index} className="flex items-start gap-2 text-sm">
-                                        <AlertTriangle className="h-3 w-3 text-orange-500 mt-1 flex-shrink-0" />
-                                        <span>{risk}</span>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              )}
-
-                              {caseAnalysis.analysis_data.legalStrategy.opportunities && 
-                               caseAnalysis.analysis_data.legalStrategy.opportunities.length > 0 && (
-                                <div>
-                                  <label className="text-sm font-medium text-muted-foreground">Favorable Aspects</label>
-                                  <ul className="mt-2 space-y-1">
-                                    {caseAnalysis.analysis_data.legalStrategy.opportunities.map((opportunity: string, index: number) => (
-                                      <li key={index} className="flex items-start gap-2 text-sm">
-                                        <CheckCircle className="h-3 w-3 text-green-600 mt-1 flex-shrink-0" />
-                                        <span>{opportunity}</span>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Case Complexity */}
-                        {caseAnalysis.analysis_data.caseComplexity && (
-                          <div>
-                            <h4 className="font-semibold mb-3 flex items-center gap-2">
-                              <AlertCircle className="h-4 w-4 text-orange-600" />
-                              Case Complexity Assessment
-                            </h4>
-                            <div className="border rounded-lg p-4 space-y-3">
-                              <div className="flex items-center gap-2">
-                                <Badge 
-                                  variant={
-                                    caseAnalysis.analysis_data.caseComplexity.level === 'low' ? 'secondary' :
-                                    caseAnalysis.analysis_data.caseComplexity.level === 'medium' ? 'default' : 'destructive'
-                                  }
-                                  className="capitalize"
-                                >
-                                  {caseAnalysis.analysis_data.caseComplexity.level} Complexity
-                                </Badge>
-                                {caseAnalysis.analysis_data.caseComplexity.estimatedCost && (
-                                  <Badge variant="outline">
-                                    {caseAnalysis.analysis_data.caseComplexity.estimatedCost}
-                                  </Badge>
-                                )}
-                              </div>
-
-                              {caseAnalysis.analysis_data.caseComplexity.factors && 
-                               caseAnalysis.analysis_data.caseComplexity.factors.length > 0 && (
-                                <div>
-                                  <label className="text-sm font-medium text-muted-foreground">Complexity Factors</label>
-                                  <ul className="mt-2 space-y-1">
-                                    {caseAnalysis.analysis_data.caseComplexity.factors.map((factor: string, index: number) => (
-                                      <li key={index} className="flex items-start gap-2 text-sm">
-                                        <span className="text-primary mt-1">•</span>
-                                        <span>{factor}</span>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Analysis Timestamp */}
-                        <div className="text-sm text-muted-foreground text-center pt-4 border-t">
-                          Analysis generated on {formatDate(caseAnalysis.generated_at)}
-                        </div>
-                      </>
-                    ) : caseAnalysis?.status === 'pending' ? (
-                      <div className="text-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                        <h3 className="text-lg font-semibold mb-2">Analysis Pending</h3>
-                        <p className="text-muted-foreground">Legal analysis is being generated...</p>
-                      </div>
-                    ) : (
-                      <div className="text-center py-8">
-                        <Scale className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                        <h3 className="text-lg font-semibold mb-2">No legal analysis available</h3>
-                        <p className="text-muted-foreground">
-                          {conversation.length === 0 
-                            ? 'No conversation available to analyze' 
-                            : 'Legal analysis will be generated from the intake conversation'
-                          }
-                        </p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </ScrollArea>
-          </Tabs>
-        ) : (
-          <div className="flex items-center justify-center h-96">
-            <div className="text-center">
-              <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Case not found</h3>
-              <p className="text-muted-foreground">Unable to load case details.</p>
+                          </CardContent>
+                        </Card>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Scale className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                      <p className="text-muted-foreground">No legal analysis available</p>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Click "Generate Analysis" to create a comprehensive legal analysis for this case.
+                      </p>
+                    </div>
+                  )}
+                </TabsContent>
+              </ScrollArea>
+            </Tabs>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">Case not found</p>
             </div>
-          </div>
-        )}
+          )}
+        </DialogContent>
+      </Dialog>
 
-        {/* Document Preview Modal */}
+      {previewDocument && (
         <DocumentPreview
+          document={previewDocument}
           isOpen={!!previewDocument}
           onClose={() => setPreviewDocument(null)}
-          document={previewDocument}
         />
-      </DialogContent>
-    </Dialog>
+      )}
+    </>
   );
 };
