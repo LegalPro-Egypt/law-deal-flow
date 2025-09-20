@@ -11,6 +11,7 @@ import { LegalChatbot } from "@/components/LegalChatbot";
 
 import { PersonalDetailsForm, PersonalDetailsData } from "@/components/PersonalDetailsForm";
 import DocumentUpload from "@/components/DocumentUpload";
+import { AuthenticationPrompt } from "@/components/AuthenticationPrompt";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { generateCaseTitle } from "@/utils/caseUtils";
@@ -21,7 +22,7 @@ const Intake = () => {
   const [extractedCaseData, setExtractedCaseData] = useState<any>(null);
   const [showPersonalForm, setShowPersonalForm] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [caseId, setCaseId] = useState<string | null>(null);
@@ -559,14 +560,30 @@ const Intake = () => {
         {/* Step 1: AI Chat Interface */}
         {currentStep === 1 && !showPersonalForm && (
           <div className="flex flex-col h-[calc(100vh-280px)] sm:h-[calc(100vh-320px)] min-h-[400px] max-h-[600px]">
-            <LegalChatbot 
-              mode="intake"
-              userId={user?.id}
-              caseId={caseId}
-              onCaseDataExtracted={handleCaseDataExtracted}
-              onCaseCreated={(id) => setCaseId(id)}
-              className="flex-1"
-            />
+            {loading ? (
+              <div className="flex items-center justify-center flex-1">
+                <div className="text-muted-foreground">Loading...</div>
+              </div>
+            ) : user ? (
+              <LegalChatbot 
+                mode="intake"
+                userId={user.id}
+                caseId={caseId}
+                onCaseDataExtracted={handleCaseDataExtracted}
+                onCaseCreated={(id) => setCaseId(id)}
+                className="flex-1"
+              />
+            ) : (
+              <div className="flex items-center justify-center flex-1">
+                <div className="text-center space-y-4">
+                  <div className="text-muted-foreground">Please log in to start your case intake</div>
+                  <AuthenticationPrompt 
+                    trigger="case_submission"
+                    onAuthenticated={() => window.location.reload()}
+                  />
+                </div>
+              </div>
+            )}
             
             <div className="flex flex-col sm:flex-row sm:justify-between gap-3 mt-4 p-3 bg-background border-t">
               <div className="text-sm text-muted-foreground">

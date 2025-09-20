@@ -72,6 +72,27 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
   // Initialize conversation (optionally with known user/case)
   const initializeConversation = useCallback(async (userId?: string, initialCaseId?: string) => {
     try {
+      // For intake mode, ensure we have a userId
+      if (state.mode === 'intake' && !userId) {
+        console.log('Intake mode requires userId, skipping initialization');
+        return null;
+      }
+
+      // Check if we have a valid session for authenticated operations
+      if (state.mode === 'intake') {
+        const { data: session } = await supabase.auth.getSession();
+        if (!session?.session) {
+          console.log('No active session for intake mode, retrying...');
+          // Brief retry for session readiness
+          await new Promise(resolve => setTimeout(resolve, 100));
+          const { data: retrySession } = await supabase.auth.getSession();
+          if (!retrySession?.session) {
+            console.log('Still no session after retry, aborting');
+            return null;
+          }
+        }
+      }
+
       console.log('Initializing conversation with:', { userId, initialCaseId, mode: state.mode, language: state.language });
       
       const sessionId = crypto.randomUUID();
