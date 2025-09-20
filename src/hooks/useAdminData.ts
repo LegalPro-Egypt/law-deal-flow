@@ -263,13 +263,72 @@ export const useAdminData = () => {
         .join(' ');
 
       // Generate comprehensive legal analysis from conversation
-      const legalAnalysisResult = await supabase.functions.invoke('generate-legal-analysis', {
-        body: { 
-          messages: messages,
-          category: extractedData.category || 'General',
-          language: conversation.language || 'en'
+      let legalAnalysis;
+      try {
+        const legalAnalysisResult = await supabase.functions.invoke('generate-legal-analysis', {
+          body: { 
+            messages: messages,
+            category: extractedData.category || 'General',
+            language: conversation.language || 'en'
+          }
+        });
+
+        if (legalAnalysisResult.error) {
+          console.error('Legal analysis generation error:', legalAnalysisResult.error);
+          // Fallback analysis if generation fails
+          legalAnalysis = {
+            caseSummary: extractedData.summary || conversationText.slice(0, 500),
+            applicableLaws: [],
+            recommendedSpecialization: {
+              primaryArea: extractedData.category || 'General Legal',
+              secondaryAreas: [],
+              reasoning: "Based on case category and initial assessment"
+            },
+            legalStrategy: {
+              immediateSteps: ["Consult with qualified lawyer", "Gather relevant documents"],
+              documentation: extractedData.requiredDocuments || [],
+              timeline: "To be determined upon legal consultation",
+              risks: [],
+              opportunities: []
+            },
+            caseComplexity: {
+              level: extractedData.complexity || 'medium',
+              factors: ["Standard legal matter requiring professional assessment"],
+              estimatedCost: "To be determined"
+            },
+            jurisdiction: "egypt",
+            urgency: extractedData.urgency || 'medium'
+          };
+        } else if (legalAnalysisResult.data?.legalAnalysis) {
+          legalAnalysis = legalAnalysisResult.data.legalAnalysis;
         }
-      });
+      } catch (error) {
+        console.error('Failed to generate legal analysis:', error);
+        // Fallback analysis if generation completely fails
+        legalAnalysis = {
+          caseSummary: extractedData.summary || conversationText.slice(0, 500),
+          applicableLaws: [],
+          recommendedSpecialization: {
+            primaryArea: extractedData.category || 'General Legal',
+            secondaryAreas: [],
+            reasoning: "Based on case category and initial assessment"
+          },
+          legalStrategy: {
+            immediateSteps: ["Consult with qualified lawyer", "Gather relevant documents"],
+            documentation: extractedData.requiredDocuments || [],
+            timeline: "To be determined upon legal consultation",
+            risks: [],
+            opportunities: []
+          },
+          caseComplexity: {
+            level: extractedData.complexity || 'medium',
+            factors: ["Standard legal matter requiring professional assessment"],
+            estimatedCost: "To be determined"
+          },
+          jurisdiction: "egypt",
+          urgency: extractedData.urgency || 'medium'
+        };
+      }
 
       // Generate client responses summary from user messages
       const clientResponsesSummary = {
@@ -281,30 +340,6 @@ export const useAdminData = () => {
         timeline: extractedData.timeline || null
       };
 
-      // Use generated legal analysis or fallback to basic analysis
-      const legalAnalysis = legalAnalysisResult.data?.legalAnalysis || {
-        caseSummary: extractedData.summary || conversationText.slice(0, 500),
-        applicableLaws: [],
-        recommendedSpecialization: {
-          primaryArea: extractedData.category || 'General Legal',
-          secondaryAreas: [],
-          reasoning: "Based on case category and initial assessment"
-        },
-        legalStrategy: {
-          immediateSteps: ["Consult with qualified lawyer", "Gather relevant documents"],
-          documentation: extractedData.requiredDocuments || [],
-          timeline: "To be determined upon legal consultation",
-          risks: [],
-          opportunities: []
-        },
-        caseComplexity: {
-          level: extractedData.complexity || 'medium',
-          factors: ["Standard legal matter requiring professional assessment"],
-          estimatedCost: "To be determined"
-        },
-        jurisdiction: "egypt",
-        urgency: extractedData.urgency || 'medium'
-      };
 
       const caseData = {
         user_id: conversation.user_id,

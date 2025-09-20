@@ -117,116 +117,71 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
       if (caseError) throw caseError;
       setCaseDetails(caseData);
 
-      // Try to fetch conversation by case_id first
+      // Enhanced conversation fetching logic
       let conversationData = null;
+      let messagesData = [];
+
+      // Method 1: Try to find conversation by case_id
       const { data: linkedConversation } = await supabase
         .from('conversations')
-        .select(`
-          id,
-          messages (
-            id,
-            role,
-            content,
-            created_at
-          )
-        `)
+        .select('*')
         .eq('case_id', caseId)
-        .single();
+        .maybeSingle();
 
-      conversationData = linkedConversation;
-
-      // If no conversation found by case_id, try enhanced fallback search
-      if (!conversationData && caseData.user_id) {
-        console.log('No conversation found by case_id, trying enhanced fallback search...');
-        
-        // First try: Search for conversations around case creation time (±6 hours)
-        const caseTime = new Date(caseData.created_at);
-        const longStartTime = new Date(caseTime.getTime() - 6 * 60 * 60 * 1000); // 6 hours before
-        const longEndTime = new Date(caseTime.getTime() + 6 * 60 * 60 * 1000); // 6 hours after
-        
-        const { data: timeFrameConversations } = await supabase
+      if (linkedConversation) {
+        conversationData = linkedConversation;
+      } else {
+        // Method 2: Find by user_id and intake mode, prioritizing by message count
+        const { data: candidateConversations } = await supabase
           .from('conversations')
-          .select(`
-            id,
-            created_at,
-            messages (
-              id,
-              role,
-              content,
-              created_at
-            )
-          `)
+          .select('*')
           .eq('user_id', caseData.user_id)
           .eq('mode', 'intake')
-          .gte('created_at', longStartTime.toISOString())
-          .lte('created_at', longEndTime.toISOString())
           .order('created_at', { ascending: false });
 
-        // Prioritize conversations with more messages
-        let bestConversation = null;
-        if (timeFrameConversations && timeFrameConversations.length > 0) {
-          bestConversation = timeFrameConversations.reduce((prev, current) => {
-            const prevMessageCount = prev.messages?.length || 0;
-            const currentMessageCount = current.messages?.length || 0;
-            return currentMessageCount > prevMessageCount ? current : prev;
-          });
-        }
+        if (candidateConversations && candidateConversations.length > 0) {
+          // For each candidate, count messages and pick the one with most messages
+          let bestConversation = null;
+          let maxMessages = 0;
 
-        // If no good conversation in timeframe, search all user conversations
-        if (!bestConversation || (bestConversation.messages?.length || 0) === 0) {
-          console.log('No good conversation in timeframe, searching all user intake conversations...');
-          
-          const { data: allUserConversations } = await supabase
-            .from('conversations')
-            .select(`
-              id,
-              created_at,
-              messages (
-                id,
-                role,
-                content,
-                created_at
-              )
-            `)
-            .eq('user_id', caseData.user_id)
-            .eq('mode', 'intake')
-            .order('created_at', { ascending: false })
-            .limit(5);
+          for (const conv of candidateConversations) {
+            const { count } = await supabase
+              .from('messages')
+              .select('*', { count: 'exact', head: true })
+              .eq('conversation_id', conv.id);
 
-          if (allUserConversations && allUserConversations.length > 0) {
-            // Find conversation with most messages
-            bestConversation = allUserConversations.reduce((prev, current) => {
-              const prevMessageCount = prev.messages?.length || 0;
-              const currentMessageCount = current.messages?.length || 0;
-              return currentMessageCount > prevMessageCount ? current : prev;
-            });
+            if (count && count > maxMessages) {
+              maxMessages = count;
+              bestConversation = conv;
+            }
           }
-        }
 
-        if (bestConversation && (bestConversation.messages?.length || 0) > 0) {
-          conversationData = bestConversation;
-          console.log(`Found conversation via enhanced search: ${bestConversation.id} with ${bestConversation.messages?.length || 0} messages`);
-          
-          // Attempt to fix the broken link
-          const { error: linkError } = await supabase
-            .from('conversations')
-            .update({ case_id: caseId })
-            .eq('id', bestConversation.id);
+          if (bestConversation && maxMessages > 0) {
+            conversationData = bestConversation;
             
-          if (linkError) {
-            console.error('Failed to link conversation to case:', linkError);
-          } else {
-            console.log('Successfully linked conversation to case');
+            // Auto-repair: link the conversation to the case
+            await supabase
+              .from('conversations')
+              .update({ case_id: caseId })
+              .eq('id', conversationData.id);
           }
         }
       }
 
-      if (conversationData?.messages) {
-        setConversation(conversationData.messages);
-      } else {
-        console.log('No conversation found for case:', caseId);
-        setConversation([]);
+      if (conversationData) {
+        // Fetch messages for the conversation
+        const { data: messages, error: messagesError } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('conversation_id', conversationData.id)
+          .order('created_at', { ascending: true });
+
+        if (!messagesError) {
+          messagesData = messages || [];
+        }
       }
+
+      setConversation(messagesData);
 
       // Fetch documents
       const { data: documentsData } = await supabase
