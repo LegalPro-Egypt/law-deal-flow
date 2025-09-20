@@ -45,6 +45,9 @@ const Landing = () => {
               <span className="text-xl font-bold">LegalPro</span>
             </div>
             <div className="flex items-center space-x-4">
+              <Link to="/legal-database">
+                <Button variant="ghost">Guides</Button>
+              </Link>
               <Link to="/auth?force=true">
                 <Button variant="ghost">Sign In</Button>
               </Link>
@@ -72,11 +75,6 @@ const Landing = () => {
               <Link to="/auth?force=true&redirect=intake">
                 <Button size="lg" className="bg-accent hover:bg-accent-hover text-lg px-8 py-3">
                   Start Your Case
-                </Button>
-              </Link>
-              <Link to="/legal-database">
-                <Button size="lg" variant="secondary" className="bg-white text-primary hover:bg-white/90 text-lg px-8 py-3">
-                  Browse Legal Guides
                 </Button>
               </Link>
             </div>
