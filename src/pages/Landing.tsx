@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Scale, Shield, MessageSquare, Users, Clock, Check } from "lucide-react";
+import { Scale, Shield, MessageSquare, Users, Clock, Check, Brain, Lock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { HomepageChatbot } from "@/components/HomepageChatbot";
@@ -79,6 +79,39 @@ const Landing = () => {
                   Browse Legal Guides
                 </Button>
               </Link>
+            </div>
+            
+            {/* Premium Trust Signals */}
+            <div className="trust-signals-container">
+              <div className="trust-signal-card">
+                <div className="trust-signal-icon verified">
+                  <Shield className="h-6 w-6 text-white" />
+                </div>
+                <div className="trust-signal-content">
+                  <h3>Verified Lawyers</h3>
+                  <p>Licensed professionals</p>
+                </div>
+              </div>
+              
+              <div className="trust-signal-card">
+                <div className="trust-signal-icon ai-powered">
+                  <Brain className="h-6 w-6 text-white" />
+                </div>
+                <div className="trust-signal-content">
+                  <h3>AI-Powered Intake</h3>
+                  <p>Smart case matching</p>
+                </div>
+              </div>
+              
+              <div className="trust-signal-card">
+                <div className="trust-signal-icon secure">
+                  <Lock className="h-6 w-6 text-white" />
+                </div>
+                <div className="trust-signal-content">
+                  <h3>Secure Payments</h3>
+                  <p>Bank-level encryption</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
