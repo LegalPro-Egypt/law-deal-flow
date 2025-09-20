@@ -215,6 +215,7 @@ export type Database = {
           draft_data: Json | null
           extracted_entities: Json | null
           id: string
+          idempotency_key: string | null
           jurisdiction: string
           language: string
           legal_analysis: Json | null
@@ -246,6 +247,7 @@ export type Database = {
           draft_data?: Json | null
           extracted_entities?: Json | null
           id?: string
+          idempotency_key?: string | null
           jurisdiction?: string
           language?: string
           legal_analysis?: Json | null
@@ -277,6 +279,7 @@ export type Database = {
           draft_data?: Json | null
           extracted_entities?: Json | null
           id?: string
+          idempotency_key?: string | null
           jurisdiction?: string
           language?: string
           legal_analysis?: Json | null

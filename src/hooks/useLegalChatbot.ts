@@ -55,7 +55,7 @@ export interface ChatbotState {
 
 export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
   const { toast } = useToast();
-  const { caseId, caseNumber, conversationId: globalConversationId, setCaseData, setConversationId: setGlobalConversationId, clearCase } = useCaseState();
+  const { caseId, caseNumber, conversationId: globalConversationId, idempotencyKey, setCaseData, setConversationId: setGlobalConversationId, setIdempotencyKey, clearCase } = useCaseState();
 
   const [state, setState] = useState<ChatbotState>({
     messages: [],
@@ -71,10 +71,30 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
   // Refs to avoid stale closures for IDs
   const conversationIdRef = useRef<string | null>(null);
 
-  // Create case first and return durable case_id/case_number
+  // Create case first and return durable case_id/case_number with idempotency
   const createCase = useCallback(async (userId: string): Promise<{ caseId: string; caseNumber: string } | null> => {
     try {
       console.log('Creating case for user:', userId);
+      
+      // Generate idempotency key if not already set
+      let currentIdempotencyKey = idempotencyKey;
+      if (!currentIdempotencyKey) {
+        currentIdempotencyKey = crypto.randomUUID();
+        setIdempotencyKey(currentIdempotencyKey);
+      }
+
+      // Try to find existing case with same idempotency key first
+      const { data: existingCase } = await supabase
+        .from('cases')
+        .select('id, case_number')
+        .eq('user_id', userId)
+        .eq('idempotency_key', currentIdempotencyKey)
+        .maybeSingle();
+
+      if (existingCase) {
+        console.log('Using existing case with idempotency key:', existingCase);
+        return { caseId: existingCase.id, caseNumber: existingCase.case_number };
+      }
       
       // Generate unique case number
       const now = new Date();
@@ -97,12 +117,29 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
           case_number: uniqueCaseNumber,
           language: state.language,
           jurisdiction: 'egypt',
-          description: 'Case created from intake conversation'
+          description: 'Case created from intake conversation',
+          idempotency_key: currentIdempotencyKey,
         })
         .select()
         .single();
 
       if (caseError) {
+        // Check if this is a duplicate key error due to race condition
+        if (caseError.code === '23505' && caseError.message.includes('unique_case_per_user_idempotency')) {
+          // Race condition: another request created the case, fetch it
+          const { data: raceCase } = await supabase
+            .from('cases')
+            .select('id, case_number')
+            .eq('user_id', userId)
+            .eq('idempotency_key', currentIdempotencyKey)
+            .maybeSingle();
+          
+          if (raceCase) {
+            console.log('Using case created by race condition:', raceCase);
+            return { caseId: raceCase.id, caseNumber: raceCase.case_number };
+          }
+        }
+        
         console.error('Error creating case:', caseError);
         toast({
           title: "Case Creation Failed",
@@ -123,7 +160,7 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
       });
       return null;
     }
-  }, [state.language, toast]);
+  }, [state.language, toast, idempotencyKey, setIdempotencyKey]);
 
   // Initialize conversation (optionally with known user/case)
   const initializeConversation = useCallback(async (userId?: string, initialCaseId?: string) => {

@@ -280,36 +280,11 @@ const Intake = () => {
       return;
     }
 
-    // Ensure a draft case exists
-    try {
-      if (!caseId && user) {
-        const { data, error } = await supabase
-          .from('cases')
-          .insert({
-            user_id: user.id,
-            status: 'draft',
-            category: extractedCaseData?.category || 'general',
-            title: generateCaseTitle(extractedCaseData) || 'New Case'
-          })
-          .select('id')
-          .single();
-
-        if (error) {
-          console.error('Failed to create draft case:', error);
-          toast({
-            title: 'Could not continue',
-            description: error.message,
-            variant: 'destructive',
-          });
-          return;
-        }
-        setCaseId(data.id);
-      }
-    } catch (e: any) {
-      console.error('Unexpected error creating draft case:', e);
+    // Case should already exist from intake chat - just continue
+    if (!caseId) {
       toast({
-        title: 'Unexpected error',
-        description: 'Please try again.',
+        title: 'Error',
+        description: 'Please start a case first by chatting with our AI assistant',
         variant: 'destructive',
       });
       return;
@@ -396,15 +371,7 @@ const Intake = () => {
         return;
       }
 
-      // Clean up any other draft cases for this user to prevent duplicates
-      if (user) {
-        await supabase
-          .from('cases')
-          .delete()
-          .eq('user_id', user.id)
-          .eq('status', 'draft')
-          .neq('id', caseId);
-      }
+      // No cleanup needed - idempotency prevents duplicates
 
       // Show success message
       toast({

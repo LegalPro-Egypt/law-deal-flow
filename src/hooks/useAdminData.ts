@@ -568,28 +568,7 @@ export const useAdminData = () => {
     }
   };
 
-  const cleanupDuplicateCases = async () => {
-    try {
-      const { error } = await supabase.rpc('cleanup_admin_duplicate_cases');
-      if (error) throw error;
-      
-      toast({
-        title: "Success",
-        description: "Duplicate cases cleaned up successfully",
-      });
-      
-      // Refresh data after cleanup
-      await Promise.all([fetchAdminStats(), fetchPendingIntakes(), fetchCases()]);
-    } catch (error: any) {
-      console.error('Error cleaning up duplicate cases:', error);
-      toast({
-        title: "Error",
-        description: `Failed to cleanup duplicate cases: ${error.message}`,
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
+  // Cleanup function removed - idempotency prevents duplicates
 
   const repairCaseConversationLinks = async () => {
     try {
@@ -680,9 +659,6 @@ export const useAdminData = () => {
       fetchPendingIntakes(),
       fetchCases()
     ]).finally(() => setLoading(false));
-
-    // Perform initial cleanup
-    cleanupDuplicateCases().catch(console.error);
   }, []);
 
   return {
@@ -694,7 +670,7 @@ export const useAdminData = () => {
     deleteSelectedIntakes,
     denyCaseAndDelete,
     deleteCase,
-    cleanupDuplicateCases,
+    // cleanupDuplicateCases removed
     repairCaseConversationLinks,
     refreshData: () => Promise.all([fetchAdminStats(), fetchPendingIntakes(), fetchCases()])
   };

@@ -6,8 +6,10 @@ interface CaseState {
   caseId: string | null;
   caseNumber: string | null;
   conversationId: string | null;
-  setCaseData: (caseId: string, caseNumber: string) => void;
+  idempotencyKey: string | null;
+  setCaseData: (caseId: string, caseNumber: string, idempotencyKey?: string) => void;
   setConversationId: (conversationId: string) => void;
+  setIdempotencyKey: (key: string) => void;
   clearCase: () => void;
 }
 
@@ -17,12 +19,15 @@ export const useCaseState = create<CaseState>()(
       caseId: null,
       caseNumber: null,
       conversationId: null,
-      setCaseData: (caseId: string, caseNumber: string) => 
-        set({ caseId, caseNumber }),
+      idempotencyKey: null,
+      setCaseData: (caseId: string, caseNumber: string, idempotencyKey?: string) => 
+        set({ caseId, caseNumber, idempotencyKey: idempotencyKey || null }),
       setConversationId: (conversationId: string) => 
         set({ conversationId }),
+      setIdempotencyKey: (key: string) => 
+        set({ idempotencyKey: key }),
       clearCase: () => 
-        set({ caseId: null, caseNumber: null, conversationId: null }),
+        set({ caseId: null, caseNumber: null, conversationId: null, idempotencyKey: null }),
     }),
     {
       name: 'case-state',
