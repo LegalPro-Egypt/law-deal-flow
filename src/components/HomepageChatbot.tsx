@@ -24,6 +24,8 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [connectionFailed, setConnectionFailed] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   const {
     messages,
@@ -35,12 +37,28 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
     setLanguage,
   } = useLegalChatbot('qa');
 
-  // Initialize anonymous conversation on mount
+  // Initialize anonymous conversation on mount with retry logic
   useEffect(() => {
-    if (!conversationId) {
-      initializeConversation(); // No userId for anonymous sessions
+    if (!conversationId && !connectionFailed && retryCount < 3) {
+      const tryInitialize = async () => {
+        console.log(`Attempting to initialize anonymous conversation (attempt ${retryCount + 1})`);
+        const result = await initializeConversation(); // No userId for anonymous sessions
+        
+        if (!result && retryCount < 2) {
+          // Retry after a brief delay
+          setTimeout(() => {
+            setRetryCount(prev => prev + 1);
+          }, 1000 * (retryCount + 1));
+        } else if (!result && retryCount >= 2) {
+          // Max retries reached, show fallback state
+          console.log('Max retries reached for anonymous conversation');
+          setConnectionFailed(true);
+        }
+      };
+      
+      tryInitialize();
     }
-  }, [conversationId, initializeConversation]);
+  }, [conversationId, initializeConversation, connectionFailed, retryCount]);
 
   // Auto-scroll to bottom when messages change (only after user interaction)
   useEffect(() => {
@@ -211,40 +229,67 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    placeholder="Ask Lexa about Egyptian law..."
-                    disabled={isLoading || !conversationId}
+                    placeholder={
+                      connectionFailed 
+                        ? "Connection failed - Sign in to continue..." 
+                        : !conversationId && retryCount > 0
+                        ? "Connecting..."
+                        : "Ask Lexa about Egyptian law..."
+                    }
+                    disabled={isLoading || (!conversationId && !connectionFailed)}
                     className="flex-1"
                   />
                   <Button
-                    onClick={handleSendMessage}
-                    disabled={!inputMessage.trim() || isLoading || !conversationId}
+                    onClick={connectionFailed ? () => window.location.href = '/auth' : handleSendMessage}
+                    disabled={!inputMessage.trim() || isLoading || (!conversationId && !connectionFailed)}
                     className="bg-primary hover:bg-primary/90"
                   >
                     {isLoading ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : connectionFailed ? (
+                      'Sign In'
                     ) : (
                       <Send className="h-4 w-4" />
                     )}
                   </Button>
                 </div>
 
-                {/* Professional Legal Disclaimer */}
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                  <div className="flex items-start gap-3">
-                    <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                    <div className="text-sm text-amber-800">
-                      <strong>Information Only:</strong> Lexa provides general legal information about Egyptian law. 
-                      For personalized legal advice, {" "}
-                      <Link 
-                        to="/auth?redirect=intake" 
-                        className="text-primary hover:text-primary/80 underline font-medium"
-                      >
-                        connect with our verified lawyers
-                      </Link>
-                      .
+                {/* Connection Status or Legal Disclaimer */}
+                {connectionFailed ? (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                      <div className="text-sm text-red-800">
+                        <strong>Connection Required:</strong> We couldn't start an anonymous chat session. 
+                        Please {" "}
+                        <Link 
+                          to="/auth" 
+                          className="text-primary hover:text-primary/80 underline font-medium"
+                        >
+                          sign in
+                        </Link>
+                        {" "} to access the full chat experience and get legal help.
+                      </div>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <div className="text-sm text-amber-800">
+                        <strong>Information Only:</strong> Lexa provides general legal information about Egyptian law. 
+                        For personalized legal advice, {" "}
+                        <Link 
+                          to="/auth?redirect=intake" 
+                          className="text-primary hover:text-primary/80 underline font-medium"
+                        >
+                          connect with our verified lawyers
+                        </Link>
+                        .
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

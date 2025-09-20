@@ -79,8 +79,11 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
         return null;
       }
 
-      // Check if we have a valid session for authenticated operations
-      if (state.mode === 'intake') {
+      // For anonymous QA mode, explicitly handle the case
+      if (state.mode === 'qa' && !userId) {
+        console.log('Initializing anonymous QA conversation');
+      } else if (state.mode === 'intake') {
+        // Check if we have a valid session for authenticated operations
         const { data: session } = await supabase.auth.getSession();
         if (!session?.session) {
           console.log('No active session for intake mode, retrying...');
@@ -94,25 +97,45 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
         }
       }
 
-      console.log('Initializing conversation with:', { userId, initialCaseId, mode: state.mode, language: state.language });
+      console.log('Initializing conversation with:', { 
+        userId: userId || null, 
+        initialCaseId, 
+        mode: state.mode, 
+        language: state.language,
+        isAnonymous: !userId
+      });
       
       const sessionId = crypto.randomUUID();
 
+      // Prepare conversation data with explicit null for anonymous users
+      const conversationData = {
+        user_id: userId || null, // Explicitly set to null for anonymous users
+        case_id: initialCaseId || null,
+        session_id: sessionId,
+        mode: state.mode,
+        language: state.language,
+        status: 'active' as const,
+      };
+
+      console.log('Inserting conversation with data:', conversationData);
+
       const { data: conversation, error } = await supabase
         .from('conversations')
-        .insert({
-          user_id: state.mode === 'intake' ? userId || null : userId,
-          case_id: initialCaseId || null,
-          session_id: sessionId,
-          mode: state.mode,
-          language: state.language,
-          status: 'active',
-        })
+        .insert(conversationData)
         .select()
         .single();
 
       if (error) {
         console.error('Conversation creation error:', error);
+        console.error('Error details:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          mode: state.mode,
+          userId: userId || null,
+          isAnonymous: !userId
+        });
         throw error;
       }
 
@@ -232,11 +255,25 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
     } catch (err) {
       console.error('Failed to initialize conversation:', err);
       
-      // Provide more specific error message based on the error type
+      // Provide more specific error message based on the error type and mode
       let errorMessage = 'Failed to start conversation. Please try again.';
+      let shouldShowToast = true;
+      
       if (err && typeof err === 'object' && 'message' in err) {
         const errorMsg = (err as any).message;
-        if (errorMsg.includes('policy')) {
+        const errorCode = (err as any).code;
+        
+        // Handle anonymous QA failures more gracefully
+        if (state.mode === 'qa' && !userId) {
+          console.log('Anonymous QA conversation failed, this might be expected in some cases');
+          errorMessage = 'Unable to start anonymous chat. Please try refreshing the page or sign in for full access.';
+          
+          // For anonymous QA, don't show toast for certain policy errors
+          if (errorMsg.includes('policy') || errorCode === '42501') {
+            shouldShowToast = false;
+            console.log('Anonymous QA blocked by policy, user needs to sign in');
+          }
+        } else if (errorMsg.includes('policy') || errorCode === '42501') {
           errorMessage = 'Permission error starting conversation. Please make sure you are logged in.';
         } else if (errorMsg.includes('network') || errorMsg.includes('connection')) {
           errorMessage = 'Network error. Please check your connection and try again.';
@@ -245,11 +282,15 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
         }
       }
       
-      toast({
-        title: 'Error',
-        description: errorMessage,
-        variant: 'destructive',
-      });
+      // Only show toast for non-anonymous failures or critical errors
+      if (shouldShowToast) {
+        toast({
+          title: 'Error',
+          description: errorMessage,
+          variant: 'destructive',
+        });
+      }
+      
       return null;
     }
   }, [state.mode, state.language, toast]);
