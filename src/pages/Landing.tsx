@@ -288,48 +288,50 @@ const Landing = () => {
             </div>
             
             {/* Other 3 sections in a row */}
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <h3 className="font-semibold mb-4 text-sm">Services</h3>
-                <ul className="space-y-2 text-muted-foreground text-xs">
-                  <li>Family Law</li>
-                  <li>Immigration</li>
-                  <li>Real Estate</li>
-                  <li>Corporate Law</li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-4 text-sm">Support</h3>
-                <ul className="space-y-2 text-muted-foreground text-xs">
-                  <li>
-                    <Link to="/help" className="hover:text-primary transition-colors">
-                      Help Center
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/help" className="hover:text-primary transition-colors">
-                      Contact Us
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/privacy-policy" className="hover:text-primary transition-colors">
-                      Privacy Policy
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/terms-of-service" className="hover:text-primary transition-colors">
-                      Terms of Service
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-4 text-sm">Languages</h3>
-                <ul className="space-y-2 text-muted-foreground text-xs">
-                  <li>English</li>
-                  <li>العربية</li>
-                  <li>Deutsch</li>
-                </ul>
+            <div className="flex justify-center">
+              <div className="grid grid-cols-3 gap-6 max-w-sm">
+                <div>
+                  <h3 className="font-semibold mb-4 text-sm">Services</h3>
+                  <ul className="space-y-2 text-muted-foreground text-xs">
+                    <li>Family Law</li>
+                    <li>Immigration</li>
+                    <li>Real Estate</li>
+                    <li>Corporate Law</li>
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-4 text-sm">Support</h3>
+                  <ul className="space-y-2 text-muted-foreground text-xs">
+                    <li>
+                      <Link to="/help" className="hover:text-primary transition-colors">
+                        Help Center
+                      </Link>
+                    </li>
+                    <li>
+                      <Link to="/help" className="hover:text-primary transition-colors">
+                        Contact Us
+                      </Link>
+                    </li>
+                    <li>
+                      <Link to="/privacy-policy" className="hover:text-primary transition-colors">
+                        Privacy Policy
+                      </Link>
+                    </li>
+                    <li>
+                      <Link to="/terms-of-service" className="hover:text-primary transition-colors">
+                        Terms of Service
+                      </Link>
+                    </li>
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-4 text-sm">Languages</h3>
+                  <ul className="space-y-2 text-muted-foreground text-xs">
+                    <li>English</li>
+                    <li>العربية</li>
+                    <li>Deutsch</li>
+                  </ul>
+                </div>
               </div>
             </div>
           </div>
