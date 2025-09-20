@@ -396,6 +396,16 @@ const Intake = () => {
         return;
       }
 
+      // Clean up any other draft cases for this user to prevent duplicates
+      if (user) {
+        await supabase
+          .from('cases')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('status', 'draft')
+          .neq('id', caseId);
+      }
+
       // Show success message
       toast({
         title: 'Case Submitted Successfully',
