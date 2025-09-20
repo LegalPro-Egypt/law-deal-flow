@@ -186,6 +186,24 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
         // Create a draft case with retry mechanism for duplicate case_number
         const createDraftCaseWithRetry = async (retryCount = 0): Promise<void> => {
           try {
+            // First check if user already has a draft case that can be reused
+            const { data: existingDraft } = await supabase
+              .from('cases')
+              .select('id')
+              .eq('user_id', userId)
+              .eq('status', 'draft')
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .maybeSingle();
+
+            if (existingDraft?.id) {
+              // Reuse existing draft case
+              setCaseId(existingDraft.id);
+              await supabase.from('conversations').update({ case_id: existingDraft.id }).eq('id', newConversationId);
+              console.log('Reusing existing draft case:', existingDraft.id);
+              return;
+            }
+            
             // Generate unique case number to prevent duplicates
             const now = new Date();
             const year = now.getFullYear();

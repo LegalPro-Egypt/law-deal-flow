@@ -81,7 +81,27 @@ export const useClientData = () => {
 
       if (error) throw error;
       
-      const casesData = (data || []).map(caseItem => ({
+      // Filter and prioritize cases to prevent showing duplicate drafts
+      const allCases = data || [];
+      
+      // Clean up: if there's a submitted case, remove any draft cases with similar content
+      const submittedCases = allCases.filter(c => c.status === 'submitted' || c.status === 'in_progress');
+      const draftCases = allCases.filter(c => c.status === 'draft');
+      
+      // If there are submitted cases, only keep draft cases that don't have submitted equivalents
+      let filteredCases = [...submittedCases];
+      if (draftCases.length > 0) {
+        const uniqueDrafts = draftCases.filter(draft => {
+          // Keep draft if no submitted case with similar category/content exists
+          return !submittedCases.some(submitted => 
+            submitted.category === draft.category && 
+            Math.abs(new Date(submitted.created_at).getTime() - new Date(draft.created_at).getTime()) < 2 * 60 * 60 * 1000 // within 2 hours
+          );
+        });
+        filteredCases = [...filteredCases, ...uniqueDrafts];
+      }
+      
+      const casesData = filteredCases.map(caseItem => ({
         ...caseItem,
         assigned_lawyer: null as any // Will fetch separately if needed
       }));
@@ -89,9 +109,12 @@ export const useClientData = () => {
       console.log('useClientData: Fetched cases:', casesData.length, casesData);
       setCases(casesData);
       
+      // Set active case - prefer submitted cases over drafts
       if (casesData.length > 0) {
-        console.log('useClientData: Setting active case:', casesData[0].id);
-        setActiveCase(casesData[0]);
+        const submittedCase = casesData.find(c => c.status === 'submitted' || c.status === 'in_progress');
+        const activeCase = submittedCase || casesData[0];
+        console.log('useClientData: Setting active case:', activeCase.id);
+        setActiveCase(activeCase);
       } else {
         console.log('useClientData: No cases found');
         setActiveCase(null);
@@ -285,8 +308,21 @@ export const useClientData = () => {
     console.log('useClientData: Manual refresh triggered');
     if (user) {
       setLoading(true);
+      // Clean up any duplicate cases before refreshing
+      await cleanupDuplicateCases();
       await fetchCases();
       setLoading(false);
+    }
+  };
+
+  const cleanupDuplicateCases = async () => {
+    if (!user) return;
+    
+    try {
+      // Call the database function to clean up duplicates
+      await supabase.rpc('cleanup_duplicate_draft_cases');
+    } catch (error) {
+      console.log('Cleanup function not available yet, skipping cleanup');
     }
   };
 
