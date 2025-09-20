@@ -50,6 +50,7 @@ import { CaseDetailsDialog } from "@/components/CaseDetailsDialog";
 import { ConversationDialog } from "@/components/ConversationDialog";
 import { InviteLawyerDialog } from "@/components/InviteLawyerDialog";
 import { LawyerDetailsDialog } from "@/components/LawyerDetailsDialog";
+import { AssignLawyerDialog } from "@/components/AssignLawyerDialog";
 import { LawyerChatHistoryDialog } from "@/components/LawyerChatHistoryDialog";
 import AnonymousQAManager from "@/components/AnonymousQAManager";
 
@@ -80,6 +81,8 @@ const AdminDashboard = () => {
   const [lawyerToDelete, setLawyerToDelete] = useState<string | null>(null);
   const [showLawyerDeleteConfirm, setShowLawyerDeleteConfirm] = useState(false);
   const [expandedImage, setExpandedImage] = useState<{url: string; title: string} | null>(null);
+  const [showAssignLawyerDialog, setShowAssignLawyerDialog] = useState(false);
+  const [caseToAssign, setCaseToAssign] = useState<{id: string, category?: string} | null>(null);
 
   useEffect(() => {
     fetchAllLawyers();
@@ -320,6 +323,11 @@ const AdminDashboard = () => {
   const handleDeleteLawyer = (lawyerId: string) => {
     setLawyerToDelete(lawyerId);
     setShowLawyerDeleteConfirm(true);
+  };
+
+  const handleAssignLawyer = (caseId: string, category?: string) => {
+    setCaseToAssign({ id: caseId, category });
+    setShowAssignLawyerDialog(true);
   };
 
   const confirmDeleteLawyer = async () => {
@@ -727,7 +735,12 @@ const AdminDashboard = () => {
                             <Eye className="h-4 w-4 mr-2" />
                             View Details
                           </Button>
-                          <Button size="sm" variant="outline" className="justify-start">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="justify-start"
+                            onClick={() => handleAssignLawyer(caseItem.id, caseItem.category)}
+                          >
                             <UserPlus className="h-4 w-4 mr-2" />
                             Assign Lawyer
                           </Button>
@@ -1537,6 +1550,19 @@ const AdminDashboard = () => {
           onClose={() => {
             setShowLawyerDetails(false);
             setSelectedLawyerId(null);
+          }}
+        />
+
+        <AssignLawyerDialog
+          isOpen={showAssignLawyerDialog}
+          onClose={() => {
+            setShowAssignLawyerDialog(false);
+            setCaseToAssign(null);
+          }}
+          caseId={caseToAssign?.id || ''}
+          caseCategory={caseToAssign?.category}
+          onAssign={() => {
+            refreshData();
           }}
         />
 
