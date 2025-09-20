@@ -50,7 +50,7 @@ export function formatCaseStatus(status: string): string {
     case 'submitted':
       return 'Under Review';
     case 'lawyer_assigned':
-      return 'Case Approved';
+      return 'Awaiting Proposal';
     case 'intake':
       return 'In Progress';
     case 'in_progress':

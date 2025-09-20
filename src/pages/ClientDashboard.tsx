@@ -495,7 +495,7 @@ const ClientDashboard = () => {
                         <div className="w-3 h-3 rounded-full bg-success" />
                         <div className="flex-1">
                           <div className="flex items-center justify-between">
-                            <span className="font-medium">Lawyer Assigned</span>
+                            <span className="font-medium">Case Approved</span>
                             <span className="text-sm text-muted-foreground">{formatDate(activeCase.updated_at)}</span>
                           </div>
                         </div>
