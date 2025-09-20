@@ -296,10 +296,26 @@ const Landing = () => {
             <div>
               <h3 className="font-semibold mb-4">Support</h3>
               <ul className="space-y-2 text-muted-foreground">
-                <li>Help Center</li>
-                <li>Contact Us</li>
-                <li>Privacy Policy</li>
-                <li>Terms of Service</li>
+                <li>
+                  <Link to="/help" className="hover:text-primary transition-colors">
+                    Help Center
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/help" className="hover:text-primary transition-colors">
+                    Contact Us
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/privacy-policy" className="hover:text-primary transition-colors">
+                    Privacy Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/terms-of-service" className="hover:text-primary transition-colors">
+                    Terms of Service
+                  </Link>
+                </li>
               </ul>
             </div>
             <div>
