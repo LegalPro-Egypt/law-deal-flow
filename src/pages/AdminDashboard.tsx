@@ -517,19 +517,19 @@ const AdminDashboard = () => {
         {/* Main Content Tabs */}
         <Tabs defaultValue="intakes" className="space-y-6">
           <div className="border-b">
-            <div className="flex overflow-x-auto scrollbar-hide">
-              <TabsList className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 w-full gap-1 sm:gap-2">
-                <TabsTrigger value="intakes" className="whitespace-nowrap">AI Intakes</TabsTrigger>
-                <TabsTrigger value="cases" className="whitespace-nowrap">Cases</TabsTrigger>
-                <TabsTrigger value="lawyers" className="whitespace-nowrap">
+            <div className="overflow-x-auto scrollbar-hide">
+              <TabsList className="inline-flex w-max min-w-full">
+                <TabsTrigger value="intakes" className="whitespace-nowrap flex-shrink-0">AI Intakes</TabsTrigger>
+                <TabsTrigger value="cases" className="whitespace-nowrap flex-shrink-0">Cases</TabsTrigger>
+                <TabsTrigger value="lawyers" className="whitespace-nowrap flex-shrink-0">
                   Lawyers {stats.pendingVerifications > 0 && (
                     <Badge variant="destructive" className="ml-1 text-xs">
                       {stats.pendingVerifications}
                     </Badge>
                   )}
                 </TabsTrigger>
-                <TabsTrigger value="requests" className="whitespace-nowrap">Lawyer Requests</TabsTrigger>
-                <TabsTrigger value="anonymous-qa" className="whitespace-nowrap">Anonymous Q&A</TabsTrigger>
+                <TabsTrigger value="requests" className="whitespace-nowrap flex-shrink-0">Lawyer Requests</TabsTrigger>
+                <TabsTrigger value="anonymous-qa" className="whitespace-nowrap flex-shrink-0">Anonymous Q&A</TabsTrigger>
               </TabsList>
             </div>
           </div>
