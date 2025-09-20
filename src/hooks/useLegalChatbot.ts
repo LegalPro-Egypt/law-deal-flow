@@ -279,33 +279,9 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
         messages: [] // Don't use local messages - read from DB
       }));
 
-      // Write welcome message to case_messages if we have a case_id
-      if (effectiveCaseId) {
-        try {
-          const { error: welcomeError } = await supabase
-            .from('case_messages')
-            .insert({
-              case_id: effectiveCaseId,
-              role: 'assistant',
-              content: getWelcomeMessage(state.mode, state.language),
-              message_type: 'text',
-              metadata: { isWelcomeMessage: true }
-            });
-
-          if (welcomeError) {
-            console.error('Error saving welcome message:', welcomeError);
-            toast({
-              title: "Message Save Warning",
-              description: "Welcome message may not be saved properly.",
-              variant: "default"
-            });
-          } else {
-            console.log('Welcome message saved to case_messages');
-          }
-        } catch (error) {
-          console.error('Error saving welcome message:', error);
-        }
-      }
+      // Welcome message will not be locally written to case_messages.
+      // The server (edge function) persists messages; UI reads from DB via admin views.
+      // Removed local welcome insert to avoid duplicate writes.
 
       // Small delay to ensure conversation is committed to database
       // This helps prevent race conditions with the first user message
@@ -389,40 +365,7 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
       timestamp: new Date(),
     };
 
-    // CRITICAL: Write user message to database FIRST before UI update
-    if (state.mode === 'intake' && activeCaseId) {
-      try {
-        console.log('Saving user message to case_messages with case_id:', activeCaseId);
-        const { error: userMsgError } = await supabase
-          .from('case_messages')
-          .insert({
-            case_id: activeCaseId,
-            role: 'user',
-            content: trimmed,
-            message_type: 'text',
-            metadata: {}
-          });
-
-        if (userMsgError) {
-          console.error('CRITICAL: Failed to save user message:', userMsgError);
-          toast({
-            title: 'Message Save Failed',
-            description: 'Failed to save your message. Please try again.',
-            variant: 'destructive',
-          });
-          return;
-        }
-        console.log('User message saved successfully to case_messages');
-      } catch (error) {
-        console.error('CRITICAL: Error saving user message:', error);
-        toast({
-          title: 'Message Save Failed', 
-          description: 'Failed to save your message. Please try again.',
-          variant: 'destructive',
-        });
-        return;
-      }
-    }
+    // No local write for user message; server-side edge function handles persistence to messages and case_messages.
 
     // Set loading state only - don't add to local messages (read from DB instead)
     setState(prev => ({
@@ -477,40 +420,8 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
         metadata: newExtracted || undefined,
       };
 
-      // CRITICAL: Write AI message to database IMMEDIATELY
-      if (state.mode === 'intake' && activeCaseId) {
-        try {
-          console.log('Saving AI message to case_messages with case_id:', activeCaseId);
-          const { error: aiMsgError } = await supabase
-            .from('case_messages')
-            .insert({
-              case_id: activeCaseId,
-              role: 'assistant',
-              content: aiText,
-              message_type: 'text',
-              metadata: (newExtracted || {}) as any
-            });
+      // No local write for AI message; server-side edge function persists the assistant reply to case_messages.
 
-          if (aiMsgError) {
-            console.error('CRITICAL: Failed to save AI message:', aiMsgError);
-            toast({
-              title: 'AI Response Save Failed',
-              description: 'AI response received but not saved. Please refresh and try again.',
-              variant: 'destructive',
-            });
-            // Don't return here - still show the message to user
-          } else {
-            console.log('AI message saved successfully to case_messages');
-          }
-        } catch (error) {
-          console.error('CRITICAL: Error saving AI message:', error);
-          toast({
-            title: 'AI Response Save Failed',
-            description: 'AI response received but not saved. Please refresh and try again.',
-            variant: 'destructive',
-          });
-        }
-      }
 
       // Sync any returned IDs (legacy support)
       if (data?.conversationId && data.conversationId !== conversationIdRef.current) {

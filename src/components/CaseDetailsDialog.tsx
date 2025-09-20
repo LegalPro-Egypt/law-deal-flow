@@ -161,7 +161,8 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
         console.log('Health check - Case:', caseId, 'Messages:', finalMessages.length, 'Newest:', newestMessage?.created_at);
       }
 
-      setConversation(finalMessages);
+      // De-duplicate before setting state to avoid duplicate bubbles
+      setConversation(dedupeMessages(finalMessages));
     } catch (error: any) {
       console.error('Error fetching conversation:', error);
     }
@@ -251,13 +252,41 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  // De-duplicate messages by deterministic key to guard against double inserts
+  const dedupeMessages = (msgs: ConversationMessage[]) => {
+    const seen = new Set<string>();
+    const result: ConversationMessage[] = [];
+    for (const m of msgs || []) {
+      const key = `${m.case_id}|${m.role}|${m.content}|${m.created_at}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        result.push(m);
+      }
+    }
+    return result;
+  };
+
+  // Sanitize AI summary to enforce neutral third-person POV using client name when available
+  const sanitizeAiSummary = (text?: string, clientName?: string) => {
+    if (!text) return '';
+    const name = clientName && clientName.trim().length > 0 ? clientName.trim() : null;
+    // Replace common second-person pronouns with third-person equivalents
+    let s = text
+      .replace(/\bYou\b/g, name ? name : 'The client')
+      .replace(/\byou\b/g, name ? name : 'the client')
+      .replace(/\bYour\b/g, name ? `${name}'s` : "The client's")
+      .replace(/\byour\b/g, name ? `${name}'s` : "the client's");
+    return s;
+  };
+
+
   const generateSummary = async () => {
     if (!caseId) return;
 
     setGeneratingSummary(true);
     try {
       const { data, error } = await supabase.functions.invoke('generate-conversation-summary', {
-        body: { caseId }
+        body: { caseId, clientName: caseDetails?.client_name }
       });
 
       if (error) throw error;
