@@ -256,6 +256,35 @@
   max-width: 120px;
 }
 
+/* RTL List Utilities */
+.rtl-list {
+  padding-inline-start: 1.25rem;
+  list-style: none;
+  position: relative;
+}
+
+.rtl-list li {
+  position: relative;
+}
+
+.rtl-list li::before {
+  content: '•';
+  position: absolute;
+  inset-inline-start: -1rem;
+  color: currentColor;
+}
+
+/* RTL Direction Utilities */
+.rtl-dir {
+  direction: rtl;
+  text-align: right;
+}
+
+.ltr-dir {
+  direction: ltr;
+  text-align: left;
+}
+
 /* RTL Mobile Optimization */
 @media (max-width: 767px) {
   .rtl-mobile-container {

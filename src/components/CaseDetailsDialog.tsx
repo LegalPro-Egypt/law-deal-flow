@@ -528,7 +528,7 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                 </TabsTrigger>
               </TabsList>
 
-              <ScrollArea className="h-[60vh] mt-4">
+              <ScrollArea className="h-[60vh] mt-4 overflow-x-hidden">
                 <TabsContent value="overview" className="space-y-4">
                   {/* Case Status and Priority */}
                   <div className="grid md:grid-cols-3 gap-4">
@@ -847,32 +847,32 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                     <div className="space-y-4">
                       {/* Case Summary */}
                       {caseAnalysis.analysis_data.caseSummary && (
-                        <Card>
-                          <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                              <BookOpen className="h-4 w-4" />
-                              {t('caseDetails.legalAnalysis.caseSummary')}
-                            </CardTitle>
-                          </CardHeader>
-                           <CardContent>
-                             <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
-                               {analysis.caseSummary}
-                             </p>
-                           </CardContent>
-                        </Card>
+                          <Card>
+                           <CardHeader>
+                             <CardTitle className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}>
+                               <BookOpen className="h-4 w-4" />
+                               {t('caseDetails.legalAnalysis.caseSummary')}
+                             </CardTitle>
+                           </CardHeader>
+                            <CardContent>
+                              <p className={`text-sm whitespace-pre-wrap break-words leading-relaxed ${isRTL() ? 'rtl-dir' : 'ltr-dir'}`} dir={isRTL() ? 'rtl' : 'ltr'}>
+                                {analysis.caseSummary}
+                              </p>
+                            </CardContent>
+                         </Card>
                       )}
 
                        {/* Applicable Laws */}
                        {(() => {
                          const laws = analysis?.applicableLaws || caseAnalysis?.analysis_data?.applicableLaws || [];
                          return laws.length > 0 && (
-                        <Card>
-                           <CardHeader>
-                             <CardTitle className="flex items-center gap-2">
-                               <Scale className="h-4 w-4" />
-                               {t('caseDetails.legalAnalysis.applicableLaws')}
-                             </CardTitle>
-                           </CardHeader>
+                         <Card>
+                            <CardHeader>
+                              <CardTitle className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}>
+                                <Scale className="h-4 w-4" />
+                                {t('caseDetails.legalAnalysis.applicableLaws')}
+                              </CardTitle>
+                            </CardHeader>
                             <CardContent>
                               <div className="space-y-3">
                                  {(analysis?.applicableLaws || caseAnalysis?.analysis_data?.applicableLaws || []).map((law: any, index: number) => (
@@ -900,13 +900,13 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
 
                       {/* Recommended Specialization */}
                       {analysis?.recommendedSpecialization && (
-                        <Card>
-                          <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                              <Target className="h-4 w-4" />
-                              {t('caseDetails.legalAnalysis.recommendedSpecialization')}
-                            </CardTitle>
-                          </CardHeader>
+                         <Card>
+                           <CardHeader>
+                             <CardTitle className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}>
+                               <Target className="h-4 w-4" />
+                               {t('caseDetails.legalAnalysis.recommendedSpecialization')}
+                             </CardTitle>
+                           </CardHeader>
                            <CardContent>
                              <div className="space-y-3">
                                {analysis.recommendedSpecialization.primaryArea && (
@@ -920,19 +920,19 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                                {analysis.recommendedSpecialization.secondaryAreas?.length > 0 && (
                                  <div>
                                    <h4 className="font-medium mb-2">{t('caseDetails.legalAnalysis.secondaryAreas')}</h4>
-                                   <ul className={`list-disc ${isRTL() ? 'pr-5' : 'pl-5'} space-y-1`}>
-                                     {analysis.recommendedSpecialization.secondaryAreas.map((area: string, i: number) => (
-                                       <li key={i} className="text-sm break-words">{area}</li>
-                                     ))}
-                                   </ul>
+                                    <ul className={`rtl-list space-y-1 ${isRTL() ? 'rtl-dir' : 'ltr-dir'}`} dir={isRTL() ? 'rtl' : 'ltr'}>
+                                      {analysis.recommendedSpecialization.secondaryAreas.map((area: string, i: number) => (
+                                        <li key={i} className="text-sm break-words">{area}</li>
+                                      ))}
+                                    </ul>
                                  </div>
                                )}
                                {analysis.recommendedSpecialization.reasoning && (
                                  <div>
                                    <h4 className="font-medium mb-2">{t('caseDetails.legalAnalysis.reasoning')}</h4>
-                                   <p className="text-sm text-muted-foreground whitespace-pre-wrap break-words leading-relaxed">
-                                     {analysis.recommendedSpecialization.reasoning}
-                                   </p>
+                                    <p className={`text-sm text-muted-foreground whitespace-pre-wrap break-words leading-relaxed ${isRTL() ? 'rtl-dir' : 'ltr-dir'}`} dir={isRTL() ? 'rtl' : 'ltr'}>
+                                      {analysis.recommendedSpecialization.reasoning}
+                                    </p>
                                  </div>
                                )}
                             </div>
@@ -942,68 +942,68 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
 
                         {/* Legal Strategy */}
                          {analysis?.legalStrategy && (
-                         <Card>
-                            <CardHeader>
-                              <CardTitle className="flex items-center gap-2">
-                                <Target className="h-4 w-4" />
-                                {t('caseDetails.legalAnalysis.legalStrategy')}
-                              </CardTitle>
-                            </CardHeader>
+                          <Card>
+                             <CardHeader>
+                               <CardTitle className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}>
+                                 <Target className="h-4 w-4" />
+                                 {t('caseDetails.legalAnalysis.legalStrategy')}
+                               </CardTitle>
+                             </CardHeader>
                              <CardContent className="space-y-4">
                                 {analysis.legalStrategy.immediateSteps?.length > 0 && (
                                  <div>
                                    <h4 className="font-medium mb-2">{t('caseDetails.legalAnalysis.immediateSteps')}</h4>
-                                   <ul className={`list-disc ${isRTL() ? 'pr-5' : 'pl-5'} space-y-1`}>
-                                      {analysis.legalStrategy.immediateSteps.map((step: string, i: number) => (
-                                       <li key={i} className="text-sm break-words">{step}</li>
-                                     ))}
-                                   </ul>
+                                    <ul className={`rtl-list space-y-1 ${isRTL() ? 'rtl-dir' : 'ltr-dir'}`} dir={isRTL() ? 'rtl' : 'ltr'}>
+                                       {analysis.legalStrategy.immediateSteps.map((step: string, i: number) => (
+                                        <li key={i} className="text-sm break-words">{step}</li>
+                                      ))}
+                                    </ul>
                                  </div>
                                 )}
                                  {analysis.legalStrategy.documentation?.length > 0 && (
                                    <div>
                                      <h4 className="font-medium mb-2">{t('caseDetails.legalAnalysis.requiredDocumentation')}</h4>
-                                     <ul className={`list-disc ${isRTL() ? 'pr-5' : 'pl-5'} space-y-1`}>
-                                       {analysis.legalStrategy.documentation.map((doc: string, i: number) => (
-                                         <li key={i} className="text-sm break-words">{doc}</li>
-                                       ))}
-                                     </ul>
+                                      <ul className={`rtl-list space-y-1 ${isRTL() ? 'rtl-dir' : 'ltr-dir'}`} dir={isRTL() ? 'rtl' : 'ltr'}>
+                                        {analysis.legalStrategy.documentation.map((doc: string, i: number) => (
+                                          <li key={i} className="text-sm break-words">{doc}</li>
+                                        ))}
+                                      </ul>
                                    </div>
                                  )}
                                  {analysis.legalStrategy.timeline && (
                                   <div>
                                     <h4 className="font-medium mb-2">{t('caseDetails.legalAnalysis.timeline')}</h4>
-                                     <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
-                                       {analysis.legalStrategy.timeline}
-                                     </p>
+                                      <p className={`text-sm whitespace-pre-wrap break-words leading-relaxed ${isRTL() ? 'rtl-dir' : 'ltr-dir'}`} dir={isRTL() ? 'rtl' : 'ltr'}>
+                                        {analysis.legalStrategy.timeline}
+                                      </p>
                                   </div>
                                 )}
                                 {/* Risks */}
                                 {analysis.legalStrategy.risks?.length > 0 && (
                                  <div>
-                                   <h4 className="font-medium mb-2 flex items-center gap-2">
-                                     <AlertTriangle className="h-4 w-4 text-orange-500" />
-                                     {t('caseDetails.legalAnalysis.risks')}
-                                   </h4>
-                                   <ul className={`list-disc ${isRTL() ? 'pr-5' : 'pl-5'} space-y-1`}>
-                                     {analysis.legalStrategy.risks.map((risk: string, i: number) => (
-                                       <li key={i} className="text-sm break-words">{risk}</li>
-                                     ))}
-                                   </ul>
+                                    <h4 className={`font-medium mb-2 flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}>
+                                      <AlertTriangle className="h-4 w-4 text-orange-500" />
+                                      {t('caseDetails.legalAnalysis.risks')}
+                                    </h4>
+                                    <ul className={`rtl-list space-y-1 ${isRTL() ? 'rtl-dir' : 'ltr-dir'}`} dir={isRTL() ? 'rtl' : 'ltr'}>
+                                      {analysis.legalStrategy.risks.map((risk: string, i: number) => (
+                                        <li key={i} className="text-sm break-words">{risk}</li>
+                                      ))}
+                                    </ul>
                                  </div>
                                 )}
                                 {/* Opportunities */}
                                 {analysis.legalStrategy.opportunities?.length > 0 && (
                                  <div>
-                                   <h4 className="font-medium mb-2 flex items-center gap-2">
-                                     <CheckCircle className="h-4 w-4 text-green-500" />
-                                     {t('caseDetails.legalAnalysis.opportunities')}
-                                   </h4>
-                                   <ul className={`list-disc ${isRTL() ? 'pr-5' : 'pl-5'} space-y-1`}>
-                                     {analysis.legalStrategy.opportunities.map((opportunity: string, i: number) => (
-                                       <li key={i} className="text-sm break-words">{opportunity}</li>
-                                     ))}
-                                   </ul>
+                                    <h4 className={`font-medium mb-2 flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}>
+                                      <CheckCircle className="h-4 w-4 text-green-500" />
+                                      {t('caseDetails.legalAnalysis.opportunities')}
+                                    </h4>
+                                    <ul className={`rtl-list space-y-1 ${isRTL() ? 'rtl-dir' : 'ltr-dir'}`} dir={isRTL() ? 'rtl' : 'ltr'}>
+                                      {analysis.legalStrategy.opportunities.map((opportunity: string, i: number) => (
+                                        <li key={i} className="text-sm break-words">{opportunity}</li>
+                                      ))}
+                                    </ul>
                                  </div>
                                 )}
                             </CardContent>
@@ -1012,13 +1012,13 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
 
                        {/* Case Complexity */}
                        {analysis?.caseComplexity && (
-                         <Card>
-                           <CardHeader>
-                             <CardTitle className="flex items-center gap-2">
-                               <Shield className="h-4 w-4" />
-                               {t('caseDetails.legalAnalysis.caseComplexity')}
-                             </CardTitle>
-                           </CardHeader>
+                          <Card>
+                            <CardHeader>
+                              <CardTitle className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}>
+                                <Shield className="h-4 w-4" />
+                                {t('caseDetails.legalAnalysis.caseComplexity')}
+                              </CardTitle>
+                            </CardHeader>
                            <CardContent>
                              <div className="space-y-3">
                                <div className="flex items-center gap-2">
@@ -1036,11 +1036,11 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                                {analysis.caseComplexity.factors?.length > 0 && (
                                  <div>
                                    <h4 className="font-medium mb-2">{t('caseDetails.legalAnalysis.complexityFactors')}</h4>
-                                   <ul className={`list-disc ${isRTL() ? 'pr-5' : 'pl-5'} space-y-1`}>
-                                     {analysis.caseComplexity.factors.map((factor: string, i: number) => (
-                                       <li key={i} className="text-sm break-words">{factor}</li>
-                                     ))}
-                                   </ul>
+                                    <ul className={`rtl-list space-y-1 ${isRTL() ? 'rtl-dir' : 'ltr-dir'}`} dir={isRTL() ? 'rtl' : 'ltr'}>
+                                      {analysis.caseComplexity.factors.map((factor: string, i: number) => (
+                                        <li key={i} className="text-sm break-words">{factor}</li>
+                                      ))}
+                                    </ul>
                                  </div>
                                )}
                              </div>
