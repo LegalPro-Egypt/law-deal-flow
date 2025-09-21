@@ -34,6 +34,7 @@ import { DocumentPreview } from './DocumentPreview';
 import { getClientNameForRole, shouldShowContactInfo } from '@/utils/clientPrivacy';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/hooks/useLanguage';
+import { useContentTranslation } from '@/hooks/useContentTranslation';
 
 interface CaseDetailsDialogProps {
   caseId: string | null;
@@ -94,6 +95,7 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
 }) => {
   const { profile } = useAuth();
   const { t, isRTL } = useLanguage();
+  const { translateText } = useContentTranslation();
   const [caseDetails, setCaseDetails] = useState<CaseDetails | null>(null);
   const [conversation, setConversation] = useState<ConversationMessage[]>([]);
   const [documents, setDocuments] = useState<CaseDocument[]>([]);
@@ -103,6 +105,7 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
   const [generatingAnalysis, setGeneratingAnalysis] = useState(false);
   const [previewDocument, setPreviewDocument] = useState<CaseDocument | null>(null);
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
+  const [translatedContent, setTranslatedContent] = useState<Record<string, string>>({});
   const { toast } = useToast();
 
   useEffect(() => {
@@ -294,6 +297,80 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
       .replace(/\byour\b/g, name ? `${name}'s` : "the client's");
     return s;
   };
+
+  // Translation helper functions
+  const getTranslatedContent = async (key: string, originalText: string, sourceLanguage = 'en') => {
+    if (translatedContent[key]) {
+      return translatedContent[key];
+    }
+    
+    try {
+      const translated = await translateText(originalText, sourceLanguage);
+      setTranslatedContent(prev => ({ ...prev, [key]: translated }));
+      return translated;
+    } catch (error) {
+      console.error('Translation error:', error);
+      return originalText;
+    }
+  };
+
+  // Auto-translate content when language changes
+  useEffect(() => {
+    if (caseDetails && isRTL()) {
+      // Translate case content
+      getTranslatedContent('title', caseDetails.title);
+      getTranslatedContent('description', caseDetails.description);
+      if (caseDetails.ai_summary) {
+        getTranslatedContent('ai_summary', caseDetails.ai_summary);
+      }
+    }
+  }, [caseDetails, isRTL]);
+
+  useEffect(() => {
+    if (caseAnalysis && isRTL()) {
+      // Translate legal analysis content
+      const analysisData = caseAnalysis.analysis_data;
+      if (analysisData) {
+        if (analysisData.caseSummary) {
+          getTranslatedContent('case_summary', analysisData.caseSummary);
+        }
+        if (analysisData.legalStrategy) {
+          getTranslatedContent('legal_strategy', analysisData.legalStrategy);
+        }
+        if (analysisData.applicableLaws) {
+          getTranslatedContent('applicable_laws', analysisData.applicableLaws);
+        }
+        if (analysisData.recommendations) {
+          getTranslatedContent('recommendations', analysisData.recommendations);
+        }
+        if (analysisData.complexityFactors) {
+          getTranslatedContent('complexity_factors', analysisData.complexityFactors);
+        }
+        // Translate individual laws and relevance
+        if (analysisData.applicableLaws && Array.isArray(analysisData.applicableLaws)) {
+          analysisData.applicableLaws.forEach((law: any, index: number) => {
+            if (law.law) {
+              getTranslatedContent(`law_${index}`, law.law);
+            }
+            if (law.relevance) {
+              getTranslatedContent(`law_relevance_${index}`, law.relevance);
+            }
+          });
+        }
+      }
+    }
+  }, [caseAnalysis, isRTL]);
+
+  useEffect(() => {
+    if (documents.length > 0 && isRTL()) {
+      // Translate document categories
+      documents.forEach(doc => {
+        if (doc.document_category) {
+          getTranslatedContent(`doc_category_${doc.id}`, doc.document_category);
+        }
+      });
+    }
+  }, [documents, isRTL]);
 
 
   const generateSummary = async () => {
@@ -563,7 +640,9 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                     <CardContent className="space-y-4">
                       <div>
                         <h4 className="font-medium">{t('caseDetails.caseInfo.caseTitle')}</h4>
-                        <p className="text-sm text-muted-foreground">{caseDetails.title}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {isRTL() ? translatedContent['title'] || caseDetails.title : caseDetails.title}
+                        </p>
                       </div>
                       <div>
                         <h4 className="font-medium">{t('caseDetails.caseInfo.category')}</h4>
@@ -576,7 +655,9 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                       </div>
                       <div>
                         <h4 className="font-medium">{t('caseDetails.caseInfo.description')}</h4>
-                        <p className="text-sm text-muted-foreground">{caseDetails.description}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {isRTL() ? translatedContent['description'] || caseDetails.description : caseDetails.description}
+                        </p>
                       </div>
                     </CardContent>
                   </Card>
@@ -621,7 +702,12 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <p className="text-sm">{caseDetails.ai_summary}</p>
+                        <p className="text-sm">
+                          {isRTL() ? 
+                            sanitizeAiSummary(translatedContent['ai_summary'] || caseDetails.ai_summary, caseDetails.client_name) :
+                            sanitizeAiSummary(caseDetails.ai_summary, caseDetails.client_name)
+                          }
+                        </p>
                       </CardContent>
                     </Card>
                   )}
@@ -717,12 +803,14 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                       {documents.map((doc) => (
                         <Card key={doc.id}>
                           <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <FileText className="h-8 w-8 text-blue-600" />
-                                <div>
-                                  <h4 className="font-medium">{doc.file_name}</h4>
-                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <div className="flex items-center justify-between gap-4">
+                              <div className="flex items-center gap-3 min-w-0 flex-1">
+                                <FileText className="h-8 w-8 text-blue-600 flex-shrink-0" />
+                                <div className="min-w-0 flex-1">
+                                  <h4 className="font-medium truncate" title={doc.file_name}>
+                                    {doc.file_name}
+                                  </h4>
+                                  <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
                                     <span>{doc.file_type.toUpperCase()}</span>
                                     <span>•</span>
                                     <span>{formatFileSize(doc.file_size)}</span>
@@ -731,15 +819,21 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                                   </div>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 flex-shrink-0">
                                 {doc.document_category && (
-                                  <Badge variant="outline">{doc.document_category}</Badge>
+                                  <Badge variant="outline" className="hidden sm:inline-flex">
+                                    {isRTL() ? 
+                                      translatedContent[`doc_category_${doc.id}`] || doc.document_category :
+                                      doc.document_category
+                                    }
+                                  </Badge>
                                 )}
                                 <Button
                                   variant="outline"
                                   size="sm"
                                   onClick={() => viewDocument(doc)}
                                   disabled={loadingStates[`view-${doc.id}`]}
+                                  title={t('caseDetails.documents.view')}
                                 >
                                   {loadingStates[`view-${doc.id}`] ? (
                                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
@@ -752,6 +846,7 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                                   size="sm"
                                   onClick={() => downloadDocument(doc)}
                                   disabled={loadingStates[`download-${doc.id}`]}
+                                  title={t('caseDetails.documents.download')}
                                 >
                                   {loadingStates[`download-${doc.id}`] ? (
                                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
@@ -835,7 +930,12 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                             </CardTitle>
                           </CardHeader>
                           <CardContent>
-                            <p className="text-sm">{caseAnalysis.analysis_data.caseSummary}</p>
+                            <p className="text-sm">
+                              {isRTL() ? 
+                                translatedContent['case_summary'] || caseAnalysis.analysis_data.caseSummary :
+                                caseAnalysis.analysis_data.caseSummary
+                              }
+                            </p>
                           </CardContent>
                         </Card>
                       )}
@@ -853,7 +953,12 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                              <div className="space-y-3">
                                {caseAnalysis.analysis_data.applicableLaws.map((law: any, index: number) => (
                                  <div key={index} className="p-3 border rounded-lg">
-                                   <h4 className="font-medium">{law.law}</h4>
+                                    <h4 className="font-medium">
+                                      {isRTL() ? 
+                                        translatedContent[`law_${index}`] || law.law :
+                                        law.law
+                                      }
+                                    </h4>
                                    {law.articles && law.articles.length > 0 && (
                                      <div className="mt-2 flex flex-wrap gap-1">
                                        {law.articles.map((article: string, i: number) => (
@@ -863,9 +968,14 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                                        ))}
                                      </div>
                                    )}
-                                   {law.relevance && (
-                                     <p className="text-sm text-muted-foreground mt-2">{law.relevance}</p>
-                                   )}
+                                    {law.relevance && (
+                                      <p className="text-sm text-muted-foreground mt-2">
+                                        {isRTL() ? 
+                                          translatedContent[`law_relevance_${index}`] || law.relevance :
+                                          law.relevance
+                                        }
+                                      </p>
+                                    )}
                                  </div>
                                ))}
                              </div>
