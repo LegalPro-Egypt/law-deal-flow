@@ -225,7 +225,7 @@ const Landing = () => {
                 </p>
               </div>
               <div className={`order-2 ${isRTL() ? 'md:order-1' : 'md:order-1'}`}>
-                <div className="bg-muted/50 rounded-lg p-8 h-64 flex items-center justify-center">
+                <div className="bg-muted/50 rounded-lg p-8 h-80 flex items-center justify-center">
                   <MessageSquare className="h-24 w-24 text-primary" />
                 </div>
               </div>
@@ -241,7 +241,7 @@ const Landing = () => {
                 </p>
               </div>
               <div className="order-2">
-                <div className="bg-muted/50 rounded-lg p-8 h-64 flex items-center justify-center">
+                <div className="bg-muted/50 rounded-lg p-8 h-80 flex items-center justify-center">
                   <Users className="h-24 w-24 text-primary" />
                 </div>
               </div>
@@ -257,7 +257,7 @@ const Landing = () => {
                 </p>
               </div>
               <div className={`order-2 ${isRTL() ? 'md:order-1' : 'md:order-1'}`}>
-                <div className="bg-muted/50 rounded-lg p-8 h-64 flex items-center justify-center">
+                <div className="bg-muted/50 rounded-lg p-8 h-80 flex items-center justify-center">
                   <Shield className="h-24 w-24 text-primary" />
                 </div>
               </div>
