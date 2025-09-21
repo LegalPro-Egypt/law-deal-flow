@@ -54,13 +54,28 @@ serve(async (req) => {
     // Initialize Supabase client
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Fetch case data using separate queries (same approach as admin dashboard)
-    console.log('Fetching case data for case:', caseId);
-    
-    // 1. Fetch base case data
+    // Fetch comprehensive case data including lawyer profile
     const { data: caseData, error: caseError } = await supabase
       .from('cases')
-      .select('*')
+      .select(`
+        *,
+        documents(file_name, document_category, ocr_text),
+        case_analysis(analysis_data, analysis_type),
+        case_messages(content, role, created_at),
+        conversations!inner(messages(content, role, created_at)),
+        assigned_lawyer:profiles!assigned_lawyer_id(
+          first_name,
+          last_name,
+          law_firm,
+          office_address,
+          phone,
+          office_phone,
+          email,
+          license_number,
+          specializations,
+          years_experience
+        )
+      `)
       .eq('id', caseId)
       .single();
 
@@ -74,58 +89,6 @@ serve(async (req) => {
       });
     }
 
-    console.log('Base case data fetched successfully');
-
-    // 2. Fetch case messages
-    const { data: caseMessages } = await supabase
-      .from('case_messages')
-      .select('content, role, created_at')
-      .eq('case_id', caseId)
-      .order('created_at', { ascending: true });
-
-    console.log(`Fetched ${caseMessages?.length || 0} case messages`);
-
-    // 3. Fetch documents
-    const { data: documents } = await supabase
-      .from('documents')
-      .select('file_name, document_category, ocr_text')
-      .eq('case_id', caseId);
-
-    console.log(`Fetched ${documents?.length || 0} documents`);
-
-    // 4. Fetch case analysis
-    const { data: caseAnalysis } = await supabase
-      .from('case_analysis')
-      .select('analysis_data, analysis_type')
-      .eq('case_id', caseId);
-
-    console.log(`Fetched ${caseAnalysis?.length || 0} case analysis records`);
-
-    // 5. Fetch assigned lawyer profile (if exists)
-    let lawyerProfile = null;
-    if (caseData.assigned_lawyer_id) {
-      console.log('Fetching lawyer profile for ID:', caseData.assigned_lawyer_id);
-      const { data: lawyer } = await supabase
-        .from('profiles')
-        .select(`
-          first_name,
-          last_name,
-          law_firm,
-          office_address,
-          phone,
-          office_phone,
-          email,
-          license_number,
-          specializations,
-          years_experience
-        `)
-        .eq('user_id', caseData.assigned_lawyer_id)
-        .maybeSingle();
-      
-      lawyerProfile = lawyer;
-      console.log('Lawyer profile fetched:', !!lawyerProfile);
-    }
-
     // Prepare context for AI
     const caseContext = {
       case_number: caseData.case_number,
@@ -137,25 +100,25 @@ serve(async (req) => {
       jurisdiction: caseData.jurisdiction,
       language: caseData.language,
       applicable_laws: caseData.applicable_laws,
-      documents: documents?.map((doc: any) => ({
+      documents: caseData.documents?.map((doc: any) => ({
         name: doc.file_name,
         category: doc.document_category,
         summary: doc.ocr_text?.substring(0, 500) // First 500 chars
       })) || [],
-      legal_analysis: caseAnalysis?.map((analysis: any) => analysis.analysis_data) || [],
-      conversation_history: caseMessages?.slice(-10) || [] // Last 10 messages
+      legal_analysis: caseData.case_analysis?.map((analysis: any) => analysis.analysis_data) || [],
+      conversation_history: caseData.conversations?.[0]?.messages?.slice(-10) || [] // Last 10 messages
     };
 
     // Prepare lawyer information
-    const lawyerInfo = lawyerProfile ? {
-      name: `${lawyerProfile.first_name || ''} ${lawyerProfile.last_name || ''}`.trim(),
-      law_firm: lawyerProfile.law_firm,
-      office_address: lawyerProfile.office_address,
-      phone: lawyerProfile.phone || lawyerProfile.office_phone,
-      email: lawyerProfile.email,
-      license_number: lawyerProfile.license_number,
-      specializations: lawyerProfile.specializations,
-      years_experience: lawyerProfile.years_experience
+    const lawyerInfo = caseData.assigned_lawyer ? {
+      name: `${caseData.assigned_lawyer.first_name || ''} ${caseData.assigned_lawyer.last_name || ''}`.trim(),
+      law_firm: caseData.assigned_lawyer.law_firm,
+      office_address: caseData.assigned_lawyer.office_address,
+      phone: caseData.assigned_lawyer.phone || caseData.assigned_lawyer.office_phone,
+      email: caseData.assigned_lawyer.email,
+      license_number: caseData.assigned_lawyer.license_number,
+      specializations: caseData.assigned_lawyer.specializations,
+      years_experience: caseData.assigned_lawyer.years_experience
     } : null;
 
     const systemPrompt = `You are a professional legal proposal generator for the LegalPro platform. Create a comprehensive, bilingual legal proposal in both English and Arabic with identical content structure.
