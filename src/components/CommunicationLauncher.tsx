@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Video, Phone, MessageCircle, Calendar, Clock, Users } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useTwilioSession } from '@/hooks/useTwilioSession';
+import { useLanguage } from '@/hooks/useLanguage';
 import { TwilioVideoInterface } from './TwilioVideoInterface';
 import { TwilioVoiceInterface } from './TwilioVoiceInterface';
 import { SessionRecordingsPlayer } from './SessionRecordingsPlayer';
@@ -21,6 +22,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
   caseTitle,
   lawyerAssigned = false
 }) => {
+  const { isRTL } = useLanguage();
   const {
     sessions,
     activeSession,
@@ -132,18 +134,18 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
   }
 
   return (
-    <div className="space-y-4">
+    <div className={`space-y-4 ${isRTL() ? 'rtl-dir' : ''}`}>
       {/* Communication Controls */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse justify-end' : ''}`}>
             <Video className="w-5 h-5" />
             Communication
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className={`space-y-4 ${isRTL() ? 'text-right' : ''}`}>
           {!lawyerAssigned ? (
-            <div className="text-center p-4 bg-muted rounded-lg">
+            <div className={`text-center p-4 bg-muted rounded-lg ${isRTL() ? 'text-right' : ''}`}>
               <Users className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
               <p className="text-sm text-muted-foreground">
                 Waiting for lawyer assignment to enable communication
@@ -154,7 +156,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
               <Button
                 onClick={() => handleStartCommunication('video')}
                 disabled={connecting || !!activeCaseSession}
-                className="flex items-center gap-2"
+                className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}
               >
                 <Video className="w-4 h-4" />
                 {connecting ? 'Connecting...' : 'Start Video Call'}
@@ -164,7 +166,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
                 variant="outline"
                 onClick={() => handleStartCommunication('voice')}
                 disabled={connecting || !!activeCaseSession}
-                className="flex items-center gap-2"
+                className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}
               >
                 <Phone className="w-4 h-4" />
                 Voice Call
@@ -172,7 +174,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
               
               <Dialog open={showRecordings} onOpenChange={setShowRecordings}>
                 <DialogTrigger asChild>
-                  <Button variant="outline" className="flex items-center gap-2">
+                  <Button variant="outline" className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}>
                     <MessageCircle className="w-4 h-4" />
                     View Recordings
                   </Button>
@@ -189,8 +191,8 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
 
           {activeCaseSession && (
             <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
+              <div className={`flex items-center justify-between ${isRTL() ? 'flex-row-reverse' : ''}`}>
+                <div className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}>
                   <Badge variant="default" className="animate-pulse">
                     🔴 Active Session
                   </Badge>
@@ -211,25 +213,25 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
       {caseSessions.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse justify-end' : ''}`}>
               <Clock className="w-5 h-5" />
               Recent Sessions
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className={isRTL() ? 'text-right' : ''}>
             <div className="space-y-3">
               {caseSessions.slice(0, 3).map((session) => (
                 <div
                   key={session.id}
-                  className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+                  className={`flex items-center justify-between p-3 bg-muted/50 rounded-lg ${isRTL() ? 'flex-row-reverse' : ''}`}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className={`flex items-center gap-3 ${isRTL() ? 'flex-row-reverse' : ''}`}>
                     {session.session_type === 'video' ? (
                       <Video className="w-4 h-4 text-primary" />
                     ) : (
                       <Phone className="w-4 h-4 text-primary" />
                     )}
-                    <div>
+                    <div className={isRTL() ? 'text-right' : ''}>
                       <p className="text-sm font-medium capitalize">
                         {session.session_type} Session
                       </p>
@@ -239,7 +241,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-2">
+                  <div className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}>
                     <Badge variant={
                       session.status === 'active' ? 'default' :
                       session.status === 'ended' ? 'secondary' :

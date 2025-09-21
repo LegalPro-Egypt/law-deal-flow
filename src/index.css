@@ -236,6 +236,26 @@
   flex-direction: row-reverse;
 }
 
+/* RTL Card Positioning */
+.rtl-card {
+  text-align: right;
+}
+
+.rtl .rtl-card {
+  direction: rtl;
+}
+
+/* RTL Badge and Button Alignment */
+.rtl .rtl-badge-container {
+  justify-content: flex-end;
+}
+
+/* RTL Communication Components */
+.rtl .communication-inbox {
+  text-align: right;
+  direction: rtl;
+}
+
 /* RTL Container Overflow Protection */
 .rtl-safe-container {
   @apply w-full overflow-x-hidden;

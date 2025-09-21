@@ -91,20 +91,20 @@ export const CommunicationInbox: React.FC<CommunicationInboxProps> = ({
   const disabledInfo = getDisabledMessage();
 
   return (
-    <Card className="bg-gradient-card shadow-card">
+    <Card className={`bg-gradient-card shadow-card ${isRTL() ? 'rtl-card' : ''}`}>
       <CardHeader>
-        <CardTitle className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}>
+        <CardTitle className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse justify-end' : ''}`}>
           <MessageSquare className="h-5 w-5" />
           {t('communication.inbox.title')}
         </CardTitle>
-        <CardDescription>
+        <CardDescription className={isRTL() ? 'text-right' : ''}>
           {t(`communication.inbox.description.${userRole}`)}
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className={isRTL() ? 'text-right' : ''}>
         {canCommunicate ? (
           <div className="space-y-4">
-            <div className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}>
+            <div className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse justify-end' : ''}`}>
               <Badge variant="secondary" className="bg-success/10 text-success">
                 {t('communication.status.active')}
               </Badge>
@@ -121,14 +121,14 @@ export const CommunicationInbox: React.FC<CommunicationInboxProps> = ({
             />
           </div>
         ) : (
-          <Alert>
+          <Alert className={isRTL() ? 'text-right' : ''}>
             <disabledInfo.icon className="h-4 w-4" />
             <AlertDescription className="space-y-2">
-              <div className="font-medium">{disabledInfo.title}</div>
-              <div className="text-sm text-muted-foreground">
+              <div className={`font-medium ${isRTL() ? 'text-right' : ''}`}>{disabledInfo.title}</div>
+              <div className={`text-sm text-muted-foreground ${isRTL() ? 'text-right' : ''}`}>
                 {disabledInfo.description}
               </div>
-              <div className={`flex items-center gap-2 mt-2 ${isRTL() ? 'flex-row-reverse' : ''}`}>
+              <div className={`flex items-center gap-2 mt-2 ${isRTL() ? 'flex-row-reverse justify-end' : ''}`}>
                 <Badge variant="outline" className="text-xs">
                   {t('communication.labels.status')} {t(`dashboard.cases.status.${caseStatus}`, caseStatus)}
                 </Badge>
