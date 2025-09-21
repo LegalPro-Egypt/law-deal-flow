@@ -26,6 +26,21 @@ serve(async (req) => {
     // Create Supabase client with service role key for database operations
     const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
+    // If caseId is provided, fetch the case language
+    let caseLanguage = language;
+    if (caseId) {
+      const { data: caseInfo } = await supabase
+        .from('cases')
+        .select('language')
+        .eq('id', caseId)
+        .single();
+      
+      if (caseInfo?.language) {
+        caseLanguage = caseInfo.language;
+        console.log('Using case language:', caseLanguage);
+      }
+    }
+
     // If caseId is provided, create a pending analysis record first
     if (caseId) {
       const { error: insertError } = await supabase
@@ -42,7 +57,88 @@ serve(async (req) => {
       }
     }
 
-    const systemPrompt = `You are an expert Egyptian legal consultant AI assistant. You will analyze legal conversations and provide comprehensive legal analysis in JSON format.
+    const getSystemPrompt = (language: string, category: string) => {
+      switch (language) {
+        case 'ar':
+          return `أنت مساعد ذكي متخصص في الاستشارات القانونية المصرية. ستقوم بتحليل المحادثات القانونية وتقديم تحليل قانوني شامل بصيغة JSON.
+
+يجب أن تكون إجابتك عبارة عن كائن JSON صحيح بالهيكل التالي:
+{
+  "caseSummary": "ملخص موجز للقضية القانونية",
+  "applicableLaws": [
+    {
+      "law": "اسم القانون",
+      "articles": ["أرقام المواد"],
+      "relevance": "كيفية تطبيق هذا القانون"
+    }
+  ],
+  "recommendedSpecialization": {
+    "primaryArea": "المجال القانوني الأساسي",
+    "secondaryAreas": ["قائمة المجالات الثانوية"],
+    "reasoning": "سبب توصية هذه المجالات"
+  },
+  "legalStrategy": {
+    "immediateSteps": ["قائمة الإجراءات الفورية"],
+    "documentation": ["الوثائق المطلوبة"],
+    "timeline": "الجدول الزمني المتوقع",
+    "risks": ["المخاطر المحتملة"],
+    "opportunities": ["الجوانب المؤاتية"]
+  },
+  "caseComplexity": {
+    "level": "منخفض|متوسط|مرتفع",
+    "factors": ["عوامل التعقيد"],
+    "estimatedCost": "تقدير التكلفة"
+  },
+  "jurisdiction": "مصر",
+  "urgency": "منخفض|متوسط|مرتفع"
+}
+
+ركز على القانون المصري عند الإمكان. قدم نصائح عملية وقابلة للتنفيذ. اعتبر السياق الثقافي والقانوني لمصر.
+
+الفئة: ${category}
+اللغة: ${language}`;
+
+        case 'de':
+          return `Sie sind ein Experte für ägyptische Rechtsberatung. Sie werden Rechtsgespräche analysieren und eine umfassende Rechtsanalyse im JSON-Format bereitstellen.
+
+Ihre Antwort muss ein gültiges JSON-Objekt mit der folgenden Struktur sein:
+{
+  "caseSummary": "Kurze Zusammenfassung des Rechtsproblems",
+  "applicableLaws": [
+    {
+      "law": "Gesetzesname",
+      "articles": ["Artikelnummern"],
+      "relevance": "Wie dieses Gesetz gilt"
+    }
+  ],
+  "recommendedSpecialization": {
+    "primaryArea": "Primärer Rechtsbereich",
+    "secondaryAreas": ["Liste sekundärer Bereiche"],
+    "reasoning": "Warum diese Bereiche empfohlen werden"
+  },
+  "legalStrategy": {
+    "immediateSteps": ["Liste sofortiger Maßnahmen"],
+    "documentation": ["erforderliche Dokumente"],
+    "timeline": "erwarteter Zeitplan",
+    "risks": ["potentielle Risiken"],
+    "opportunities": ["günstige Aspekte"]
+  },
+  "caseComplexity": {
+    "level": "niedrig|mittel|hoch",
+    "factors": ["Komplexitätsfaktoren"],
+    "estimatedCost": "Kostenschätzung"
+  },
+  "jurisdiction": "ägypten",
+  "urgency": "niedrig|mittel|hoch"
+}
+
+Konzentrieren Sie sich auf ägyptisches Recht, wenn zutreffend. Geben Sie praktische, umsetzbare Ratschläge. Berücksichtigen Sie den kulturellen und rechtlichen Kontext für Ägypten.
+
+Kategorie: ${category}
+Sprache: ${language}`;
+
+        default: // English
+          return `You are an expert Egyptian legal consultant AI assistant. You will analyze legal conversations and provide comprehensive legal analysis in JSON format.
 
 Your response must be a valid JSON object with the following structure:
 {
@@ -78,7 +174,11 @@ Your response must be a valid JSON object with the following structure:
 Focus on Egyptian law when applicable. Provide practical, actionable advice. Consider cultural and legal context for Egypt.
 
 Category: ${category}
-Language: ${language}`;
+Language: ${caseLanguage}`;
+      }
+    };
+
+    const systemPrompt = getSystemPrompt(caseLanguage, category);
 
     const conversationMessages = [
       { role: 'system', content: systemPrompt },

@@ -17,14 +17,6 @@ serve(async (req) => {
   }
 
   try {
-    const { caseId, clientName } = await req.json();
-
-    if (!caseId) {
-      throw new Error('Case ID is required');
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
     // Fetch case information including language
     const { data: caseInfo, error: caseError } = await supabase
       .from('cases')
@@ -56,7 +48,7 @@ serve(async (req) => {
       `)
       .eq('case_id', caseId)
       .maybeSingle();
-    
+
     if (linkedConversation) {
       conversationData = linkedConversation;
     } else {
