@@ -67,34 +67,32 @@ const Landing = () => {
     <div className={`min-h-screen ${isRTL() ? 'rtl' : 'ltr'}`}>
       {/* Header */}
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className={`flex items-center justify-between h-16 ${isRTL() ? 'flex-row-reverse' : ''}`}>
-            <div className={`flex items-center space-x-2 ${isRTL() ? 'space-x-reverse' : ''}`}>
-              <Scale className="h-8 w-8 text-primary" />
-              <span className="text-xl font-bold">LegalPro</span>
-            </div>
-            <div className={`flex items-center gap-1 sm:gap-4 ${isRTL() ? 'flex-row-reverse' : ''}`}>
-              <LanguageToggle />
-              <Link to="/legal-database">
-                <Button variant="ghost">{t('landing.header.guides')}</Button>
-              </Link>
-              <Link to="/auth?force=true">
-                <Button variant="ghost" className="hidden sm:inline-flex">{t('landing.header.signIn')}</Button>
-              </Link>
-              <Link to="/auth?force=true">
-                <Button className="bg-gradient-primary shadow-hero text-sm px-3 sm:px-4">
-                  <span className="sm:hidden">{t('landing.header.signIn')}</span>
-                  <span className="hidden sm:inline">{t('landing.header.getStarted')}</span>
-                </Button>
-              </Link>
-            </div>
+        <div className="rtl-header-container h-16">
+          <div className={`flex items-center space-x-2 ${isRTL() ? 'space-x-reverse' : ''}`}>
+            <Scale className="h-8 w-8 text-primary" />
+            <span className="text-xl font-bold">LegalPro</span>
+          </div>
+          <div className={`flex items-center gap-1 sm:gap-3 ${isRTL() ? 'flex-row-reverse' : ''}`}>
+            <LanguageToggle />
+            <Link to="/legal-database">
+              <Button variant="ghost" size="sm">{t('landing.header.guides')}</Button>
+            </Link>
+            <Link to="/auth?force=true">
+              <Button variant="ghost" size="sm" className="hidden sm:inline-flex">{t('landing.header.signIn')}</Button>
+            </Link>
+            <Link to="/auth?force=true">
+              <Button size="sm" className="bg-gradient-primary shadow-hero text-sm px-3 sm:px-4">
+                <span className="sm:hidden">{t('landing.header.signIn')}</span>
+                <span className="hidden sm:inline">{t('landing.header.getStarted')}</span>
+              </Button>
+            </Link>
           </div>
         </div>
       </header>
 
       {/* Hero Section */}
       <section className="bg-gradient-hero text-white py-20 sm:py-32">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="rtl-hero-container">
           <div className="max-w-4xl mx-auto text-center animate-fade-in">
             <h1 className="text-4xl sm:text-6xl font-bold mb-6">
               {t('landing.hero.title')}{" "}
