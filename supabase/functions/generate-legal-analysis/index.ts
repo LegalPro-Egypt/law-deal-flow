@@ -84,8 +84,7 @@ Your response must be a valid JSON object with the following structure:
   },
   "caseComplexity": {
     "level": "low|medium|high",
-    "factors": ["complexity factors"],
-    "estimatedCost": "cost estimate"
+    "factors": ["complexity factors"]
   },
   "jurisdiction": "egypt",
   "urgency": "low|medium|high"
@@ -122,8 +121,7 @@ Category: ${category}`;
   },
   "caseComplexity": {
     "level": "منخفض|متوسط|مرتفع",
-    "factors": ["عوامل التعقيد"],
-    "estimatedCost": "تقدير التكلفة"
+    "factors": ["عوامل التعقيد"]
   },
   "jurisdiction": "مصر",
   "urgency": "منخفض|متوسط|مرتفع"
@@ -224,8 +222,7 @@ Please provide your analysis in the exact JSON format specified.`;
         },
         caseComplexity: {
           level: 'medium',
-          factors: ["Requires professional legal assessment"],
-          estimatedCost: "To be determined"
+          factors: ["Requires professional legal assessment"]
         },
         jurisdiction: "egypt",
         urgency: 'medium'
@@ -262,8 +259,7 @@ Please provide your analysis in the exact JSON format specified.`;
         },
         caseComplexity: {
           level: 'متوسط',
-          factors: ["يتطلب تقييم قانوني مهني"],
-          estimatedCost: "يتم تحديدها"
+          factors: ["يتطلب تقييم قانوني مهني"]
         },
         jurisdiction: "مصر",
         urgency: 'متوسط'

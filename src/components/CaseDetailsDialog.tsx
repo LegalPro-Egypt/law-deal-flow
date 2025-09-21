@@ -901,68 +901,171 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                         </Card>
                       )}
 
-                      {/* Legal Strategy */}
-                       {(currentLanguage === 'ar' 
-                         ? (caseAnalysis.analysis_data.ar?.legalStrategy || caseAnalysis.analysis_data.legalStrategy)
-                         : (caseAnalysis.analysis_data.en?.legalStrategy || caseAnalysis.analysis_data.legalStrategy)
-                       ) && (
+                      {/* Recommended Specialization */}
+                      {(currentLanguage === 'ar' 
+                        ? (caseAnalysis.analysis_data.ar?.recommendedSpecialization || caseAnalysis.analysis_data.recommendedSpecialization)
+                        : (caseAnalysis.analysis_data.en?.recommendedSpecialization || caseAnalysis.analysis_data.recommendedSpecialization)
+                      ) && (
                         <Card>
-                           <CardHeader>
-                             <CardTitle className="flex items-center gap-2">
-                               <Target className="h-4 w-4" />
-                               {t('caseDetails.legalAnalysis.legalStrategy')}
-                             </CardTitle>
-                           </CardHeader>
-                           <CardContent className="space-y-4">
+                          <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                              <Target className="h-4 w-4" />
+                              {t('caseDetails.legalAnalysis.recommendedSpecialization')}
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-3">
                               {(currentLanguage === 'ar' 
-                                ? (caseAnalysis.analysis_data.ar?.legalStrategy?.immediateSteps || caseAnalysis.analysis_data.legalStrategy?.immediateSteps)
-                                : (caseAnalysis.analysis_data.en?.legalStrategy?.immediateSteps || caseAnalysis.analysis_data.legalStrategy?.immediateSteps)
+                                ? (caseAnalysis.analysis_data.ar?.recommendedSpecialization?.primaryArea || caseAnalysis.analysis_data.recommendedSpecialization?.primaryArea)
+                                : (caseAnalysis.analysis_data.en?.recommendedSpecialization?.primaryArea || caseAnalysis.analysis_data.recommendedSpecialization?.primaryArea)
                               ) && (
-                               <div>
-                                 <h4 className="font-medium mb-2">{t('caseDetails.legalAnalysis.immediateSteps')}</h4>
-                                 <ul className="list-disc pl-5 space-y-1">
-                                    {(currentLanguage === 'ar' 
-                                      ? (caseAnalysis.analysis_data.ar?.legalStrategy?.immediateSteps || caseAnalysis.analysis_data.legalStrategy?.immediateSteps)
-                                      : (caseAnalysis.analysis_data.en?.legalStrategy?.immediateSteps || caseAnalysis.analysis_data.legalStrategy?.immediateSteps)
-                                    ).map((step: string, i: number) => (
-                                     <li key={i} className="text-sm">{step}</li>
-                                   ))}
-                                 </ul>
-                               </div>
-                              )}
-                               {(currentLanguage === 'ar' 
-                                 ? (caseAnalysis.analysis_data.ar?.legalStrategy?.documentation || caseAnalysis.analysis_data.legalStrategy?.documentation)
-                                 : (caseAnalysis.analysis_data.en?.legalStrategy?.documentation || caseAnalysis.analysis_data.legalStrategy?.documentation)
-                               ) && (
-                                 <div>
-                                   <h4 className="font-medium mb-2">{t('caseDetails.legalAnalysis.requiredDocumentation')}</h4>
-                                   <ul className="list-disc pl-5 space-y-1">
-                                     {(currentLanguage === 'ar' 
-                                       ? (caseAnalysis.analysis_data.ar?.legalStrategy?.documentation || caseAnalysis.analysis_data.legalStrategy?.documentation)
-                                       : (caseAnalysis.analysis_data.en?.legalStrategy?.documentation || caseAnalysis.analysis_data.legalStrategy?.documentation)
-                                     ).map((doc: string, i: number) => (
-                                       <li key={i} className="text-sm">{doc}</li>
-                                     ))}
-                                   </ul>
-                                 </div>
-                               )}
-                               {(currentLanguage === 'ar' 
-                                 ? (caseAnalysis.analysis_data.ar?.legalStrategy?.timeline || caseAnalysis.analysis_data.legalStrategy?.timeline)
-                                 : (caseAnalysis.analysis_data.en?.legalStrategy?.timeline || caseAnalysis.analysis_data.legalStrategy?.timeline)
-                               ) && (
                                 <div>
-                                  <h4 className="font-medium mb-2">{t('caseDetails.legalAnalysis.timeline')}</h4>
-                                   <p className="text-sm">
-                                     {currentLanguage === 'ar' 
-                                       ? (caseAnalysis.analysis_data.ar?.legalStrategy?.timeline || caseAnalysis.analysis_data.legalStrategy?.timeline)
-                                       : (caseAnalysis.analysis_data.en?.legalStrategy?.timeline || caseAnalysis.analysis_data.legalStrategy?.timeline)
-                                     }
-                                   </p>
+                                  <span className="text-sm font-medium">Primary Area: </span>
+                                  <span className="text-sm">
+                                    {currentLanguage === 'ar' 
+                                      ? (caseAnalysis.analysis_data.ar?.recommendedSpecialization?.primaryArea || caseAnalysis.analysis_data.recommendedSpecialization?.primaryArea)
+                                      : (caseAnalysis.analysis_data.en?.recommendedSpecialization?.primaryArea || caseAnalysis.analysis_data.recommendedSpecialization?.primaryArea)
+                                    }
+                                  </span>
                                 </div>
                               )}
-                           </CardContent>
+                              {(currentLanguage === 'ar' 
+                                ? (caseAnalysis.analysis_data.ar?.recommendedSpecialization?.secondaryAreas || caseAnalysis.analysis_data.recommendedSpecialization?.secondaryAreas)
+                                : (caseAnalysis.analysis_data.en?.recommendedSpecialization?.secondaryAreas || caseAnalysis.analysis_data.recommendedSpecialization?.secondaryAreas)
+                              )?.length > 0 && (
+                                <div>
+                                  <h4 className="font-medium mb-2">Secondary Areas:</h4>
+                                  <ul className="list-disc pl-5 space-y-1">
+                                    {(currentLanguage === 'ar' 
+                                      ? (caseAnalysis.analysis_data.ar?.recommendedSpecialization?.secondaryAreas || caseAnalysis.analysis_data.recommendedSpecialization?.secondaryAreas)
+                                      : (caseAnalysis.analysis_data.en?.recommendedSpecialization?.secondaryAreas || caseAnalysis.analysis_data.recommendedSpecialization?.secondaryAreas)
+                                    ).map((area: string, i: number) => (
+                                      <li key={i} className="text-sm">{area}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                              {(currentLanguage === 'ar' 
+                                ? (caseAnalysis.analysis_data.ar?.recommendedSpecialization?.reasoning || caseAnalysis.analysis_data.recommendedSpecialization?.reasoning)
+                                : (caseAnalysis.analysis_data.en?.recommendedSpecialization?.reasoning || caseAnalysis.analysis_data.recommendedSpecialization?.reasoning)
+                              ) && (
+                                <div>
+                                  <h4 className="font-medium mb-2">Reasoning:</h4>
+                                  <p className="text-sm text-muted-foreground">
+                                    {currentLanguage === 'ar' 
+                                      ? (caseAnalysis.analysis_data.ar?.recommendedSpecialization?.reasoning || caseAnalysis.analysis_data.recommendedSpecialization?.reasoning)
+                                      : (caseAnalysis.analysis_data.en?.recommendedSpecialization?.reasoning || caseAnalysis.analysis_data.recommendedSpecialization?.reasoning)
+                                    }
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          </CardContent>
                         </Card>
                       )}
+
+                       {/* Legal Strategy */}
+                        {(currentLanguage === 'ar' 
+                          ? (caseAnalysis.analysis_data.ar?.legalStrategy || caseAnalysis.analysis_data.legalStrategy)
+                          : (caseAnalysis.analysis_data.en?.legalStrategy || caseAnalysis.analysis_data.legalStrategy)
+                        ) && (
+                         <Card>
+                            <CardHeader>
+                              <CardTitle className="flex items-center gap-2">
+                                <Target className="h-4 w-4" />
+                                {t('caseDetails.legalAnalysis.legalStrategy')}
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                               {(currentLanguage === 'ar' 
+                                 ? (caseAnalysis.analysis_data.ar?.legalStrategy?.immediateSteps || caseAnalysis.analysis_data.legalStrategy?.immediateSteps)
+                                 : (caseAnalysis.analysis_data.en?.legalStrategy?.immediateSteps || caseAnalysis.analysis_data.legalStrategy?.immediateSteps)
+                               )?.length > 0 && (
+                                <div>
+                                  <h4 className="font-medium mb-2">{t('caseDetails.legalAnalysis.immediateSteps')}</h4>
+                                  <ul className="list-disc pl-5 space-y-1">
+                                     {(currentLanguage === 'ar' 
+                                       ? (caseAnalysis.analysis_data.ar?.legalStrategy?.immediateSteps || caseAnalysis.analysis_data.legalStrategy?.immediateSteps)
+                                       : (caseAnalysis.analysis_data.en?.legalStrategy?.immediateSteps || caseAnalysis.analysis_data.legalStrategy?.immediateSteps)
+                                     ).map((step: string, i: number) => (
+                                      <li key={i} className="text-sm">{step}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                               )}
+                                {(currentLanguage === 'ar' 
+                                  ? (caseAnalysis.analysis_data.ar?.legalStrategy?.documentation || caseAnalysis.analysis_data.legalStrategy?.documentation)
+                                  : (caseAnalysis.analysis_data.en?.legalStrategy?.documentation || caseAnalysis.analysis_data.legalStrategy?.documentation)
+                                )?.length > 0 && (
+                                  <div>
+                                    <h4 className="font-medium mb-2">{t('caseDetails.legalAnalysis.requiredDocumentation')}</h4>
+                                    <ul className="list-disc pl-5 space-y-1">
+                                      {(currentLanguage === 'ar' 
+                                        ? (caseAnalysis.analysis_data.ar?.legalStrategy?.documentation || caseAnalysis.analysis_data.legalStrategy?.documentation)
+                                        : (caseAnalysis.analysis_data.en?.legalStrategy?.documentation || caseAnalysis.analysis_data.legalStrategy?.documentation)
+                                      ).map((doc: string, i: number) => (
+                                        <li key={i} className="text-sm">{doc}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                                {(currentLanguage === 'ar' 
+                                  ? (caseAnalysis.analysis_data.ar?.legalStrategy?.timeline || caseAnalysis.analysis_data.legalStrategy?.timeline)
+                                  : (caseAnalysis.analysis_data.en?.legalStrategy?.timeline || caseAnalysis.analysis_data.legalStrategy?.timeline)
+                                ) && (
+                                 <div>
+                                   <h4 className="font-medium mb-2">{t('caseDetails.legalAnalysis.timeline')}</h4>
+                                    <p className="text-sm">
+                                      {currentLanguage === 'ar' 
+                                        ? (caseAnalysis.analysis_data.ar?.legalStrategy?.timeline || caseAnalysis.analysis_data.legalStrategy?.timeline)
+                                        : (caseAnalysis.analysis_data.en?.legalStrategy?.timeline || caseAnalysis.analysis_data.legalStrategy?.timeline)
+                                      }
+                                    </p>
+                                 </div>
+                               )}
+                               {/* Risks */}
+                               {(currentLanguage === 'ar' 
+                                 ? (caseAnalysis.analysis_data.ar?.legalStrategy?.risks || caseAnalysis.analysis_data.legalStrategy?.risks)
+                                 : (caseAnalysis.analysis_data.en?.legalStrategy?.risks || caseAnalysis.analysis_data.legalStrategy?.risks)
+                               )?.length > 0 && (
+                                <div>
+                                  <h4 className="font-medium mb-2 flex items-center gap-2">
+                                    <AlertTriangle className="h-4 w-4 text-orange-500" />
+                                    Risks
+                                  </h4>
+                                  <ul className="list-disc pl-5 space-y-1">
+                                    {(currentLanguage === 'ar' 
+                                      ? (caseAnalysis.analysis_data.ar?.legalStrategy?.risks || caseAnalysis.analysis_data.legalStrategy?.risks)
+                                      : (caseAnalysis.analysis_data.en?.legalStrategy?.risks || caseAnalysis.analysis_data.legalStrategy?.risks)
+                                    ).map((risk: string, i: number) => (
+                                      <li key={i} className="text-sm">{risk}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                               )}
+                               {/* Opportunities */}
+                               {(currentLanguage === 'ar' 
+                                 ? (caseAnalysis.analysis_data.ar?.legalStrategy?.opportunities || caseAnalysis.analysis_data.legalStrategy?.opportunities)
+                                 : (caseAnalysis.analysis_data.en?.legalStrategy?.opportunities || caseAnalysis.analysis_data.legalStrategy?.opportunities)
+                               )?.length > 0 && (
+                                <div>
+                                  <h4 className="font-medium mb-2 flex items-center gap-2">
+                                    <CheckCircle className="h-4 w-4 text-green-500" />
+                                    Opportunities
+                                  </h4>
+                                  <ul className="list-disc pl-5 space-y-1">
+                                    {(currentLanguage === 'ar' 
+                                      ? (caseAnalysis.analysis_data.ar?.legalStrategy?.opportunities || caseAnalysis.analysis_data.legalStrategy?.opportunities)
+                                      : (caseAnalysis.analysis_data.en?.legalStrategy?.opportunities || caseAnalysis.analysis_data.legalStrategy?.opportunities)
+                                    ).map((opportunity: string, i: number) => (
+                                      <li key={i} className="text-sm">{opportunity}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                               )}
+                            </CardContent>
+                         </Card>
+                       )}
 
                       {/* Case Complexity */}
                       {caseAnalysis.analysis_data.caseComplexity && (
@@ -978,23 +1081,38 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                               <div className="flex items-center gap-2">
                                 <span className="text-sm">Complexity Level:</span>
                                 <Badge variant={
-                                  caseAnalysis.analysis_data.caseComplexity.level === 'high' ? 'destructive' :
-                                  caseAnalysis.analysis_data.caseComplexity.level === 'medium' ? 'default' : 'secondary'
+                                  (currentLanguage === 'ar' 
+                                    ? (caseAnalysis.analysis_data.ar?.caseComplexity?.level || caseAnalysis.analysis_data.caseComplexity?.level)
+                                    : (caseAnalysis.analysis_data.en?.caseComplexity?.level || caseAnalysis.analysis_data.caseComplexity?.level)
+                                  ) === 'high' || (currentLanguage === 'ar' 
+                                    ? (caseAnalysis.analysis_data.ar?.caseComplexity?.level || caseAnalysis.analysis_data.caseComplexity?.level)
+                                    : (caseAnalysis.analysis_data.en?.caseComplexity?.level || caseAnalysis.analysis_data.caseComplexity?.level)
+                                  ) === 'مرتفع' ? 'destructive' :
+                                  (currentLanguage === 'ar' 
+                                    ? (caseAnalysis.analysis_data.ar?.caseComplexity?.level || caseAnalysis.analysis_data.caseComplexity?.level)
+                                    : (caseAnalysis.analysis_data.en?.caseComplexity?.level || caseAnalysis.analysis_data.caseComplexity?.level)
+                                  ) === 'medium' || (currentLanguage === 'ar' 
+                                    ? (caseAnalysis.analysis_data.ar?.caseComplexity?.level || caseAnalysis.analysis_data.caseComplexity?.level)
+                                    : (caseAnalysis.analysis_data.en?.caseComplexity?.level || caseAnalysis.analysis_data.caseComplexity?.level)
+                                  ) === 'متوسط' ? 'default' : 'secondary'
                                 }>
-                                  {caseAnalysis.analysis_data.caseComplexity.level?.toUpperCase()}
+                                  {(currentLanguage === 'ar' 
+                                    ? (caseAnalysis.analysis_data.ar?.caseComplexity?.level || caseAnalysis.analysis_data.caseComplexity?.level)
+                                    : (caseAnalysis.analysis_data.en?.caseComplexity?.level || caseAnalysis.analysis_data.caseComplexity?.level)
+                                  )?.toUpperCase()}
                                 </Badge>
                               </div>
-                              {caseAnalysis.analysis_data.caseComplexity.estimatedCost && (
-                                <div>
-                                  <span className="text-sm font-medium">Estimated Cost: </span>
-                                  <span className="text-sm">{caseAnalysis.analysis_data.caseComplexity.estimatedCost}</span>
-                                </div>
-                              )}
-                              {caseAnalysis.analysis_data.caseComplexity.factors && caseAnalysis.analysis_data.caseComplexity.factors.length > 0 && (
+                              {(currentLanguage === 'ar' 
+                                ? (caseAnalysis.analysis_data.ar?.caseComplexity?.factors || caseAnalysis.analysis_data.caseComplexity?.factors)
+                                : (caseAnalysis.analysis_data.en?.caseComplexity?.factors || caseAnalysis.analysis_data.caseComplexity?.factors)
+                              )?.length > 0 && (
                                 <div>
                                   <h4 className="font-medium mb-2">Complexity Factors:</h4>
                                   <ul className="list-disc pl-5 space-y-1">
-                                    {caseAnalysis.analysis_data.caseComplexity.factors.map((factor: string, i: number) => (
+                                    {(currentLanguage === 'ar' 
+                                      ? (caseAnalysis.analysis_data.ar?.caseComplexity?.factors || caseAnalysis.analysis_data.caseComplexity?.factors)
+                                      : (caseAnalysis.analysis_data.en?.caseComplexity?.factors || caseAnalysis.analysis_data.caseComplexity?.factors)
+                                    ).map((factor: string, i: number) => (
                                       <li key={i} className="text-sm">{factor}</li>
                                     ))}
                                   </ul>
