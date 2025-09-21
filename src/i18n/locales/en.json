@@ -94,6 +94,18 @@
     },
     "generatedTitle": "Generated Proposal"
   },
+  "lawyerAssistant": {
+    "title": "Legal AI Assistant",
+    "badge": "Egyptian Law Expert",
+    "status": "Online",
+    "welcomeMessage": "Hello! I'm Lexa, your AI legal assistant specialized in Egyptian law. I'm here to help you with legal research, case analysis, and professional insights. What legal question can I assist you with today?",
+    "placeholder": "Ask about Egyptian law, legal procedures, or get case insights...",
+    "disclaimer": "AI legal assistant for professional use only. Verify current regulations.",
+    "error": {
+      "title": "Error",
+      "description": "Failed to send message. Please try again."
+    }
+  },
   "common": {
     "loading": "Loading...",
     "error": "Error",

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/hooks/useLanguage";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -33,6 +34,7 @@ interface LawyerQAChatbotProps {
 export const LawyerQAChatbot = ({ isOpen, onToggle }: LawyerQAChatbotProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t, isRTL, getCurrentLanguage } = useLanguage();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -56,11 +58,11 @@ export const LawyerQAChatbot = ({ isOpen, onToggle }: LawyerQAChatbotProps) => {
       // Initialize with welcome message
       setMessages([{
         role: 'assistant',
-        content: 'Hello! I\'m Lexa, your AI legal assistant specialized in Egyptian law. I\'m here to help you with legal research, case analysis, and professional insights. What legal question can I assist you with today?',
+        content: t('lawyerAssistant.welcomeMessage'),
         timestamp: new Date()
       }]);
     }
-  }, [isOpen]);
+  }, [isOpen, t]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -86,7 +88,7 @@ export const LawyerQAChatbot = ({ isOpen, onToggle }: LawyerQAChatbotProps) => {
           message: input,
           conversation_id: conversationId,
           mode: 'qa_lawyer',
-          language: 'en',
+          language: getCurrentLanguage(),
           lawyerId: user.id
         }
       });
@@ -118,8 +120,8 @@ export const LawyerQAChatbot = ({ isOpen, onToggle }: LawyerQAChatbotProps) => {
     } catch (error: any) {
       console.error('Error sending message:', error);
       toast({
-        title: "Error",
-        description: "Failed to send message. Please try again.",
+        title: t('lawyerAssistant.error.title'),
+        description: t('lawyerAssistant.error.description'),
         variant: "destructive",
       });
     } finally {
@@ -169,12 +171,12 @@ export const LawyerQAChatbot = ({ isOpen, onToggle }: LawyerQAChatbotProps) => {
   return (
     <Card className={`fixed bottom-6 right-6 z-50 shadow-xl transition-all duration-300 ${
       isMinimized ? 'w-80 h-16' : 'w-96 h-[500px]'
-    }`}>
+    } ${isRTL() ? 'text-right' : ''}`}>
       <CardHeader className="p-4 bg-gradient-primary text-primary-foreground rounded-t-lg">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        <div className={`flex items-center justify-between ${isRTL() ? 'flex-row-reverse' : ''}`}>
+          <div className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}>
             <Scale className="h-5 w-5" />
-            <CardTitle className="text-lg">Legal AI Assistant</CardTitle>
+            <CardTitle className="text-lg">{t('lawyerAssistant.title')}</CardTitle>
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -195,13 +197,13 @@ export const LawyerQAChatbot = ({ isOpen, onToggle }: LawyerQAChatbotProps) => {
             </Button>
           </div>
         </div>
-        <div className="flex items-center gap-2 mt-2">
+        <div className={`flex items-center gap-2 mt-2 ${isRTL() ? 'flex-row-reverse' : ''}`}>
           <Badge variant="secondary" className="text-xs bg-white/20 text-white border-white/30">
-            Egyptian Law Expert
+            {t('lawyerAssistant.badge')}
           </Badge>
-          <div className="flex items-center gap-1 text-xs text-white/80">
+          <div className={`flex items-center gap-1 text-xs text-white/80 ${isRTL() ? 'flex-row-reverse' : ''}`}>
             <div className="w-2 h-2 rounded-full bg-green-400"></div>
-            Online
+            {t('lawyerAssistant.status')}
           </div>
         </div>
       </CardHeader>
@@ -215,22 +217,24 @@ export const LawyerQAChatbot = ({ isOpen, onToggle }: LawyerQAChatbotProps) => {
                   <div
                     key={index}
                     className={`flex gap-3 ${
-                      message.role === 'user' ? 'justify-end' : 'justify-start'
+                      message.role === 'user' 
+                        ? isRTL() ? 'justify-start' : 'justify-end'
+                        : isRTL() ? 'justify-end' : 'justify-start'
                     }`}
                   >
-                    {message.role === 'assistant' && (
+                    {(message.role === 'assistant' && !isRTL()) || (message.role === 'user' && isRTL()) ? (
                       <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                         {getMessageIcon(message.role)}
                       </div>
-                    )}
+                    ) : null}
                     <div
                       className={`max-w-[80%] rounded-lg p-3 ${
                         message.role === 'user'
                           ? 'bg-primary text-primary-foreground'
                           : 'bg-muted'
-                      }`}
+                      } ${isRTL() ? 'text-right' : 'text-left'}`}
                     >
-                      <div className="text-sm">
+                      <div className="text-sm leading-relaxed">
                         {formatMessageContent(message.content)}
                       </div>
                       <div className={`text-xs mt-1 opacity-70 ${
@@ -239,25 +243,32 @@ export const LawyerQAChatbot = ({ isOpen, onToggle }: LawyerQAChatbotProps) => {
                         {message.timestamp.toLocaleTimeString()}
                       </div>
                     </div>
-                    {message.role === 'user' && (
+                    {(message.role === 'user' && !isRTL()) || (message.role === 'assistant' && isRTL()) ? (
                       <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                         {getMessageIcon(message.role)}
                       </div>
-                    )}
+                    ) : null}
                   </div>
                 ))}
                 {loading && (
-                  <div className="flex gap-3 justify-start">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Bot className="h-4 w-4" />
-                    </div>
+                  <div className={`flex gap-3 ${isRTL() ? 'justify-end' : 'justify-start'}`}>
+                    {!isRTL() && (
+                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Bot className="h-4 w-4" />
+                      </div>
+                    )}
                     <div className="bg-muted rounded-lg p-3 max-w-[80%]">
-                      <div className="flex space-x-1">
+                      <div className={`flex ${isRTL() ? 'space-x-reverse space-x-1' : 'space-x-1'}`}>
                         <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce"></div>
                         <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
                         <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                       </div>
                     </div>
+                    {isRTL() && (
+                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Bot className="h-4 w-4" />
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -266,14 +277,14 @@ export const LawyerQAChatbot = ({ isOpen, onToggle }: LawyerQAChatbotProps) => {
           </CardContent>
 
           <div className="p-4 border-t">
-            <div className="flex gap-2">
+            <div className={`flex gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}>
               <Input
                 ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Ask about Egyptian law, legal procedures, or get case insights..."
-                className="flex-1"
+                placeholder={t('lawyerAssistant.placeholder')}
+                className={`flex-1 ${isRTL() ? 'text-right' : ''}`}
                 disabled={loading}
               />
               <Button 
@@ -285,8 +296,8 @@ export const LawyerQAChatbot = ({ isOpen, onToggle }: LawyerQAChatbotProps) => {
                 <Send className="h-4 w-4" />
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground mt-2 text-center">
-              AI legal assistant for professional use only. Verify current regulations.
+            <p className={`text-xs text-muted-foreground mt-2 text-center ${isRTL() ? 'leading-relaxed' : ''}`}>
+              {t('lawyerAssistant.disclaimer')}
             </p>
           </div>
         </>
