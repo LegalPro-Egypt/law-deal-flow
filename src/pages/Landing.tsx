@@ -217,7 +217,7 @@ const Landing = () => {
           <div>
             {/* Step 1 - Mobile: Text → Image, Desktop: Image → Text */}
             <div className="flex flex-col md:grid md:grid-cols-2 gap-8 items-center mb-12">
-              <div className="order-1">
+              <div className="order-1 text-center md:text-left">
                 <div className="text-accent font-bold mb-2">Step 1</div>
                 <h3 className="text-2xl font-bold mb-4">{t('landing.howItWorks.step1.title')}</h3>
                 <p className="text-muted-foreground text-lg">
@@ -233,7 +233,7 @@ const Landing = () => {
 
             {/* Step 2 - Mobile: Text → Image, Desktop: Text → Image */}
             <div className="flex flex-col md:grid md:grid-cols-2 gap-8 items-center mb-12">
-              <div className="order-1">
+              <div className="order-1 text-center md:text-left">
                 <div className="text-accent font-bold mb-2">Step 2</div>
                 <h3 className="text-2xl font-bold mb-4">{t('landing.howItWorks.step2.title')}</h3>
                 <p className="text-muted-foreground text-lg">
@@ -249,7 +249,7 @@ const Landing = () => {
 
             {/* Step 3 - Mobile: Text → Image, Desktop: Image → Text */}
             <div className="flex flex-col md:grid md:grid-cols-2 gap-8 items-center">
-              <div className="order-1">
+              <div className="order-1 text-center md:text-left">
                 <div className="text-accent font-bold mb-2">Step 3</div>
                 <h3 className="text-2xl font-bold mb-4">{t('landing.howItWorks.step3.title')}</h3>
                 <p className="text-muted-foreground text-lg">
