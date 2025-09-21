@@ -23,6 +23,7 @@ import {
 import { LawyerQAChatbot } from "@/components/LawyerQAChatbot";
 import { CompleteVerificationForm } from "@/components/CompleteVerificationForm";
 import { CaseDetailsDialog } from "@/components/CaseDetailsDialog";
+import { getClientNameForRole } from "@/utils/clientPrivacy";
 
 interface LawyerStats {
   activeCases: number;
@@ -452,7 +453,7 @@ const LawyerDashboard = () => {
                       <CardDescription>
                         <div className="flex items-center gap-2 text-sm">
                           <Users className="h-4 w-4" />
-                          Client: {caseItem.client_name}
+                          Client: {getClientNameForRole(caseItem.client_name, profile?.role)}
                         </div>
                         <div className="flex items-center gap-2 text-sm mt-1">
                           <FileText className="h-4 w-4" />

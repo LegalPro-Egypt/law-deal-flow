@@ -31,6 +31,8 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { DocumentPreview } from './DocumentPreview';
+import { getClientNameForRole, shouldShowContactInfo } from '@/utils/clientPrivacy';
+import { useAuth } from '@/hooks/useAuth';
 
 interface CaseDetailsDialogProps {
   caseId: string | null;
@@ -89,6 +91,7 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
   isOpen, 
   onClose 
 }) => {
+  const { profile } = useAuth();
   const [caseDetails, setCaseDetails] = useState<CaseDetails | null>(null);
   const [conversation, setConversation] = useState<ConversationMessage[]>([]);
   const [documents, setDocuments] = useState<CaseDocument[]>([]);
@@ -576,17 +579,21 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                     <CardContent className="space-y-3">
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">{caseDetails.client_name}</span>
+                        <span className="text-sm">{getClientNameForRole(caseDetails.client_name, profile?.role)}</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Mail className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">{caseDetails.client_email}</span>
-                      </div>
-                      {caseDetails.client_phone && (
-                        <div className="flex items-center gap-2">
-                          <Phone className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">{caseDetails.client_phone}</span>
-                        </div>
+                      {shouldShowContactInfo(profile?.role) && (
+                        <>
+                          <div className="flex items-center gap-2">
+                            <Mail className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm">{caseDetails.client_email}</span>
+                          </div>
+                          {caseDetails.client_phone && (
+                            <div className="flex items-center gap-2">
+                              <Phone className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-sm">{caseDetails.client_phone}</span>
+                            </div>
+                          )}
+                        </>
                       )}
                     </CardContent>
                   </Card>
