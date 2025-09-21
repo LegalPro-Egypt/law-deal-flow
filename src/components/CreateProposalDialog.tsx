@@ -241,7 +241,7 @@ Please review this proposal and let me know if you have any questions or would l
           </TabsList>
 
           <TabsContent value="form" className="space-y-6 overflow-y-auto max-h-[60vh]">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className={`text-sm flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}>
@@ -250,7 +250,7 @@ Please review this proposal and let me know if you have any questions or would l
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div>
+                  <div className={`space-y-2 ${isRTL() ? 'text-right' : ''}`}>
                     <Label htmlFor="consultation_fee">{t('proposal.feeStructure.consultation')}</Label>
                     <Input
                       id="consultation_fee"
@@ -261,7 +261,7 @@ Please review this proposal and let me know if you have any questions or would l
                       step="50"
                     />
                   </div>
-                  <div>
+                  <div className={`space-y-2 ${isRTL() ? 'text-right' : ''}`}>
                     <Label htmlFor="remaining_fee">{t('proposal.feeStructure.remaining')}</Label>
                     <Input
                       id="remaining_fee"
@@ -287,13 +287,14 @@ Please review this proposal and let me know if you have any questions or would l
                     {t('proposal.timeline.title')}
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                  <CardContent className="space-y-2">
                   <Label htmlFor="timeline">{t('proposal.timeline.estimated')}</Label>
                   <Input
                     id="timeline"
                     value={formData.timeline}
                     onChange={(e) => handleInputChange('timeline', e.target.value)}
                     placeholder={t('proposal.timeline.placeholder')}
+                    className={isRTL() ? 'text-right' : ''}
                   />
                 </CardContent>
               </Card>
@@ -314,7 +315,7 @@ Please review this proposal and let me know if you have any questions or would l
                   onChange={(e) => handleInputChange('strategy', e.target.value)}
                   placeholder={t('proposal.strategy.placeholder')}
                   rows={4}
-                  className="resize-none"
+                  className={`resize-none ${isRTL() ? 'text-right leading-relaxed' : ''}`}
                 />
                 <p className="text-xs text-muted-foreground mt-2">
                   {t('proposal.strategy.description')}
@@ -346,7 +347,7 @@ Please review this proposal and let me know if you have any questions or would l
                   <CardTitle className="text-lg">{t('proposal.generatedTitle')}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className={`prose prose-sm max-w-none whitespace-pre-wrap bg-muted p-4 rounded-md ${isRTL() ? 'text-right' : 'text-left'}`}>
+                  <div className={`prose prose-sm max-w-none whitespace-pre-wrap bg-muted p-4 rounded-md leading-relaxed ${isRTL() ? 'text-right' : 'text-left'}`}>
                     {generatedProposal}
                   </div>
                 </CardContent>

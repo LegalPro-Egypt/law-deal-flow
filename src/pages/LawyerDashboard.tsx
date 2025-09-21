@@ -168,9 +168,9 @@ const LawyerDashboard = () => {
                 <span className="text-xl font-bold">LegalConnect</span>
                 <Badge variant="secondary" className="ml-2">Lawyer Portal</Badge>
               </Link>
-              <Button variant="ghost" size="sm" onClick={handleSignOut}>
-                <LogOut className="h-4 w-4 mr-2" />
-                {t('dashboard.signOut')}
+              <Button variant="ghost" size="sm" onClick={handleSignOut} aria-label={t('dashboard.signOut')}>
+                <LogOut className={`h-4 w-4 ${isRTL() ? '' : 'mr-2'}`} />
+                {!isRTL() && <span>{t('dashboard.signOut')}</span>}
               </Button>
             </div>
           </div>
@@ -299,9 +299,9 @@ const LawyerDashboard = () => {
               <span className="text-sm text-muted-foreground hidden sm:block">
                 {t('dashboard.welcome', { name: profile?.first_name || 'Lawyer' })}
               </span>
-              <Button variant="ghost" size="sm" onClick={handleSignOut} className="rtl-text-overflow">
-                <LogOut className={`h-4 w-4 ${isRTL() ? 'ml-2' : 'mr-2'}`} />
-                <span className="rtl-text-wrap">{t('dashboard.signOut')}</span>
+              <Button variant="ghost" size="sm" onClick={handleSignOut} aria-label={t('dashboard.signOut')}>
+                <LogOut className={`h-4 w-4 ${isRTL() ? '' : 'mr-2'}`} />
+                {!isRTL() && <span>{t('dashboard.signOut')}</span>}
               </Button>
             </div>
           </div>
