@@ -518,15 +518,13 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
             </div>
           ) : caseDetails ? (
             <Tabs defaultValue="overview" className="h-full">
-              <TabsList className={`grid w-full ${profile?.role === 'lawyer' ? 'grid-cols-3' : 'grid-cols-4'} h-auto p-1 gap-1`}>
+              <TabsList className="grid w-full grid-cols-4 h-auto p-1 gap-1">
                 <TabsTrigger value="overview" className="text-xs sm:text-sm px-2 py-2">
                   {t('caseDetails.tabs.overview')}
                 </TabsTrigger>
-                {profile?.role !== 'lawyer' && (
-                  <TabsTrigger value="conversation" className="text-xs sm:text-sm px-2 py-2">
-                    {t('caseDetails.tabs.conversation')}
-                  </TabsTrigger>
-                )}
+                <TabsTrigger value="conversation" className="text-xs sm:text-sm px-2 py-2">
+                  {t('caseDetails.tabs.conversation')}
+                </TabsTrigger>
                 <TabsTrigger value="documents" className="text-xs sm:text-sm px-2 py-2">
                   {t('caseDetails.tabs.documents')}
                 </TabsTrigger>
@@ -574,36 +572,34 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                     </Card>
                   </div>
 
-                  {/* Case Information - Hidden for lawyers */}
-                  {profile?.role !== 'lawyer' && (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <FileText className="h-4 w-4" />
-                          {t('caseDetails.caseInfo.title')}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div>
-                          <h4 className="font-medium">{t('caseDetails.caseInfo.caseTitle')}</h4>
-                          <p className="text-sm text-muted-foreground">{caseDetails.title}</p>
+                  {/* Case Information - Now visible to lawyers for proposal generation */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <FileText className="h-4 w-4" />
+                        {t('caseDetails.caseInfo.title')}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <h4 className="font-medium">{t('caseDetails.caseInfo.caseTitle')}</h4>
+                        <p className="text-sm text-muted-foreground">{caseDetails.title}</p>
+                      </div>
+                      <div>
+                        <h4 className="font-medium">{t('caseDetails.caseInfo.category')}</h4>
+                        <div className="flex gap-2 mt-1">
+                          <Badge variant="outline">{caseDetails.category}</Badge>
+                          {caseDetails.subcategory && (
+                            <Badge variant="outline">{caseDetails.subcategory}</Badge>
+                          )}
                         </div>
-                        <div>
-                          <h4 className="font-medium">{t('caseDetails.caseInfo.category')}</h4>
-                          <div className="flex gap-2 mt-1">
-                            <Badge variant="outline">{caseDetails.category}</Badge>
-                            {caseDetails.subcategory && (
-                              <Badge variant="outline">{caseDetails.subcategory}</Badge>
-                            )}
-                          </div>
-                        </div>
-                        <div>
-                          <h4 className="font-medium">{t('caseDetails.caseInfo.description')}</h4>
-                          <p className="text-sm text-muted-foreground">{caseDetails.description}</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
+                      </div>
+                      <div>
+                        <h4 className="font-medium">{t('caseDetails.caseInfo.description')}</h4>
+                        <p className="text-sm text-muted-foreground">{caseDetails.description}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
 
                   {/* Client Information */}
                   <Card>
@@ -687,92 +683,90 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                   </Card>
                 </TabsContent>
 
-                {profile?.role !== 'lawyer' && (
-                  <TabsContent value="conversation" className="space-y-4">
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <h3 className="text-lg font-semibold">{t('caseDetails.conversation.title')}</h3>
-                        <Button
-                          onClick={generateSummary}
-                          disabled={generatingSummary || conversation.length === 0}
-                          size="sm"
-                          variant="outline"
-                          className="shrink-0"
-                        >
-                          {generatingSummary ? (
-                            <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                              <span className="whitespace-nowrap">{t('caseDetails.conversation.generating')}</span>
-                            </div>
-                          ) : (
-                            <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                              <Sparkles className="h-4 w-4" />
-                              <span className="whitespace-nowrap">{t('caseDetails.conversation.generateSummary')}</span>
-                            </div>
-                          )}
-                        </Button>
-                      </div>
-
-                      {/* Health Check Info */}
-                      <Card className="bg-muted/50">
-                        <CardContent className="p-3">
-                           <div className="text-xs text-muted-foreground space-y-1">
-                             <div><strong>{t('caseDetails.conversation.healthCheck')}</strong></div>
-                             <div>{t('caseDetails.conversation.caseId')} {caseId}</div>
-                             <div>{t('caseDetails.conversation.messageCount')} {conversation.length}</div>
-                             {conversation.length > 0 && (
-                               <div>{t('caseDetails.conversation.newestMessage')} {formatDate(conversation[conversation.length - 1]?.created_at || '')}</div>
-                             )}
-                             {caseDetails?.client_name && (
-                               <div>{t('caseDetails.conversation.clientName')} {caseDetails.client_name}</div>
-                             )}
-                           </div>
-                        </CardContent>
-                      </Card>
-
-                      <ScrollArea className="h-96 border rounded-lg p-4">
-                        {conversation.length > 0 ? (
-                          <div className="space-y-4">
-                            {conversation.map((message, index) => (
-                              <div
-                                key={message.id || index}
-                                className={`flex ${
-                                  isRTL 
-                                    ? (message.role === 'user' ? 'justify-start' : 'justify-end')
-                                    : (message.role === 'user' ? 'justify-end' : 'justify-start')
-                                }`}
-                              >
-                                <div
-                                  className={`max-w-[80%] rounded-lg p-3 ${
-                                    message.role === 'user'
-                                      ? 'bg-primary text-primary-foreground'
-                                      : 'bg-muted'
-                                  }`}
-                                >
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-xs font-medium">
-                                      {message.role === 'user' ? t('caseDetails.conversation.client') : t('caseDetails.conversation.assistant')}
-                                    </span>
-                                    <span className="text-xs opacity-70">
-                                      {formatDate(message.created_at)}
-                                    </span>
-                                  </div>
-                                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                                </div>
-                              </div>
-                            ))}
+                <TabsContent value="conversation" className="space-y-4">
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-lg font-semibold">{t('caseDetails.conversation.title')}</h3>
+                      <Button
+                        onClick={generateSummary}
+                        disabled={generatingSummary || conversation.length === 0}
+                        size="sm"
+                        variant="outline"
+                        className="shrink-0"
+                      >
+                        {generatingSummary ? (
+                          <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                            <span className="whitespace-nowrap">{t('caseDetails.conversation.generating')}</span>
                           </div>
                         ) : (
-                          <div className="text-center text-muted-foreground">
-                            <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                            <p>{t('caseDetails.conversation.noMessages')}</p>
-                            <p className="text-xs mt-1">{t('caseDetails.conversation.noMessagesDesc')}</p>
+                          <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            <Sparkles className="h-4 w-4" />
+                            <span className="whitespace-nowrap">{t('caseDetails.conversation.generateSummary')}</span>
                           </div>
                         )}
-                      </ScrollArea>
+                      </Button>
                     </div>
-                  </TabsContent>
-                )}
+
+                    {/* Health Check Info */}
+                    <Card className="bg-muted/50">
+                      <CardContent className="p-3">
+                         <div className="text-xs text-muted-foreground space-y-1">
+                           <div><strong>{t('caseDetails.conversation.healthCheck')}</strong></div>
+                           <div>{t('caseDetails.conversation.caseId')} {caseId}</div>
+                           <div>{t('caseDetails.conversation.messageCount')} {conversation.length}</div>
+                           {conversation.length > 0 && (
+                             <div>{t('caseDetails.conversation.newestMessage')} {formatDate(conversation[conversation.length - 1]?.created_at || '')}</div>
+                           )}
+                           {caseDetails?.client_name && (
+                             <div>{t('caseDetails.conversation.clientName')} {caseDetails.client_name}</div>
+                           )}
+                         </div>
+                      </CardContent>
+                    </Card>
+
+                    <ScrollArea className="h-96 border rounded-lg p-4">
+                      {conversation.length > 0 ? (
+                        <div className="space-y-4">
+                          {conversation.map((message, index) => (
+                            <div
+                              key={message.id || index}
+                              className={`flex ${
+                                isRTL 
+                                  ? (message.role === 'user' ? 'justify-start' : 'justify-end')
+                                  : (message.role === 'user' ? 'justify-end' : 'justify-start')
+                              }`}
+                            >
+                              <div
+                                className={`max-w-[80%] rounded-lg p-3 ${
+                                  message.role === 'user'
+                                    ? 'bg-primary text-primary-foreground'
+                                    : 'bg-muted'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-xs font-medium">
+                                    {message.role === 'user' ? t('caseDetails.conversation.client') : t('caseDetails.conversation.assistant')}
+                                  </span>
+                                  <span className="text-xs opacity-70">
+                                    {formatDate(message.created_at)}
+                                  </span>
+                                </div>
+                                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center text-muted-foreground">
+                          <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                          <p>{t('caseDetails.conversation.noMessages')}</p>
+                          <p className="text-xs mt-1">{t('caseDetails.conversation.noMessagesDesc')}</p>
+                        </div>
+                      )}
+                    </ScrollArea>
+                  </div>
+                </TabsContent>
 
                 <TabsContent value="documents" className="space-y-4">
                   {documents.length > 0 ? (
