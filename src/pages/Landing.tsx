@@ -214,7 +214,7 @@ const Landing = () => {
             <p className="text-xl text-muted-foreground">{t('landing.howItWorks.subtitle')}</p>
           </div>
 
-          <div className="max-w-4xl mx-auto">
+          <div>
             {/* Step 1 - Mobile: Text → Image, Desktop: Image → Text */}
             <div className="flex flex-col md:grid md:grid-cols-2 gap-8 items-center mb-12">
               <div className="order-1">
@@ -225,7 +225,7 @@ const Landing = () => {
                 </p>
               </div>
               <div className={`order-2 ${isRTL() ? 'md:order-1' : 'md:order-1'}`}>
-                <div className="bg-muted/50 rounded-lg p-8 h-80 w-full flex items-center justify-center">
+                <div className="bg-muted/50 rounded-lg p-4 h-36 sm:h-40 md:h-56 w-full flex items-center justify-center">
                   <MessageSquare className="h-24 w-24 text-primary" />
                 </div>
               </div>
@@ -241,7 +241,7 @@ const Landing = () => {
                 </p>
               </div>
               <div className="order-2">
-                <div className="bg-muted/50 rounded-lg p-8 h-80 w-full flex items-center justify-center">
+                <div className="bg-muted/50 rounded-lg p-4 h-36 sm:h-40 md:h-56 w-full flex items-center justify-center">
                   <Users className="h-24 w-24 text-primary" />
                 </div>
               </div>
@@ -257,7 +257,7 @@ const Landing = () => {
                 </p>
               </div>
               <div className={`order-2 ${isRTL() ? 'md:order-1' : 'md:order-1'}`}>
-                <div className="bg-muted/50 rounded-lg p-8 h-80 w-full flex items-center justify-center">
+                <div className="bg-muted/50 rounded-lg p-4 h-36 sm:h-40 md:h-56 w-full flex items-center justify-center">
                   <Shield className="h-24 w-24 text-primary" />
                 </div>
               </div>
