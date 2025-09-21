@@ -12,7 +12,7 @@ export const ProBonoSection = () => {
   const { elementRef, isVisible } = useIntersectionObserver({ threshold: 0.2 });
 
   return (
-    <section className="relative py-12 md:py-16 bg-gradient-to-br from-primary/5 via-background to-accent/5 overflow-hidden">
+    <section className="relative py-12 md:py-16 overflow-hidden">
       {/* Top Wave Divider - Desktop/Tablet only */}
       <div className="hidden md:block">
         <WaveDivider direction="top" />
