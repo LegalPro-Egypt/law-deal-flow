@@ -4,16 +4,36 @@ import { Badge } from "@/components/ui/badge";
 import { Heart, Scale } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
+import { WaveDivider } from "@/components/ui/wave-divider";
 
 export const ProBonoSection = () => {
   const { t, isRTL } = useLanguage();
+  const { elementRef, isVisible } = useIntersectionObserver({ threshold: 0.2 });
 
   return (
-    <section className="py-16 bg-gradient-to-br from-primary/5 via-background to-accent/5">
-      <div className="container mx-auto px-4">
+    <section className="relative py-12 md:py-16 bg-gradient-to-br from-primary/5 via-background to-accent/5 overflow-hidden">
+      {/* Top Wave Divider - Desktop/Tablet only */}
+      <div className="hidden md:block">
+        <WaveDivider direction="top" />
+      </div>
+
+      {/* Animated Background Accent - Desktop/Tablet only */}
+      <div className="hidden md:block absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-gradient-to-br from-primary/6 to-accent/4 rounded-full blur-3xl animate-drift-rotate -translate-x-1/2 -translate-y-1/2"></div>
+        <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-gradient-to-tr from-accent/5 to-primary/3 rounded-full blur-2xl animate-gentle-pulse"></div>
+        <div className="absolute bottom-1/3 left-1/4 w-80 h-80 bg-gradient-to-bl from-primary/4 to-accent/6 rounded-full blur-3xl animate-drift-rotate" style={{ animationDelay: '-10s' }}></div>
+      </div>
+
+      <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-4xl mx-auto">
-          <Card className="p-6 sm:p-8 lg:p-12 bg-gradient-card shadow-elevated border-0 relative overflow-hidden mx-auto">
-            {/* Decorative Background Elements */}
+          <Card 
+            ref={elementRef as React.RefObject<HTMLDivElement>}
+            className={`p-6 sm:p-8 lg:p-12 bg-gradient-card shadow-elevated border-0 relative overflow-hidden mx-auto transition-all duration-300 ${
+              isVisible ? 'md:animate-slide-up-fade' : 'md:opacity-0 md:translate-y-10'
+            }`}
+          >
+            {/* Enhanced Decorative Background Elements */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/10 to-accent/10 rounded-full blur-3xl -translate-y-16 translate-x-16"></div>
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-success/10 to-primary/10 rounded-full blur-2xl translate-y-12 -translate-x-12"></div>
             
@@ -75,6 +95,11 @@ export const ProBonoSection = () => {
             </div>
           </Card>
         </div>
+      </div>
+
+      {/* Bottom Wave Divider - Desktop/Tablet only */}
+      <div className="hidden md:block">
+        <WaveDivider direction="bottom" />
       </div>
     </section>
   );
