@@ -31,15 +31,17 @@ export const ProBonoSection = () => {
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/10 to-accent/10 rounded-full blur-3xl -translate-y-16 translate-x-16"></div>
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-success/10 to-primary/10 rounded-full blur-2xl translate-y-12 -translate-x-12"></div>
             
-            {/* Vision Badge */}
-            <div className={`flex justify-center ${isRTL() ? 'lg:justify-start' : 'lg:justify-start'} mb-6`}>
-              <Badge 
-                variant="secondary" 
-                className="bg-primary/10 text-primary border-primary/20 px-3 py-1 text-sm font-medium"
-              >
-                {t('proBono.badge')}
-              </Badge>
-            </div>
+            {/* Vision Badge - Hidden in Arabic */}
+            {!isRTL() && (
+              <div className="flex justify-center lg:justify-start mb-6">
+                <Badge 
+                  variant="secondary" 
+                  className="bg-primary/10 text-primary border-primary/20 px-3 py-1 text-sm font-medium"
+                >
+                  {t('proBono.badge')}
+                </Badge>
+              </div>
+            )}
 
             <div className={`grid lg:grid-cols-2 gap-8 items-center ${isRTL() ? 'lg:grid-cols-[1fr,auto]' : ''}`}>
               {/* Content */}
