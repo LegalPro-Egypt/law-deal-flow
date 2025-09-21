@@ -81,7 +81,7 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
 
       if (error) {
         console.error('Edge function error:', error);
-        throw error;
+        throw new Error(`Edge function error: ${JSON.stringify(error)}`);
       }
 
       if (!data) {
@@ -89,7 +89,7 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
       }
 
       if (data.error) {
-        throw new Error(data.error);
+        throw new Error(`Proposal generation failed: ${data.error}`);
       }
 
       if (!data.generatedProposal) {

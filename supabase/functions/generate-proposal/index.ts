@@ -54,28 +54,10 @@ serve(async (req) => {
     // Initialize Supabase client
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Fetch comprehensive case data including lawyer profile
+    // Fetch case data with separate simple queries
     const { data: caseData, error: caseError } = await supabase
       .from('cases')
-      .select(`
-        *,
-        documents(file_name, document_category, ocr_text),
-        case_analysis(analysis_data, analysis_type),
-        case_messages(content, role, created_at),
-        conversations!inner(messages(content, role, created_at)),
-        assigned_lawyer:profiles!assigned_lawyer_id(
-          first_name,
-          last_name,
-          law_firm,
-          office_address,
-          phone,
-          office_phone,
-          email,
-          license_number,
-          specializations,
-          years_experience
-        )
-      `)
+      .select('*')
       .eq('id', caseId)
       .single();
 
@@ -89,6 +71,39 @@ serve(async (req) => {
       });
     }
 
+    // Fetch related data separately
+    const [documentsResult, analysisResult, messagesResult, lawyerResult] = await Promise.all([
+      supabase
+        .from('documents')
+        .select('file_name, document_category, ocr_text')
+        .eq('case_id', caseId),
+      
+      supabase
+        .from('case_analysis')
+        .select('analysis_data, analysis_type')
+        .eq('case_id', caseId),
+      
+      supabase
+        .from('case_messages')
+        .select('content, role, created_at')
+        .eq('case_id', caseId)
+        .order('created_at', { ascending: false })
+        .limit(10),
+      
+      caseData.assigned_lawyer_id ? supabase
+        .from('profiles')
+        .select('first_name, last_name, law_firm, office_address, phone, office_phone, email, license_number, specializations, years_experience')
+        .eq('user_id', caseData.assigned_lawyer_id)
+        .single() : { data: null, error: null }
+    ]);
+
+    console.log('Fetched related data:', {
+      documents: documentsResult.data?.length || 0,
+      analysis: analysisResult.data?.length || 0,
+      messages: messagesResult.data?.length || 0,
+      lawyer: lawyerResult.data ? 'found' : 'not found'
+    });
+
     // Prepare context for AI
     const caseContext = {
       case_number: caseData.case_number,
@@ -100,25 +115,25 @@ serve(async (req) => {
       jurisdiction: caseData.jurisdiction,
       language: caseData.language,
       applicable_laws: caseData.applicable_laws,
-      documents: caseData.documents?.map((doc: any) => ({
+      documents: documentsResult.data?.map((doc: any) => ({
         name: doc.file_name,
         category: doc.document_category,
         summary: doc.ocr_text?.substring(0, 500) // First 500 chars
       })) || [],
-      legal_analysis: caseData.case_analysis?.map((analysis: any) => analysis.analysis_data) || [],
-      conversation_history: caseData.conversations?.[0]?.messages?.slice(-10) || [] // Last 10 messages
+      legal_analysis: analysisResult.data?.map((analysis: any) => analysis.analysis_data) || [],
+      conversation_history: messagesResult.data || [] // Last 10 messages from case_messages
     };
 
     // Prepare lawyer information
-    const lawyerInfo = caseData.assigned_lawyer ? {
-      name: `${caseData.assigned_lawyer.first_name || ''} ${caseData.assigned_lawyer.last_name || ''}`.trim(),
-      law_firm: caseData.assigned_lawyer.law_firm,
-      office_address: caseData.assigned_lawyer.office_address,
-      phone: caseData.assigned_lawyer.phone || caseData.assigned_lawyer.office_phone,
-      email: caseData.assigned_lawyer.email,
-      license_number: caseData.assigned_lawyer.license_number,
-      specializations: caseData.assigned_lawyer.specializations,
-      years_experience: caseData.assigned_lawyer.years_experience
+    const lawyerInfo = lawyerResult.data ? {
+      name: `${lawyerResult.data.first_name || ''} ${lawyerResult.data.last_name || ''}`.trim(),
+      law_firm: lawyerResult.data.law_firm,
+      office_address: lawyerResult.data.office_address,
+      phone: lawyerResult.data.phone || lawyerResult.data.office_phone,
+      email: lawyerResult.data.email,
+      license_number: lawyerResult.data.license_number,
+      specializations: lawyerResult.data.specializations,
+      years_experience: lawyerResult.data.years_experience
     } : null;
 
     const systemPrompt = `You are a professional legal proposal generator for the LegalPro platform. Create a comprehensive, bilingual legal proposal in both English and Arabic with identical content structure.
