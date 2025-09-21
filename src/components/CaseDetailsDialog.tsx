@@ -574,34 +574,36 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                     </Card>
                   </div>
 
-                  {/* Case Information */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <FileText className="h-4 w-4" />
-                        {t('caseDetails.caseInfo.title')}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div>
-                        <h4 className="font-medium">{t('caseDetails.caseInfo.caseTitle')}</h4>
-                        <p className="text-sm text-muted-foreground">{caseDetails.title}</p>
-                      </div>
-                      <div>
-                        <h4 className="font-medium">{t('caseDetails.caseInfo.category')}</h4>
-                        <div className="flex gap-2 mt-1">
-                          <Badge variant="outline">{caseDetails.category}</Badge>
-                          {caseDetails.subcategory && (
-                            <Badge variant="outline">{caseDetails.subcategory}</Badge>
-                          )}
+                  {/* Case Information - Hidden for lawyers */}
+                  {profile?.role !== 'lawyer' && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <FileText className="h-4 w-4" />
+                          {t('caseDetails.caseInfo.title')}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div>
+                          <h4 className="font-medium">{t('caseDetails.caseInfo.caseTitle')}</h4>
+                          <p className="text-sm text-muted-foreground">{caseDetails.title}</p>
                         </div>
-                      </div>
-                      <div>
-                        <h4 className="font-medium">{t('caseDetails.caseInfo.description')}</h4>
-                        <p className="text-sm text-muted-foreground">{caseDetails.description}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
+                        <div>
+                          <h4 className="font-medium">{t('caseDetails.caseInfo.category')}</h4>
+                          <div className="flex gap-2 mt-1">
+                            <Badge variant="outline">{caseDetails.category}</Badge>
+                            {caseDetails.subcategory && (
+                              <Badge variant="outline">{caseDetails.subcategory}</Badge>
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="font-medium">{t('caseDetails.caseInfo.description')}</h4>
+                          <p className="text-sm text-muted-foreground">{caseDetails.description}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
 
                   {/* Client Information */}
                   <Card>
