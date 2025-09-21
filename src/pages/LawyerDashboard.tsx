@@ -23,6 +23,7 @@ import {
 import { LawyerQAChatbot } from "@/components/LawyerQAChatbot";
 import { CompleteVerificationForm } from "@/components/CompleteVerificationForm";
 import { CaseDetailsDialog } from "@/components/CaseDetailsDialog";
+import { CreateProposalDialog } from "@/components/CreateProposalDialog";
 import { getClientNameForRole } from "@/utils/clientPrivacy";
 
 interface LawyerStats {
@@ -61,6 +62,7 @@ const LawyerDashboard = () => {
   const [showVerificationForm, setShowVerificationForm] = useState(false);
   const [selectedCaseId, setSelectedCaseId] = useState<string>("");
   const [caseDetailsOpen, setCaseDetailsOpen] = useState(false);
+  const [selectedCaseForProposal, setSelectedCaseForProposal] = useState<Case | null>(null);
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -470,9 +472,13 @@ const LawyerDashboard = () => {
                         >
                           View Details
                         </Button>
-                        <Button size="sm" className="bg-primary hover:bg-primary/90">
-                          <MessageSquare className="h-4 w-4 mr-2" />
-                          Send Message
+                        <Button 
+                          size="sm" 
+                          className="bg-primary hover:bg-primary/90"
+                          onClick={() => setSelectedCaseForProposal(caseItem)}
+                        >
+                          <FileText className="h-4 w-4 mr-2" />
+                          Create Proposal
                         </Button>
                       </div>
                     </CardContent>
@@ -495,6 +501,19 @@ const LawyerDashboard = () => {
         caseId={selectedCaseId}
         isOpen={caseDetailsOpen}
         onClose={() => setCaseDetailsOpen(false)}
+      />
+
+      {/* Create Proposal Dialog */}
+      <CreateProposalDialog
+        open={!!selectedCaseForProposal}
+        onOpenChange={(open) => !open && setSelectedCaseForProposal(null)}
+        caseId={selectedCaseForProposal?.id || ''}
+        caseTitle={selectedCaseForProposal?.title || ''}
+        clientName={selectedCaseForProposal?.client_name || ''}
+        onProposalSent={() => {
+          fetchDashboardData();
+          setSelectedCaseForProposal(null);
+        }}
       />
     </div>
   );
