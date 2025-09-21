@@ -646,20 +646,23 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                           disabled={generatingSummary || conversation.length === 0}
                           size="sm"
                           variant="outline"
+                          className="shrink-0"
                         >
                           {generatingSummary ? (
-                            <>
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
-                              {t('caseDetails.conversation.generating')}
-                            </>
+                            <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                              <span className="whitespace-nowrap">{t('caseDetails.conversation.generating')}</span>
+                            </div>
                           ) : (
-                            <>
-                              <Sparkles className="h-4 w-4 mr-2" />
-                              {(caseDetails.ai_summary_en || caseDetails.ai_summary_ar || caseDetails.ai_summary) 
-                                ? t('caseDetails.conversation.regenerateSummary', 'Regenerate Summary')
-                                : t('caseDetails.conversation.generateSummary')
-                              }
-                            </>
+                            <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                              <Sparkles className="h-4 w-4" />
+                              <span className="whitespace-nowrap">
+                                {(caseDetails.ai_summary_en || caseDetails.ai_summary_ar || caseDetails.ai_summary) 
+                                  ? t('caseDetails.conversation.generateSummary')
+                                  : t('caseDetails.conversation.generateSummary')
+                                }
+                              </span>
+                            </div>
                           )}
                         </Button>
                       </div>
@@ -692,17 +695,18 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                           disabled={generatingSummary || conversation.length === 0}
                           size="sm"
                           variant="outline"
+                          className="shrink-0"
                         >
                           {generatingSummary ? (
-                            <>
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
-                              {t('caseDetails.conversation.generating')}
-                            </>
+                            <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                              <span className="whitespace-nowrap">{t('caseDetails.conversation.generating')}</span>
+                            </div>
                           ) : (
-                            <>
-                              <Sparkles className="h-4 w-4 mr-2" />
-                              {t('caseDetails.conversation.generateSummary')}
-                            </>
+                            <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                              <Sparkles className="h-4 w-4" />
+                              <span className="whitespace-nowrap">{t('caseDetails.conversation.generateSummary')}</span>
+                            </div>
                           )}
                         </Button>
                       </div>
