@@ -284,23 +284,23 @@ const LawyerDashboard = () => {
   }
 
   return (
-    <div className={`min-h-screen bg-background ${isRTL() ? 'rtl' : 'ltr'}`}>
+    <div className={`min-h-screen bg-background rtl-safe-container ${isRTL() ? 'rtl' : 'ltr'}`}>
       {/* Header */}
       <header className="border-b bg-background/95 backdrop-blur sticky top-0 z-50">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="rtl-safe-container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <Link to="/?force=true" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
+            <Link to="/?force=true" className={`flex items-center gap-2 hover:opacity-80 transition-opacity ${isRTL() ? 'rtl-flex-row' : ''}`}>
               <Scale className="h-8 w-8 text-primary" />
               <span className="text-xl font-bold">LegalConnect</span>
-              <Badge variant="secondary" className="ml-2">Lawyer Portal</Badge>
+              <Badge variant="secondary" className="rtl-ml-2">Lawyer Portal</Badge>
             </Link>
             <div className="flex items-center gap-4">
               <LanguageToggle />
-              <span className="text-sm text-muted-foreground">
+              <span className="text-sm text-muted-foreground hidden sm:block">
                 {t('dashboard.welcome', { name: profile?.first_name || 'Lawyer' })}
               </span>
               <Button variant="ghost" size="sm" onClick={handleSignOut}>
-                <LogOut className="h-4 w-4 mr-2" />
+                <LogOut className={`h-4 w-4 ${isRTL() ? 'ml-2' : 'mr-2'}`} />
                 {t('dashboard.signOut')}
               </Button>
             </div>
@@ -308,7 +308,7 @@ const LawyerDashboard = () => {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="rtl-mobile-container mx-auto py-8 rtl-container">
         {/* Verification Status Banner */}
         {profile?.verification_status !== 'verified' && (
           <Card className="mb-6 border-warning bg-warning/5">
@@ -332,14 +332,14 @@ const LawyerDashboard = () => {
                   </p>
                   {profile?.verification_status === 'pending_basic' && (
                     <div className="flex gap-2">
-                      <Button 
-                        onClick={() => setShowVerificationForm(true)}
-                        size="sm"
-                        className="bg-primary hover:bg-primary/90"
-                      >
-                        <Settings className="h-4 w-4 mr-2" />
-                        Complete Verification
-                      </Button>
+                        <Button 
+                          onClick={() => setShowVerificationForm(true)}
+                          size="sm"
+                          className="bg-primary hover:bg-primary/90"
+                        >
+                          <Settings className={`h-4 w-4 ${isRTL() ? 'ml-2' : 'mr-2'}`} />
+                          Complete Verification
+                        </Button>
                     </div>
                   )}
                   {profile?.verification_status === 'pending_complete' && (
@@ -364,7 +364,7 @@ const LawyerDashboard = () => {
         )}
 
         {/* Stats Overview */}
-        <div className="grid md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <Card className="bg-gradient-card shadow-card">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -439,23 +439,23 @@ const LawyerDashboard = () => {
                 {cases.map((caseItem) => (
                   <Card key={caseItem.id} className="hover:shadow-md transition-shadow">
                     <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <Badge variant="outline" className="font-mono text-xs">
-                            {caseItem.case_number}
-                          </Badge>
-                          <Badge variant={getStatusVariant(caseItem.status)}>
-                            {t(`dashboard.cases.status.${caseItem.status}`)}
-                          </Badge>
-                          <Badge variant={getUrgencyVariant(caseItem.urgency)}>
-                            {t(`dashboard.cases.urgency.${caseItem.urgency}`)} {isRTL() ? 'أولوية' : 'Priority'}
-                          </Badge>
-                        </div>
-                        <div className="text-right text-xs text-muted-foreground">
-                          <div>Created: {formatDate(caseItem.created_at)}</div>
-                          <div>Updated: {formatDate(caseItem.updated_at)}</div>
-                        </div>
-                      </div>
+                       <div className="flex items-center justify-between">
+                         <div className="flex items-center gap-2 flex-wrap">
+                           <Badge variant="outline" className="font-mono text-xs">
+                             {caseItem.case_number}
+                           </Badge>
+                           <Badge variant={getStatusVariant(caseItem.status)}>
+                             {t(`dashboard.cases.status.${caseItem.status}`)}
+                           </Badge>
+                           <Badge variant={getUrgencyVariant(caseItem.urgency)}>
+                             {t(`dashboard.cases.urgency.${caseItem.urgency}`)} {isRTL() ? 'أولوية' : 'Priority'}
+                           </Badge>
+                         </div>
+                         <div className={`text-xs text-muted-foreground flex-shrink-0 ${isRTL() ? 'text-left' : 'text-right'}`}>
+                           <div>Created: {formatDate(caseItem.created_at)}</div>
+                           <div>Updated: {formatDate(caseItem.updated_at)}</div>
+                         </div>
+                       </div>
                       <CardTitle className="text-lg">{caseItem.title}</CardTitle>
                       <CardDescription>
                         <div className="flex items-center gap-2 text-sm">
@@ -468,25 +468,26 @@ const LawyerDashboard = () => {
                         </div>
                       </CardDescription>
                     </CardHeader>
-                    <CardContent className="pt-0">
-                      <div className="flex gap-2">
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => handleViewDetails(caseItem.id)}
-                        >
-                          {t('dashboard.cases.viewDetails')}
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          className="bg-primary hover:bg-primary/90"
-                          onClick={() => setSelectedCaseForProposal(caseItem)}
-                        >
-                          <FileText className="h-4 w-4 mr-2" />
-                          {t('dashboard.cases.createProposal')}
-                        </Button>
-                      </div>
-                    </CardContent>
+                     <CardContent className="pt-0">
+                       <div className="flex gap-2 flex-wrap">
+                         <Button 
+                           size="sm" 
+                           variant="outline"
+                           onClick={() => handleViewDetails(caseItem.id)}
+                           className="flex-shrink-0"
+                         >
+                           {t('dashboard.cases.viewDetails')}
+                         </Button>
+                         <Button 
+                           size="sm" 
+                           className="bg-primary hover:bg-primary/90 flex-shrink-0"
+                           onClick={() => setSelectedCaseForProposal(caseItem)}
+                         >
+                           <FileText className={`h-4 w-4 ${isRTL() ? 'ml-2' : 'mr-2'}`} />
+                           {t('dashboard.cases.createProposal')}
+                         </Button>
+                       </div>
+                     </CardContent>
                   </Card>
                 ))}
               </div>
