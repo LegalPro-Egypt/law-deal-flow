@@ -627,7 +627,7 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                   </Card>
 
                   {/* AI Summary */}
-                  {caseDetails.ai_summary && (
+                  {(caseDetails.ai_summary_en || caseDetails.ai_summary_ar || caseDetails.ai_summary) && (
                     <Card>
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
@@ -636,16 +636,12 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        {isTranslating ? (
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                            <span>{t('common.loading')}</span>
-                          </div>
-                        ) : (
-                          <p className="text-sm">
-                            {translatedContent.aiSummary || caseDetails.ai_summary}
-                          </p>
-                        )}
+                        <p className="text-sm">
+                          {currentLanguage === 'ar' 
+                            ? (caseDetails.ai_summary_ar || caseDetails.ai_summary)
+                            : (caseDetails.ai_summary_en || caseDetails.ai_summary)
+                          }
+                        </p>
                       </CardContent>
                     </Card>
                   )}
@@ -860,7 +856,10 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                           </CardHeader>
                           <CardContent>
                             <p className="text-sm">
-                              {translatedContent.legalAnalysis?.caseSummary || caseAnalysis.analysis_data.caseSummary}
+                              {currentLanguage === 'ar' 
+                                ? (caseAnalysis.analysis_data.ar?.caseSummary || caseAnalysis.analysis_data.caseSummary)
+                                : (caseAnalysis.analysis_data.en?.caseSummary || caseAnalysis.analysis_data.caseSummary)
+                              }
                             </p>
                           </CardContent>
                         </Card>
@@ -877,7 +876,10 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                            </CardHeader>
                            <CardContent>
                              <div className="space-y-3">
-                               {(translatedContent.legalAnalysis?.applicableLaws || caseAnalysis.analysis_data.applicableLaws).map((law: any, index: number) => (
+                                {(currentLanguage === 'ar' 
+                                  ? (caseAnalysis.analysis_data.ar?.applicableLaws || caseAnalysis.analysis_data.applicableLaws)
+                                  : (caseAnalysis.analysis_data.en?.applicableLaws || caseAnalysis.analysis_data.applicableLaws)
+                                ).map((law: any, index: number) => (
                                  <div key={index} className="p-3 border rounded-lg">
                                    <h4 className="font-medium">{law.law}</h4>
                                    {law.articles && law.articles.length > 0 && (
@@ -900,7 +902,10 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                       )}
 
                       {/* Legal Strategy */}
-                      {(translatedContent.legalAnalysis?.legalStrategy || caseAnalysis.analysis_data.legalStrategy) && (
+                       {(currentLanguage === 'ar' 
+                         ? (caseAnalysis.analysis_data.ar?.legalStrategy || caseAnalysis.analysis_data.legalStrategy)
+                         : (caseAnalysis.analysis_data.en?.legalStrategy || caseAnalysis.analysis_data.legalStrategy)
+                       ) && (
                         <Card>
                            <CardHeader>
                              <CardTitle className="flex items-center gap-2">
@@ -909,30 +914,50 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                              </CardTitle>
                            </CardHeader>
                            <CardContent className="space-y-4">
-                             {(translatedContent.legalAnalysis?.legalStrategy?.immediateSteps || caseAnalysis.analysis_data.legalStrategy.immediateSteps) && (
+                              {(currentLanguage === 'ar' 
+                                ? (caseAnalysis.analysis_data.ar?.legalStrategy?.immediateSteps || caseAnalysis.analysis_data.legalStrategy?.immediateSteps)
+                                : (caseAnalysis.analysis_data.en?.legalStrategy?.immediateSteps || caseAnalysis.analysis_data.legalStrategy?.immediateSteps)
+                              ) && (
                                <div>
                                  <h4 className="font-medium mb-2">{t('caseDetails.legalAnalysis.immediateSteps')}</h4>
                                  <ul className="list-disc pl-5 space-y-1">
-                                   {(translatedContent.legalAnalysis?.legalStrategy?.immediateSteps || caseAnalysis.analysis_data.legalStrategy.immediateSteps).map((step: string, i: number) => (
+                                    {(currentLanguage === 'ar' 
+                                      ? (caseAnalysis.analysis_data.ar?.legalStrategy?.immediateSteps || caseAnalysis.analysis_data.legalStrategy?.immediateSteps)
+                                      : (caseAnalysis.analysis_data.en?.legalStrategy?.immediateSteps || caseAnalysis.analysis_data.legalStrategy?.immediateSteps)
+                                    ).map((step: string, i: number) => (
                                      <li key={i} className="text-sm">{step}</li>
                                    ))}
                                  </ul>
                                </div>
-                             )}
-                              {(translatedContent.legalAnalysis?.legalStrategy?.documentation || caseAnalysis.analysis_data.legalStrategy.documentation) && (
-                                <div>
-                                  <h4 className="font-medium mb-2">{t('caseDetails.legalAnalysis.requiredDocumentation')}</h4>
-                                  <ul className="list-disc pl-5 space-y-1">
-                                    {(translatedContent.legalAnalysis?.legalStrategy?.documentation || caseAnalysis.analysis_data.legalStrategy.documentation).map((doc: string, i: number) => (
-                                      <li key={i} className="text-sm">{doc}</li>
-                                    ))}
-                                  </ul>
-                                </div>
                               )}
-                              {(translatedContent.legalAnalysis?.legalStrategy?.timeline || caseAnalysis.analysis_data.legalStrategy.timeline) && (
+                               {(currentLanguage === 'ar' 
+                                 ? (caseAnalysis.analysis_data.ar?.legalStrategy?.documentation || caseAnalysis.analysis_data.legalStrategy?.documentation)
+                                 : (caseAnalysis.analysis_data.en?.legalStrategy?.documentation || caseAnalysis.analysis_data.legalStrategy?.documentation)
+                               ) && (
+                                 <div>
+                                   <h4 className="font-medium mb-2">{t('caseDetails.legalAnalysis.requiredDocumentation')}</h4>
+                                   <ul className="list-disc pl-5 space-y-1">
+                                     {(currentLanguage === 'ar' 
+                                       ? (caseAnalysis.analysis_data.ar?.legalStrategy?.documentation || caseAnalysis.analysis_data.legalStrategy?.documentation)
+                                       : (caseAnalysis.analysis_data.en?.legalStrategy?.documentation || caseAnalysis.analysis_data.legalStrategy?.documentation)
+                                     ).map((doc: string, i: number) => (
+                                       <li key={i} className="text-sm">{doc}</li>
+                                     ))}
+                                   </ul>
+                                 </div>
+                               )}
+                               {(currentLanguage === 'ar' 
+                                 ? (caseAnalysis.analysis_data.ar?.legalStrategy?.timeline || caseAnalysis.analysis_data.legalStrategy?.timeline)
+                                 : (caseAnalysis.analysis_data.en?.legalStrategy?.timeline || caseAnalysis.analysis_data.legalStrategy?.timeline)
+                               ) && (
                                 <div>
                                   <h4 className="font-medium mb-2">{t('caseDetails.legalAnalysis.timeline')}</h4>
-                                  <p className="text-sm">{translatedContent.legalAnalysis?.legalStrategy?.timeline || caseAnalysis.analysis_data.legalStrategy.timeline}</p>
+                                   <p className="text-sm">
+                                     {currentLanguage === 'ar' 
+                                       ? (caseAnalysis.analysis_data.ar?.legalStrategy?.timeline || caseAnalysis.analysis_data.legalStrategy?.timeline)
+                                       : (caseAnalysis.analysis_data.en?.legalStrategy?.timeline || caseAnalysis.analysis_data.legalStrategy?.timeline)
+                                     }
+                                   </p>
                                 </div>
                               )}
                            </CardContent>
