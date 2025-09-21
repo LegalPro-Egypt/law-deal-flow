@@ -67,22 +67,24 @@ const Landing = () => {
     <div className={`min-h-screen ${isRTL() ? 'rtl' : 'ltr'}`}>
       {/* Header */}
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className={`flex items-center justify-between h-16 ${isRTL() ? 'flex-row-reverse' : ''}`}>
-            <div className={`flex items-center space-x-2 ${isRTL() ? 'space-x-reverse' : ''}`}>
-              <Scale className="h-8 w-8 text-primary" />
+        <div className="rtl-header-container container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="rtl-header-nav h-16">
+            <div className={`rtl-flex-items-center ${isRTL() ? 'rtl-space-x-2' : 'space-x-2'}`}>
+              <Scale className="h-8 w-8 text-primary flex-shrink-0" />
               <span className="text-xl font-bold">LegalPro</span>
             </div>
-            <div className={`flex items-center gap-1 sm:gap-4 ${isRTL() ? 'flex-row-reverse' : ''}`}>
-              <LanguageToggle />
+            <div className={`rtl-flex-items-center ${isRTL() ? 'rtl-space-x-1' : 'rtl-space-x-2'}`}>
+              <div className="rtl-lang-toggle">
+                <LanguageToggle />
+              </div>
               <Link to="/legal-database">
-                <Button variant="ghost">{t('landing.header.guides')}</Button>
+                <Button variant="ghost" className="rtl-button-compact hidden sm:inline-flex">{t('landing.header.guides')}</Button>
               </Link>
               <Link to="/auth?force=true">
-                <Button variant="ghost" className="hidden sm:inline-flex">{t('landing.header.signIn')}</Button>
+                <Button variant="ghost" className="rtl-button-compact hidden sm:inline-flex">{t('landing.header.signIn')}</Button>
               </Link>
               <Link to="/auth?force=true">
-                <Button className="bg-gradient-primary shadow-hero text-sm px-3 sm:px-4">
+                <Button className="bg-gradient-primary shadow-hero rtl-button-compact">
                   <span className="sm:hidden">{t('landing.header.signIn')}</span>
                   <span className="hidden sm:inline">{t('landing.header.getStarted')}</span>
                 </Button>
