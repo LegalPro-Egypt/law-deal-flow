@@ -5,7 +5,6 @@ import { Heart, Scale } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
-import { WaveDivider } from "@/components/ui/wave-divider";
 
 export const ProBonoSection = () => {
   const { t, isRTL } = useLanguage();
@@ -13,11 +12,6 @@ export const ProBonoSection = () => {
 
   return (
     <section className="relative py-12 md:py-16 bg-muted/30 overflow-hidden">
-      {/* Top Wave Divider - Desktop/Tablet only */}
-      <div className="hidden md:block">
-        <WaveDivider direction="top" />
-      </div>
-
       {/* Animated Background Accent - Desktop/Tablet only */}
       <div className="hidden md:block absolute inset-0 pointer-events-none">
         <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-gradient-to-br from-primary/6 to-accent/4 rounded-full blur-3xl animate-drift-rotate -translate-x-1/2 -translate-y-1/2"></div>
@@ -95,11 +89,6 @@ export const ProBonoSection = () => {
             </div>
           </Card>
         </div>
-      </div>
-
-      {/* Bottom Wave Divider - Desktop/Tablet only */}
-      <div className="hidden md:block">
-        <WaveDivider direction="bottom" />
       </div>
     </section>
   );
