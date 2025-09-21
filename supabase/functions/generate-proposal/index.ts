@@ -54,7 +54,7 @@ serve(async (req) => {
     // Initialize Supabase client
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Fetch comprehensive case data
+    // Fetch comprehensive case data including lawyer profile
     const { data: caseData, error: caseError } = await supabase
       .from('cases')
       .select(`
@@ -62,7 +62,19 @@ serve(async (req) => {
         documents(file_name, document_category, ocr_text),
         case_analysis(analysis_data, analysis_type),
         case_messages(content, role, created_at),
-        conversations!inner(messages(content, role, created_at))
+        conversations!inner(messages(content, role, created_at)),
+        assigned_lawyer:profiles!assigned_lawyer_id(
+          first_name,
+          last_name,
+          law_firm,
+          office_address,
+          phone,
+          office_phone,
+          email,
+          license_number,
+          specializations,
+          years_experience
+        )
       `)
       .eq('id', caseId)
       .single();
@@ -97,21 +109,49 @@ serve(async (req) => {
       conversation_history: caseData.conversations?.[0]?.messages?.slice(-10) || [] // Last 10 messages
     };
 
-    const systemPrompt = `You are a professional legal proposal generator. Create a comprehensive, professional legal proposal based on the provided case information and lawyer input.
+    // Prepare lawyer information
+    const lawyerInfo = caseData.assigned_lawyer ? {
+      name: `${caseData.assigned_lawyer.first_name || ''} ${caseData.assigned_lawyer.last_name || ''}`.trim(),
+      law_firm: caseData.assigned_lawyer.law_firm,
+      office_address: caseData.assigned_lawyer.office_address,
+      phone: caseData.assigned_lawyer.phone || caseData.assigned_lawyer.office_phone,
+      email: caseData.assigned_lawyer.email,
+      license_number: caseData.assigned_lawyer.license_number,
+      specializations: caseData.assigned_lawyer.specializations,
+      years_experience: caseData.assigned_lawyer.years_experience
+    } : null;
+
+    const systemPrompt = `You are a professional legal proposal generator for the LegalPro platform. Create a comprehensive, professional legal proposal based on the provided case information and lawyer input.
+
+CRITICAL FORMATTING REQUIREMENTS:
+- Timeline sections: Use structured bullet points or numbered lists, NEVER use pipe characters (|) or table formatting
+- Payment terms: ALL payments are processed through the LegalPro platform only
+- Lawyer information: Use the actual lawyer contact details provided, NEVER use placeholders like [Attorney Name]
+- Platform disclaimers: Include specific liability and payment processing disclaimers
 
 The proposal should be structured, professional, and include:
 1. Executive Summary
 2. Legal Analysis & Case Overview
 3. Scope of Work & Services
-4. Timeline & Milestones
-5. Fee Structure & Payment Terms
-6. Terms & Conditions
+4. Timeline & Milestones (use clean numbered lists or bullet points)
+5. Fee Structure & Payment Terms (LegalPro platform only)
+6. Terms & Conditions (include platform disclaimers)
 7. Next Steps
+8. Attorney Contact Information (use real data from assigned lawyer)
+
+MANDATORY PLATFORM DISCLAIMERS:
+- "LegalPro is not liable for any work commenced by the lawyer"
+- "This scope of work contract is between the lawyer and the client only"
+- "Payment for security reasons is handled by Egyptlegalpro.com through the LegalPro platform"
+- "All payments must be processed through the LegalPro platform - no direct payments, wire transfers, or checks accepted"
 
 Use formal legal language appropriate for the jurisdiction (${caseData.jurisdiction}). Be specific about the legal issues identified and the proposed approach.
 
 Case Information:
 ${JSON.stringify(caseContext, null, 2)}
+
+Assigned Lawyer Information:
+${lawyerInfo ? JSON.stringify(lawyerInfo, null, 2) : 'No lawyer assigned yet'}
 
 Lawyer Input:
 - Consultation Fee: $${proposalInput.consultation_fee}
@@ -120,7 +160,7 @@ Lawyer Input:
 - Timeline: ${proposalInput.timeline}
 - Strategy: ${proposalInput.strategy}
 
-Generate a professional proposal document that combines all this information into a cohesive, persuasive legal proposal.`;
+Generate a professional proposal document that combines all this information into a cohesive, persuasive legal proposal. Use the actual lawyer contact information in the attorney section, format timelines as clean numbered lists, and include all required platform disclaimers.`;
 
     // Try multiple models with fallback
     const models = ['gpt-5-2025-08-07', 'gpt-5-mini-2025-08-07', 'gpt-4.1-2025-04-14'];
