@@ -73,7 +73,7 @@ const Landing = () => {
             </div>
             <div className="flex items-center gap-1 sm:gap-4">
               <LanguageToggle />
-              <Link to="/legal-database" className="hidden sm:block">
+              <Link to="/legal-database">
                 <Button variant="ghost">Guides</Button>
               </Link>
               <Link to="/auth?force=true">
@@ -81,7 +81,7 @@ const Landing = () => {
               </Link>
               <Link to="/auth?force=true">
                 <Button className="bg-gradient-primary shadow-hero text-sm px-3 sm:px-4">
-                  <span className="sm:hidden">Start</span>
+                  <span className="sm:hidden">Sign In</span>
                   <span className="hidden sm:inline">Get Started</span>
                 </Button>
               </Link>
