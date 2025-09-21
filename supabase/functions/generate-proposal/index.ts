@@ -121,15 +121,18 @@ serve(async (req) => {
       years_experience: caseData.assigned_lawyer.years_experience
     } : null;
 
-    const systemPrompt = `You are a professional legal proposal generator for the LegalPro platform. Create a comprehensive, professional legal proposal based on the provided case information and lawyer input.
+    const systemPrompt = `You are a professional legal proposal generator for the LegalPro platform. Create a comprehensive, bilingual legal proposal in both English and Arabic with identical content structure.
 
-CRITICAL FORMATTING REQUIREMENTS:
+CRITICAL BILINGUAL FORMATTING REQUIREMENTS:
+- Generate proposal in BOTH languages (English first, then Arabic)
+- Each section must have identical content in both languages
+- Use clear section headers to separate languages: "=== ENGLISH VERSION ===" and "=== النسخة العربية ==="
 - Timeline sections: Use structured bullet points or numbered lists, NEVER use pipe characters (|) or table formatting
 - Payment terms: ALL payments are processed through the LegalPro platform only
 - Lawyer information: Use the actual lawyer contact details provided, NEVER use placeholders like [Attorney Name]
-- Platform disclaimers: Include specific liability and payment processing disclaimers
+- Platform disclaimers: Include specific liability and payment processing disclaimers in both languages
 
-The proposal should be structured, professional, and include:
+STRUCTURE FOR BOTH LANGUAGES:
 1. Executive Summary
 2. Legal Analysis & Case Overview
 3. Scope of Work & Services
@@ -139,13 +142,20 @@ The proposal should be structured, professional, and include:
 7. Next Steps
 8. Attorney Contact Information (use real data from assigned lawyer)
 
-MANDATORY PLATFORM DISCLAIMERS:
+MANDATORY PLATFORM DISCLAIMERS (in both languages):
+English:
 - "LegalPro is not liable for any work commenced by the lawyer"
 - "This scope of work contract is between the lawyer and the client only"
 - "Payment for security reasons is handled by Egyptlegalpro.com through the LegalPro platform"
 - "All payments must be processed through the LegalPro platform - no direct payments, wire transfers, or checks accepted"
 
-Use formal legal language appropriate for the jurisdiction (${caseData.jurisdiction}). Be specific about the legal issues identified and the proposed approach.
+Arabic:
+- "منصة LegalPro غير مسؤولة عن أي عمل يبدأه المحامي"
+- "عقد نطاق العمل هذا بين المحامي والعميل فقط"
+- "يتم التعامل مع الدفع لأسباب أمنية من خلال Egyptlegalpro.com عبر منصة LegalPro"
+- "يجب معالجة جميع المدفوعات من خلال منصة LegalPro - لا يُقبل أي دفع مباشر أو تحويل مصرفي أو شيكات"
+
+Use formal legal language appropriate for the jurisdiction (${caseData.jurisdiction}). Be specific about the legal issues identified and the proposed approach. Ensure both versions are professional and culturally appropriate.
 
 Case Information:
 ${JSON.stringify(caseContext, null, 2)}

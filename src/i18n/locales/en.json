@@ -47,6 +47,53 @@
     "loading": "Loading dashboard...",
     "error": "Error loading dashboard data"
   },
+  "proposal": {
+    "title": "Create AI-Powered Proposal",
+    "subtitle": "{{caseTitle}} • {{clientName}}",
+    "tabs": {
+      "details": "Proposal Details",
+      "preview": "Preview & Send"
+    },
+    "feeStructure": {
+      "title": "Fee Structure",
+      "consultation": "Consultation Fee ($)",
+      "remaining": "Remaining Fee ($)",
+      "total": "Total Fee"
+    },
+    "timeline": {
+      "title": "Timeline",
+      "estimated": "Estimated Timeline",
+      "placeholder": "e.g., 4-6 weeks"
+    },
+    "strategy": {
+      "title": "Legal Strategy",
+      "label": "Your Approach & Strategy",
+      "placeholder": "Describe your legal strategy, approach, and key points you'll address in this case...",
+      "description": "This will be used by AI to generate a comprehensive proposal with professional legal language."
+    },
+    "buttons": {
+      "generate": "Generate AI Proposal",
+      "generating": "Generating...",
+      "send": "Send Proposal",
+      "sending": "Sending...",
+      "backToEdit": "Back to Edit"
+    },
+    "messages": {
+      "strategyRequired": "Strategy Required",
+      "strategyRequiredDesc": "Please provide your legal strategy before generating the proposal.",
+      "generated": "Proposal Generated",
+      "generatedDesc": "Your AI-powered proposal has been created successfully.",
+      "generationFailed": "Generation Failed",
+      "noProposal": "No Proposal",
+      "noProposalDesc": "Please generate a proposal first.",
+      "sent": "Proposal Sent",
+      "sentDesc": "Your professional proposal has been sent to {{clientName}}.",
+      "sendFailed": "Send Failed",
+      "sendFailedDesc": "Failed to send proposal. Please try again.",
+      "noGenerated": "No proposal generated yet. Please go back to the form tab and generate a proposal first."
+    },
+    "generatedTitle": "Generated Proposal"
+  },
   "common": {
     "loading": "Loading...",
     "error": "Error",

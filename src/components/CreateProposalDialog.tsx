@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/hooks/useLanguage";
 import { Loader2, FileText, DollarSign, Clock, Target } from "lucide-react";
 
 interface CreateProposalDialogProps {
@@ -46,6 +47,7 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
   const [isSending, setIsSending] = useState(false);
   const [activeTab, setActiveTab] = useState("form");
   const { toast } = useToast();
+  const { t, isRTL } = useLanguage();
 
   const handleInputChange = (field: keyof ProposalForm, value: string | number) => {
     setFormData(prev => ({
@@ -57,8 +59,8 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
   const generateProposal = async () => {
     if (!formData.strategy.trim()) {
       toast({
-        title: "Strategy Required",
-        description: "Please provide your legal strategy before generating the proposal.",
+        title: t('proposal.messages.strategyRequired'),
+        description: t('proposal.messages.strategyRequiredDesc'),
         variant: "destructive"
       });
       return;
@@ -99,8 +101,8 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
       setActiveTab("preview");
       
       toast({
-        title: "Proposal Generated",
-        description: "Your AI-powered proposal has been created successfully."
+        title: t('proposal.messages.generated'),
+        description: t('proposal.messages.generatedDesc')
       });
     } catch (error) {
       console.error('Error generating proposal:', error);
@@ -113,7 +115,7 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
       }
       
       toast({
-        title: "Generation Failed",
+        title: t('proposal.messages.generationFailed'),
         description: errorMessage,
         variant: "destructive"
       });
@@ -125,8 +127,8 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
   const sendProposal = async () => {
     if (!generatedProposal) {
       toast({
-        title: "No Proposal",
-        description: "Please generate a proposal first.",
+        title: t('proposal.messages.noProposal'),
+        description: t('proposal.messages.noProposalDesc'),
         variant: "destructive"
       });
       return;
@@ -188,8 +190,8 @@ Please review this proposal and let me know if you have any questions or would l
       }
 
       toast({
-        title: "Proposal Sent",
-        description: `Your professional proposal has been sent to ${clientName}.`
+        title: t('proposal.messages.sent'),
+        description: t('proposal.messages.sentDesc', { clientName })
       });
 
       onProposalSent();
@@ -208,8 +210,8 @@ Please review this proposal and let me know if you have any questions or would l
     } catch (error) {
       console.error('Error sending proposal:', error);
       toast({
-        title: "Send Failed",
-        description: "Failed to send proposal. Please try again.",
+        title: t('proposal.messages.sendFailed'),
+        description: t('proposal.messages.sendFailedDesc'),
         variant: "destructive"
       });
     } finally {
@@ -219,22 +221,22 @@ Please review this proposal and let me know if you have any questions or would l
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+      <DialogContent className={`max-w-4xl max-h-[90vh] overflow-hidden ${isRTL() ? 'rtl' : 'ltr'}`}>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}>
             <FileText className="h-5 w-5" />
-            Create AI-Powered Proposal
+            {t('proposal.title')}
           </DialogTitle>
           <p className="text-sm text-muted-foreground">
-            {caseTitle} • {clientName}
+            {t('proposal.subtitle', { caseTitle, clientName })}
           </p>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 overflow-hidden">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="form">Proposal Details</TabsTrigger>
+            <TabsTrigger value="form">{t('proposal.tabs.details')}</TabsTrigger>
             <TabsTrigger value="preview" disabled={!generatedProposal}>
-              Preview & Send
+              {t('proposal.tabs.preview')}
             </TabsTrigger>
           </TabsList>
 
@@ -242,14 +244,14 @@ Please review this proposal and let me know if you have any questions or would l
             <div className="grid grid-cols-2 gap-4">
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm flex items-center gap-2">
+                  <CardTitle className={`text-sm flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}>
                     <DollarSign className="h-4 w-4" />
-                    Fee Structure
+                    {t('proposal.feeStructure.title')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <Label htmlFor="consultation_fee">Consultation Fee ($)</Label>
+                    <Label htmlFor="consultation_fee">{t('proposal.feeStructure.consultation')}</Label>
                     <Input
                       id="consultation_fee"
                       type="number"
@@ -260,7 +262,7 @@ Please review this proposal and let me know if you have any questions or would l
                     />
                   </div>
                   <div>
-                    <Label htmlFor="remaining_fee">Remaining Fee ($)</Label>
+                    <Label htmlFor="remaining_fee">{t('proposal.feeStructure.remaining')}</Label>
                     <Input
                       id="remaining_fee"
                       type="number"
@@ -272,7 +274,7 @@ Please review this proposal and let me know if you have any questions or would l
                   </div>
                   <Separator />
                   <div className="flex justify-between items-center font-semibold">
-                    <span>Total Fee:</span>
+                    <span>{t('proposal.feeStructure.total')}:</span>
                     <span>${(formData.consultation_fee + formData.remaining_fee).toLocaleString()}</span>
                   </div>
                 </CardContent>
@@ -280,18 +282,18 @@ Please review this proposal and let me know if you have any questions or would l
 
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm flex items-center gap-2">
+                  <CardTitle className={`text-sm flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}>
                     <Clock className="h-4 w-4" />
-                    Timeline
+                    {t('proposal.timeline.title')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Label htmlFor="timeline">Estimated Timeline</Label>
+                  <Label htmlFor="timeline">{t('proposal.timeline.estimated')}</Label>
                   <Input
                     id="timeline"
                     value={formData.timeline}
                     onChange={(e) => handleInputChange('timeline', e.target.value)}
-                    placeholder="e.g., 4-6 weeks"
+                    placeholder={t('proposal.timeline.placeholder')}
                   />
                 </CardContent>
               </Card>
@@ -299,39 +301,39 @@ Please review this proposal and let me know if you have any questions or would l
 
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm flex items-center gap-2">
+                <CardTitle className={`text-sm flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}>
                   <Target className="h-4 w-4" />
-                  Legal Strategy
+                  {t('proposal.strategy.title')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <Label htmlFor="strategy">Your Approach & Strategy</Label>
+                <Label htmlFor="strategy">{t('proposal.strategy.label')}</Label>
                 <Textarea
                   id="strategy"
                   value={formData.strategy}
                   onChange={(e) => handleInputChange('strategy', e.target.value)}
-                  placeholder="Describe your legal strategy, approach, and key points you'll address in this case..."
+                  placeholder={t('proposal.strategy.placeholder')}
                   rows={4}
                   className="resize-none"
                 />
                 <p className="text-xs text-muted-foreground mt-2">
-                  This will be used by AI to generate a comprehensive proposal with professional legal language.
+                  {t('proposal.strategy.description')}
                 </p>
               </CardContent>
             </Card>
 
-            <div className="flex justify-end">
+            <div className={`flex ${isRTL() ? 'justify-start' : 'justify-end'}`}>
               <Button 
                 onClick={generateProposal} 
                 disabled={isGenerating || !formData.strategy.trim()}
               >
                 {isGenerating ? (
                   <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Generating...
+                    <Loader2 className={`h-4 w-4 ${isRTL() ? 'ml-2' : 'mr-2'} animate-spin`} />
+                    {t('proposal.buttons.generating')}
                   </>
                 ) : (
-                  'Generate AI Proposal'
+                  t('proposal.buttons.generate')
                 )}
               </Button>
             </div>
@@ -341,10 +343,10 @@ Please review this proposal and let me know if you have any questions or would l
             {generatedProposal ? (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Generated Proposal</CardTitle>
+                  <CardTitle className="text-lg">{t('proposal.generatedTitle')}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="prose prose-sm max-w-none whitespace-pre-wrap bg-muted p-4 rounded-md">
+                  <div className={`prose prose-sm max-w-none whitespace-pre-wrap bg-muted p-4 rounded-md ${isRTL() ? 'text-right' : 'text-left'}`}>
                     {generatedProposal}
                   </div>
                 </CardContent>
@@ -354,24 +356,24 @@ Please review this proposal and let me know if you have any questions or would l
                 <CardContent className="text-center py-8">
                   <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                   <p className="text-muted-foreground">
-                    No proposal generated yet. Please go back to the form tab and generate a proposal first.
+                    {t('proposal.messages.noGenerated')}
                   </p>
                 </CardContent>
               </Card>
             )}
 
-            <div className="flex justify-between">
+            <div className={`flex ${isRTL() ? 'justify-between flex-row-reverse' : 'justify-between'}`}>
               <Button variant="outline" onClick={() => setActiveTab("form")}>
-                Back to Edit
+                {t('proposal.buttons.backToEdit')}
               </Button>
               <Button onClick={sendProposal} disabled={isSending || !generatedProposal}>
                 {isSending ? (
                   <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Sending...
+                    <Loader2 className={`h-4 w-4 ${isRTL() ? 'ml-2' : 'mr-2'} animate-spin`} />
+                    {t('proposal.buttons.sending')}
                   </>
                 ) : (
-                  'Send Proposal'
+                  t('proposal.buttons.send')
                 )}
               </Button>
             </div>

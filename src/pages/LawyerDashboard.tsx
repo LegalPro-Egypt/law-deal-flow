@@ -299,9 +299,9 @@ const LawyerDashboard = () => {
               <span className="text-sm text-muted-foreground hidden sm:block">
                 {t('dashboard.welcome', { name: profile?.first_name || 'Lawyer' })}
               </span>
-              <Button variant="ghost" size="sm" onClick={handleSignOut}>
+              <Button variant="ghost" size="sm" onClick={handleSignOut} className="rtl-text-overflow">
                 <LogOut className={`h-4 w-4 ${isRTL() ? 'ml-2' : 'mr-2'}`} />
-                {t('dashboard.signOut')}
+                <span className="rtl-text-wrap">{t('dashboard.signOut')}</span>
               </Button>
             </div>
           </div>

@@ -242,6 +242,20 @@
   max-width: 100vw;
 }
 
+/* RTL Text Overflow Fix */
+.rtl-text-overflow {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.rtl-text-wrap {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
 /* RTL Mobile Optimization */
 @media (max-width: 767px) {
   .rtl-mobile-container {
@@ -252,6 +266,10 @@
   .rtl-mobile-grid {
     @apply grid gap-4;
     grid-template-columns: 1fr;
+  }
+  
+  .rtl-text-wrap {
+    max-width: 80px;
   }
   
   .rtl-mobile-flex {
