@@ -30,7 +30,7 @@
       "status": {
         "submitted": "Submitted",
         "intake": "Intake",
-        "lawyer_assigned": "Assigned",
+        "lawyer_assigned": "Awaiting Proposal",
         "proposal_sent": "Proposal Sent",
         "accepted": "Accepted",
         "in_progress": "In Progress",
@@ -122,7 +122,7 @@
       "intake": "INTAKE",
       "under_review": "UNDER REVIEW",
       "assigned": "ASSIGNED",
-      "lawyer_assigned": "ASSIGNED",
+      "lawyer_assigned": "AWAITING PROPOSAL",
       "proposal_sent": "PROPOSAL SENT",
       "accepted": "ACCEPTED",
       "in_progress": "IN PROGRESS",

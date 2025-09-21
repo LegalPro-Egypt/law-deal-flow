@@ -30,7 +30,7 @@
       "status": {
         "submitted": "مُقدمة",
         "intake": "استقبال",
-        "lawyer_assigned": "مُكلفة",
+        "lawyer_assigned": "في انتظار العرض",
         "proposal_sent": "تم إرسال العرض",
         "accepted": "مقبولة",
         "in_progress": "قيد التنفيذ",
@@ -122,7 +122,7 @@
       "intake": "استقبال",
       "under_review": "قيد المراجعة",
       "assigned": "مُكلفة",
-      "lawyer_assigned": "مُكلفة",
+      "lawyer_assigned": "في انتظار العرض",
       "proposal_sent": "تم إرسال العرض",
       "accepted": "مقبولة",
       "in_progress": "قيد التنفيذ",
