@@ -322,8 +322,13 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
 
       if (error) throw error;
 
-      // Update the local state with the generated summary
-      setCaseDetails(prev => prev ? { ...prev, ai_summary: data.summary } : null);
+      // Update the local state with both bilingual summaries
+      setCaseDetails(prev => prev ? { 
+        ...prev, 
+        ai_summary: data.summary, // Backward compatibility
+        ai_summary_en: data.summaryEn,
+        ai_summary_ar: data.summaryAr
+      } : null);
       
       toast({
         title: t('caseDetails.toast.summaryGenerated'),
@@ -629,24 +634,52 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                   </Card>
 
                   {/* AI Summary */}
-                  {(caseDetails.ai_summary_en || caseDetails.ai_summary_ar || caseDetails.ai_summary) && (
-                    <Card>
-                      <CardHeader>
+                  <Card>
+                    <CardHeader>
+                      <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
                         <CardTitle className="flex items-center gap-2">
                           <Sparkles className="h-4 w-4" />
                           {t('caseDetails.aiSummary.title')}
                         </CardTitle>
-                      </CardHeader>
+                        <Button
+                          onClick={generateSummary}
+                          disabled={generatingSummary || conversation.length === 0}
+                          size="sm"
+                          variant="outline"
+                        >
+                          {generatingSummary ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
+                              {t('caseDetails.conversation.generating')}
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="h-4 w-4 mr-2" />
+                              {(caseDetails.ai_summary_en || caseDetails.ai_summary_ar || caseDetails.ai_summary) 
+                                ? t('caseDetails.conversation.regenerateSummary', 'Regenerate Summary')
+                                : t('caseDetails.conversation.generateSummary')
+                              }
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    {(caseDetails.ai_summary_en || caseDetails.ai_summary_ar || caseDetails.ai_summary) && (
                       <CardContent>
-                        <p className="text-sm">
+                        <div 
+                          className={`text-sm whitespace-pre-wrap break-words ${
+                            isRTL && currentLanguage === 'ar' ? 'text-right' : 'text-left'
+                          }`}
+                          dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
+                        >
                           {currentLanguage === 'ar' 
                             ? (caseDetails.ai_summary_ar || caseDetails.ai_summary)
                             : (caseDetails.ai_summary_en || caseDetails.ai_summary)
                           }
-                        </p>
+                        </div>
                       </CardContent>
-                    </Card>
-                  )}
+                    )}
+                  </Card>
                 </TabsContent>
 
                 {profile?.role !== 'lawyer' && (
