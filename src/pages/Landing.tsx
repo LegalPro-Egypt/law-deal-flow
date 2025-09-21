@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { HomepageChatbot } from "@/components/HomepageChatbot";
 import { ProBonoSection } from "@/components/ProBonoSection";
 import { PromotionalPopup } from "@/components/PromotionalPopup";
+import { LanguageToggle } from "@/components/LanguageToggle";
 
 const Landing = () => {
   const { isAuthenticated, role, loading } = useAuth();
@@ -71,6 +72,7 @@ const Landing = () => {
               <span className="text-xl font-bold">LegalPro</span>
             </div>
             <div className="flex items-center space-x-1 sm:space-x-4">
+              <LanguageToggle />
               <Link to="/legal-database" className="order-1 sm:order-none">
                 <Button variant="ghost">Guides</Button>
               </Link>
