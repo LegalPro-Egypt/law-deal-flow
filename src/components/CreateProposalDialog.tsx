@@ -66,6 +66,8 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
 
     setIsGenerating(true);
     try {
+      console.log('Generating proposal for case:', caseId, 'with data:', formData);
+      
       const { data, error } = await supabase.functions.invoke('generate-proposal', {
         body: {
           caseId,
@@ -73,8 +75,26 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
         }
       });
 
-      if (error) throw error;
+      console.log('Edge function response:', { data, error });
 
+      if (error) {
+        console.error('Edge function error:', error);
+        throw error;
+      }
+
+      if (!data) {
+        throw new Error('No data returned from proposal generation');
+      }
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      if (!data.generatedProposal) {
+        throw new Error('No proposal content generated');
+      }
+
+      console.log('Generated proposal length:', data.generatedProposal.length);
       setGeneratedProposal(data.generatedProposal);
       setActiveTab("preview");
       
@@ -84,9 +104,17 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
       });
     } catch (error) {
       console.error('Error generating proposal:', error);
+      
+      let errorMessage = "Failed to generate proposal. Please try again.";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
       toast({
         title: "Generation Failed",
-        description: "Failed to generate proposal. Please try again.",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
@@ -310,7 +338,7 @@ Please review this proposal and let me know if you have any questions or would l
           </TabsContent>
 
           <TabsContent value="preview" className="space-y-4 overflow-y-auto max-h-[60vh]">
-            {generatedProposal && (
+            {generatedProposal ? (
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">Generated Proposal</CardTitle>
@@ -321,13 +349,22 @@ Please review this proposal and let me know if you have any questions or would l
                   </div>
                 </CardContent>
               </Card>
+            ) : (
+              <Card>
+                <CardContent className="text-center py-8">
+                  <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">
+                    No proposal generated yet. Please go back to the form tab and generate a proposal first.
+                  </p>
+                </CardContent>
+              </Card>
             )}
 
             <div className="flex justify-between">
               <Button variant="outline" onClick={() => setActiveTab("form")}>
                 Back to Edit
               </Button>
-              <Button onClick={sendProposal} disabled={isSending}>
+              <Button onClick={sendProposal} disabled={isSending || !generatedProposal}>
                 {isSending ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
