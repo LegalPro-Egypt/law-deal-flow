@@ -173,7 +173,7 @@ const LawyerDashboard = () => {
             <div className="flex items-center justify-between h-16">
               <Link to="/?force=true" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
                 <Scale className="h-8 w-8 text-primary" />
-                <span className="text-xl font-bold">LegalConnect</span>
+                <span className="text-xl font-bold">LegalPro</span>
                 <Badge variant="secondary" className="ml-2">Lawyer Portal</Badge>
               </Link>
               <Button variant="ghost" size="sm" onClick={handleSignOut} aria-label={t('dashboard.signOut')}>
@@ -225,7 +225,7 @@ const LawyerDashboard = () => {
             <div className="flex items-center justify-between h-16">
               <Link to="/?force=true" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
                 <Scale className="h-8 w-8 text-primary" />
-                <span className="text-xl font-bold">LegalConnect</span>
+                <span className="text-xl font-bold">LegalPro</span>
                 <Badge variant="secondary" className="ml-2">Lawyer Portal</Badge>
               </Link>
               <Button variant="ghost" size="sm" onClick={() => setShowVerificationForm(false)}>
@@ -299,7 +299,7 @@ const LawyerDashboard = () => {
           <div className="flex items-center justify-between h-16">
             <Link to="/?force=true" className={`flex items-center gap-2 hover:opacity-80 transition-opacity ${isRTL() ? 'rtl-flex-row' : ''}`}>
               <Scale className="h-8 w-8 text-primary" />
-              <span className="text-xl font-bold">LegalConnect</span>
+              <span className="text-xl font-bold">LegalPro</span>
               <Badge variant="secondary" className="rtl-ml-2">Lawyer Portal</Badge>
             </Link>
             <div className="flex items-center gap-4">
