@@ -302,14 +302,12 @@ export type Database = {
           id: string
           language: string
           lawyer_id: string | null
-          livekit_room_id: string | null
           metadata: Json | null
           mode: string
           session_id: string
           status: string
           updated_at: string
           user_id: string | null
-          video_session_id: string | null
         }
         Insert: {
           case_id?: string | null
@@ -317,14 +315,12 @@ export type Database = {
           id?: string
           language?: string
           lawyer_id?: string | null
-          livekit_room_id?: string | null
           metadata?: Json | null
           mode?: string
           session_id: string
           status?: string
           updated_at?: string
           user_id?: string | null
-          video_session_id?: string | null
         }
         Update: {
           case_id?: string | null
@@ -332,14 +328,12 @@ export type Database = {
           id?: string
           language?: string
           lawyer_id?: string | null
-          livekit_room_id?: string | null
           metadata?: Json | null
           mode?: string
           session_id?: string
           status?: string
           updated_at?: string
           user_id?: string | null
-          video_session_id?: string | null
         }
         Relationships: [
           {
@@ -347,13 +341,6 @@ export type Database = {
             columns: ["case_id"]
             isOneToOne: false
             referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "conversations_video_session_id_fkey"
-            columns: ["video_session_id"]
-            isOneToOne: false
-            referencedRelation: "video_sessions"
             referencedColumns: ["id"]
           },
         ]
@@ -710,186 +697,6 @@ export type Database = {
           years_experience?: number | null
         }
         Relationships: []
-      }
-      session_participants: {
-        Row: {
-          connection_quality: string | null
-          created_at: string
-          duration_seconds: number | null
-          id: string
-          joined_at: string | null
-          left_at: string | null
-          metadata: Json | null
-          participant_identity: string
-          role: string
-          user_id: string
-          video_session_id: string
-        }
-        Insert: {
-          connection_quality?: string | null
-          created_at?: string
-          duration_seconds?: number | null
-          id?: string
-          joined_at?: string | null
-          left_at?: string | null
-          metadata?: Json | null
-          participant_identity: string
-          role: string
-          user_id: string
-          video_session_id: string
-        }
-        Update: {
-          connection_quality?: string | null
-          created_at?: string
-          duration_seconds?: number | null
-          id?: string
-          joined_at?: string | null
-          left_at?: string | null
-          metadata?: Json | null
-          participant_identity?: string
-          role?: string
-          user_id?: string
-          video_session_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "session_participants_video_session_id_fkey"
-            columns: ["video_session_id"]
-            isOneToOne: false
-            referencedRelation: "video_sessions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      session_recordings: {
-        Row: {
-          completed_at: string | null
-          created_at: string
-          duration_seconds: number | null
-          file_path: string | null
-          file_size: number | null
-          format: string | null
-          id: string
-          livekit_recording_id: string
-          metadata: Json | null
-          recording_url: string | null
-          started_at: string | null
-          status: string
-          updated_at: string
-          video_session_id: string
-        }
-        Insert: {
-          completed_at?: string | null
-          created_at?: string
-          duration_seconds?: number | null
-          file_path?: string | null
-          file_size?: number | null
-          format?: string | null
-          id?: string
-          livekit_recording_id: string
-          metadata?: Json | null
-          recording_url?: string | null
-          started_at?: string | null
-          status?: string
-          updated_at?: string
-          video_session_id: string
-        }
-        Update: {
-          completed_at?: string | null
-          created_at?: string
-          duration_seconds?: number | null
-          file_path?: string | null
-          file_size?: number | null
-          format?: string | null
-          id?: string
-          livekit_recording_id?: string
-          metadata?: Json | null
-          recording_url?: string | null
-          started_at?: string | null
-          status?: string
-          updated_at?: string
-          video_session_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "session_recordings_video_session_id_fkey"
-            columns: ["video_session_id"]
-            isOneToOne: false
-            referencedRelation: "video_sessions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      video_sessions: {
-        Row: {
-          case_id: string
-          client_id: string
-          created_at: string
-          duration_seconds: number | null
-          ended_at: string | null
-          id: string
-          lawyer_id: string | null
-          livekit_room_id: string
-          metadata: Json | null
-          recording_consent_client: boolean | null
-          recording_consent_lawyer: boolean | null
-          recording_enabled: boolean
-          room_name: string
-          scheduled_at: string | null
-          session_type: string
-          started_at: string | null
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          case_id: string
-          client_id: string
-          created_at?: string
-          duration_seconds?: number | null
-          ended_at?: string | null
-          id?: string
-          lawyer_id?: string | null
-          livekit_room_id: string
-          metadata?: Json | null
-          recording_consent_client?: boolean | null
-          recording_consent_lawyer?: boolean | null
-          recording_enabled?: boolean
-          room_name: string
-          scheduled_at?: string | null
-          session_type?: string
-          started_at?: string | null
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          case_id?: string
-          client_id?: string
-          created_at?: string
-          duration_seconds?: number | null
-          ended_at?: string | null
-          id?: string
-          lawyer_id?: string | null
-          livekit_room_id?: string
-          metadata?: Json | null
-          recording_consent_client?: boolean | null
-          recording_consent_lawyer?: boolean | null
-          recording_enabled?: boolean
-          room_name?: string
-          scheduled_at?: string | null
-          session_type?: string
-          started_at?: string | null
-          status?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "video_sessions_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-        ]
       }
     }
     Views: {
