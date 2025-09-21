@@ -10,9 +10,9 @@ export const ProBonoSection = () => {
 
   return (
     <section className="py-16 bg-gradient-to-br from-primary/5 via-background to-accent/5">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto">
-          <Card className="p-8 sm:p-12 bg-gradient-card shadow-elevated border-0 relative overflow-hidden">
+          <Card className="p-6 sm:p-8 lg:p-12 bg-gradient-card shadow-elevated border-0 relative overflow-hidden mx-auto">
             {/* Decorative Background Elements */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/10 to-accent/10 rounded-full blur-3xl -translate-y-16 translate-x-16"></div>
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-success/10 to-primary/10 rounded-full blur-2xl translate-y-12 -translate-x-12"></div>
