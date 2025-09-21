@@ -160,7 +160,7 @@ export const LawyerQAChatbot = ({ isOpen, onToggle }: LawyerQAChatbotProps) => {
     return (
       <Button
         onClick={onToggle}
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg bg-gradient-primary hover:bg-gradient-primary/90 z-50"
+        className="fixed bottom-6 ltr:right-6 rtl:left-6 h-14 w-14 rounded-full shadow-lg bg-gradient-primary hover:bg-gradient-primary/90 z-50"
         size="lg"
       >
         <MessageCircle className="h-6 w-6" />
@@ -169,7 +169,7 @@ export const LawyerQAChatbot = ({ isOpen, onToggle }: LawyerQAChatbotProps) => {
   }
 
   return (
-    <Card className={`fixed bottom-6 right-6 z-50 shadow-xl transition-all duration-300 ${
+    <Card className={`fixed bottom-6 ltr:right-6 rtl:left-6 z-50 shadow-xl transition-all duration-300 ${
       isMinimized ? 'w-80 h-16' : 'w-96 h-[500px]'
     } ${isRTL() ? 'text-right' : ''}`}>
       <CardHeader className="p-4 bg-gradient-primary text-primary-foreground rounded-t-lg">
@@ -178,7 +178,7 @@ export const LawyerQAChatbot = ({ isOpen, onToggle }: LawyerQAChatbotProps) => {
             <Scale className="h-5 w-5" />
             <CardTitle className="text-lg">{t('lawyerAssistant.title')}</CardTitle>
           </div>
-          <div className="flex items-center gap-2">
+          <div className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}>
             <Button
               variant="ghost"
               size="sm"
