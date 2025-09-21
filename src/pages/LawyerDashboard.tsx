@@ -299,20 +299,20 @@ const LawyerDashboard = () => {
       {/* Header */}
       <header className="border-b bg-background/95 backdrop-blur sticky top-0 z-50">
         <div className="rtl-safe-container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Link to="/?force=true" className={`flex items-center gap-2 hover:opacity-80 transition-opacity ${isRTL() ? 'rtl-flex-row' : ''}`}>
+          <div className={`flex items-center justify-between h-16 ${isRTL() ? 'flex-row-reverse' : ''}`}>
+            <Link to="/?force=true" className={`flex items-center gap-2 hover:opacity-80 transition-opacity ${isRTL() ? 'flex-row-reverse' : ''}`}>
               <Scale className="h-8 w-8 text-primary" />
               <span className="text-xl font-bold">LegalConnect</span>
-              <Badge variant="secondary" className="rtl-ml-2">Lawyer Portal</Badge>
+              <Badge variant="secondary" className={`${isRTL() ? 'mr-2' : 'ml-2'}`}>Lawyer Portal</Badge>
             </Link>
-            <div className="flex items-center gap-4">
+            <div className={`flex items-center gap-4 ${isRTL() ? 'flex-row-reverse' : ''}`}>
               <LanguageToggle />
-              <span className="text-sm text-muted-foreground hidden sm:block">
+              <span className={`text-sm text-muted-foreground hidden sm:block ${isRTL() ? 'text-right' : ''}`}>
                 {t('dashboard.welcome', { name: profile?.first_name || 'Lawyer' })}
               </span>
               <Button variant="ghost" size="sm" onClick={handleSignOut} aria-label={t('dashboard.signOut')}>
-                <LogOut className={`h-4 w-4 ${isRTL() ? '' : 'mr-2'}`} />
-                {!isRTL() && <span>{t('dashboard.signOut')}</span>}
+                <LogOut className={`h-4 w-4 ${isRTL() ? 'ml-2' : 'mr-2'}`} />
+                <span>{t('dashboard.signOut')}</span>
               </Button>
             </div>
           </div>
