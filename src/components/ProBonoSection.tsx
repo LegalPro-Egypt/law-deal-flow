@@ -23,7 +23,7 @@ export const ProBonoSection = () => {
         <div className="max-w-4xl mx-auto">
           <Card 
             ref={elementRef as React.RefObject<HTMLDivElement>}
-            className={`p-6 sm:p-8 lg:p-12 bg-gradient-card shadow-elevated border-0 relative overflow-hidden mx-auto transition-all duration-300 ${
+            className={`p-6 sm:p-8 lg:p-12 bg-gradient-card shadow-elevated drop-shadow-2xl border-0 relative overflow-hidden mx-auto transition-all duration-300 ${
               isVisible ? 'md:animate-slide-up-fade' : 'md:opacity-0 md:translate-y-10'
             }`}
           >
