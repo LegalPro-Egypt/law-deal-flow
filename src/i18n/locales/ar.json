@@ -1,0 +1,61 @@
+{
+  "dashboard": {
+    "welcome": "مرحباً، {{name}}",
+    "signOut": "تسجيل الخروج",
+    "stats": {
+      "activeCases": "القضايا النشطة",
+      "pendingCases": "القضايا المعلقة",
+      "completedCases": "القضايا المكتملة", 
+      "totalEarnings": "إجمالي الأرباح"
+    },
+    "verification": {
+      "pendingBasic": "إكمال الملف الشخصي",
+      "pendingComplete": "قيد المراجعة",
+      "verified": "تم التحقق",
+      "status": "حالة التحقق",
+      "description": "لبدء استقبال قضايا العملاء، تحتاج إلى إكمال عملية التحقق.",
+      "completeProfile": "إكمال الملف الشخصي",
+      "waitingReview": "ملفك الشخصي قيد المراجعة. سيتم إشعارك عند الموافقة.",
+      "approved": "تم التحقق من ملفك الشخصي. يمكنك الآن استقبال مهام القضايا.",
+      "inactive": "حسابك غير نشط حالياً. يرجى التواصل مع الدعم.",
+      "notApproved": "لم تتم الموافقة عليك كمحامي على هذه المنصة."
+    },
+    "cases": {
+      "title": "القضايا المسندة إليك",
+      "noCases": "لم يتم تعيين قضايا بعد",
+      "caseNumber": "القضية رقم {{number}}",
+      "viewDetails": "عرض التفاصيل",
+      "createProposal": "إنشاء اقتراح",
+      "qaChat": "محادثة الأسئلة",
+      "status": {
+        "submitted": "مقدمة",
+        "intake": "استقبال",
+        "lawyer_assigned": "مسندة",
+        "proposal_sent": "تم إرسال الاقتراح",
+        "accepted": "مقبولة",
+        "in_progress": "قيد العمل",
+        "completed": "مكتملة",
+        "cancelled": "ملغية"
+      },
+      "urgency": {
+        "low": "منخفضة",
+        "medium": "متوسطة",
+        "high": "عالية", 
+        "urgent": "عاجلة"
+      }
+    },
+    "loading": "جارٍ تحميل لوحة التحكم...",
+    "error": "خطأ في تحميل بيانات لوحة التحكم"
+  },
+  "common": {
+    "loading": "جارٍ التحميل...",
+    "error": "خطأ",
+    "success": "نجح",
+    "cancel": "إلغاء", 
+    "save": "حفظ",
+    "close": "إغلاق",
+    "language": "اللغة",
+    "english": "English",
+    "arabic": "العربية"
+  }
+}

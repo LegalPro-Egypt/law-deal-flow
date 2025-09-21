@@ -25,6 +25,9 @@ import { CompleteVerificationForm } from "@/components/CompleteVerificationForm"
 import { CaseDetailsDialog } from "@/components/CaseDetailsDialog";
 import { CreateProposalDialog } from "@/components/CreateProposalDialog";
 import { getClientNameForRole } from "@/utils/clientPrivacy";
+import { useLanguage } from "@/hooks/useLanguage";
+import { LanguageToggle } from "@/components/LanguageToggle";
+import { VerificationStatusBadge } from "@/components/VerificationStatusBadge";
 
 interface LawyerStats {
   activeCases: number;
@@ -50,6 +53,7 @@ const LawyerDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, profile, loading: authLoading } = useAuth();
+  const { t, isRTL } = useLanguage();
   const [stats, setStats] = useState<LawyerStats>({
     activeCases: 0,
     completedCases: 0,
@@ -100,8 +104,8 @@ const LawyerDashboard = () => {
     } catch (error: any) {
       console.error('Error fetching dashboard data:', error);
       toast({
-        title: "Error",
-        description: "Failed to load dashboard data. Please try refreshing the page.",
+        title: t('common.error'),
+        description: t('dashboard.error'),
         variant: "destructive",
       });
     } finally {
@@ -119,7 +123,7 @@ const LawyerDashboard = () => {
       });
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: t('common.error'),
         description: "Failed to sign out: " + error.message,
         variant: "destructive",
       });
@@ -166,7 +170,7 @@ const LawyerDashboard = () => {
               </Link>
               <Button variant="ghost" size="sm" onClick={handleSignOut}>
                 <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
+                {t('dashboard.signOut')}
               </Button>
             </div>
           </div>
@@ -185,9 +189,9 @@ const LawyerDashboard = () => {
 
   const getVerificationTitle = (status: string | null | undefined) => {
     switch (status) {
-      case 'pending_basic': return "Complete Your Verification";
-      case 'pending_complete': return "Verification Under Review";
-      case 'verified': return "Fully Verified";
+      case 'pending_basic': return t('dashboard.verification.pendingBasic');
+      case 'pending_complete': return t('dashboard.verification.pendingComplete');
+      case 'verified': return t('dashboard.verification.verified');
       default: return "";
     }
   };
@@ -195,11 +199,11 @@ const LawyerDashboard = () => {
   const getVerificationDescription = (status: string | null | undefined) => {
     switch (status) {
       case 'pending_basic': 
-        return "To start receiving client cases, you need to complete the verification process with additional professional details.";
+        return t('dashboard.verification.description');
       case 'pending_complete': 
-        return "Thank you for completing your verification! Our admin team is reviewing your submission and will notify you once approved.";
+        return t('dashboard.verification.waitingReview');
       case 'verified': 
-        return "Your profile is fully verified. You can now receive client cases and access all lawyer features.";
+        return t('dashboard.verification.approved');
       default: return "";
     }
   };
@@ -217,7 +221,7 @@ const LawyerDashboard = () => {
                 <Badge variant="secondary" className="ml-2">Lawyer Portal</Badge>
               </Link>
               <Button variant="ghost" size="sm" onClick={() => setShowVerificationForm(false)}>
-                Back to Dashboard
+                {isRTL() ? 'العودة إلى لوحة التحكم' : 'Back to Dashboard'}
               </Button>
             </div>
           </div>
@@ -246,8 +250,8 @@ const LawyerDashboard = () => {
             <CardTitle className="text-2xl font-bold">Lawyer Dashboard</CardTitle>
             <CardDescription>
               {profile?.role !== 'lawyer' 
-                ? "You don't have lawyer permissions."
-                : "Your lawyer account is pending approval."
+                ? t('dashboard.verification.notApproved')
+                : t('dashboard.verification.inactive')
               }
             </CardDescription>
           </CardHeader>
@@ -256,20 +260,20 @@ const LawyerDashboard = () => {
               <div className="space-y-4">
                 <AlertCircle className="h-12 w-12 text-warning mx-auto" />
                 <p className="text-muted-foreground">
-                  This dashboard is only available for approved lawyers. Please contact admin if this is an error.
+                  {t('dashboard.verification.notApproved')}
                 </p>
                 <Button onClick={handleSignOut} variant="outline">
-                  Sign Out
+                  {t('dashboard.signOut')}
                 </Button>
               </div>
             ) : (
               <div className="space-y-4">
                 <Clock className="h-12 w-12 text-warning mx-auto" />
                 <p className="text-muted-foreground">
-                  Your lawyer profile is currently under review. You'll receive an email notification once it's approved.
+                  {t('dashboard.verification.inactive')}
                 </p>
                 <Button onClick={handleSignOut} variant="outline">
-                  Sign Out
+                  {t('dashboard.signOut')}
                 </Button>
               </div>
             )}
@@ -280,7 +284,7 @@ const LawyerDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className={`min-h-screen bg-background ${isRTL() ? 'rtl' : 'ltr'}`}>
       {/* Header */}
       <header className="border-b bg-background/95 backdrop-blur sticky top-0 z-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -291,12 +295,13 @@ const LawyerDashboard = () => {
               <Badge variant="secondary" className="ml-2">Lawyer Portal</Badge>
             </Link>
             <div className="flex items-center gap-4">
+              <LanguageToggle />
               <span className="text-sm text-muted-foreground">
-                Welcome, {profile?.first_name || 'Lawyer'}
+                {t('dashboard.welcome', { name: profile?.first_name || 'Lawyer' })}
               </span>
               <Button variant="ghost" size="sm" onClick={handleSignOut}>
                 <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
+                {t('dashboard.signOut')}
               </Button>
             </div>
           </div>
@@ -364,7 +369,7 @@ const LawyerDashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Active Cases</p>
+                  <p className="text-sm font-medium text-muted-foreground">{t('dashboard.stats.activeCases')}</p>
                   <p className="text-3xl font-bold">{stats.activeCases}</p>
                 </div>
                 <FileText className="h-8 w-8 text-success" />
@@ -376,7 +381,7 @@ const LawyerDashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Pending Cases</p>
+                  <p className="text-sm font-medium text-muted-foreground">{t('dashboard.stats.pendingCases')}</p>
                   <p className="text-3xl font-bold">{stats.pendingCases}</p>
                 </div>
                 <Clock className="h-8 w-8 text-warning" />
@@ -388,7 +393,7 @@ const LawyerDashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Completed Cases</p>
+                  <p className="text-sm font-medium text-muted-foreground">{t('dashboard.stats.completedCases')}</p>
                   <p className="text-3xl font-bold">{stats.completedCases}</p>
                 </div>
                 <CheckCircle className="h-8 w-8 text-primary" />
@@ -400,7 +405,7 @@ const LawyerDashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total Earnings</p>
+                  <p className="text-sm font-medium text-muted-foreground">{t('dashboard.stats.totalEarnings')}</p>
                   <p className="text-3xl font-bold">Coming Soon</p>
                 </div>
                 <Users className="h-8 w-8 text-accent" />
@@ -414,7 +419,7 @@ const LawyerDashboard = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
-              My Cases
+              {t('dashboard.cases.title')}
             </CardTitle>
             <CardDescription>
               Cases assigned to you for legal assistance
@@ -424,7 +429,7 @@ const LawyerDashboard = () => {
             {cases.length === 0 ? (
               <div className="text-center py-8">
                 <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No cases assigned yet</h3>
+                <h3 className="text-lg font-semibold mb-2">{t('dashboard.cases.noCases')}</h3>
                 <p className="text-muted-foreground">
                   New cases will appear here when they're assigned to you by the admin.
                 </p>
@@ -440,10 +445,10 @@ const LawyerDashboard = () => {
                             {caseItem.case_number}
                           </Badge>
                           <Badge variant={getStatusVariant(caseItem.status)}>
-                            {caseItem.status.charAt(0).toUpperCase() + caseItem.status.slice(1)}
+                            {t(`dashboard.cases.status.${caseItem.status}`)}
                           </Badge>
                           <Badge variant={getUrgencyVariant(caseItem.urgency)}>
-                            {caseItem.urgency.charAt(0).toUpperCase() + caseItem.urgency.slice(1)} Priority
+                            {t(`dashboard.cases.urgency.${caseItem.urgency}`)} {isRTL() ? 'أولوية' : 'Priority'}
                           </Badge>
                         </div>
                         <div className="text-right text-xs text-muted-foreground">
@@ -470,7 +475,7 @@ const LawyerDashboard = () => {
                           variant="outline"
                           onClick={() => handleViewDetails(caseItem.id)}
                         >
-                          View Details
+                          {t('dashboard.cases.viewDetails')}
                         </Button>
                         <Button 
                           size="sm" 
@@ -478,7 +483,7 @@ const LawyerDashboard = () => {
                           onClick={() => setSelectedCaseForProposal(caseItem)}
                         >
                           <FileText className="h-4 w-4 mr-2" />
-                          Create Proposal
+                          {t('dashboard.cases.createProposal')}
                         </Button>
                       </div>
                     </CardContent>

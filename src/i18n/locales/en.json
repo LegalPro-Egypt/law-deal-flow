@@ -1,0 +1,61 @@
+{
+  "dashboard": {
+    "welcome": "Welcome, {{name}}",
+    "signOut": "Sign Out",
+    "stats": {
+      "activeCases": "Active Cases",
+      "pendingCases": "Pending Cases", 
+      "completedCases": "Completed Cases",
+      "totalEarnings": "Total Earnings"
+    },
+    "verification": {
+      "pendingBasic": "Complete Profile",
+      "pendingComplete": "Under Review",
+      "verified": "Verified",
+      "status": "Verification Status",
+      "description": "To start receiving client cases, you need to complete the verification process.",
+      "completeProfile": "Complete Profile",
+      "waitingReview": "Your profile is under review. You'll be notified once approved.",
+      "approved": "Your profile has been verified. You can now receive case assignments.",
+      "inactive": "Your account is currently inactive. Please contact support.",
+      "notApproved": "You are not approved as a lawyer on this platform."
+    },
+    "cases": {
+      "title": "Your Assigned Cases",
+      "noCases": "No cases assigned yet",
+      "caseNumber": "Case #{{number}}",
+      "viewDetails": "View Details",
+      "createProposal": "Create Proposal",
+      "qaChat": "QA Chat",
+      "status": {
+        "submitted": "Submitted",
+        "intake": "Intake",
+        "lawyer_assigned": "Assigned",
+        "proposal_sent": "Proposal Sent",
+        "accepted": "Accepted",
+        "in_progress": "In Progress",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      },
+      "urgency": {
+        "low": "Low",
+        "medium": "Medium", 
+        "high": "High",
+        "urgent": "Urgent"
+      }
+    },
+    "loading": "Loading dashboard...",
+    "error": "Error loading dashboard data"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "close": "Close",
+    "language": "Language",
+    "english": "English",
+    "arabic": "العربية"
+  }
+}

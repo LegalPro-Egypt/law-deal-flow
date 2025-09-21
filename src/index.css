@@ -190,6 +190,30 @@
     @apply font-semibold tracking-tight;
   }
 
+  /* RTL Support */
+  [dir="rtl"] {
+    direction: rtl;
+    text-align: right;
+  }
+
+  [dir="rtl"] .rtl-flip {
+    transform: scaleX(-1);
+  }
+
+  [dir="rtl"] .rtl-text-left {
+    text-align: right;
+  }
+
+  [dir="rtl"] .rtl-text-right {
+    text-align: left;
+  }
+
+  /* Arabic font optimization */
+  [lang="ar"] {
+    font-family: "Noto Sans Arabic", "Cairo", "Amiri", system-ui, sans-serif;
+    line-height: 1.6;
+  }
+
   /* Smooth Focus States */
   .focus-ring {
     @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
