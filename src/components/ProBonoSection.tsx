@@ -18,7 +18,7 @@ export const ProBonoSection = () => {
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-success/10 to-primary/10 rounded-full blur-2xl translate-y-12 -translate-x-12"></div>
             
             {/* Vision Badge */}
-            <div className={`flex ${isRTL() ? 'justify-end' : 'justify-start'} mb-6`}>
+            <div className={`flex justify-center ${isRTL() ? 'lg:justify-end' : 'lg:justify-start'} mb-6`}>
               <Badge 
                 variant="secondary" 
                 className="bg-primary/10 text-primary border-primary/20 px-3 py-1 text-sm font-medium"
@@ -29,7 +29,7 @@ export const ProBonoSection = () => {
 
             <div className={`grid lg:grid-cols-2 gap-8 items-center ${isRTL() ? 'lg:grid-cols-[1fr,auto]' : ''}`}>
               {/* Content */}
-              <div className={`${isRTL() ? 'lg:order-2 text-right' : 'lg:order-1 text-left'}`}>
+              <div className={`text-center ${isRTL() ? 'lg:order-2 lg:text-right' : 'lg:order-1 lg:text-left'}`}>
                 <h2 className="text-3xl sm:text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent leading-tight">
                   {t('proBono.title')}
                 </h2>
@@ -42,7 +42,7 @@ export const ProBonoSection = () => {
                   {t('proBono.description')}
                 </p>
 
-                <div className={`flex ${isRTL() ? 'justify-end' : 'justify-start'}`}>
+                <div className={`flex justify-center ${isRTL() ? 'lg:justify-end' : 'lg:justify-start'}`}>
                   <Link to="/auth?redirect=pro-bono" className="inline-block">
                     <Button 
                       size="lg" 
