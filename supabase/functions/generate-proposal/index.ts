@@ -3,6 +3,10 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+
+if (!openAIApiKey) {
+  console.error('OPENAI_API_KEY environment variable is not set');
+}
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
@@ -21,10 +25,31 @@ serve(async (req) => {
     const { caseId, proposalInput } = await req.json();
     
     if (!caseId || !proposalInput) {
-      throw new Error('Missing caseId or proposalInput');
+      console.error('Missing required parameters:', { caseId: !!caseId, proposalInput: !!proposalInput });
+      return new Response(JSON.stringify({ 
+        error: 'Missing required parameters: caseId and proposalInput are required' 
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
-    console.log('Generating proposal for case:', caseId);
+    if (!openAIApiKey) {
+      console.error('OpenAI API key not configured');
+      return new Response(JSON.stringify({ 
+        error: 'OpenAI API key not configured. Please contact support.' 
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    console.log('Generating proposal for case:', caseId, 'with input:', {
+      consultation_fee: proposalInput.consultation_fee,
+      remaining_fee: proposalInput.remaining_fee,
+      timeline: proposalInput.timeline,
+      strategy: proposalInput.strategy?.substring(0, 100) + '...'
+    });
 
     // Initialize Supabase client
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -43,7 +68,13 @@ serve(async (req) => {
       .single();
 
     if (caseError || !caseData) {
-      throw new Error(`Failed to fetch case data: ${caseError?.message}`);
+      console.error('Failed to fetch case data:', caseError);
+      return new Response(JSON.stringify({ 
+        error: `Failed to fetch case data: ${caseError?.message || 'Case not found'}` 
+      }), {
+        status: 404,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // Prepare context for AI
@@ -91,30 +122,73 @@ Lawyer Input:
 
 Generate a professional proposal document that combines all this information into a cohesive, persuasive legal proposal.`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-5-2025-08-07',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: 'Generate the professional legal proposal based on the provided information.' }
-        ],
-        max_completion_tokens: 2000,
-      }),
-    });
+    // Try multiple models with fallback
+    const models = ['gpt-5-2025-08-07', 'gpt-5-mini-2025-08-07', 'gpt-4.1-2025-04-14'];
+    let generatedProposal = null;
+    let lastError = null;
 
-    const data = await response.json();
-    
-    if (!response.ok) {
-      console.error('OpenAI API error:', data);
-      throw new Error(`OpenAI API error: ${data.error?.message || 'Unknown error'}`);
+    for (const model of models) {
+      try {
+        console.log(`Attempting proposal generation with model: ${model}`);
+        
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openAIApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: 'Generate the professional legal proposal based on the provided information.' }
+            ],
+            max_completion_tokens: 2000,
+          }),
+        });
+
+        const data = await response.json();
+        console.log(`Model ${model} response status:`, response.status);
+        
+        if (!response.ok) {
+          console.error(`OpenAI API error with ${model}:`, data);
+          lastError = new Error(`OpenAI API error: ${data.error?.message || 'Unknown error'}`);
+          continue; // Try next model
+        }
+
+        if (!data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
+          console.error(`Invalid response structure from ${model}:`, data);
+          lastError = new Error(`Invalid response from ${model}`);
+          continue;
+        }
+
+        generatedProposal = data.choices[0].message.content.trim();
+        
+        if (!generatedProposal || generatedProposal.length < 100) {
+          console.error(`Generated proposal too short from ${model}:`, generatedProposal?.length || 0, 'characters');
+          lastError = new Error(`Generated proposal is too short (${generatedProposal?.length || 0} characters)`);
+          continue;
+        }
+
+        console.log(`Successfully generated proposal with ${model}, length:`, generatedProposal.length);
+        break; // Success, exit loop
+        
+      } catch (error) {
+        console.error(`Error with model ${model}:`, error);
+        lastError = error;
+        continue;
+      }
     }
 
-    const generatedProposal = data.choices[0].message.content;
+    if (!generatedProposal) {
+      console.error('All models failed to generate proposal:', lastError);
+      return new Response(JSON.stringify({ 
+        error: `Failed to generate proposal: ${lastError?.message || 'All AI models failed'}` 
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     console.log('Successfully generated proposal');
 
