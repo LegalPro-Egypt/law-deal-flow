@@ -106,9 +106,123 @@
       "description": "Failed to send message. Please try again."
     }
   },
+  "caseDetails": {
+    "title": "Case Details",
+    "loading": "Loading case details...",
+    "notFound": "Case not found",
+    "tabs": {
+      "overview": "Overview",
+      "conversation": "Chat",
+      "documents": "Files",
+      "legalAnalysis": "Legal Analysis"
+    },
+    "status": {
+      "title": "Status",
+      "submitted": "SUBMITTED",
+      "intake": "INTAKE",
+      "under_review": "UNDER REVIEW",
+      "assigned": "ASSIGNED",
+      "lawyer_assigned": "ASSIGNED",
+      "proposal_sent": "PROPOSAL SENT",
+      "accepted": "ACCEPTED",
+      "in_progress": "IN PROGRESS",
+      "completed": "COMPLETED",
+      "cancelled": "CANCELLED",
+      "closed": "CLOSED"
+    },
+    "urgency": {
+      "title": "Priority",
+      "urgent": "URGENT",
+      "high": "HIGH",
+      "medium": "MEDIUM",
+      "low": "LOW"
+    },
+    "caseInfo": {
+      "title": "Case Information",
+      "created": "Created",
+      "caseTitle": "Title",
+      "category": "Category",
+      "description": "Description"
+    },
+    "clientInfo": {
+      "title": "Client Information"
+    },
+    "aiSummary": {
+      "title": "AI Summary"
+    },
+    "conversation": {
+      "title": "Conversation History",
+      "generateSummary": "Generate AI Summary",
+      "generating": "Generating...",
+      "noMessages": "No messages yet",
+      "noMessagesDesc": "Messages will appear here once the case is active",
+      "healthCheck": "Health Check:",
+      "caseId": "Case ID:",
+      "messageCount": "Message Count:",
+      "newestMessage": "Newest Message:",
+      "clientName": "Client Name:",
+      "client": "Client",
+      "assistant": "Assistant"
+    },
+    "documents": {
+      "noDocuments": "No documents uploaded",
+      "noDocumentsDesc": "Documents uploaded for this case will appear here.",
+      "fileSize": {
+        "bytes": "Bytes",
+        "kb": "KB", 
+        "mb": "MB",
+        "gb": "GB"
+      }
+    },
+    "legalAnalysis": {
+      "title": "Legal Analysis",
+      "refresh": "Refresh",
+      "generate": "Generate Analysis",
+      "generating": "Generating...",
+      "healthTitle": "Legal Analysis Health:",
+      "analysisCreated": "Analysis Created:",
+      "noAnalysis": "Status: No analysis available",
+      "caseSummary": "Case Summary",
+      "applicableLaws": "Applicable Laws",
+      "article": "Article",
+      "legalStrategy": "Legal Strategy",
+      "immediateSteps": "Immediate Steps:",
+      "requiredDocumentation": "Required Documentation:",
+      "timeline": "Timeline:",
+      "caseComplexity": "Case Complexity Assessment",
+      "complexityLevel": "Complexity Level:",
+      "estimatedCost": "Estimated Cost:",
+      "complexityFactors": "Complexity Factors:",
+      "pending": "Analysis pending...",
+      "noAnalysisAvailable": "No legal analysis available",
+      "generateDesc": "Click \"Generate Analysis\" to create a comprehensive legal analysis for this case."
+    },
+    "actions": {
+      "download": "Download",
+      "view": "View"
+    },
+    "toast": {
+      "summaryGenerated": "Summary Generated",
+      "summaryGeneratedDesc": "AI summary has been generated successfully",
+      "analysisGenerated": "Legal Analysis Generated", 
+      "analysisGeneratedDesc": "Comprehensive legal analysis has been generated successfully",
+      "downloadStarted": "Download Started",
+      "downloadStartedDesc": "Downloading {{fileName}}",
+      "messageFetchError": "Message Fetch Error",
+      "messageFetchErrorDesc": "Failed to fetch messages: {{error}}",
+      "downloadFailed": "Download Failed",
+      "downloadFailedDesc": "Failed to download document",
+      "viewFailed": "View Failed",
+      "viewFailedDesc": "Failed to view document",
+      "error": "Error",
+      "fetchError": "Failed to fetch case details",
+      "summaryError": "Failed to generate conversation summary",
+      "analysisError": "Failed to generate legal analysis"
+    }
+  },
   "common": {
     "loading": "Loading...",
-    "error": "Error",
+    "error": "Error", 
     "success": "Success",
     "cancel": "Cancel",
     "save": "Save",

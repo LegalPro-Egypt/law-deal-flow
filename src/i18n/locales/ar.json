@@ -106,6 +106,120 @@
       "description": "فشل في إرسال الرسالة. يرجى المحاولة مرة أخرى."
     }
   },
+  "caseDetails": {
+    "title": "تفاصيل القضية",
+    "loading": "جاري تحميل تفاصيل القضية...",
+    "notFound": "القضية غير موجودة",
+    "tabs": {
+      "overview": "نظرة عامة",
+      "conversation": "المحادثة",
+      "documents": "الملفات",
+      "legalAnalysis": "التحليل القانوني"
+    },
+    "status": {
+      "title": "الحالة",
+      "submitted": "مُقدمة",
+      "intake": "استقبال",
+      "under_review": "قيد المراجعة",
+      "assigned": "مُكلفة",
+      "lawyer_assigned": "مُكلفة",
+      "proposal_sent": "تم إرسال العرض",
+      "accepted": "مقبولة",
+      "in_progress": "قيد التنفيذ",
+      "completed": "مكتملة",
+      "cancelled": "ملغية",
+      "closed": "مغلقة"
+    },
+    "urgency": {
+      "title": "الأولوية",
+      "urgent": "عاجلة",
+      "high": "عالية",
+      "medium": "متوسطة",
+      "low": "منخفضة"
+    },
+    "caseInfo": {
+      "title": "معلومات القضية",
+      "created": "تاريخ الإنشاء",
+      "caseTitle": "العنوان",
+      "category": "الفئة",
+      "description": "الوصف"
+    },
+    "clientInfo": {
+      "title": "معلومات العميل"
+    },
+    "aiSummary": {
+      "title": "ملخص الذكاء الاصطناعي"
+    },
+    "conversation": {
+      "title": "تاريخ المحادثة",
+      "generateSummary": "إنتاج ملخص بالذكاء الاصطناعي",
+      "generating": "جاري الإنتاج...",
+      "noMessages": "لا توجد رسائل بعد",
+      "noMessagesDesc": "ستظهر الرسائل هنا بمجرد تفعيل القضية",
+      "healthCheck": "فحص الحالة:",
+      "caseId": "معرف القضية:",
+      "messageCount": "عدد الرسائل:",
+      "newestMessage": "أحدث رسالة:",
+      "clientName": "اسم العميل:",
+      "client": "العميل",
+      "assistant": "المساعد"
+    },
+    "documents": {
+      "noDocuments": "لم يتم رفع أي مستندات",
+      "noDocumentsDesc": "ستظهر المستندات المرفوعة لهذه القضية هنا.",
+      "fileSize": {
+        "bytes": "بايت",
+        "kb": "كيلوبايت",
+        "mb": "ميجابايت", 
+        "gb": "جيجابايت"
+      }
+    },
+    "legalAnalysis": {
+      "title": "التحليل القانوني",
+      "refresh": "تحديث",
+      "generate": "إنتاج التحليل",
+      "generating": "جاري الإنتاج...",
+      "healthTitle": "حالة التحليل القانوني:",
+      "analysisCreated": "تم إنشاء التحليل:",
+      "noAnalysis": "الحالة: لا يوجد تحليل متاح",
+      "caseSummary": "ملخص القضية",
+      "applicableLaws": "القوانين المطبقة", 
+      "article": "المادة",
+      "legalStrategy": "الإستراتيجية القانونية",
+      "immediateSteps": "الخطوات الفورية:",
+      "requiredDocumentation": "المستندات المطلوبة:",
+      "timeline": "الجدول الزمني:",
+      "caseComplexity": "تقييم تعقيد القضية",
+      "complexityLevel": "مستوى التعقيد:",
+      "estimatedCost": "التكلفة المقدرة:",
+      "complexityFactors": "عوامل التعقيد:",
+      "pending": "التحليل قيد الانتظار...",
+      "noAnalysisAvailable": "لا يوجد تحليل قانوني متاح",
+      "generateDesc": "اضغط على \"إنتاج التحليل\" لإنشاء تحليل قانوني شامل لهذه القضية."
+    },
+    "actions": {
+      "download": "تحميل",
+      "view": "عرض"
+    },
+    "toast": {
+      "summaryGenerated": "تم إنتاج الملخص",
+      "summaryGeneratedDesc": "تم إنشاء ملخص الذكاء الاصطناعي بنجاح",
+      "analysisGenerated": "تم إنتاج التحليل القانوني",
+      "analysisGeneratedDesc": "تم إنشاء التحليل القانوني الشامل بنجاح",
+      "downloadStarted": "بدأ التحميل",
+      "downloadStartedDesc": "جاري تحميل {{fileName}}",
+      "messageFetchError": "خطأ في جلب الرسائل",
+      "messageFetchErrorDesc": "فشل في جلب الرسائل: {{error}}",
+      "downloadFailed": "فشل التحميل",
+      "downloadFailedDesc": "فشل في تحميل المستند",
+      "viewFailed": "فشل العرض",
+      "viewFailedDesc": "فشل في عرض المستند",
+      "error": "خطأ",
+      "fetchError": "فشل في جلب تفاصيل القضية",
+      "summaryError": "فشل في إنتاج ملخص المحادثة",
+      "analysisError": "فشل في إنتاج التحليل القانوني"
+    }
+  },
   "common": {
     "loading": "جاري التحميل...",
     "error": "خطأ",

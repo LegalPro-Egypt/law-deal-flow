@@ -33,6 +33,7 @@ import { useToast } from '@/hooks/use-toast';
 import { DocumentPreview } from './DocumentPreview';
 import { getClientNameForRole, shouldShowContactInfo } from '@/utils/clientPrivacy';
 import { useAuth } from '@/hooks/useAuth';
+import { useLanguage } from '@/hooks/useLanguage';
 
 interface CaseDetailsDialogProps {
   caseId: string | null;
@@ -92,6 +93,7 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
   onClose 
 }) => {
   const { profile } = useAuth();
+  const { t, isRTL } = useLanguage();
   const [caseDetails, setCaseDetails] = useState<CaseDetails | null>(null);
   const [conversation, setConversation] = useState<ConversationMessage[]>([]);
   const [documents, setDocuments] = useState<CaseDocument[]>([]);
@@ -147,8 +149,8 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
       if (messagesError) {
         console.error('Error fetching case messages:', messagesError);
         toast({
-          title: "Message Fetch Error",
-          description: `Failed to fetch messages: ${messagesError.message}`,
+          title: t('caseDetails.toast.messageFetchError'),
+          description: t('caseDetails.toast.messageFetchErrorDesc', { error: messagesError.message }),
           variant: "destructive",
         });
       }
@@ -212,8 +214,8 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
     } catch (error: any) {
       console.error('Error fetching case details:', error);
       toast({
-        title: "Error",
-        description: "Failed to fetch case details",
+        title: t('caseDetails.toast.error'),
+        description: t('caseDetails.toast.fetchError'),
         variant: "destructive",
       });
     } finally {
@@ -247,12 +249,23 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
     return new Date(dateString).toLocaleString();
   };
 
+  // Helper functions for translations
+  const getStatusTranslation = (status: string) => {
+    const statusKey = status.toLowerCase().replace(/\s+/g, '_');
+    return t(`caseDetails.status.${statusKey}`, status.replace('_', ' ').toUpperCase());
+  };
+
+  const getUrgencyTranslation = (urgency: string) => {
+    return t(`caseDetails.urgency.${urgency.toLowerCase()}`, urgency.toUpperCase());
+  };
+
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) return `0 ${t('caseDetails.documents.fileSize.bytes')}`;
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const sizes = ['bytes', 'kb', 'mb', 'gb'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    const size = parseFloat((bytes / Math.pow(k, i)).toFixed(2));
+    return `${size} ${t(`caseDetails.documents.fileSize.${sizes[i]}`)}`;
   };
 
   // De-duplicate messages by deterministic key to guard against double inserts
@@ -298,14 +311,14 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
       setCaseDetails(prev => prev ? { ...prev, ai_summary: data.summary } : null);
       
       toast({
-        title: "Summary Generated",
-        description: "AI summary has been generated successfully",
+        title: t('caseDetails.toast.summaryGenerated'),
+        description: t('caseDetails.toast.summaryGeneratedDesc'),
       });
     } catch (error: any) {
       console.error('Error generating summary:', error);
       toast({
-        title: "Error",
-        description: "Failed to generate conversation summary",
+        title: t('caseDetails.toast.error'),
+        description: t('caseDetails.toast.summaryError'),
         variant: "destructive",
       });
     } finally {
@@ -356,14 +369,14 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
       setCaseAnalysis(analysisData);
       
       toast({
-        title: "Legal Analysis Generated",
-        description: "Comprehensive legal analysis has been generated successfully",
+        title: t('caseDetails.toast.analysisGenerated'),
+        description: t('caseDetails.toast.analysisGeneratedDesc'),
       });
     } catch (error: any) {
       console.error('Error generating legal analysis:', error);
       toast({
-        title: "Error",
-        description: "Failed to generate legal analysis",
+        title: t('caseDetails.toast.error'),
+        description: t('caseDetails.toast.analysisError'),
         variant: "destructive",
       });
     } finally {
@@ -397,14 +410,14 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
       window.URL.revokeObjectURL(url);
       
       toast({
-        title: "Download Started",
-        description: `Downloading ${doc.file_name}`,
+        title: t('caseDetails.toast.downloadStarted'),
+        description: t('caseDetails.toast.downloadStartedDesc', { fileName: doc.file_name }),
       });
     } catch (error) {
       console.error('Error downloading document:', error);
       toast({
-        title: "Download Failed",
-        description: "Failed to download document",
+        title: t('caseDetails.toast.downloadFailed'),
+        description: t('caseDetails.toast.downloadFailedDesc'),
         variant: "destructive",
       });
     } finally {
@@ -451,8 +464,8 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
     } catch (error) {
       console.error('Error viewing document:', error);
       toast({
-        title: "View Failed",
-        description: "Failed to view document",
+        title: t('caseDetails.toast.viewFailed'),
+        description: t('caseDetails.toast.viewFailedDesc'),
         variant: "destructive",
       });
     } finally {
@@ -469,7 +482,7 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
-              Case Details
+              {t('caseDetails.title')}
               {caseDetails && (
                 <Badge variant="outline">{caseDetails.case_number}</Badge>
               )}
@@ -480,23 +493,23 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
             <div className="flex items-center justify-center h-96">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                <p className="text-muted-foreground">Loading case details...</p>
+                <p className="text-muted-foreground">{t('caseDetails.loading')}</p>
               </div>
             </div>
           ) : caseDetails ? (
             <Tabs defaultValue="overview" className="h-full">
               <TabsList className="grid w-full grid-cols-4 h-auto p-1 gap-1">
                 <TabsTrigger value="overview" className="text-xs sm:text-sm px-2 py-2">
-                  Overview
+                  {t('caseDetails.tabs.overview')}
                 </TabsTrigger>
                 <TabsTrigger value="conversation" className="text-xs sm:text-sm px-2 py-2">
-                  Chat
+                  {t('caseDetails.tabs.conversation')}
                 </TabsTrigger>
                 <TabsTrigger value="documents" className="text-xs sm:text-sm px-2 py-2">
-                  Files
+                  {t('caseDetails.tabs.documents')}
                 </TabsTrigger>
                 <TabsTrigger value="legal-analysis" className="text-xs sm:text-sm px-2 py-2">
-                  Legal Analysis
+                  {t('caseDetails.tabs.legalAnalysis')}
                 </TabsTrigger>
               </TabsList>
 
@@ -508,10 +521,10 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                       <CardContent className="p-4">
                         <div className="flex items-center gap-2">
                           <AlertCircle className="h-4 w-4" />
-                          <span className="text-sm font-medium">Status</span>
+                          <span className="text-sm font-medium">{t('caseDetails.status.title')}</span>
                         </div>
                         <Badge className={`mt-2 ${getStatusColor(caseDetails.status)}`}>
-                          {caseDetails.status.replace('_', ' ').toUpperCase()}
+                          {getStatusTranslation(caseDetails.status)}
                         </Badge>
                       </CardContent>
                     </Card>
@@ -520,10 +533,10 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                       <CardContent className="p-4">
                         <div className="flex items-center gap-2">
                           <Clock className="h-4 w-4" />
-                          <span className="text-sm font-medium">Priority</span>
+                          <span className="text-sm font-medium">{t('caseDetails.urgency.title')}</span>
                         </div>
                         <Badge className={`mt-2 ${getUrgencyColor(caseDetails.urgency)}`}>
-                          {caseDetails.urgency.toUpperCase()}
+                          {getUrgencyTranslation(caseDetails.urgency)}
                         </Badge>
                       </CardContent>
                     </Card>
@@ -532,7 +545,7 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                       <CardContent className="p-4">
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4" />
-                          <span className="text-sm font-medium">Created</span>
+                          <span className="text-sm font-medium">{t('caseDetails.caseInfo.created')}</span>
                         </div>
                         <p className="mt-2 text-sm">{formatDate(caseDetails.created_at)}</p>
                       </CardContent>
@@ -544,16 +557,16 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <FileText className="h-4 w-4" />
-                        Case Information
+                        {t('caseDetails.caseInfo.title')}
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div>
-                        <h4 className="font-medium">Title</h4>
+                        <h4 className="font-medium">{t('caseDetails.caseInfo.caseTitle')}</h4>
                         <p className="text-sm text-muted-foreground">{caseDetails.title}</p>
                       </div>
                       <div>
-                        <h4 className="font-medium">Category</h4>
+                        <h4 className="font-medium">{t('caseDetails.caseInfo.category')}</h4>
                         <div className="flex gap-2 mt-1">
                           <Badge variant="outline">{caseDetails.category}</Badge>
                           {caseDetails.subcategory && (
@@ -562,7 +575,7 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                         </div>
                       </div>
                       <div>
-                        <h4 className="font-medium">Description</h4>
+                        <h4 className="font-medium">{t('caseDetails.caseInfo.description')}</h4>
                         <p className="text-sm text-muted-foreground">{caseDetails.description}</p>
                       </div>
                     </CardContent>
@@ -573,7 +586,7 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <User className="h-4 w-4" />
-                        Client Information
+                        {t('caseDetails.clientInfo.title')}
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
@@ -604,7 +617,7 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                           <Sparkles className="h-4 w-4" />
-                          AI Summary
+                          {t('caseDetails.aiSummary.title')}
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
@@ -617,7 +630,7 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                 <TabsContent value="conversation" className="space-y-4">
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
-                      <h3 className="text-lg font-semibold">Conversation History</h3>
+                      <h3 className="text-lg font-semibold">{t('caseDetails.conversation.title')}</h3>
                       <Button
                         onClick={generateSummary}
                         disabled={generatingSummary || conversation.length === 0}
@@ -627,12 +640,12 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                         {generatingSummary ? (
                           <>
                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
-                            Generating...
+                            {t('caseDetails.conversation.generating')}
                           </>
                         ) : (
                           <>
                             <Sparkles className="h-4 w-4 mr-2" />
-                            Generate AI Summary
+                            {t('caseDetails.conversation.generateSummary')}
                           </>
                         )}
                       </Button>
@@ -642,14 +655,14 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                     <Card className="bg-muted/50">
                       <CardContent className="p-3">
                          <div className="text-xs text-muted-foreground space-y-1">
-                           <div><strong>Health Check:</strong></div>
-                           <div>Case ID: {caseId}</div>
-                           <div>Message Count: {conversation.length}</div>
+                           <div><strong>{t('caseDetails.conversation.healthCheck')}</strong></div>
+                           <div>{t('caseDetails.conversation.caseId')} {caseId}</div>
+                           <div>{t('caseDetails.conversation.messageCount')} {conversation.length}</div>
                            {conversation.length > 0 && (
-                             <div>Newest Message: {formatDate(conversation[conversation.length - 1]?.created_at || '')}</div>
+                             <div>{t('caseDetails.conversation.newestMessage')} {formatDate(conversation[conversation.length - 1]?.created_at || '')}</div>
                            )}
                            {caseDetails?.client_name && (
-                             <div>Client Name: {caseDetails.client_name}</div>
+                             <div>{t('caseDetails.conversation.clientName')} {caseDetails.client_name}</div>
                            )}
                          </div>
                       </CardContent>
@@ -662,7 +675,9 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                             <div
                               key={message.id || index}
                               className={`flex ${
-                                message.role === 'user' ? 'justify-end' : 'justify-start'
+                                isRTL 
+                                  ? (message.role === 'user' ? 'justify-start' : 'justify-end')
+                                  : (message.role === 'user' ? 'justify-end' : 'justify-start')
                               }`}
                             >
                               <div
@@ -674,7 +689,7 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                               >
                                 <div className="flex items-center gap-2 mb-1">
                                   <span className="text-xs font-medium">
-                                    {message.role === 'user' ? 'Client' : 'Assistant'}
+                                    {message.role === 'user' ? t('caseDetails.conversation.client') : t('caseDetails.conversation.assistant')}
                                   </span>
                                   <span className="text-xs opacity-70">
                                     {formatDate(message.created_at)}
@@ -688,8 +703,8 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                       ) : (
                         <div className="text-center text-muted-foreground">
                           <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                          <p>No messages yet</p>
-                          <p className="text-xs mt-1">Messages will appear here once the case is active</p>
+                          <p>{t('caseDetails.conversation.noMessages')}</p>
+                          <p className="text-xs mt-1">{t('caseDetails.conversation.noMessagesDesc')}</p>
                         </div>
                       )}
                     </ScrollArea>
@@ -753,9 +768,9 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                   ) : (
                     <div className="text-center py-8">
                       <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                      <p className="text-muted-foreground">No documents uploaded</p>
+                      <p className="text-muted-foreground">{t('caseDetails.documents.noDocuments')}</p>
                       <p className="text-sm text-muted-foreground mt-2">
-                        Documents uploaded for this case will appear here.
+                        {t('caseDetails.documents.noDocumentsDesc')}
                       </p>
                     </div>
                   )}
@@ -763,14 +778,14 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
 
                 <TabsContent value="legal-analysis" className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-semibold">Legal Analysis</h3>
+                    <h3 className="text-lg font-semibold">{t('caseDetails.legalAnalysis.title')}</h3>
                     <div className="flex items-center gap-2">
                       <Button
                         onClick={fetchCaseDetails}
                         size="sm"
                         variant="ghost"
                       >
-                        Refresh
+                        {t('caseDetails.legalAnalysis.refresh')}
                       </Button>
                       <Button
                         onClick={generateLegalAnalysis}
@@ -781,12 +796,12 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                         {generatingAnalysis ? (
                           <>
                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
-                            Generating...
+                            {t('caseDetails.legalAnalysis.generating')}
                           </>
                         ) : (
                           <>
                             <Scale className="h-4 w-4 mr-2" />
-                            Generate Analysis
+                            {t('caseDetails.legalAnalysis.generate')}
                           </>
                         )}
                       </Button>
@@ -797,12 +812,12 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                   <Card className="bg-muted/50">
                     <CardContent className="p-3">
                       <div className="text-xs text-muted-foreground space-y-1">
-                        <div><strong>Legal Analysis Health:</strong></div>
-                        <div>Case ID: {caseId}</div>
+                        <div><strong>{t('caseDetails.legalAnalysis.healthTitle')}</strong></div>
+                        <div>{t('caseDetails.conversation.caseId')} {caseId}</div>
                         {caseAnalysis ? (
-                          <div>Analysis Created: {formatDate(caseAnalysis.created_at)}</div>
+                          <div>{t('caseDetails.legalAnalysis.analysisCreated')} {formatDate(caseAnalysis.created_at)}</div>
                         ) : (
-                          <div>Status: No analysis available</div>
+                          <div>{t('caseDetails.legalAnalysis.noAnalysis')}</div>
                         )}
                       </div>
                     </CardContent>
@@ -816,7 +831,7 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                           <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                               <BookOpen className="h-4 w-4" />
-                              Case Summary
+                              {t('caseDetails.legalAnalysis.caseSummary')}
                             </CardTitle>
                           </CardHeader>
                           <CardContent>
@@ -828,73 +843,73 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                       {/* Applicable Laws */}
                       {caseAnalysis.analysis_data.applicableLaws && caseAnalysis.analysis_data.applicableLaws.length > 0 && (
                         <Card>
-                          <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                              <Scale className="h-4 w-4" />
-                              Applicable Laws
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="space-y-3">
-                              {caseAnalysis.analysis_data.applicableLaws.map((law: any, index: number) => (
-                                <div key={index} className="p-3 border rounded-lg">
-                                  <h4 className="font-medium">{law.law}</h4>
-                                  {law.articles && law.articles.length > 0 && (
-                                    <div className="mt-2 flex flex-wrap gap-1">
-                                      {law.articles.map((article: string, i: number) => (
-                                        <Badge key={i} variant="outline" className="text-xs">
-                                          Article {article}
-                                        </Badge>
-                                      ))}
-                                    </div>
-                                  )}
-                                  {law.relevance && (
-                                    <p className="text-sm text-muted-foreground mt-2">{law.relevance}</p>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          </CardContent>
+                           <CardHeader>
+                             <CardTitle className="flex items-center gap-2">
+                               <Scale className="h-4 w-4" />
+                               {t('caseDetails.legalAnalysis.applicableLaws')}
+                             </CardTitle>
+                           </CardHeader>
+                           <CardContent>
+                             <div className="space-y-3">
+                               {caseAnalysis.analysis_data.applicableLaws.map((law: any, index: number) => (
+                                 <div key={index} className="p-3 border rounded-lg">
+                                   <h4 className="font-medium">{law.law}</h4>
+                                   {law.articles && law.articles.length > 0 && (
+                                     <div className="mt-2 flex flex-wrap gap-1">
+                                       {law.articles.map((article: string, i: number) => (
+                                         <Badge key={i} variant="outline" className="text-xs">
+                                           {t('caseDetails.legalAnalysis.article')} {article}
+                                         </Badge>
+                                       ))}
+                                     </div>
+                                   )}
+                                   {law.relevance && (
+                                     <p className="text-sm text-muted-foreground mt-2">{law.relevance}</p>
+                                   )}
+                                 </div>
+                               ))}
+                             </div>
+                           </CardContent>
                         </Card>
                       )}
 
                       {/* Legal Strategy */}
                       {caseAnalysis.analysis_data.legalStrategy && (
                         <Card>
-                          <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                              <Target className="h-4 w-4" />
-                              Legal Strategy
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="space-y-4">
-                            {caseAnalysis.analysis_data.legalStrategy.immediateSteps && (
-                              <div>
-                                <h4 className="font-medium mb-2">Immediate Steps:</h4>
-                                <ul className="list-disc pl-5 space-y-1">
-                                  {caseAnalysis.analysis_data.legalStrategy.immediateSteps.map((step: string, i: number) => (
-                                    <li key={i} className="text-sm">{step}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                            {caseAnalysis.analysis_data.legalStrategy.documentation && (
-                              <div>
-                                <h4 className="font-medium mb-2">Required Documentation:</h4>
-                                <ul className="list-disc pl-5 space-y-1">
-                                  {caseAnalysis.analysis_data.legalStrategy.documentation.map((doc: string, i: number) => (
-                                    <li key={i} className="text-sm">{doc}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                            {caseAnalysis.analysis_data.legalStrategy.timeline && (
-                              <div>
-                                <h4 className="font-medium mb-2">Timeline:</h4>
-                                <p className="text-sm">{caseAnalysis.analysis_data.legalStrategy.timeline}</p>
-                              </div>
-                            )}
-                          </CardContent>
+                           <CardHeader>
+                             <CardTitle className="flex items-center gap-2">
+                               <Target className="h-4 w-4" />
+                               {t('caseDetails.legalAnalysis.legalStrategy')}
+                             </CardTitle>
+                           </CardHeader>
+                           <CardContent className="space-y-4">
+                             {caseAnalysis.analysis_data.legalStrategy.immediateSteps && (
+                               <div>
+                                 <h4 className="font-medium mb-2">{t('caseDetails.legalAnalysis.immediateSteps')}</h4>
+                                 <ul className="list-disc pl-5 space-y-1">
+                                   {caseAnalysis.analysis_data.legalStrategy.immediateSteps.map((step: string, i: number) => (
+                                     <li key={i} className="text-sm">{step}</li>
+                                   ))}
+                                 </ul>
+                               </div>
+                             )}
+                             {caseAnalysis.analysis_data.legalStrategy.documentation && (
+                               <div>
+                                 <h4 className="font-medium mb-2">{t('caseDetails.legalAnalysis.requiredDocumentation')}</h4>
+                                 <ul className="list-disc pl-5 space-y-1">
+                                   {caseAnalysis.analysis_data.legalStrategy.documentation.map((doc: string, i: number) => (
+                                     <li key={i} className="text-sm">{doc}</li>
+                                   ))}
+                                 </ul>
+                               </div>
+                             )}
+                             {caseAnalysis.analysis_data.legalStrategy.timeline && (
+                               <div>
+                                 <h4 className="font-medium mb-2">{t('caseDetails.legalAnalysis.timeline')}</h4>
+                                 <p className="text-sm">{caseAnalysis.analysis_data.legalStrategy.timeline}</p>
+                               </div>
+                             )}
+                           </CardContent>
                         </Card>
                       )}
 
@@ -943,10 +958,10 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
                     <div className="text-center py-8">
                       <Scale className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                       <p className="text-muted-foreground">
-                        {generatingAnalysis ? "Analysis pending..." : "No legal analysis available"}
+                        {generatingAnalysis ? t('caseDetails.legalAnalysis.pending') : t('caseDetails.legalAnalysis.noAnalysisAvailable')}
                       </p>
                       <p className="text-sm text-muted-foreground mt-2">
-                        Click "Generate Analysis" to create a comprehensive legal analysis for this case.
+                        {t('caseDetails.legalAnalysis.generateDesc')}
                       </p>
                     </div>
                   )}
@@ -955,7 +970,7 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
             </Tabs>
           ) : (
             <div className="text-center py-8">
-              <p className="text-muted-foreground">Case not found</p>
+              <p className="text-muted-foreground">{t('caseDetails.notFound')}</p>
             </div>
           )}
         </DialogContent>
