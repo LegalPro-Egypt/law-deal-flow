@@ -1,198 +1,101 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
+import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from './useLanguage';
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+interface TranslationOptions {
+  content: string;
+  contentType?: 'ai_summary' | 'legal_analysis' | 'general';
+  fromLanguage?: string;
+  cacheKey?: string;
+}
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+export const useContentTranslation = () => {
+  const { getCurrentLanguage } = useLanguage();
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [translationCache, setTranslationCache] = useState<Record<string, string>>({});
 
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
-    // Fetch case information including language
-    const { data: caseInfo, error: caseError } = await supabase
-      .from('cases')
-      .select('user_id, language')
-      .eq('id', caseId)
-      .single();
-
-    if (caseError || !caseInfo) {
-      throw new Error('Case not found');
-    }
-
-    const caseLanguage = caseInfo.language || 'en';
-    console.log('Case language:', caseLanguage);
-
-    // Fetch conversation messages for the case - try multiple approaches
-    let conversationData = null;
-    let conversationError = null;
+  const translateContent = async ({ 
+    content, 
+    contentType = 'general', 
+    fromLanguage = 'auto',
+    cacheKey 
+  }: TranslationOptions): Promise<string> => {
+    const targetLanguage = getCurrentLanguage();
     
-    // First try to find conversation directly linked to case
-    const { data: linkedConversation, error: linkedError } = await supabase
-      .from('conversations')
-      .select(`
-        id,
-        messages (
-          role,
+    // Return original content if it's already in the target language
+    if (fromLanguage === targetLanguage) {
+      return content;
+    }
+
+    // Check local cache first
+    const localCacheKey = `${cacheKey || content.slice(0, 50)}_${targetLanguage}`;
+    if (translationCache[localCacheKey]) {
+      return translationCache[localCacheKey];
+    }
+
+    setIsTranslating(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('translate-case-content', {
+        body: {
           content,
-          created_at
-        )
-      `)
-      .eq('case_id', caseId)
-      .maybeSingle();
-
-    if (linkedConversation) {
-      conversationData = linkedConversation;
-    } else {
-      // If no direct link, try to find by user_id and mode
-      if (caseInfo?.user_id) {
-        const { data: userConversation, error: userError } = await supabase
-          .from('conversations')
-          .select(`
-            id,
-            messages (
-              role,
-              content,
-              created_at
-            )
-          `)
-          .eq('user_id', caseInfo.user_id)
-          .eq('mode', 'intake')
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        
-        if (userConversation) {
-          conversationData = userConversation;
-          
-          // Link this conversation to the case for future reference
-          await supabase
-            .from('conversations')
-            .update({ case_id: caseId })
-            .eq('id', userConversation.id);
-        } else {
-          conversationError = userError || new Error('No conversation found for case');
+          contentType,
+          fromLanguage,
+          toLanguage: targetLanguage,
+          cacheKey: cacheKey || `${contentType}_${Date.now()}`
         }
-      } else {
-        conversationError = linkedError || new Error('No case found');
+      });
+
+      if (error) {
+        console.error('Translation error:', error);
+        return content; // Return original content on error
       }
-    }
 
-    if (conversationError) {
-      throw conversationError;
-    }
-
-    if (!conversationData?.messages || conversationData.messages.length === 0) {
-      throw new Error('No conversation found for this case');
-    }
-
-    // Prepare conversation text for summarization
-    const conversationText = conversationData.messages
-      .sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
-      .map((msg: any) => `${msg.role.toUpperCase()}: ${msg.content}`)
-      .join('\n\n');
-
-    // Create language-specific system prompt
-    const getSystemPrompt = (language: string, clientName?: string) => {
-      const clientRef = clientName ? `"${clientName}"` : '';
+      const translatedContent = data.translatedContent;
       
-      switch (language) {
-        case 'ar':
-          return `أنت مساعد قانوني مختص في تلخيص المحادثات بين العملاء ومساعدي الذكاء الاصطناعي القانونيين. قم بإنشاء ملخص احترافي ومختصر يتضمن:
-            - القضية القانونية الرئيسية أو المشكلة المطروحة
-            - الحقائق والظروف الأساسية
-            - التواريخ المهمة والأطراف أو الوثائق المذكورة
-            - اهتمامات العميل الأساسية أو أهدافه
-            - أي مسائل عاجلة أو مواعيد نهائية
-            
-            مهم جداً: اكتب الملخص بصيغة الغائب المحايدة عن العميل. ${clientRef ? `أشر إلى العميل باسم ${clientRef}` : 'استخدم "العميل"'} بدلاً من الضمائر المباشرة ("أنت" و "لك"). هذا الملخص مخصص للمراجعة الإدارية وليس للتواصل مع العميل.
-            
-            اجعل الملخص واقعياً وواضحاً ومناسباً للمحترفين القانونيين لفهم القضية بسرعة.`;
-        
-        case 'de':
-          return `Sie sind ein Rechtsassistent, der darauf spezialisiert ist, Gespräche zwischen Kunden und KI-Rechtsassistenten zusammenzufassen. Erstellen Sie eine prägnante, professionelle Zusammenfassung, die Folgendes erfasst:
-            - Das hauptsächliche rechtliche Problem oder die diskutierte Angelegenheit
-            - Wichtige Fakten und Umstände
-            - Wichtige Daten, Parteien oder erwähnte Dokumente
-            - Die primären Anliegen oder Ziele des Kunden
-            - Dringende Angelegenheiten oder Fristen
-            
-            WICHTIG: Schreiben Sie die Zusammenfassung in neutraler dritter Person über den KUNDEN. ${clientRef ? `Bezeichnen Sie den Kunden als ${clientRef}` : 'Verwenden Sie "der Kunde"'} anstelle der direkten Anrede ("Sie", "Ihr"). Diese Zusammenfassung ist für die administrative Überprüfung gedacht, nicht für die Kundenkommunikation.
-            
-            Halten Sie die Zusammenfassung sachlich, klar und geeignet für Rechtsexperten, um den Fall schnell zu verstehen.`;
-        
-        default: // English
-          return `You are a legal assistant tasked with summarizing conversations between clients and AI legal assistants. Create a concise, professional paragraph summary that captures:
-            - The main legal issue or problem discussed
-            - Key facts and circumstances
-            - Important dates, parties, or documents mentioned
-            - The client's primary concerns or goals
-            - Any urgent matters or deadlines
-            
-            CRITICAL: Write the summary in neutral third-person perspective about the CLIENT. ${clientRef ? `Refer to the client as ${clientRef}` : 'Use "the client"'} instead of second-person language ("you", "your"). This summary is for admin review, not client communication.
-            
-            Keep the summary factual, clear, and suitable for legal professionals to quickly understand the case.`;
-      }
-    };
+      // Update local cache
+      setTranslationCache(prev => ({
+        ...prev,
+        [localCacheKey]: translatedContent
+      }));
 
-    // Generate AI summary using OpenAI
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: getSystemPrompt(caseLanguage, clientName)
-          },
-          {
-            role: 'user',
-            content: `Please summarize the following legal intake conversation:\n\n${conversationText}`
-          }
-        ],
-        temperature: 0.3,
-        max_tokens: 500,
-      }),
-    });
+      return translatedContent;
+    } catch (error) {
+      console.error('Translation request failed:', error);
+      return content; // Return original content on error
+    } finally {
+      setIsTranslating(false);
+    }
+  };
 
-    if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.statusText}`);
+  const translateIfNeeded = async (
+    content: string | null | undefined,
+    originalLanguage: string,
+    contentType?: 'ai_summary' | 'legal_analysis' | 'general',
+    cacheKey?: string
+  ): Promise<string> => {
+    if (!content) return '';
+    
+    const currentLanguage = getCurrentLanguage();
+    
+    // If content is already in the current UI language, return as-is
+    if (originalLanguage === currentLanguage) {
+      return content;
     }
 
-    const aiResponse = await response.json();
-    const summary = aiResponse.choices[0].message.content;
-
-    // Update the case with the generated summary
-    const { error: updateError } = await supabase
-      .from('cases')
-      .update({ ai_summary: summary })
-      .eq('id', caseId);
-
-    if (updateError) {
-      throw updateError;
-    }
-
-    return new Response(JSON.stringify({ summary }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    // Otherwise, translate
+    return translateContent({
+      content,
+      contentType,
+      fromLanguage: originalLanguage,
+      cacheKey
     });
+  };
 
-  } catch (error) {
-    console.error('Error in generate-conversation-summary function:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-  }
-});
+  return {
+    translateContent,
+    translateIfNeeded,
+    isTranslating,
+    currentLanguage: getCurrentLanguage()
+  };
+};

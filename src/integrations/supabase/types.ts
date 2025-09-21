@@ -369,6 +369,42 @@ export type Database = {
           },
         ]
       }
+      content_translations: {
+        Row: {
+          cache_key: string
+          content_type: string | null
+          created_at: string
+          id: string
+          original_content: string
+          source_language: string
+          target_language: string
+          translated_content: string
+          updated_at: string
+        }
+        Insert: {
+          cache_key: string
+          content_type?: string | null
+          created_at?: string
+          id?: string
+          original_content: string
+          source_language: string
+          target_language: string
+          translated_content: string
+          updated_at?: string
+        }
+        Update: {
+          cache_key?: string
+          content_type?: string | null
+          created_at?: string
+          id?: string
+          original_content?: string
+          source_language?: string
+          target_language?: string
+          translated_content?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           case_id: string | null
