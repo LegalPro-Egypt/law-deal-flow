@@ -15,6 +15,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import HelpCenter from "./pages/HelpCenter";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
+import ProBono from "./pages/ProBono";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/pro-bono" element={<ProBono />} />
           <Route path="/intake" element={
             <ProtectedRoute>
               <Intake />

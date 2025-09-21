@@ -273,7 +273,97 @@
     "title": "Your Case Helps Another",
     "subtitle": "Each time you use LegalPro, you help us fund free legal aid for someone who has no other way to be heard.",
     "description": "Building a future where justice isn't limited by financial means.",
-    "button": "Apply for Pro Bono Review"
+    "button": "Apply for Pro Bono Review",
+    "page": {
+      "title": "Apply for Pro Bono Legal Aid",
+      "subtitle": "Free legal assistance for those who cannot afford it. We believe everyone deserves access to justice.",
+      "whatIs": {
+        "title": "What is Pro Bono Legal Aid?",
+        "description": "Pro bono legal aid provides free legal services to individuals who cannot afford legal representation. Our experienced lawyers volunteer their time to help those in need, ensuring that financial constraints don't prevent access to justice."
+      },
+      "benefits": {
+        "access": {
+          "title": "Equal Access to Justice",
+          "desc": "Professional legal representation regardless of financial status"
+        },
+        "free": {
+          "title": "Completely Free",
+          "desc": "No fees, no hidden costs - entirely funded by our pro bono program"
+        }
+      },
+      "criteria": {
+        "title": "Acceptance Criteria",
+        "subtitle": "We evaluate applications based on financial need and case merit",
+        "financial": {
+          "title": "Financial Requirements",
+          "income": "Monthly household income below poverty threshold",
+          "assets": "Limited assets and savings",
+          "support": "No other means of legal support available"
+        },
+        "case": {
+          "title": "Case Requirements",
+          "merit": "Cases with clear legal merit and achievable outcomes",
+          "scope": "Matters within our areas of expertise",
+          "urgency": "Priority given to urgent and time-sensitive cases"
+        }
+      },
+      "disclaimer": {
+        "title": "Important Notice",
+        "text": "Due to limited resources, not all applications can be accepted. We prioritize cases based on urgency, merit, and available capacity. All applications are reviewed carefully and fairly."
+      },
+      "form": {
+        "title": "Pro Bono Application Form",
+        "subtitle": "Please provide detailed information to help us evaluate your case",
+        "personal": {
+          "title": "Personal Information",
+          "fullName": "Full Name",
+          "fullNamePlaceholder": "Enter your full legal name",
+          "email": "Email Address",
+          "emailPlaceholder": "your.email@example.com",
+          "phone": "Phone Number",
+          "phonePlaceholder": "Enter your phone number"
+        },
+        "financial": {
+          "title": "Financial Information",
+          "monthlyIncome": "Monthly Household Income (EGP)",
+          "monthlyIncomePlaceholder": "Enter your total monthly household income",
+          "familySize": "Family Size",
+          "hasAssets": "Do you own significant assets?",
+          "hasAssetsPlaceholder": "Select an option"
+        },
+        "case": {
+          "title": "Case Details",
+          "caseTitle": "Case Title",
+          "caseTitlePlaceholder": "Brief title describing your legal issue",
+          "category": "Legal Category",
+          "categoryPlaceholder": "Select the type of legal issue",
+          "categories": {
+            "family": "Family Law",
+            "criminal": "Criminal Law",
+            "civil": "Civil Rights",
+            "labor": "Labor & Employment",
+            "housing": "Housing & Tenancy",
+            "immigration": "Immigration",
+            "other": "Other"
+          },
+          "urgency": "Urgency Level",
+          "urgencyPlaceholder": "How urgent is your case?",
+          "description": "Detailed Case Description",
+          "descriptionPlaceholder": "Please provide a detailed description of your legal issue, including relevant facts, dates, and what kind of help you need...",
+          "previousHelp": "Have you sought legal help before?",
+          "previousHelpPlaceholder": "Select an option",
+          "whyNeedHelp": "Why do you need pro bono assistance?",
+          "whyNeedHelpPlaceholder": "Explain your financial situation and why you cannot afford legal fees..."
+        },
+        "submit": "Submit Application",
+        "submitting": "Submitting..."
+      }
+    },
+    "application": {
+      "success": "Application Submitted Successfully",
+      "successDesc": "Your pro bono application has been submitted. We will review it and contact you within 5-7 business days.",
+      "error": "Failed to submit application. Please try again."
+    }
   },
   "common": {
     "loading": "Loading...",
@@ -284,6 +374,8 @@
     "close": "Close",
     "language": "Language",
     "english": "English",
-    "arabic": "العربية"
+    "arabic": "العربية",
+    "yes": "Yes",
+    "no": "No"
   }
 }

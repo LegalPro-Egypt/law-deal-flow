@@ -43,7 +43,7 @@ export const ProBonoSection = () => {
                 </p>
 
                 <div className={`flex justify-center ${isRTL() ? 'lg:justify-end' : 'lg:justify-start'}`}>
-                  <Link to="/auth?redirect=pro-bono" className="inline-block">
+                  <Link to="/pro-bono" className="inline-block">
                     <Button 
                       size="lg" 
                       className="bg-gradient-primary hover:bg-primary/90 text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"

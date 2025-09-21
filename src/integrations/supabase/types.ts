@@ -716,6 +716,60 @@ export type Database = {
           },
         ]
       }
+      pro_bono_applications: {
+        Row: {
+          admin_notes: string | null
+          admin_response: string | null
+          case_details: Json
+          created_at: string
+          email: string
+          financial_info: Json
+          full_name: string
+          id: string
+          phone: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          supporting_documents: string[] | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          admin_response?: string | null
+          case_details?: Json
+          created_at?: string
+          email: string
+          financial_info?: Json
+          full_name: string
+          id?: string
+          phone: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          supporting_documents?: string[] | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          admin_response?: string | null
+          case_details?: Json
+          created_at?: string
+          email?: string
+          financial_info?: Json
+          full_name?: string
+          id?: string
+          phone?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          supporting_documents?: string[] | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           bar_admissions: string[] | null

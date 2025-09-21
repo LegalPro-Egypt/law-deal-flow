@@ -53,6 +53,7 @@ import { LawyerDetailsDialog } from "@/components/LawyerDetailsDialog";
 import { AssignLawyerDialog } from "@/components/AssignLawyerDialog";
 import { LawyerChatHistoryDialog } from "@/components/LawyerChatHistoryDialog";
 import AnonymousQAManager from "@/components/AnonymousQAManager";
+import { ProBonoApplicationsManager } from "@/components/ProBonoApplicationsManager";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -536,6 +537,7 @@ const AdminDashboard = () => {
                     </Badge>
                   )}
                 </TabsTrigger>
+                <TabsTrigger value="probono" className="whitespace-nowrap flex-shrink-0">Pro Bono</TabsTrigger>
                 <TabsTrigger value="requests" className="whitespace-nowrap flex-shrink-0">Lawyer Requests</TabsTrigger>
                 <TabsTrigger value="anonymous-qa" className="whitespace-nowrap flex-shrink-0">Anonymous Q&A</TabsTrigger>
               </TabsList>
