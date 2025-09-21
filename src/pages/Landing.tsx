@@ -9,9 +9,11 @@ import { HomepageChatbot } from "@/components/HomepageChatbot";
 import { ProBonoSection } from "@/components/ProBonoSection";
 import { PromotionalPopup } from "@/components/PromotionalPopup";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { useLanguage } from "@/hooks/useLanguage";
 
 const Landing = () => {
   const { isAuthenticated, role, loading } = useAuth();
+  const { t, isRTL } = useLanguage();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [showPromoPopup, setShowPromoPopup] = useState(false);
@@ -55,34 +57,34 @@ const Landing = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground mt-2">Loading...</p>
+          <p className="text-muted-foreground mt-2">{t('common.loading')}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen">
+    <div className={`min-h-screen ${isRTL() ? 'rtl' : 'ltr'}`}>
       {/* Header */}
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-2">
+          <div className={`flex items-center justify-between h-16 ${isRTL() ? 'flex-row-reverse' : ''}`}>
+            <div className={`flex items-center space-x-2 ${isRTL() ? 'space-x-reverse' : ''}`}>
               <Scale className="h-8 w-8 text-primary" />
               <span className="text-xl font-bold">LegalPro</span>
             </div>
-            <div className="flex items-center gap-1 sm:gap-4">
+            <div className={`flex items-center gap-1 sm:gap-4 ${isRTL() ? 'flex-row-reverse' : ''}`}>
               <LanguageToggle />
               <Link to="/legal-database">
-                <Button variant="ghost">Guides</Button>
+                <Button variant="ghost">{t('landing.header.guides')}</Button>
               </Link>
               <Link to="/auth?force=true">
-                <Button variant="ghost" className="hidden sm:inline-flex">Sign In</Button>
+                <Button variant="ghost" className="hidden sm:inline-flex">{t('landing.header.signIn')}</Button>
               </Link>
               <Link to="/auth?force=true">
                 <Button className="bg-gradient-primary shadow-hero text-sm px-3 sm:px-4">
-                  <span className="sm:hidden">Sign In</span>
-                  <span className="hidden sm:inline">Get Started</span>
+                  <span className="sm:hidden">{t('landing.header.signIn')}</span>
+                  <span className="hidden sm:inline">{t('landing.header.getStarted')}</span>
                 </Button>
               </Link>
             </div>
@@ -95,17 +97,16 @@ const Landing = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center animate-fade-in">
             <h1 className="text-4xl sm:text-6xl font-bold mb-6">
-              Find Trusted Lawyers in Egypt{" "}
-              <span className="text-accent sm:block sm:mt-2">Fast, Fair & Secure</span>
+              {t('landing.hero.title')}{" "}
+              <span className="text-accent sm:block sm:mt-2">{t('landing.hero.titleAccent')}</span>
             </h1>
             <p className="text-xl sm:text-2xl text-gray-200 mb-8 max-w-3xl mx-auto">
-              AI-powered intake, secure messaging, and transparent pricing. 
-              Get legal help the modern way with full payment protection.
+              {t('landing.hero.subtitle')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/auth?force=true&redirect=intake">
                 <Button size="lg" className="bg-accent hover:bg-accent-hover text-xl px-12 py-4">
-                  Start Your Case
+                  {t('landing.hero.startCase')}
                 </Button>
               </Link>
             </div>
@@ -117,8 +118,8 @@ const Landing = () => {
                   <Shield className="h-6 w-6 text-white" />
                 </div>
                 <div className="trust-signal-content">
-                  <h3>Verified Lawyers</h3>
-                  <p>Licensed professionals</p>
+                  <h3>{t('landing.hero.trustSignals.verifiedLawyers.title')}</h3>
+                  <p>{t('landing.hero.trustSignals.verifiedLawyers.subtitle')}</p>
                 </div>
               </div>
               
@@ -127,8 +128,8 @@ const Landing = () => {
                   <Brain className="h-6 w-6 text-white" />
                 </div>
                 <div className="trust-signal-content">
-                  <h3>AI-Powered Intake</h3>
-                  <p>Smart case matching</p>
+                  <h3>{t('landing.hero.trustSignals.aiIntake.title')}</h3>
+                  <p>{t('landing.hero.trustSignals.aiIntake.subtitle')}</p>
                 </div>
               </div>
               
@@ -137,8 +138,8 @@ const Landing = () => {
                   <Lock className="h-6 w-6 text-white" />
                 </div>
                 <div className="trust-signal-content">
-                  <h3>Secure Payments</h3>
-                  <p>Bank-level encryption</p>
+                  <h3>{t('landing.hero.trustSignals.securePayments.title')}</h3>
+                  <p>{t('landing.hero.trustSignals.securePayments.subtitle')}</p>
                 </div>
               </div>
             </div>
@@ -156,9 +157,9 @@ const Landing = () => {
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Why Choose LegalPro?</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">{t('landing.features.title')}</h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Streamlined legal services with built-in protection and transparency
+              {t('landing.features.subtitle')}
             </p>
           </div>
 
@@ -166,37 +167,37 @@ const Landing = () => {
             {[
               {
                 icon: <MessageSquare className="h-8 w-8" />,
-                title: "Lexa AI Intake",
-                description: "Lexa, our AI assistant, collects your case details and matches you with the right specialist"
+                title: t('landing.features.lexaIntake.title'),
+                description: t('landing.features.lexaIntake.description')
               },
               {
                 icon: <Shield className="h-8 w-8" />,
-                title: "Payment Protection", 
-                description: "Secure escrow system with 50% holdback until case delivery and satisfaction"
+                title: t('landing.features.paymentProtection.title'),
+                description: t('landing.features.paymentProtection.description')
               },
               {
                 icon: <Users className="h-8 w-8" />,
-                title: "Vetted Lawyers",
-                description: "All lawyers are verified professionals with specialization ratings and reviews"
+                title: t('landing.features.vettedLawyers.title'),
+                description: t('landing.features.vettedLawyers.description')
               },
               {
                 icon: <Clock className="h-8 w-8" />,
-                title: "Fast Matching",
-                description: "Get matched with available lawyers within hours, not days or weeks"
+                title: t('landing.features.fastMatching.title'),
+                description: t('landing.features.fastMatching.description')
               },
               {
                 icon: <MessageSquare className="h-8 w-8" />,
-                title: "Secure Messaging",
-                description: "End-to-end encrypted communication with file sharing and voice notes"
+                title: t('landing.features.secureMessaging.title'),
+                description: t('landing.features.secureMessaging.description')
               },
               {
                 icon: <Check className="h-8 w-8" />,
-                title: "Case Tracking",
-                description: "Real-time updates on your case progress with milestone notifications"
+                title: t('landing.features.caseTracking.title'),
+                description: t('landing.features.caseTracking.description')
               }
             ].map((feature, index) => (
-              <Card key={index} className="p-6 card-hover bg-gradient-card animate-slide-up text-center md:text-left">
-                <div className="text-primary mb-4 flex justify-center md:justify-start">{feature.icon}</div>
+              <Card key={index} className={`p-6 card-hover bg-gradient-card animate-slide-up text-center ${isRTL() ? 'md:text-right' : 'md:text-left'}`}>
+                <div className={`text-primary mb-4 flex justify-center ${isRTL() ? 'md:justify-end' : 'md:justify-start'}`}>{feature.icon}</div>
                 <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
                 <p className="text-muted-foreground">{feature.description}</p>
               </Card>
@@ -209,23 +210,22 @@ const Landing = () => {
       <section className="py-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">How It Works</h2>
-            <p className="text-xl text-muted-foreground">Simple, transparent process from intake to resolution</p>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">{t('landing.howItWorks.title')}</h2>
+            <p className="text-xl text-muted-foreground">{t('landing.howItWorks.subtitle')}</p>
           </div>
 
           <div className="max-w-4xl mx-auto">
-            <div className="grid md:grid-cols-2 gap-8 items-center mb-12">
-              <div className="order-2 md:order-1">
+            <div className={`grid md:grid-cols-2 gap-8 items-center mb-12 ${isRTL() ? 'md:grid-flow-dense' : ''}`}>
+              <div className={`${isRTL() ? 'md:order-2' : 'order-2 md:order-1'}`}>
                 <div className="bg-muted/50 rounded-lg p-8 h-64 flex items-center justify-center">
                   <MessageSquare className="h-24 w-24 text-primary" />
                 </div>
               </div>
-              <div className="order-1 md:order-2">
+              <div className={`${isRTL() ? 'md:order-1' : 'order-1 md:order-2'}`}>
                 <div className="text-accent font-bold mb-2">Step 1</div>
-                <h3 className="text-2xl font-bold mb-4">Lexa AI Intake</h3>
+                <h3 className="text-2xl font-bold mb-4">{t('landing.howItWorks.step1.title')}</h3>
                 <p className="text-muted-foreground text-lg">
-                  Chat with Lexa, our AI legal assistant, to describe your needs. Upload documents, 
-                  answer guided questions, and get your case categorized automatically.
+                  {t('landing.howItWorks.step1.description')}
                 </p>
               </div>
             </div>
@@ -233,10 +233,9 @@ const Landing = () => {
             <div className="grid md:grid-cols-2 gap-8 items-center mb-12">
               <div>
                 <div className="text-accent font-bold mb-2">Step 2</div>
-                <h3 className="text-2xl font-bold mb-4">Expert Matching</h3>
+                <h3 className="text-2xl font-bold mb-4">{t('landing.howItWorks.step2.title')}</h3>
                 <p className="text-muted-foreground text-lg">
-                  Our admin team reviews your case and matches you with a specialist lawyer 
-                  based on expertise, language, and availability.
+                  {t('landing.howItWorks.step2.description')}
                 </p>
               </div>
               <div>
@@ -246,18 +245,17 @@ const Landing = () => {
               </div>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-8 items-center">
-              <div className="order-2 md:order-1">
+            <div className={`grid md:grid-cols-2 gap-8 items-center ${isRTL() ? 'md:grid-flow-dense' : ''}`}>
+              <div className={`${isRTL() ? 'md:order-2' : 'order-2 md:order-1'}`}>
                 <div className="bg-muted/50 rounded-lg p-8 h-64 flex items-center justify-center">
                   <Shield className="h-24 w-24 text-primary" />
                 </div>
               </div>
-              <div className="order-1 md:order-2">
+              <div className={`${isRTL() ? 'md:order-1' : 'order-1 md:order-2'}`}>
                 <div className="text-accent font-bold mb-2">Step 3</div>
-                <h3 className="text-2xl font-bold mb-4">Secure Work & Payment</h3>
+                <h3 className="text-2xl font-bold mb-4">{t('landing.howItWorks.step3.title')}</h3>
                 <p className="text-muted-foreground text-lg">
-                  Review proposal, pay consultation fee, then communicate securely. 
-                  Full payment is held in escrow until case completion.
+                  {t('landing.howItWorks.step3.description')}
                 </p>
               </div>
             </div>
@@ -268,13 +266,13 @@ const Landing = () => {
       {/* CTA Section */}
       <section className="bg-gradient-primary text-white py-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4">Ready to Get Started?</h2>
+          <h2 className="text-3xl sm:text-4xl font-bold mb-4">{t('landing.cta.title')}</h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto text-gray-200">
-            Join LegalPro and benefit from our network of vetted lawyers that have helped thousands of people get justice
+            {t('landing.cta.subtitle')}
           </p>
           <Link to="/auth?redirect=intake">
             <Button size="lg" className="bg-accent hover:bg-accent-hover text-lg px-8 py-3">
-              Start Your Legal Journey
+              {t('landing.cta.button')}
             </Button>
           </Link>
         </div>
@@ -287,12 +285,12 @@ const Landing = () => {
           <div className="md:hidden">
             {/* LegalPro section centered on top */}
             <div className="text-center mb-8">
-              <div className="flex items-center justify-center space-x-2 mb-4">
+              <div className={`flex items-center justify-center space-x-2 mb-4 ${isRTL() ? 'space-x-reverse' : ''}`}>
                 <Scale className="h-6 w-6 text-primary" />
                 <span className="font-bold">LegalPro</span>
               </div>
               <p className="text-muted-foreground">
-                Professional legal services with Lexa AI-powered matching and secure payment protection.
+                {t('landing.footer.description')}
               </p>
             </div>
             
@@ -300,45 +298,45 @@ const Landing = () => {
             <div className="flex justify-center">
               <div className="grid grid-cols-3 gap-6 max-w-sm">
                 <div>
-                  <h3 className="font-semibold mb-4 text-sm">Services</h3>
+                  <h3 className="font-semibold mb-4 text-sm">{t('landing.footer.services.title')}</h3>
                   <ul className="space-y-2 text-muted-foreground text-xs">
-                    <li>Family Law</li>
-                    <li>Immigration</li>
-                    <li>Real Estate</li>
-                    <li>Corporate Law</li>
+                    <li>{t('landing.footer.services.familyLaw')}</li>
+                    <li>{t('landing.footer.services.immigration')}</li>
+                    <li>{t('landing.footer.services.realEstate')}</li>
+                    <li>{t('landing.footer.services.corporateLaw')}</li>
                   </ul>
                 </div>
                 <div>
-                  <h3 className="font-semibold mb-4 text-sm">Support</h3>
+                  <h3 className="font-semibold mb-4 text-sm">{t('landing.footer.support.title')}</h3>
                   <ul className="space-y-2 text-muted-foreground text-xs">
                     <li>
                       <Link to="/help" className="hover:text-primary transition-colors">
-                        Help Center
+                        {t('landing.footer.support.helpCenter')}
                       </Link>
                     </li>
                     <li>
                       <Link to="/help" className="hover:text-primary transition-colors">
-                        Contact Us
+                        {t('landing.footer.support.contactUs')}
                       </Link>
                     </li>
                     <li>
                       <Link to="/privacy-policy" className="hover:text-primary transition-colors">
-                        Privacy Policy
+                        {t('landing.footer.support.privacyPolicy')}
                       </Link>
                     </li>
                     <li>
                       <Link to="/terms-of-service" className="hover:text-primary transition-colors">
-                        Terms of Service
+                        {t('landing.footer.support.termsOfService')}
                       </Link>
                     </li>
                   </ul>
                 </div>
                 <div>
-                  <h3 className="font-semibold mb-4 text-sm">Languages</h3>
+                  <h3 className="font-semibold mb-4 text-sm">{t('landing.footer.languages.title')}</h3>
                   <ul className="space-y-2 text-muted-foreground text-xs">
-                    <li>English</li>
-                    <li>العربية</li>
-                    <li>Deutsch</li>
+                    <li>{t('landing.footer.languages.english')}</li>
+                    <li>{t('landing.footer.languages.arabic')}</li>
+                    <li>{t('landing.footer.languages.german')}</li>
                   </ul>
                 </div>
               </div>
@@ -348,59 +346,59 @@ const Landing = () => {
           {/* Desktop Layout */}
           <div className="hidden md:grid md:grid-cols-4 gap-8">
             <div>
-              <div className="flex items-center space-x-2 mb-4">
+              <div className={`flex items-center space-x-2 mb-4 ${isRTL() ? 'space-x-reverse' : ''}`}>
                 <Scale className="h-6 w-6 text-primary" />
                 <span className="font-bold">LegalPro</span>
               </div>
               <p className="text-muted-foreground">
-                Professional legal services with Lexa AI-powered matching and secure payment protection.
+                {t('landing.footer.description')}
               </p>
             </div>
             <div>
-              <h3 className="font-semibold mb-4">Services</h3>
+              <h3 className="font-semibold mb-4">{t('landing.footer.services.title')}</h3>
               <ul className="space-y-2 text-muted-foreground">
-                <li>Family Law</li>
-                <li>Immigration</li>
-                <li>Real Estate</li>
-                <li>Corporate Law</li>
+                <li>{t('landing.footer.services.familyLaw')}</li>
+                <li>{t('landing.footer.services.immigration')}</li>
+                <li>{t('landing.footer.services.realEstate')}</li>
+                <li>{t('landing.footer.services.corporateLaw')}</li>
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold mb-4">Support</h3>
+              <h3 className="font-semibold mb-4">{t('landing.footer.support.title')}</h3>
               <ul className="space-y-2 text-muted-foreground">
                 <li>
                   <Link to="/help" className="hover:text-primary transition-colors">
-                    Help Center
+                    {t('landing.footer.support.helpCenter')}
                   </Link>
                 </li>
                 <li>
                   <Link to="/help" className="hover:text-primary transition-colors">
-                    Contact Us
+                    {t('landing.footer.support.contactUs')}
                   </Link>
                 </li>
                 <li>
                   <Link to="/privacy-policy" className="hover:text-primary transition-colors">
-                    Privacy Policy
+                    {t('landing.footer.support.privacyPolicy')}
                   </Link>
                 </li>
                 <li>
                   <Link to="/terms-of-service" className="hover:text-primary transition-colors">
-                    Terms of Service
+                    {t('landing.footer.support.termsOfService')}
                   </Link>
                 </li>
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold mb-4">Languages</h3>
+              <h3 className="font-semibold mb-4">{t('landing.footer.languages.title')}</h3>
               <ul className="space-y-2 text-muted-foreground">
-                <li>English</li>
-                <li>العربية</li>
-                <li>Deutsch</li>
+                <li>{t('landing.footer.languages.english')}</li>
+                <li>{t('landing.footer.languages.arabic')}</li>
+                <li>{t('landing.footer.languages.german')}</li>
               </ul>
             </div>
           </div>
           <div className="mt-8 pt-8 border-t text-center text-muted-foreground">
-            <p>&copy; 2024 LegalPro. All rights reserved.</p>
+            <p>{t('landing.footer.copyright')}</p>
           </div>
         </div>
       </footer>

@@ -365,6 +365,124 @@
       "error": "Failed to submit application. Please try again."
     }
   },
+  "landing": {
+    "header": {
+      "guides": "Guides",
+      "signIn": "Sign In",
+      "getStarted": "Get Started"
+    },
+    "hero": {
+      "title": "Find Trusted Lawyers in Egypt",
+      "titleAccent": "Fast, Fair & Secure",
+      "subtitle": "AI-powered intake, secure messaging, and transparent pricing. Get legal help the modern way with full payment protection.",
+      "startCase": "Start Your Case",
+      "trustSignals": {
+        "verifiedLawyers": {
+          "title": "Verified Lawyers",
+          "subtitle": "Licensed professionals"
+        },
+        "aiIntake": {
+          "title": "AI-Powered Intake",
+          "subtitle": "Smart case matching"
+        },
+        "securePayments": {
+          "title": "Secure Payments",
+          "subtitle": "Bank-level encryption"
+        }
+      }
+    },
+    "chatbot": {
+      "title": "Get Free Legal Answers with",
+      "titleAccent": "Lexa AI",
+      "subtitle": "Ask our AI legal assistant about Egyptian law • No signup required • Instant answers in multiple languages • Connect with verified lawyers when you need more",
+      "lexaTitle": "Lexa Legal Assistant",
+      "lexaSubtitle": "Egyptian Law Expert • Available 24/7",
+      "placeholder": "Ask Lexa about Egyptian law...",
+      "placeholderConnecting": "Connecting...",
+      "placeholderFailed": "Connection failed - Sign in to continue...",
+      "thinking": "Lexa is thinking...",
+      "connectionRequired": "Connection Required:",
+      "connectionMessage": "We couldn't start an anonymous chat session. Please",
+      "signInLink": "sign in",
+      "connectionHelp": "to access the full chat experience and get legal help.",
+      "informationOnly": "Information Only:",
+      "informationMessage": "Lexa provides general legal information about Egyptian law. For personalized legal advice,",
+      "connectLink": "connect with our verified lawyers"
+    },
+    "features": {
+      "title": "Why Choose LegalPro?",
+      "subtitle": "Streamlined legal services with built-in protection and transparency",
+      "lexaIntake": {
+        "title": "Lexa AI Intake",
+        "description": "Lexa, our AI assistant, collects your case details and matches you with the right specialist"
+      },
+      "paymentProtection": {
+        "title": "Payment Protection",
+        "description": "Secure escrow system with 50% holdback until case delivery and satisfaction"
+      },
+      "vettedLawyers": {
+        "title": "Vetted Lawyers",
+        "description": "All lawyers are verified professionals with specialization ratings and reviews"
+      },
+      "fastMatching": {
+        "title": "Fast Matching",
+        "description": "Get matched with available lawyers within hours, not days or weeks"
+      },
+      "secureMessaging": {
+        "title": "Secure Messaging",
+        "description": "End-to-end encrypted communication with file sharing and voice notes"
+      },
+      "caseTracking": {
+        "title": "Case Tracking",
+        "description": "Real-time updates on your case progress with milestone notifications"
+      }
+    },
+    "howItWorks": {
+      "title": "How It Works",
+      "subtitle": "Simple, transparent process from intake to resolution",
+      "step1": {
+        "title": "Lexa AI Intake",
+        "description": "Chat with Lexa, our AI legal assistant, to describe your needs. Upload documents, answer guided questions, and get your case categorized automatically."
+      },
+      "step2": {
+        "title": "Expert Matching",
+        "description": "Our admin team reviews your case and matches you with a specialist lawyer based on expertise, language, and availability."
+      },
+      "step3": {
+        "title": "Secure Work & Payment",
+        "description": "Review proposal, pay consultation fee, then communicate securely. Full payment is held in escrow until case completion."
+      }
+    },
+    "cta": {
+      "title": "Ready to Get Started?",
+      "subtitle": "Join LegalPro and benefit from our network of vetted lawyers that have helped thousands of people get justice",
+      "button": "Start Your Legal Journey"
+    },
+    "footer": {
+      "description": "Professional legal services with Lexa AI-powered matching and secure payment protection.",
+      "services": {
+        "title": "Services",
+        "familyLaw": "Family Law",
+        "immigration": "Immigration",
+        "realEstate": "Real Estate",
+        "corporateLaw": "Corporate Law"
+      },
+      "support": {
+        "title": "Support",
+        "helpCenter": "Help Center",
+        "contactUs": "Contact Us",
+        "privacyPolicy": "Privacy Policy",
+        "termsOfService": "Terms of Service"
+      },
+      "languages": {
+        "title": "Languages",
+        "english": "English",
+        "arabic": "العربية",
+        "german": "Deutsch"
+      },
+      "copyright": "© 2024 LegalPro. All rights reserved."
+    }
+  },
   "common": {
     "loading": "Loading...",
     "error": "Error", 

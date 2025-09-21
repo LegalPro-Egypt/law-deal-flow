@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useLegalChatbot, ChatMessage } from '@/hooks/useLegalChatbot';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '@/hooks/useLanguage';
 
 interface HomepageChatbotProps {
   className?: string;
@@ -26,6 +27,7 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
   const [hasInteracted, setHasInteracted] = useState(false);
   const [connectionFailed, setConnectionFailed] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const { t, isRTL } = useLanguage();
 
   const {
     messages,
@@ -120,18 +122,17 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
 
   // Always visible professional chat interface
   return (
-    <section className={`py-16 bg-muted/30 ${className}`}>
+    <section className={`py-16 bg-muted/30 ${className} ${isRTL() ? 'rtl' : 'ltr'}`}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           {/* Professional Header */}
           <div className="text-center mb-8">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Get Free Legal Answers with{" "}
-              <span className="text-primary">Lexa AI</span>
+              {t('landing.chatbot.title')}{" "}
+              <span className="text-primary">{t('landing.chatbot.titleAccent')}</span>
             </h2>
             <p className="text-base sm:text-xl text-muted-foreground max-w-3xl mx-auto">
-              Ask our AI legal assistant about Egyptian law • No signup required • 
-              Instant answers in multiple languages • Connect with verified lawyers when you need more
+              {t('landing.chatbot.subtitle')}
             </p>
           </div>
 
@@ -139,18 +140,18 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
           <Card className="shadow-lg border-0 overflow-hidden bg-background">
             {/* Professional Header */}
             <CardHeader className="bg-gradient-primary text-white">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
+              <div className={`flex items-center justify-between ${isRTL() ? 'flex-row-reverse' : ''}`}>
+                <div className={`flex items-center gap-4 ${isRTL() ? 'flex-row-reverse' : ''}`}>
                   <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
                     <Scale className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <CardTitle className="text-lg text-white">Lexa Legal Assistant</CardTitle>
-                    <p className="text-sm text-white/80">Egyptian Law Expert • Available 24/7</p>
+                    <CardTitle className="text-lg text-white">{t('landing.chatbot.lexaTitle')}</CardTitle>
+                    <p className="text-sm text-white/80">{t('landing.chatbot.lexaSubtitle')}</p>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-3">
+                <div className={`flex items-center gap-3 ${isRTL() ? 'flex-row-reverse' : ''}`}>
                   <select
                     value={language}
                     onChange={(e) => setLanguage(e.target.value as 'en' | 'ar' | 'de')}
@@ -172,7 +173,9 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
                     <div
                       key={message.id}
                       className={`flex items-start gap-3 animate-fade-in ${
-                        message.role === 'user' ? 'flex-row-reverse' : 'flex-row'
+                        message.role === 'user' 
+                          ? (isRTL() ? 'flex-row' : 'flex-row-reverse')
+                          : (isRTL() ? 'flex-row-reverse' : 'flex-row')
                       }`}
                     >
                       <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
@@ -186,7 +189,7 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
                       <div
                         className={`max-w-[80%] rounded-lg px-4 py-3 ${
                           message.role === 'user'
-                            ? 'bg-primary text-primary-foreground ml-auto'
+                            ? 'bg-primary text-primary-foreground' + (isRTL() ? ' mr-auto' : ' ml-auto')
                             : 'bg-muted border border-border'
                         }`}
                       >
@@ -204,15 +207,15 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
 
                   {/* Loading indicator */}
                   {isLoading && (
-                    <div className="flex items-start gap-3 animate-fade-in">
+                    <div className={`flex items-start gap-3 animate-fade-in ${isRTL() ? 'flex-row-reverse' : ''}`}>
                       <div className="flex-shrink-0 w-8 h-8 bg-muted border border-border rounded-full flex items-center justify-center">
                         <Bot className="h-4 w-4 text-primary" />
                       </div>
                       <div className="bg-muted border border-border rounded-lg px-4 py-3">
-                        <div className="flex items-center gap-2">
+                        <div className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}>
                           <Loader2 className="h-4 w-4 animate-spin text-primary" />
                           <span className="text-sm text-muted-foreground">
-                            Lexa is thinking...
+                            {t('landing.chatbot.thinking')}
                           </span>
                         </div>
                       </div>
@@ -223,7 +226,7 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
 
               {/* Professional Input Area */}
               <div className="p-6 border-t bg-muted/50">
-                <div className="flex gap-3 mb-4">
+                <div className={`flex gap-3 mb-4 ${isRTL() ? 'flex-row-reverse' : ''}`}>
                   <Input
                     ref={inputRef}
                     value={inputMessage}
@@ -231,10 +234,10 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
                     onKeyPress={handleKeyPress}
                     placeholder={
                       connectionFailed 
-                        ? "Connection failed - Sign in to continue..." 
+                        ? t('landing.chatbot.placeholderFailed')
                         : !conversationId && retryCount > 0
-                        ? "Connecting..."
-                        : "Ask Lexa about Egyptian law..."
+                        ? t('landing.chatbot.placeholderConnecting')
+                        : t('landing.chatbot.placeholder')
                     }
                     disabled={isLoading || (!conversationId && !connectionFailed)}
                     className="flex-1"
@@ -247,7 +250,7 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
                     {isLoading ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : connectionFailed ? (
-                      'Sign In'
+                      t('landing.header.signIn')
                     ) : (
                       <Send className="h-4 w-4" />
                     )}
@@ -257,33 +260,31 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
                 {/* Connection Status or Legal Disclaimer */}
                 {connectionFailed ? (
                   <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                    <div className="flex items-start gap-3">
+                    <div className={`flex items-start gap-3 ${isRTL() ? 'flex-row-reverse' : ''}`}>
                       <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
                       <div className="text-sm text-red-800">
-                        <strong>Connection Required:</strong> We couldn't start an anonymous chat session. 
-                        Please {" "}
+                        <strong>{t('landing.chatbot.connectionRequired')}</strong> {t('landing.chatbot.connectionMessage')} {" "}
                         <Link 
                           to="/auth" 
                           className="text-primary hover:text-primary/80 underline font-medium"
                         >
-                          sign in
+                          {t('landing.chatbot.signInLink')}
                         </Link>
-                        {" "} to access the full chat experience and get legal help.
+                        {" "} {t('landing.chatbot.connectionHelp')}
                       </div>
                     </div>
                   </div>
                 ) : (
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                    <div className="flex items-start gap-3">
+                    <div className={`flex items-start gap-3 ${isRTL() ? 'flex-row-reverse' : ''}`}>
                       <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
                       <div className="text-sm text-amber-800">
-                        <strong>Information Only:</strong> Lexa provides general legal information about Egyptian law. 
-                        For personalized legal advice, {" "}
+                        <strong>{t('landing.chatbot.informationOnly')}</strong> {t('landing.chatbot.informationMessage')} {" "}
                         <Link 
                           to="/auth?redirect=intake" 
                           className="text-primary hover:text-primary/80 underline font-medium"
                         >
-                          connect with our verified lawyers
+                          {t('landing.chatbot.connectLink')}
                         </Link>
                         .
                       </div>
