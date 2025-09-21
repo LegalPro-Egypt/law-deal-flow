@@ -273,7 +273,25 @@
     "title": "Your Case Helps Another",
     "subtitle": "Each time you use LegalPro, you help us fund free legal aid for someone who has no other way to be heard.",
     "description": "Building a future where justice isn't limited by financial means.",
-    "button": "Apply for Pro Bono Review"
+    "button": "Apply for Pro Bono Review",
+    "stats": {
+      "goal": "Pro Bono Goal",
+      "year": "Target Year"
+    },
+    "features": {
+      "socialImpact": {
+        "title": "Social Impact",
+        "description": "Every case contributes to our pro bono fund"
+      },
+      "equalJustice": {
+        "title": "Equal Justice", 
+        "description": "Making legal services accessible to everyone"
+      },
+      "communityImpact": {
+        "title": "Community Impact",
+        "description": "Building a stronger, more just society"
+      }
+    }
   },
   "common": {
     "loading": "Loading...",
