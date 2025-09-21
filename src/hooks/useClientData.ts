@@ -22,6 +22,10 @@ interface ClientCase {
   ai_summary?: string;
   draft_data?: any;
   language?: string;
+  consultation_paid: boolean;
+  payment_status: string;
+  payment_amount?: number;
+  payment_date?: string;
   assigned_lawyer?: {
     first_name: string;
     last_name: string;
@@ -75,7 +79,7 @@ export const useClientData = () => {
     try {
       const { data, error } = await supabase
         .from('cases')
-        .select('*')
+        .select('*, consultation_paid, payment_status, payment_amount, payment_date')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 

@@ -24,6 +24,7 @@ import { LawyerQAChatbot } from "@/components/LawyerQAChatbot";
 import { CompleteVerificationForm } from "@/components/CompleteVerificationForm";
 import { CaseDetailsDialog } from "@/components/CaseDetailsDialog";
 import { CreateProposalDialog } from "@/components/CreateProposalDialog";
+import { CommunicationInbox } from "@/components/CommunicationInbox";
 import { getClientNameForRole } from "@/utils/clientPrivacy";
 import { useLanguage } from "@/hooks/useLanguage";
 import { LanguageToggle } from "@/components/LanguageToggle";
@@ -47,6 +48,8 @@ interface Case {
   client_email: string;
   created_at: string;
   updated_at: string;
+  consultation_paid: boolean;
+  payment_status: string;
 }
 
 const LawyerDashboard = () => {
@@ -78,10 +81,10 @@ const LawyerDashboard = () => {
     if (!user) return;
 
     try {
-      // Fetch assigned cases
+      // Fetch assigned cases with payment information
       const { data: casesData, error: casesError } = await supabase
         .from('cases')
-        .select('*')
+        .select('*, consultation_paid, payment_status')
         .eq('assigned_lawyer_id', user.id)
         .order('created_at', { ascending: false });
 
@@ -476,7 +479,7 @@ const LawyerDashboard = () => {
                         </div>
                       </CardDescription>
                     </CardHeader>
-                     <CardContent className="pt-0">
+                     <CardContent className="pt-0 space-y-4">
                        <div className="flex gap-2 flex-wrap">
                          <Button 
                            size="sm" 
@@ -495,6 +498,17 @@ const LawyerDashboard = () => {
                            {t('dashboard.cases.createProposal')}
                          </Button>
                        </div>
+                       
+                       {/* Communication Inbox Section */}
+                       <CommunicationInbox
+                         caseId={caseItem.id}
+                         caseTitle={caseItem.title}
+                         caseStatus={caseItem.status}
+                         consultationPaid={caseItem.consultation_paid || false}
+                         paymentStatus={caseItem.payment_status || 'pending'}
+                         userRole="lawyer"
+                         lawyerAssigned={true}
+                       />
                      </CardContent>
                   </Card>
                 ))}

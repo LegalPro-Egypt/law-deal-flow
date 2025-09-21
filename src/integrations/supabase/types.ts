@@ -212,6 +212,7 @@ export type Database = {
           client_phone: string | null
           client_responses_summary: Json | null
           consultation_fee: number | null
+          consultation_paid: boolean | null
           created_at: string
           description: string | null
           draft_data: Json | null
@@ -221,6 +222,9 @@ export type Database = {
           jurisdiction: string
           language: string
           legal_analysis: Json | null
+          payment_amount: number | null
+          payment_date: string | null
+          payment_status: string | null
           remaining_fee: number | null
           status: string
           step: number | null
@@ -246,6 +250,7 @@ export type Database = {
           client_phone?: string | null
           client_responses_summary?: Json | null
           consultation_fee?: number | null
+          consultation_paid?: boolean | null
           created_at?: string
           description?: string | null
           draft_data?: Json | null
@@ -255,6 +260,9 @@ export type Database = {
           jurisdiction?: string
           language?: string
           legal_analysis?: Json | null
+          payment_amount?: number | null
+          payment_date?: string | null
+          payment_status?: string | null
           remaining_fee?: number | null
           status?: string
           step?: number | null
@@ -280,6 +288,7 @@ export type Database = {
           client_phone?: string | null
           client_responses_summary?: Json | null
           consultation_fee?: number | null
+          consultation_paid?: boolean | null
           created_at?: string
           description?: string | null
           draft_data?: Json | null
@@ -289,6 +298,9 @@ export type Database = {
           jurisdiction?: string
           language?: string
           legal_analysis?: Json | null
+          payment_amount?: number | null
+          payment_date?: string | null
+          payment_status?: string | null
           remaining_fee?: number | null
           status?: string
           step?: number | null

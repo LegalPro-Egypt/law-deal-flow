@@ -33,6 +33,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
 import DocumentUpload from "@/components/DocumentUpload";
 import CaseSelector from "@/components/CaseSelector";
+import { CommunicationInbox } from "@/components/CommunicationInbox";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
@@ -423,38 +424,16 @@ const ClientDashboard = () => {
             </div>
           </div>
 
-          {/* Lawyer Info Card */}
-          <Card className="bg-gradient-card shadow-card">
-            <CardHeader>
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center">
-                  <span className="text-lg font-semibold">
-                    {activeCase.assigned_lawyer_id ? 'AL' : 'UN'}
-                  </span>
-                </div>
-                <div>
-                  <CardTitle className="text-lg">
-                    {activeCase.assigned_lawyer_id 
-                      ? 'Your Assigned Lawyer'
-                      : 'Lawyer Not Assigned Yet'
-                    }
-                  </CardTitle>
-                  <CardDescription>
-                    {activeCase.assigned_lawyer_id 
-                      ? 'Legal Representation' 
-                      : 'Waiting for assignment'
-                    }
-                  </CardDescription>
-                </div>
-                <div className="ml-auto">
-                  <Button size="sm" className="bg-gradient-primary">
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Message
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-          </Card>
+          {/* Communication Inbox Section */}
+          <CommunicationInbox
+            caseId={activeCase.id}
+            caseTitle={activeCase.title}
+            caseStatus={activeCase.status}
+            consultationPaid={activeCase.consultation_paid || false}
+            paymentStatus={activeCase.payment_status || 'pending'}
+            userRole="client"
+            lawyerAssigned={!!activeCase.assigned_lawyer_id}
+          />
         </div>
 
         {/* Main Content Tabs */}
