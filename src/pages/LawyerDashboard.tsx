@@ -89,10 +89,18 @@ const LawyerDashboard = () => {
 
       setCases(casesData || []);
 
-      // Calculate stats
-      const activeCases = casesData?.filter(c => c.status === 'active').length || 0;
-      const completedCases = casesData?.filter(c => c.status === 'completed').length || 0;
-      const pendingCases = casesData?.filter(c => c.status === 'pending').length || 0;
+      // Calculate stats with proper status mapping
+      const pendingCases = casesData?.filter(c => 
+        c.status === 'lawyer_assigned' || c.status === 'proposal_sent'
+      ).length || 0;
+      
+      const activeCases = casesData?.filter(c => 
+        c.status === 'accepted' || c.status === 'active' || c.status === 'in_progress'
+      ).length || 0;
+      
+      const completedCases = casesData?.filter(c => 
+        c.status === 'completed' || c.status === 'closed'
+      ).length || 0;
 
       setStats({
         activeCases,
