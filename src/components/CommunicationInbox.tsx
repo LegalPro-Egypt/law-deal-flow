@@ -45,45 +45,45 @@ export const CommunicationInbox: React.FC<CommunicationInboxProps> = ({
     if (userRole === 'lawyer') {
       if (caseStatus === 'lawyer_assigned') {
         return {
-          title: 'Waiting for Client Response',
-          description: 'Communication will be available once the client accepts your proposal.',
+          title: t('communication.disabled.waitingResponse.title'),
+          description: t('communication.disabled.waitingResponse.description'),
           icon: Clock
         };
       }
       if (caseStatus === 'proposal_sent') {
         return {
-          title: 'Proposal Under Review',
-          description: 'The client is reviewing your proposal. Communication will be enabled upon acceptance.',
+          title: t('communication.disabled.proposalReview.title'),
+          description: t('communication.disabled.proposalReview.description'),
           icon: Clock
         };
       }
     } else {
       if (!lawyerAssigned) {
         return {
-          title: 'No Lawyer Assigned',
-          description: 'A lawyer will be assigned to your case soon.',
+          title: t('communication.disabled.noLawyer.title'),
+          description: t('communication.disabled.noLawyer.description'),
           icon: Clock
         };
       }
       if (caseStatus === 'proposal_sent' || caseStatus === 'proposal_accepted') {
         return {
-          title: 'Payment Required',
-          description: 'Please complete the consultation payment to enable communication with your lawyer.',
+          title: t('communication.disabled.paymentRequired.title'),
+          description: t('communication.disabled.paymentRequired.description'),
           icon: CreditCard
         };
       }
       if (!consultationPaid || paymentStatus !== 'paid') {
         return {
-          title: 'Payment Pending',
-          description: 'Complete your consultation payment to start communicating with your lawyer.',
+          title: t('communication.disabled.paymentPending.title'),
+          description: t('communication.disabled.paymentPending.description'),
           icon: CreditCard
         };
       }
     }
     
     return {
-      title: 'Communication Not Available',
-      description: 'Communication is not available at this stage of your case.',
+      title: t('communication.disabled.notAvailable.title'),
+      description: t('communication.disabled.notAvailable.description'),
       icon: Lock
     };
   };
@@ -95,13 +95,10 @@ export const CommunicationInbox: React.FC<CommunicationInboxProps> = ({
       <CardHeader>
         <CardTitle className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}>
           <MessageSquare className="h-5 w-5" />
-          {t('communication.inbox.title', 'Communication Inbox')}
+          {t('communication.inbox.title')}
         </CardTitle>
         <CardDescription>
-          {userRole === 'lawyer' 
-            ? 'Video calls, voice calls, and case communication'
-            : 'Communicate directly with your assigned lawyer'
-          }
+          {t(`communication.inbox.description.${userRole}`)}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -109,11 +106,11 @@ export const CommunicationInbox: React.FC<CommunicationInboxProps> = ({
           <div className="space-y-4">
             <div className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}>
               <Badge variant="secondary" className="bg-success/10 text-success">
-                Communication Active
+                {t('communication.status.active')}
               </Badge>
               {consultationPaid && paymentStatus === 'paid' && (
                 <Badge variant="outline" className="text-xs">
-                  Paid Consultation
+                  {t('communication.status.paidConsultation')}
                 </Badge>
               )}
             </div>
@@ -133,11 +130,11 @@ export const CommunicationInbox: React.FC<CommunicationInboxProps> = ({
               </div>
               <div className={`flex items-center gap-2 mt-2 ${isRTL() ? 'flex-row-reverse' : ''}`}>
                 <Badge variant="outline" className="text-xs">
-                  Status: {caseStatus.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                  {t('communication.labels.status')} {t(`dashboard.cases.status.${caseStatus}`, caseStatus)}
                 </Badge>
                 {!consultationPaid && userRole === 'client' && (
                   <Badge variant="outline" className="text-xs">
-                    Payment: {paymentStatus.replace(/\b\w/g, l => l.toUpperCase())}
+                    {t('communication.labels.payment')} {paymentStatus.replace(/\b\w/g, l => l.toUpperCase())}
                   </Badge>
                 )}
               </div>

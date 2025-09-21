@@ -225,6 +225,49 @@
       "analysisError": "Failed to generate legal analysis"
     }
   },
+  "communication": {
+    "inbox": {
+      "title": "Communication Inbox",
+      "description": {
+        "lawyer": "Video calls, voice calls, and case communication",
+        "client": "Communicate directly with your assigned lawyer"
+      }
+    },
+    "status": {
+      "active": "Communication Active",
+      "paidConsultation": "Paid Consultation"
+    },
+    "disabled": {
+      "waitingResponse": {
+        "title": "Waiting for Client Response",
+        "description": "Communication will be available once the client accepts your proposal."
+      },
+      "proposalReview": {
+        "title": "Proposal Under Review", 
+        "description": "The client is reviewing your proposal. Communication will be enabled upon acceptance."
+      },
+      "noLawyer": {
+        "title": "No Lawyer Assigned",
+        "description": "A lawyer will be assigned to your case soon."
+      },
+      "paymentRequired": {
+        "title": "Payment Required",
+        "description": "Please complete the consultation payment to enable communication with your lawyer."
+      },
+      "paymentPending": {
+        "title": "Payment Pending",
+        "description": "Complete your consultation payment to start communicating with your lawyer."
+      },
+      "notAvailable": {
+        "title": "Communication Not Available",
+        "description": "Communication is not available at this stage of your case."
+      }
+    },
+    "labels": {
+      "status": "Status:",
+      "payment": "Payment:"
+    }
+  },
   "common": {
     "loading": "Loading...",
     "error": "Error", 
