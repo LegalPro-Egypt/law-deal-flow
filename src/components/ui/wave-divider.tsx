@@ -6,32 +6,33 @@ interface WaveDividerProps {
 }
 
 export const WaveDivider = ({ direction = 'top', className }: WaveDividerProps) => {
-  const topPath = "M0,0L48,10.7C96,21,192,43,288,48C384,53,480,43,576,37.3C672,32,768,32,864,37.3C960,43,1056,53,1152,48C1248,43,1344,21,1392,10.7L1440,0L1440,64L1392,64C1344,64,1248,64,1152,64C1056,64,960,64,864,64C768,64,672,64,576,64C480,64,384,64,288,64C192,64,96,64,48,64L0,64Z";
+  // Natural, gentle wave curves - subtly different between top and bottom
+  const topPath = "M0,0L80,8C160,16,320,32,480,28C640,24,800,0,960,8C1120,16,1280,48,1360,64L1440,80L1440,120L1360,120C1280,120,1120,120,960,120C800,120,640,120,480,120C320,120,160,120,80,120L0,120Z";
   
-  const bottomPath = "M0,64L48,53.3C96,43,192,21,288,16C384,11,480,21,576,26.7C672,32,768,32,864,26.7C960,21,1056,11,1152,16C1248,21,1344,43,1392,53.3L1440,64L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z";
+  const bottomPath = "M0,120L60,108C120,96,240,72,360,64C480,56,600,64,720,76C840,88,960,104,1080,100C1200,96,1320,72,1380,60L1440,48L1440,0L1380,0C1320,0,1200,0,1080,0C960,0,840,0,720,0C600,0,480,0,360,0C240,0,120,0,60,0L0,0Z";
 
   return (
     <div className={cn(
       "absolute w-full overflow-hidden",
-      direction === 'top' ? '-top-1' : '-bottom-1',
+      direction === 'top' ? 'top-0' : 'bottom-0',
       className
     )}>
       <svg
-        className="relative block w-full h-16 md:h-20"
-        viewBox="0 0 1440 64"
+        className="relative block w-full h-20 md:h-24"
+        viewBox="0 0 1440 120"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         preserveAspectRatio="none"
       >
         <path
           d={direction === 'top' ? topPath : bottomPath}
-          fill="hsl(var(--primary) / 0.03)"
+          fill="hsl(var(--primary) / 0.06)"
           className="transition-colors duration-300"
         />
         <path
           d={direction === 'top' ? topPath : bottomPath}
-          fill="hsl(var(--accent) / 0.02)"
-          transform="scale(1.02)"
+          fill="hsl(var(--accent) / 0.04)"
+          transform="scale(1.01)"
           className="transition-colors duration-300"
         />
       </svg>
