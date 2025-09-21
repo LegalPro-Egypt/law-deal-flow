@@ -63,7 +63,7 @@ serve(async (req) => {
         case_analysis(analysis_data, analysis_type),
         case_messages(content, role, created_at),
         conversations!inner(messages(content, role, created_at)),
-        assigned_lawyer:profiles!assigned_lawyer_id(
+        assigned_lawyer:profiles!assigned_lawyer_id(user_id)(
           first_name,
           last_name,
           law_firm,
