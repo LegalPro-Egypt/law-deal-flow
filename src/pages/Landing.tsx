@@ -6,6 +6,7 @@ import { Scale, Shield, MessageSquare, Users, Clock, Check, Brain, Lock } from "
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { HomepageChatbot } from "@/components/HomepageChatbot";
+import { ProBonoSection } from "@/components/ProBonoSection";
 import { PromotionalPopup } from "@/components/PromotionalPopup";
 
 const Landing = () => {
@@ -142,6 +143,9 @@ const Landing = () => {
 
       {/* Anonymous Q&A Chatbot Section */}
       <HomepageChatbot />
+
+      {/* Pro Bono Impact Section */}
+      <ProBonoSection />
 
       {/* Features Section */}
       <section className="py-20 bg-muted/30">

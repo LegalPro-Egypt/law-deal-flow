@@ -268,6 +268,13 @@
       "payment": "Payment:"
     }
   },
+  "proBono": {
+    "badge": "Our Vision",
+    "title": "Your Case Helps Another",
+    "subtitle": "Each time you use LegalPro, you help us fund free legal aid for someone who has no other way to be heard.",
+    "description": "Building a future where justice isn't limited by financial means.",
+    "button": "Apply for Pro Bono Review"
+  },
   "common": {
     "loading": "Loading...",
     "error": "Error", 
