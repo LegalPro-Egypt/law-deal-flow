@@ -32,7 +32,7 @@ export const ProBonoSection = () => {
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-success/10 to-primary/10 rounded-full blur-2xl translate-y-12 -translate-x-12"></div>
             
             {/* Vision Badge */}
-            <div className={`flex justify-center ${isRTL() ? 'lg:justify-end' : 'lg:justify-start'} mb-6`}>
+            <div className={`flex justify-center ${isRTL() ? 'lg:justify-start' : 'lg:justify-start'} mb-6`}>
               <Badge 
                 variant="secondary" 
                 className="bg-primary/10 text-primary border-primary/20 px-3 py-1 text-sm font-medium"
@@ -56,7 +56,7 @@ export const ProBonoSection = () => {
                   {t('proBono.description')}
                 </p>
 
-                <div className={`flex justify-center ${isRTL() ? 'lg:justify-end' : 'lg:justify-start'}`}>
+                <div className={`flex justify-center ${isRTL() ? 'lg:justify-start' : 'lg:justify-start'}`}>
                   <Link to="/pro-bono" className="inline-block">
                     <Button 
                       size="lg" 
