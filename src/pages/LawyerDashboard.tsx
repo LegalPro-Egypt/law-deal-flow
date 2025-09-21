@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { LawyerQAChatbot } from "@/components/LawyerQAChatbot";
 import { CompleteVerificationForm } from "@/components/CompleteVerificationForm";
+import { CaseDetailsDialog } from "@/components/CaseDetailsDialog";
 
 interface LawyerStats {
   activeCases: number;
@@ -57,6 +58,8 @@ const LawyerDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [chatbotOpen, setChatbotOpen] = useState(false);
   const [showVerificationForm, setShowVerificationForm] = useState(false);
+  const [selectedCaseId, setSelectedCaseId] = useState<string>("");
+  const [caseDetailsOpen, setCaseDetailsOpen] = useState(false);
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -120,22 +123,27 @@ const LawyerDashboard = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusVariant = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-success';
-      case 'completed': return 'bg-primary';
-      case 'pending': return 'bg-warning';
-      default: return 'bg-muted';
+      case 'active': return 'default';
+      case 'completed': return 'secondary';
+      case 'pending': return 'outline';
+      default: return 'outline';
     }
   };
 
-  const getUrgencyColor = (urgency: string) => {
+  const getUrgencyVariant = (urgency: string) => {
     switch (urgency) {
-      case 'high': return 'bg-destructive';
-      case 'medium': return 'bg-warning';
-      case 'low': return 'bg-success';
-      default: return 'bg-muted';
+      case 'high': return 'destructive';
+      case 'medium': return 'secondary';
+      case 'low': return 'default';
+      default: return 'outline';
     }
+  };
+
+  const handleViewDetails = (caseId: string) => {
+    setSelectedCaseId(caseId);
+    setCaseDetailsOpen(true);
   };
 
   const formatDate = (dateString: string) => {
@@ -419,39 +427,55 @@ const LawyerDashboard = () => {
                 </p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="grid gap-4">
                 {cases.map((caseItem) => (
-                  <div key={caseItem.id} className="border rounded-lg p-4">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <Badge variant="outline">{caseItem.case_number}</Badge>
-                          <Badge className={getStatusColor(caseItem.status)}>
-                            {caseItem.status}
+                  <Card key={caseItem.id} className="hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Badge variant="outline" className="font-mono text-xs">
+                            {caseItem.case_number}
                           </Badge>
-                          <Badge className={getUrgencyColor(caseItem.urgency)}>
-                            {caseItem.urgency} Priority
+                          <Badge variant={getStatusVariant(caseItem.status)}>
+                            {caseItem.status.charAt(0).toUpperCase() + caseItem.status.slice(1)}
+                          </Badge>
+                          <Badge variant={getUrgencyVariant(caseItem.urgency)}>
+                            {caseItem.urgency.charAt(0).toUpperCase() + caseItem.urgency.slice(1)} Priority
                           </Badge>
                         </div>
-                        <h3 className="font-semibold">{caseItem.title}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Client: {caseItem.client_name} • {caseItem.category}
-                        </p>
+                        <div className="text-right text-xs text-muted-foreground">
+                          <div>Created: {formatDate(caseItem.created_at)}</div>
+                          <div>Updated: {formatDate(caseItem.updated_at)}</div>
+                        </div>
                       </div>
-                      <div className="text-right text-sm text-muted-foreground">
-                        <p>Created: {formatDate(caseItem.created_at)}</p>
-                        <p>Updated: {formatDate(caseItem.updated_at)}</p>
+                      <CardTitle className="text-lg">{caseItem.title}</CardTitle>
+                      <CardDescription>
+                        <div className="flex items-center gap-2 text-sm">
+                          <Users className="h-4 w-4" />
+                          Client: {caseItem.client_name}
+                        </div>
+                        <div className="flex items-center gap-2 text-sm mt-1">
+                          <FileText className="h-4 w-4" />
+                          Category: {caseItem.category}
+                        </div>
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="flex gap-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleViewDetails(caseItem.id)}
+                        >
+                          View Details
+                        </Button>
+                        <Button size="sm" className="bg-primary hover:bg-primary/90">
+                          <MessageSquare className="h-4 w-4 mr-2" />
+                          Send Message
+                        </Button>
                       </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline">
-                        View Details
-                      </Button>
-                      <Button size="sm">
-                        Send Message
-                      </Button>
-                    </div>
-                  </div>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
             )}
@@ -463,6 +487,13 @@ const LawyerDashboard = () => {
       <LawyerQAChatbot 
         isOpen={chatbotOpen} 
         onToggle={() => setChatbotOpen(!chatbotOpen)} 
+      />
+
+      {/* Case Details Dialog */}
+      <CaseDetailsDialog
+        caseId={selectedCaseId}
+        isOpen={caseDetailsOpen}
+        onClose={() => setCaseDetailsOpen(false)}
       />
     </div>
   );
