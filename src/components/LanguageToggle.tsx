@@ -5,7 +5,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Languages } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
 
 export function LanguageToggle() {
@@ -15,9 +14,8 @@ export function LanguageToggle() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-8 px-2">
-          <Languages className="h-4 w-4" />
-          <span className="ml-2">{currentLang === 'ar' ? 'ع' : 'EN'}</span>
+        <Button variant="ghost" size="sm" className="h-8 px-3 min-w-[44px]">
+          <span className="text-sm font-medium">{currentLang === 'ar' ? 'ع' : 'EN'}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="bg-background border z-50">

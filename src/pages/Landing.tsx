@@ -71,16 +71,19 @@ const Landing = () => {
               <Scale className="h-8 w-8 text-primary" />
               <span className="text-xl font-bold">LegalPro</span>
             </div>
-            <div className="flex items-center space-x-1 sm:space-x-4">
+            <div className="flex items-center gap-1 sm:gap-4">
               <LanguageToggle />
-              <Link to="/legal-database" className="order-1 sm:order-none">
+              <Link to="/legal-database" className="hidden sm:block">
                 <Button variant="ghost">Guides</Button>
               </Link>
-              <Link to="/auth?force=true" className="order-2 sm:order-none">
-                <Button variant="ghost">Sign In</Button>
+              <Link to="/auth?force=true">
+                <Button variant="ghost" className="hidden sm:inline-flex">Sign In</Button>
               </Link>
-              <Link to="/auth?force=true" className="order-3 sm:order-none">
-                <Button className="bg-gradient-primary shadow-hero">Get Started</Button>
+              <Link to="/auth?force=true">
+                <Button className="bg-gradient-primary shadow-hero text-sm px-3 sm:px-4">
+                  <span className="sm:hidden">Start</span>
+                  <span className="hidden sm:inline">Get Started</span>
+                </Button>
               </Link>
             </div>
           </div>
