@@ -298,8 +298,8 @@ const Landing = () => {
             </div>
             
             {/* Other 3 sections in a row */}
-            <div className="flex justify-center">
-              <div className="grid grid-cols-3 gap-6 max-w-sm">
+            <div className="w-full">
+              <div className="grid grid-cols-3 gap-4 mx-auto max-w-xs">
                 <div>
                   <h3 className="font-semibold mb-4 text-sm">{t('landing.footer.services.title')}</h3>
                   <ul className="space-y-2 text-muted-foreground text-xs">
