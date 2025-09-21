@@ -57,88 +57,8 @@ serve(async (req) => {
       }
     }
 
-    const getSystemPrompt = (language: string, category: string) => {
-      switch (language) {
-        case 'ar':
-          return `أنت مساعد ذكي متخصص في الاستشارات القانونية المصرية. ستقوم بتحليل المحادثات القانونية وتقديم تحليل قانوني شامل بصيغة JSON.
-
-يجب أن تكون إجابتك عبارة عن كائن JSON صحيح بالهيكل التالي:
-{
-  "caseSummary": "ملخص موجز للقضية القانونية",
-  "applicableLaws": [
-    {
-      "law": "اسم القانون",
-      "articles": ["أرقام المواد"],
-      "relevance": "كيفية تطبيق هذا القانون"
-    }
-  ],
-  "recommendedSpecialization": {
-    "primaryArea": "المجال القانوني الأساسي",
-    "secondaryAreas": ["قائمة المجالات الثانوية"],
-    "reasoning": "سبب توصية هذه المجالات"
-  },
-  "legalStrategy": {
-    "immediateSteps": ["قائمة الإجراءات الفورية"],
-    "documentation": ["الوثائق المطلوبة"],
-    "timeline": "الجدول الزمني المتوقع",
-    "risks": ["المخاطر المحتملة"],
-    "opportunities": ["الجوانب المؤاتية"]
-  },
-  "caseComplexity": {
-    "level": "منخفض|متوسط|مرتفع",
-    "factors": ["عوامل التعقيد"],
-    "estimatedCost": "تقدير التكلفة"
-  },
-  "jurisdiction": "مصر",
-  "urgency": "منخفض|متوسط|مرتفع"
-}
-
-ركز على القانون المصري عند الإمكان. قدم نصائح عملية وقابلة للتنفيذ. اعتبر السياق الثقافي والقانوني لمصر.
-
-الفئة: ${category}
-اللغة: ${language}`;
-
-        case 'de':
-          return `Sie sind ein Experte für ägyptische Rechtsberatung. Sie werden Rechtsgespräche analysieren und eine umfassende Rechtsanalyse im JSON-Format bereitstellen.
-
-Ihre Antwort muss ein gültiges JSON-Objekt mit der folgenden Struktur sein:
-{
-  "caseSummary": "Kurze Zusammenfassung des Rechtsproblems",
-  "applicableLaws": [
-    {
-      "law": "Gesetzesname",
-      "articles": ["Artikelnummern"],
-      "relevance": "Wie dieses Gesetz gilt"
-    }
-  ],
-  "recommendedSpecialization": {
-    "primaryArea": "Primärer Rechtsbereich",
-    "secondaryAreas": ["Liste sekundärer Bereiche"],
-    "reasoning": "Warum diese Bereiche empfohlen werden"
-  },
-  "legalStrategy": {
-    "immediateSteps": ["Liste sofortiger Maßnahmen"],
-    "documentation": ["erforderliche Dokumente"],
-    "timeline": "erwarteter Zeitplan",
-    "risks": ["potentielle Risiken"],
-    "opportunities": ["günstige Aspekte"]
-  },
-  "caseComplexity": {
-    "level": "niedrig|mittel|hoch",
-    "factors": ["Komplexitätsfaktoren"],
-    "estimatedCost": "Kostenschätzung"
-  },
-  "jurisdiction": "ägypten",
-  "urgency": "niedrig|mittel|hoch"
-}
-
-Konzentrieren Sie sich auf ägyptisches Recht, wenn zutreffend. Geben Sie praktische, umsetzbare Ratschläge. Berücksichtigen Sie den kulturellen und rechtlichen Kontext für Ägypten.
-
-Kategorie: ${category}
-Sprache: ${language}`;
-
-        default: // English
-          return `You are an expert Egyptian legal consultant AI assistant. You will analyze legal conversations and provide comprehensive legal analysis in JSON format.
+    // Generate English system prompt
+    const englishSystemPrompt = `You are an expert Egyptian legal consultant AI assistant. You will analyze legal conversations and provide comprehensive legal analysis in JSON format.
 
 Your response must be a valid JSON object with the following structure:
 {
@@ -173,69 +93,119 @@ Your response must be a valid JSON object with the following structure:
 
 Focus on Egyptian law when applicable. Provide practical, actionable advice. Consider cultural and legal context for Egypt.
 
-Category: ${category}
-Language: ${caseLanguage}`;
-      }
-    };
+Category: ${category}`;
 
-    const systemPrompt = getSystemPrompt(caseLanguage, category);
+    // Generate Arabic system prompt
+    const arabicSystemPrompt = `أنت مساعد ذكي متخصص في الاستشارات القانونية المصرية. ستقوم بتحليل المحادثات القانونية وتقديم تحليل قانوني شامل بصيغة JSON.
 
-    const conversationMessages = [
-      { role: 'system', content: systemPrompt },
-      { 
-        role: 'user', 
-        content: `Please analyze this legal conversation and provide a comprehensive analysis:
+يجب أن تكون إجابتك عبارة عن كائن JSON صحيح بالهيكل التالي:
+{
+  "caseSummary": "ملخص موجز للقضية القانونية",
+  "applicableLaws": [
+    {
+      "law": "اسم القانون",
+      "articles": ["أرقام المواد"],
+      "relevance": "كيفية تطبيق هذا القانون"
+    }
+  ],
+  "recommendedSpecialization": {
+    "primaryArea": "المجال القانوني الأساسي",
+    "secondaryAreas": ["قائمة المجالات الثانوية"],
+    "reasoning": "سبب توصية هذه المجالات"
+  },
+  "legalStrategy": {
+    "immediateSteps": ["قائمة الإجراءات الفورية"],
+    "documentation": ["الوثائق المطلوبة"],
+    "timeline": "الجدول الزمني المتوقع",
+    "risks": ["المخاطر المحتملة"],
+    "opportunities": ["الجوانب المؤاتية"]
+  },
+  "caseComplexity": {
+    "level": "منخفض|متوسط|مرتفع",
+    "factors": ["عوامل التعقيد"],
+    "estimatedCost": "تقدير التكلفة"
+  },
+  "jurisdiction": "مصر",
+  "urgency": "منخفض|متوسط|مرتفع"
+}
+
+ركز على القانون المصري عند الإمكان. قدم نصائح عملية وقابلة للتنفيذ. اعتبر السياق الثقافي والقانوني لمصر.
+
+الفئة: ${category}`;
+
+    const conversationText = `Please analyze this legal conversation and provide a comprehensive analysis:
 
 Conversation Messages:
 ${messages.map(msg => `${msg.role}: ${msg.content}`).join('\n\n')}
 
-Please provide your analysis in the exact JSON format specified.`
-      }
-    ];
+Please provide your analysis in the exact JSON format specified.`;
 
-    console.log('Calling OpenAI API for legal analysis...');
+    console.log('Calling OpenAI API for legal analysis in both languages...');
     
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: conversationMessages,
-        max_tokens: 2000,
-        temperature: 0.3,
+    // Generate analysis in both languages simultaneously
+    const [englishResponse, arabicResponse] = await Promise.all([
+      fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAIApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: englishSystemPrompt },
+            { role: 'user', content: conversationText }
+          ],
+          max_tokens: 2000,
+          temperature: 0.3,
+        }),
       }),
-    });
+      fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAIApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: arabicSystemPrompt },
+            { role: 'user', content: conversationText }
+          ],
+          max_tokens: 2000,
+          temperature: 0.3,
+        }),
+      })
+    ]);
 
-    if (!response.ok) {
-      const errorDetails = await response.text();
-      console.error('OpenAI API Error:', response.status, errorDetails);
-      throw new Error(`OpenAI API error: ${response.status} - ${errorDetails}`);
+    if (!englishResponse.ok || !arabicResponse.ok) {
+      const englishError = englishResponse.ok ? '' : await englishResponse.text();
+      const arabicError = arabicResponse.ok ? '' : await arabicResponse.text();
+      console.error('OpenAI API Error:', englishResponse.status, englishError, arabicResponse.status, arabicError);
+      throw new Error(`OpenAI API error: ${englishResponse.status} or ${arabicResponse.status}`);
     }
 
-    const data = await response.json();
-    console.log('OpenAI API response received');
+    const [englishData, arabicData] = await Promise.all([
+      englishResponse.json(),
+      arabicResponse.json()
+    ]);
 
-    let legalAnalysis;
+    let englishAnalysis, arabicAnalysis;
+
+    // Parse English analysis
     try {
-      // Parse the AI response as JSON
-      const aiResponse = data.choices[0].message.content;
-      console.log('Raw AI response:', aiResponse);
+      const englishRawContent = englishData.choices[0].message.content;
+      console.log('Raw English OpenAI response:', englishRawContent);
       
-      // Try to extract JSON from the response
-      const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        legalAnalysis = JSON.parse(jsonMatch[0]);
-        console.log('Successfully parsed legal analysis JSON');
+      const englishJsonMatch = englishRawContent.match(/\{[\s\S]*\}/);
+      if (englishJsonMatch) {
+        englishAnalysis = JSON.parse(englishJsonMatch[0]);
       } else {
-        throw new Error('No valid JSON found in AI response');
+        throw new Error('No JSON found in English response');
       }
     } catch (parseError) {
-      console.error('Error parsing AI response as JSON:', parseError);
-      // Fallback analysis structure
-      legalAnalysis = {
+      console.error('Error parsing English OpenAI response:', parseError);
+      englishAnalysis = {
         caseSummary: messages.length > 0 
           ? messages.filter(m => m.role === 'user').map(m => m.content).join(' ').slice(0, 500)
           : 'Legal matter requiring professional consultation',
@@ -262,31 +232,82 @@ Please provide your analysis in the exact JSON format specified.`
       };
     }
 
-    // If caseId is provided, save the analysis to the database
+    // Parse Arabic analysis
+    try {
+      const arabicRawContent = arabicData.choices[0].message.content;
+      console.log('Raw Arabic OpenAI response:', arabicRawContent);
+      
+      const arabicJsonMatch = arabicRawContent.match(/\{[\s\S]*\}/);
+      if (arabicJsonMatch) {
+        arabicAnalysis = JSON.parse(arabicJsonMatch[0]);
+      } else {
+        throw new Error('No JSON found in Arabic response');
+      }
+    } catch (parseError) {
+      console.error('Error parsing Arabic OpenAI response:', parseError);
+      arabicAnalysis = {
+        caseSummary: "مسألة قانونية تتطلب استشارة مهنية",
+        applicableLaws: [],
+        recommendedSpecialization: {
+          primaryArea: category || 'قانوني عام',
+          secondaryAreas: [],
+          reasoning: "بناءً على فئة القضية والتقييم الأولي"
+        },
+        legalStrategy: {
+          immediateSteps: ["استشارة محامي مؤهل", "جمع المستندات ذات الصلة"],
+          documentation: [],
+          timeline: "يتم تحديدها عند الاستشارة القانونية",
+          risks: [],
+          opportunities: []
+        },
+        caseComplexity: {
+          level: 'متوسط',
+          factors: ["يتطلب تقييم قانوني مهني"],
+          estimatedCost: "يتم تحديدها"
+        },
+        jurisdiction: "مصر",
+        urgency: 'متوسط'
+      };
+    }
+
+    // Create bilingual analysis data
+    const bilingualAnalysis = {
+      en: englishAnalysis,
+      ar: arabicAnalysis
+    };
+
+    console.log('Bilingual analysis generated successfully');
+
+    // If caseId is provided, update the case_analysis table
     if (caseId) {
-      console.log('Saving legal analysis to database for case:', caseId);
+      console.log('Updating case analysis in database...');
       
       const { error: updateError } = await supabase
         .from('case_analysis')
         .update({
-          analysis_data: legalAnalysis,
+          analysis_data: bilingualAnalysis,
           status: 'completed',
-          generated_at: new Date().toISOString()
+          updated_at: new Date().toISOString()
         })
         .eq('case_id', caseId)
         .eq('status', 'pending');
 
       if (updateError) {
-        console.error('Error saving analysis to database:', updateError);
+        console.error('Error updating case analysis:', updateError);
         // Continue anyway - analysis was generated successfully
       } else {
-        console.log('Legal analysis saved successfully to database');
+        console.log('Case analysis updated successfully with bilingual data');
       }
     }
 
+    // Return the appropriate language version for backward compatibility
+    const displayAnalysis = caseLanguage === 'ar' ? arabicAnalysis : englishAnalysis;
+
     return new Response(JSON.stringify({ 
       success: true, 
-      legalAnalysis 
+      legalAnalysis: displayAnalysis,
+      analysisEn: englishAnalysis,
+      analysisAr: arabicAnalysis
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

@@ -199,6 +199,8 @@ export type Database = {
       cases: {
         Row: {
           ai_summary: string | null
+          ai_summary_ar: string | null
+          ai_summary_en: string | null
           applicable_laws: string[] | null
           assigned_admin_id: string | null
           assigned_lawyer_id: string | null
@@ -231,6 +233,8 @@ export type Database = {
         }
         Insert: {
           ai_summary?: string | null
+          ai_summary_ar?: string | null
+          ai_summary_en?: string | null
           applicable_laws?: string[] | null
           assigned_admin_id?: string | null
           assigned_lawyer_id?: string | null
@@ -263,6 +267,8 @@ export type Database = {
         }
         Update: {
           ai_summary?: string | null
+          ai_summary_ar?: string | null
+          ai_summary_en?: string | null
           applicable_laws?: string[] | null
           assigned_admin_id?: string | null
           assigned_lawyer_id?: string | null

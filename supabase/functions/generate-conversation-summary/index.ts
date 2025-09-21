@@ -108,91 +108,118 @@ serve(async (req) => {
       .map((msg: any) => `${msg.role.toUpperCase()}: ${msg.content}`)
       .join('\n\n');
 
-    // Create language-specific system prompt
-    const getSystemPrompt = (language: string, clientName?: string) => {
-      const clientRef = clientName ? `"${clientName}"` : '';
-      
-      switch (language) {
-        case 'ar':
-          return `أنت مساعد قانوني مختص في تلخيص المحادثات بين العملاء ومساعدي الذكاء الاصطناعي القانونيين. قم بإنشاء ملخص احترافي ومختصر يتضمن:
-            - القضية القانونية الرئيسية أو المشكلة المطروحة
-            - الحقائق والظروف الأساسية
-            - التواريخ المهمة والأطراف أو الوثائق المذكورة
-            - اهتمامات العميل الأساسية أو أهدافه
-            - أي مسائل عاجلة أو مواعيد نهائية
-            
-            مهم جداً: اكتب الملخص بصيغة الغائب المحايدة عن العميل. ${clientRef ? `أشر إلى العميل باسم ${clientRef}` : 'استخدم "العميل"'} بدلاً من الضمائر المباشرة ("أنت" و "لك"). هذا الملخص مخصص للمراجعة الإدارية وليس للتواصل مع العميل.
-            
-            اجعل الملخص واقعياً وواضحاً ومناسباً للمحترفين القانونيين لفهم القضية بسرعة.`;
-        
-        case 'de':
-          return `Sie sind ein Rechtsassistent, der darauf spezialisiert ist, Gespräche zwischen Kunden und KI-Rechtsassistenten zusammenzufassen. Erstellen Sie eine prägnante, professionelle Zusammenfassung, die Folgendes erfasst:
-            - Das hauptsächliche rechtliche Problem oder die diskutierte Angelegenheit
-            - Wichtige Fakten und Umstände
-            - Wichtige Daten, Parteien oder erwähnte Dokumente
-            - Die primären Anliegen oder Ziele des Kunden
-            - Dringende Angelegenheiten oder Fristen
-            
-            WICHTIG: Schreiben Sie die Zusammenfassung in neutraler dritter Person über den KUNDEN. ${clientRef ? `Bezeichnen Sie den Kunden als ${clientRef}` : 'Verwenden Sie "der Kunde"'} anstelle der direkten Anrede ("Sie", "Ihr"). Diese Zusammenfassung ist für die administrative Überprüfung gedacht, nicht für die Kundenkommunikation.
-            
-            Halten Sie die Zusammenfassung sachlich, klar und geeignet für Rechtsexperten, um den Fall schnell zu verstehen.`;
-        
-        default: // English
-          return `You are a legal assistant tasked with summarizing conversations between clients and AI legal assistants. Create a concise, professional paragraph summary that captures:
+    // Generate English system prompt
+    const englishSystemPrompt = `You are a legal assistant tasked with summarizing conversations between clients and AI legal assistants. Create a concise, professional paragraph summary that captures:
             - The main legal issue or problem discussed
             - Key facts and circumstances
             - Important dates, parties, or documents mentioned
             - The client's primary concerns or goals
             - Any urgent matters or deadlines
             
-            CRITICAL: Write the summary in neutral third-person perspective about the CLIENT. ${clientRef ? `Refer to the client as ${clientRef}` : 'Use "the client"'} instead of second-person language ("you", "your"). This summary is for admin review, not client communication.
+            CRITICAL: Write the summary in neutral third-person perspective about the CLIENT. ${clientName ? `Refer to the client as "${clientName}"` : 'Use "the client"'} instead of second-person language ("you", "your"). This summary is for admin review, not client communication.
             
-            Keep the summary factual, clear, and suitable for legal professionals to quickly understand the case.`;
-      }
-    };
+            Keep the summary factual, clear and suitable for legal professionals to quickly understand the case.`;
 
-    // Generate AI summary using OpenAI
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: getSystemPrompt(caseLanguage, clientName)
-          },
-          {
-            role: 'user',
-            content: `Please summarize the following legal intake conversation:\n\n${conversationText}`
-          }
-        ],
-        temperature: 0.3,
-        max_tokens: 500,
+    // Generate Arabic system prompt
+    const arabicSystemPrompt = `أنت مساعد قانوني مختص في تلخيص المحادثات بين العملاء ومساعدي الذكاء الاصطناعي القانونيين. قم بإنشاء ملخص احترافي ومختصر يتضمن:
+            - القضية القانونية الرئيسية أو المشكلة المطروحة
+            - الحقائق والظروف الأساسية
+            - التواريخ المهمة والأطراف أو الوثائق المذكورة
+            - اهتمامات العميل الأساسية أو أهدافه
+            - أي مسائل عاجلة أو مواعيد نهائية
+            
+            مهم جداً: اكتب الملخص بصيغة الغائب المحايدة عن العميل. ${clientName ? `أشر إلى العميل باسم "${clientName}"` : 'استخدم "العميل"'} بدلاً من الضمائر المباشرة ("أنت" و "لك"). هذا الملخص مخصص للمراجعة الإدارية وليس للتواصل مع العميل.
+            
+            اجعل الملخص واقعياً وواضحاً ومناسباً للمحترفين القانونيين لفهم القضية بسرعة.`;
+
+    console.log('Generating summaries in both languages simultaneously...');
+    
+    // Generate summaries in both languages simultaneously
+    const [englishResponse, arabicResponse] = await Promise.all([
+      fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAIApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'system',
+              content: englishSystemPrompt
+            },
+            {
+              role: 'user',
+              content: `Please summarize the following legal intake conversation:\n\n${conversationText}`
+            }
+          ],
+          temperature: 0.3,
+          max_tokens: 500,
+        }),
       }),
-    });
+      fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAIApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'system',
+              content: arabicSystemPrompt
+            },
+            {
+              role: 'user',
+              content: `Please summarize the following legal intake conversation:\n\n${conversationText}`
+            }
+          ],
+          temperature: 0.3,
+          max_tokens: 500,
+        }),
+      })
+    ]);
 
-    if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.statusText}`);
+    if (!englishResponse.ok || !arabicResponse.ok) {
+      throw new Error(`OpenAI API error: ${englishResponse.status} or ${arabicResponse.status}`);
     }
 
-    const aiResponse = await response.json();
-    const summary = aiResponse.choices[0].message.content;
+    const [englishData, arabicData] = await Promise.all([
+      englishResponse.json(),
+      arabicResponse.json()
+    ]);
 
-    // Update the case with the generated summary
+    const englishSummary = englishData.choices[0].message.content;
+    const arabicSummary = arabicData.choices[0].message.content;
+
+    console.log('Generated summaries in both languages, updating case...');
+    
+    // Update the case with both AI summaries
     const { error: updateError } = await supabase
       .from('cases')
-      .update({ ai_summary: summary })
+      .update({ 
+        ai_summary: caseLanguage === 'ar' ? arabicSummary : englishSummary, // Keep backward compatibility
+        ai_summary_en: englishSummary,
+        ai_summary_ar: arabicSummary,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', caseId);
 
     if (updateError) {
       throw updateError;
     }
 
-    return new Response(JSON.stringify({ summary }), {
+    console.log('Case updated successfully with bilingual summaries');
+
+    return new Response(JSON.stringify({ 
+      success: true, 
+      summary: caseLanguage === 'ar' ? arabicSummary : englishSummary,
+      summaryEn: englishSummary,
+      summaryAr: arabicSummary,
+      caseId: caseId
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 

@@ -34,7 +34,7 @@ import { DocumentPreview } from './DocumentPreview';
 import { getClientNameForRole, shouldShowContactInfo } from '@/utils/clientPrivacy';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/hooks/useLanguage';
-import { useContentTranslation } from '@/hooks/useContentTranslation';
+// Removed useContentTranslation as we now use bilingual content directly from database
 
 interface CaseDetailsDialogProps {
   caseId: string | null;
@@ -59,6 +59,8 @@ interface CaseDetails {
   created_at: string;
   updated_at: string;
   ai_summary?: string;
+  ai_summary_en?: string;
+  ai_summary_ar?: string;
   extracted_entities?: any;
   legal_analysis?: any;
   case_complexity_score?: number;
@@ -94,8 +96,7 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
   onClose 
 }) => {
   const { profile } = useAuth();
-  const { t, isRTL } = useLanguage();
-  const { translateIfNeeded, isTranslating } = useContentTranslation();
+  const { t, isRTL, currentLanguage } = useLanguage();
   const [caseDetails, setCaseDetails] = useState<CaseDetails | null>(null);
   const [conversation, setConversation] = useState<ConversationMessage[]>([]);
   const [documents, setDocuments] = useState<CaseDocument[]>([]);
@@ -105,10 +106,6 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
   const [generatingAnalysis, setGeneratingAnalysis] = useState(false);
   const [previewDocument, setPreviewDocument] = useState<CaseDocument | null>(null);
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
-  const [translatedContent, setTranslatedContent] = useState<{
-    aiSummary?: string;
-    legalAnalysis?: any;
-  }>({});
   const { toast } = useToast();
 
   useEffect(() => {
@@ -140,62 +137,17 @@ export const CaseDetailsDialog: React.FC<CaseDetailsDialogProps> = ({
     }
   }, [isOpen, caseId]);
 
-  // Translation effect - translate content when case details change or language changes
-  useEffect(() => {
-    const translateCaseContent = async () => {
-      if (!caseDetails) return;
+  // Get the appropriate language version directly from database
+  const aiSummary = currentLanguage === 'ar' 
+    ? (caseDetails?.ai_summary_ar || caseDetails?.ai_summary || '')
+    : (caseDetails?.ai_summary_en || caseDetails?.ai_summary || '');
 
-      const caseLanguage = caseDetails.language || 'en';
-      
-      // Translate AI summary if needed
-      if (caseDetails.ai_summary) {
-        const translatedSummary = await translateIfNeeded(
-          caseDetails.ai_summary,
-          caseLanguage,
-          'ai_summary',
-          `case_${caseDetails.id}_summary`
-        );
-        
-        if (translatedSummary !== caseDetails.ai_summary) {
-          setTranslatedContent(prev => ({
-            ...prev,
-            aiSummary: translatedSummary
-          }));
-        }
-      }
-
-      // Translate legal analysis if needed
-      if (caseAnalysis) {
-        try {
-          const analysisString = typeof caseAnalysis === 'string' 
-            ? caseAnalysis 
-            : JSON.stringify(caseAnalysis);
-          
-          const translatedAnalysis = await translateIfNeeded(
-            analysisString,
-            caseLanguage,
-            'legal_analysis',
-            `case_${caseDetails.id}_analysis`
-          );
-          
-          if (translatedAnalysis !== analysisString) {
-            const parsedAnalysis = typeof caseAnalysis === 'string' 
-              ? translatedAnalysis 
-              : JSON.parse(translatedAnalysis);
-            
-            setTranslatedContent(prev => ({
-              ...prev,
-              legalAnalysis: parsedAnalysis
-            }));
-          }
-        } catch (error) {
-          console.error('Error translating legal analysis:', error);
-        }
-      }
-    };
-
-    translateCaseContent();
-  }, [caseDetails, caseAnalysis, translateIfNeeded]);
+  // Get legal analysis in the appropriate language
+  const legalAnalysis = caseAnalysis?.analysis_data 
+    ? (currentLanguage === 'ar' && caseAnalysis.analysis_data.ar 
+        ? caseAnalysis.analysis_data.ar 
+        : caseAnalysis.analysis_data.en || caseAnalysis.analysis_data)
+    : null;
 
   const fetchConversation = async () => {
     if (!caseId) return;
