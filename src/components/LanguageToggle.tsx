@@ -14,7 +14,7 @@ export function LanguageToggle() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-8 px-2 min-w-[2.5rem] max-w-[2.75rem] rtl-button-compact">
+        <Button variant="ghost" size="sm" className="h-8 px-3 min-w-[44px]">
           <span className="text-sm font-medium">{currentLang === 'ar' ? 'ع' : 'EN'}</span>
         </Button>
       </DropdownMenuTrigger>
