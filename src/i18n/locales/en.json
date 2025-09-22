@@ -48,51 +48,47 @@
     "error": "Error loading dashboard data"
   },
   "proposal": {
-    "title": "Create AI-Powered Proposal",
-    "subtitle": "{{caseTitle}} • {{clientName}}",
-    "tabs": {
-      "details": "Proposal Details",
-      "preview": "Preview & Send"
-    },
-    "feeStructure": {
-      "title": "Fee Structure",
-      "consultation": "Consultation Fee ($)",
-      "remaining": "Remaining Fee ($)",
-      "total": "Total Fee"
-    },
-    "timeline": {
-      "title": "Timeline",
-      "estimated": "Estimated Timeline",
-      "placeholder": "e.g., 4-6 weeks"
-    },
-    "strategy": {
-      "title": "Legal Strategy",
-      "label": "Your Approach & Strategy",
-      "placeholder": "Describe your legal strategy, approach, and key points you'll address in this case...",
-      "description": "This will be used by AI to generate a comprehensive proposal with professional legal language."
-    },
-    "buttons": {
-      "generate": "Generate AI Proposal",
-      "generating": "Generating...",
-      "send": "Send Proposal",
-      "sending": "Sending...",
-      "backToEdit": "Back to Edit"
-    },
-    "messages": {
-      "strategyRequired": "Strategy Required",
-      "strategyRequiredDesc": "Please provide your legal strategy before generating the proposal.",
-      "generated": "Proposal Generated",
-      "generatedDesc": "Your AI-powered proposal has been created successfully.",
-      "generationFailed": "Generation Failed",
-      "noProposal": "No Proposal",
-      "noProposalDesc": "Please generate a proposal first.",
-      "sent": "Proposal Sent",
-      "sentDesc": "Your professional proposal has been sent to {{clientName}}.",
-      "sendFailed": "Send Failed",
-      "sendFailedDesc": "Failed to send proposal. Please try again.",
-      "noGenerated": "No proposal generated yet. Please go back to the form tab and generate a proposal first."
-    },
-    "generatedTitle": "Generated Proposal"
+    "review": {
+      "title": "Review Legal Proposal",
+      "subtitle": "Case: {{caseTitle}}",
+      "proposalContent": "Proposal Details",
+      "proposalDate": "Received on {{date}}",
+      "feeStructure": "Fee Structure",
+      "consultationFee": "Consultation Fee",
+      "remainingFee": "Remaining Fee",
+      "totalFee": "Total Fee",
+      "timeline": "Estimated Timeline",
+      "legalNotice": {
+        "title": "Legal Binding Agreement",
+        "description": "By accepting this proposal, you are entering into a legally binding agreement with the lawyer. This action has legal consequences and creates contractual obligations."
+      },
+      "termsAcceptance": {
+        "label": "I have read and agree to the Terms of Service and understand this is a legally binding agreement",
+        "description": "You must read and accept the terms of service to proceed.",
+        "link": "Terms of Service"
+      },
+      "buttons": {
+        "accept": "Accept Proposal (Legally Binding)",
+        "accepting": "Processing Acceptance...",
+        "requestChanges": "Request Changes",
+        "requesting": "Requesting Changes..."
+      },
+      "paymentNotice": "After acceptance, you will be redirected to pay the consultation fee of ${{amount}}.",
+      "success": {
+        "accepted": "Proposal Accepted",
+        "acceptedDesc": "You have successfully accepted the legal proposal. Redirecting to payment...",
+        "changesRequested": "Changes Requested",
+        "changesRequestedDesc": "Your request for changes has been sent to the lawyer."
+      },
+      "error": {
+        "termsRequired": "Terms Required",
+        "termsRequiredDesc": "You must accept the terms of service to proceed.",
+        "acceptFailed": "Failed to Accept",
+        "acceptFailedDesc": "There was an error accepting the proposal. Please try again.",
+        "changesFailed": "Failed to Request Changes",
+        "changesFailedDesc": "There was an error requesting changes. Please try again."
+      }
+    }
   },
   "lawyerAssistant": {
     "title": "Legal AI Assistant",

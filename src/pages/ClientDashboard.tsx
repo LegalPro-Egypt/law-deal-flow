@@ -42,6 +42,7 @@ import { downloadPDF, getUserFriendlyDownloadMessage } from "@/utils/pdfDownload
 const ClientDashboard = () => {
   const [newMessage, setNewMessage] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
+  const [showProposalDialog, setShowProposalDialog] = useState(false);
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const { 
@@ -60,9 +61,7 @@ const ClientDashboard = () => {
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !activeCase) return;
 
-    // Get conversation ID for this case
-    const conversationId = `conv_${activeCase.id}`;
-    await sendMessage(newMessage, conversationId);
+    await sendMessage(newMessage, activeCase.id);
     setNewMessage("");
   };
 
@@ -759,8 +758,8 @@ const ClientDashboard = () => {
                         </div>
                       ))}
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
 
                 {/* Document Upload Component */}
                 <DocumentUpload 
@@ -768,7 +767,6 @@ const ClientDashboard = () => {
                   existingDocuments={documents}
                   onFilesUploaded={(files) => {
                     console.log('Files uploaded:', files);
-                    // Documents will be refreshed via realtime subscription
                   }}
                   onRefreshRequested={refreshData}
                 />
@@ -777,6 +775,21 @@ const ClientDashboard = () => {
           </TabsContent>
         </Tabs>
       </div>
+      
+      {/* Proposal Review Dialog */}
+      {activeCase && (
+        <ProposalReviewDialog
+          open={showProposalDialog}
+          onOpenChange={setShowProposalDialog}
+          caseId={activeCase.id}
+          caseTitle={activeCase.title}
+          proposal={messages.find(m => m.message_type === 'proposal') || null}
+          onProposalAction={() => {
+            refreshData();
+            setActiveTab("overview");
+          }}
+        />
+      )}
     </div>
   );
 };
