@@ -187,22 +187,26 @@ const AdminDashboard = () => {
 
   const fetchPendingProposals = async () => {
     try {
+      // First fetch proposals with pending_admin_review status
       const { data: proposals, error } = await supabase
         .from('proposals')
-        .select(`
-          *,
-          cases!inner(
-            id, title, category, client_name, case_number, client_email
-          )
-        `)
+        .select('*')
         .eq('status', 'pending_admin_review')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      // Fetch lawyer details for each proposal
-      const proposalsWithLawyers = await Promise.all(
+      // Fetch case and lawyer details separately for each proposal
+      const proposalsWithDetails = await Promise.all(
         (proposals || []).map(async (proposal) => {
+          // Fetch case details
+          const { data: caseData, error: caseError } = await supabase
+            .from('cases')
+            .select('id, title, category, client_name, case_number, client_email')
+            .eq('id', proposal.case_id)
+            .single();
+
+          // Fetch lawyer details
           const { data: lawyer, error: lawyerError } = await supabase
             .from('profiles')
             .select('first_name, last_name, law_firm, years_experience, email')
@@ -211,12 +215,13 @@ const AdminDashboard = () => {
 
           return {
             ...proposal,
+            cases: caseData || {},
             lawyer: lawyer || {}
           };
         })
       );
 
-      setPendingProposals(proposalsWithLawyers);
+      setPendingProposals(proposalsWithDetails);
     } catch (error: any) {
       console.error('Error fetching pending proposals:', error);
     }
@@ -1735,7 +1740,7 @@ const AdminDashboard = () => {
         </Dialog>
 
         <AdminProposalReviewDialog
-          open={showProposalReview}
+          open={showProposalReview && selectedProposal !== null}
           onOpenChange={setShowProposalReview}
           proposal={selectedProposal}
           caseDetails={proposalCaseDetails}

@@ -51,6 +51,11 @@ export const AdminProposalReviewDialog = ({
   const [loading, setLoading] = useState(false);
   const [adminNotes, setAdminNotes] = useState("");
 
+  // Return early if no proposal is provided
+  if (!proposal) {
+    return null;
+  }
+
   const handleApproveProposal = async () => {
     setLoading(true);
     try {
@@ -253,19 +258,19 @@ export const AdminProposalReviewDialog = ({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="text-center p-4 bg-primary/5 rounded-lg">
                   <div className="font-semibold text-lg">
-                    ${proposal.consultation_fee?.toLocaleString() || '0'}
+                    ${proposal?.consultation_fee?.toLocaleString() || '0'}
                   </div>
                   <div className="text-sm text-muted-foreground">Consultation Fee</div>
                 </div>
                 <div className="text-center p-4 bg-secondary/5 rounded-lg">
                   <div className="font-semibold text-lg">
-                    ${proposal.remaining_fee?.toLocaleString() || '0'}
+                    ${proposal?.remaining_fee?.toLocaleString() || '0'}
                   </div>
                   <div className="text-sm text-muted-foreground">Remaining Fee</div>
                 </div>
                 <div className="text-center p-4 bg-accent/5 rounded-lg">
                   <div className="font-semibold text-lg text-primary">
-                    ${proposal.total_fee?.toLocaleString() || '0'}
+                    ${proposal?.total_fee?.toLocaleString() || '0'}
                   </div>
                   <div className="text-sm text-muted-foreground">Total Fee</div>
                 </div>
@@ -282,7 +287,7 @@ export const AdminProposalReviewDialog = ({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="whitespace-pre-wrap">{proposal.timeline}</p>
+              <p className="whitespace-pre-wrap">{proposal?.timeline || 'No timeline specified'}</p>
             </CardContent>
           </Card>
 
@@ -295,7 +300,7 @@ export const AdminProposalReviewDialog = ({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="whitespace-pre-wrap">{proposal.strategy}</p>
+              <p className="whitespace-pre-wrap">{proposal?.strategy || 'No strategy specified'}</p>
             </CardContent>
           </Card>
 
@@ -307,7 +312,7 @@ export const AdminProposalReviewDialog = ({
             <CardContent>
               <div className="prose max-w-none">
                 <div className="whitespace-pre-wrap text-sm leading-relaxed bg-muted/50 p-4 rounded-md">
-                  {proposal.generated_content}
+                  {proposal?.generated_content || 'No proposal content available'}
                 </div>
               </div>
             </CardContent>
@@ -359,7 +364,7 @@ export const AdminProposalReviewDialog = ({
 
           {/* Proposal Info */}
           <div className="text-xs text-muted-foreground text-center">
-            Proposal created on: {new Date(proposal.created_at).toLocaleDateString()} at {new Date(proposal.created_at).toLocaleTimeString()}
+            Proposal created on: {proposal ? new Date(proposal.created_at).toLocaleDateString() : 'N/A'} at {proposal ? new Date(proposal.created_at).toLocaleTimeString() : 'N/A'}
           </div>
         </div>
       </DialogContent>
