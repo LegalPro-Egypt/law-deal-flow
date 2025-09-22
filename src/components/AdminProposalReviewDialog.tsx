@@ -38,6 +38,7 @@ interface Proposal {
   status: string;
   created_at: string;
   viewed_at?: string;
+  metadata?: any;
 }
 
 interface AdminProposalReviewDialogProps {
@@ -69,15 +70,19 @@ export const AdminProposalReviewDialog = ({
   const handleApproveProposal = async () => {
     setLoading(true);
     try {
+      // Get current user ID first
+      const { data: { user } } = await supabase.auth.getUser();
+      
       // Update proposal status to sent (awaiting client response)
       const { error: proposalError } = await supabase
         .from('proposals')
         .update({
           status: 'sent',
           metadata: { 
+            ...proposal.metadata, // Preserve existing metadata
             admin_notes: adminNotes,
             admin_approved_at: new Date().toISOString(),
-            admin_approved_by: (await supabase.auth.getUser()).data.user?.id
+            admin_approved_by: user?.id
           }
         })
         .eq('id', proposal.id);
