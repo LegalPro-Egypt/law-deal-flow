@@ -16,6 +16,7 @@ import HelpCenter from "./pages/HelpCenter";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import ProBono from "./pages/ProBono";
+import Payment from "./pages/Payment";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -56,6 +57,11 @@ const App = () => (
             </ProtectedRoute>
           } />
           <Route path="/client-dashboard" element={<Navigate to="/client" replace />} />
+          <Route path="/payment" element={
+            <ProtectedRoute requiredRole="client">
+              <Payment />
+            </ProtectedRoute>
+          } />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

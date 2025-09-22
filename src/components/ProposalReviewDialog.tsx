@@ -14,7 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { FileText, Clock, DollarSign, CheckCircle, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/hooks/useLanguage";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 interface Proposal {
   id: string;
@@ -47,6 +47,7 @@ export const ProposalReviewDialog = ({
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const { currentLanguage } = useLanguage();
+  const navigate = useNavigate();
 
   const handleAcceptProposal = async () => {
     if (!acceptedTerms) {
@@ -111,8 +112,19 @@ export const ProposalReviewDialog = ({
       onProposalUpdate();
       onOpenChange(false);
 
-      // Here you would typically redirect to payment page
-      // For now, we'll just show success message
+      // Redirect to payment page
+      navigate('/payment', {
+        state: {
+          paymentData: {
+            caseId: proposal.case_id,
+            proposalId: proposal.id,
+            consultationFee: proposal.consultation_fee || 0,
+            totalFee: proposal.total_fee || 0,
+            lawyerName: 'المحامي المختص', // This could be fetched from proposal data
+            caseTitle: 'استشارة قانونية' // This could be fetched from case data
+          }
+        }
+      });
 
     } catch (error) {
       console.error('Error accepting proposal:', error);
