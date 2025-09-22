@@ -37,7 +37,7 @@ interface ProposalReviewDialogProps {
   onProposalAction: () => void;
 }
 
-export const ProposalReviewDialog: React.FC<ProposalReviewDialogProps> = ({
+const ProposalReviewDialog: React.FC<ProposalReviewDialogProps> = ({
   open,
   onOpenChange,
   caseId,
@@ -334,3 +334,5 @@ export const ProposalReviewDialog: React.FC<ProposalReviewDialogProps> = ({
     </Dialog>
   );
 };
+
+export default ProposalReviewDialog;

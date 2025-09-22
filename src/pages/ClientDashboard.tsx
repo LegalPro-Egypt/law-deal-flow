@@ -38,6 +38,7 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
 import { downloadPDF, getUserFriendlyDownloadMessage } from "@/utils/pdfDownload";
+import ProposalReviewDialog from "@/components/ProposalReviewDialog";
 
 const ClientDashboard = () => {
   const [newMessage, setNewMessage] = useState("");
