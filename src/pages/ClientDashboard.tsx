@@ -38,12 +38,10 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
 import { downloadPDF, getUserFriendlyDownloadMessage } from "@/utils/pdfDownload";
-import ProposalReviewDialog from "@/components/ProposalReviewDialog";
 
 const ClientDashboard = () => {
   const [newMessage, setNewMessage] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
-  const [showProposalDialog, setShowProposalDialog] = useState(false);
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const { 
@@ -58,10 +56,13 @@ const ClientDashboard = () => {
     refreshData
   } = useClientData();
 
+
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !activeCase) return;
 
-    await sendMessage(newMessage, activeCase.id);
+    // Get conversation ID for this case
+    const conversationId = `conv_${activeCase.id}`;
+    await sendMessage(newMessage, conversationId);
     setNewMessage("");
   };
 
@@ -198,38 +199,42 @@ const ClientDashboard = () => {
 
   const handleReviewCase = async () => {
     if (!activeCase) return;
-
-    if (!stepCompletion.allComplete) {
+    
+    const completion = getStepCompletion();
+    if (!completion.allComplete) {
+      const missingSteps = [];
+      if (!completion.step1) missingSteps.push("complete the AI chat");
+      if (!completion.step2) missingSteps.push("provide personal details");
+      if (!completion.step3) missingSteps.push("upload required documents");
+      
       toast({
-        title: "Case Review Not Available",
-        description: "Please complete all intake steps before requesting case review.",
+        title: "Cannot Proceed to Review",
+        description: `Please ${missingSteps.join(", ")} before continuing.`,
         variant: "destructive",
       });
       return;
     }
-
+    
     try {
       const { error } = await supabase
         .from('cases')
-        .update({ 
-          status: 'submitted',
-          updated_at: new Date().toISOString()
-        })
+        .update({ step: 4 })
         .eq('id', activeCase.id);
 
       if (error) throw error;
 
       toast({
-        title: "Case Submitted for Review",
-        description: "Your case has been submitted and will be reviewed by our legal team.",
+        title: "Proceeding to Review",
+        description: "Your case is ready for review and submission.",
       });
 
-      refreshData();
+      // Navigate to intake with the specific case ID for review
+      navigate(`/intake?case=${activeCase.id}`);
     } catch (error) {
-      console.error('Error submitting case:', error);
+      console.error('Error updating case step:', error);
       toast({
         title: "Error",
-        description: "Failed to submit case for review. Please try again.",
+        description: "Failed to proceed to review. Please try again.",
         variant: "destructive",
       });
     }
@@ -238,46 +243,35 @@ const ClientDashboard = () => {
   const handleSignOut = async () => {
     try {
       await signOut();
-      navigate('/auth');
+      toast({ title: "Signed out", description: "You have been logged out." });
+      // Use a query parameter to bypass auto-redirect on Landing page
+      navigate('/?force=true');
     } catch (error: any) {
-      console.error('Sign out error:', error);
+      toast({ title: "Error", description: error.message || "Failed to sign out.", variant: "destructive" });
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5">
-        <div className="container mx-auto px-4 py-8">
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 space-y-6">
-              <div className="flex items-center justify-between">
-                <Skeleton className="h-8 w-48" />
-                <Skeleton className="h-10 w-32" />
+      <div className="min-h-screen bg-background">
+        <header className="bg-card border-b border-border sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
+            <div className="flex items-center justify-between h-14 sm:h-16">
+              <div className="flex items-center space-x-2 sm:space-x-4">
+                <Link to="/?force=true" className="flex items-center space-x-2 sm:space-x-4 hover:opacity-80 transition-opacity">
+                  <Scale className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+                  <div className="flex items-center space-x-1 sm:space-x-2">
+                    <h1 className="text-lg sm:text-xl font-bold">LegalConnect</h1>
+                    <Badge variant="secondary" className="text-xs hidden sm:block">Client Portal</Badge>
+                  </div>
+                </Link>
               </div>
-              <Card className="bg-gradient-card shadow-card">
-                <CardHeader>
-                  <Skeleton className="h-6 w-32" />
-                  <Skeleton className="h-4 w-48" />
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-3/4" />
-                  <Skeleton className="h-4 w-1/2" />
-                </CardContent>
-              </Card>
-            </div>
-            <div className="space-y-6">
-              <Card className="bg-gradient-card shadow-card">
-                <CardHeader>
-                  <Skeleton className="h-6 w-24" />
-                </CardHeader>
-                <CardContent>
-                  <Skeleton className="h-20 w-full" />
-                </CardContent>
-              </Card>
             </div>
           </div>
+        </header>
+        <div className="container mx-auto px-4 py-8 space-y-6">
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-96 w-full" />
         </div>
       </div>
     );
@@ -285,43 +279,55 @@ const ClientDashboard = () => {
 
   if (!activeCase) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center space-x-3">
-              <Scale className="h-8 w-8 text-primary" />
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary-foreground bg-clip-text text-transparent">
-                Client Dashboard
-              </h1>
-            </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Settings className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={handleSignOut}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sign Out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-
-          <Card className="bg-gradient-card shadow-card max-w-2xl mx-auto text-center">
-            <CardContent className="py-12">
-              <FileText className="h-16 w-16 text-muted-foreground mx-auto mb-6" />
-              <h2 className="text-2xl font-bold mb-4">No Cases Available</h2>
-              <p className="text-muted-foreground mb-6">
-                You don't have any cases yet. To get started, please submit a new case through our intake process.
-              </p>
-              <Button asChild>
-                <Link to="/intake">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Start New Case
+      <div className="min-h-screen bg-background">
+        <header className="bg-card border-b border-border sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
+            <div className="flex items-center justify-between h-14 sm:h-16">
+              <div className="flex items-center space-x-2 sm:space-x-4">
+                <Link to="/?force=true" className="flex items-center space-x-2 sm:space-x-4 hover:opacity-80 transition-opacity">
+                  <Scale className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+                  <div className="flex items-center space-x-1 sm:space-x-2">
+                    <h1 className="text-lg sm:text-xl font-bold">LegalConnect</h1>
+                    <Badge variant="secondary" className="text-xs hidden sm:block">Client Portal</Badge>
+                  </div>
                 </Link>
-              </Button>
+              </div>
+              <div className="flex items-center space-x-1 sm:space-x-2">
+                <Button asChild className="h-9 sm:h-10" size="sm">
+                  <Link to="/intake?new=1">
+                    <Plus className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Start New Case</span>
+                  </Link>
+                </Button>
+                <Button variant="ghost" size="sm" onClick={handleSignOut} className="h-9 w-9 sm:h-10 sm:w-auto sm:px-4">
+                  <LogOut className="h-4 w-4" />
+                  <span className="hidden sm:inline sm:ml-2">Sign Out</span>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </header>
+        <div className="container mx-auto px-4 py-8 text-center">
+          <Card className="max-w-md mx-auto">
+            <CardContent className="p-8">
+              <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h2 className="text-xl font-semibold mb-2">No Active Cases</h2>
+              <p className="text-muted-foreground mb-4">
+                You don't have any active legal cases yet.
+              </p>
+              <div className="space-y-2">
+                <Button asChild>
+                  <Link to="/intake?new=1">Start New Case</Link>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={refreshData}
+                  disabled={fetchingCases}
+                  className="w-full"
+                >
+                  {fetchingCases ? "Refreshing..." : "Refresh Cases"}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -329,110 +335,126 @@ const ClientDashboard = () => {
     );
   }
 
-  const completion = getStepCompletion();
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5">
-      <div className="container mx-auto px-4 py-8">
-        
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center space-x-3">
-            <Scale className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary-foreground bg-clip-text text-transparent">
-              Client Dashboard
-            </h1>
-          </div>
-          <div className="flex items-center space-x-4">
-            {cases.length > 1 && (
-              <CaseSelector
-                cases={cases}
-                activeCase={activeCase}
-                onCaseSelect={(caseId) => {
-                  const selectedCase = cases.find(c => c.id === caseId);
-                  if (selectedCase) {
-                    setActiveCase(selectedCase);
-                  }
-                }}
-              />
-            )}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Settings className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={handleSignOut}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sign Out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-
-        
-        <Card className="mb-8 bg-gradient-card shadow-card border-l-4 border-l-primary">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-semibold mb-2">{activeCase.title}</h2>
-                <div className="flex items-center space-x-4">
-                  <Badge variant="secondary" className={getStatusColor(activeCase.status)}>
-                    {formatCaseStatus(activeCase.status)}
-                  </Badge>
-                  <span className="text-sm text-muted-foreground">
-                    Case #{activeCase.case_number}
-                  </span>
-                  <span className="text-sm text-muted-foreground">
-                    {activeCase.category}
-                  </span>
-                </div>
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="bg-card border-b border-border sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
+          <div className="flex items-center justify-between h-14 sm:h-16">
+            {/* Logo and Title */}
+            <Link to="/?force=true" className="flex items-center space-x-2 sm:space-x-4 hover:opacity-80 transition-opacity">
+              <Scale className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+              <div className="flex items-center space-x-1 sm:space-x-2">
+                <h1 className="text-lg sm:text-xl font-bold text-foreground hidden xs:block sm:block">
+                  LegalConnect
+                </h1>
+                <Badge variant="secondary" className="text-xs hidden sm:block">
+                  Client Portal
+                </Badge>
               </div>
-              <div className="flex space-x-2">
-                {cases.length > 1 && (
-                <CaseSelector
+            </Link>
+
+            {/* Case Selector - Mobile: Reduced width, Desktop: Normal */}
+            {cases.length > 1 && (
+              <div className="flex-1 max-w-[120px] sm:max-w-xs mx-2 sm:mx-4">
+                <CaseSelector 
                   cases={cases}
                   activeCase={activeCase}
                   onCaseSelect={(caseId) => {
                     const selectedCase = cases.find(c => c.id === caseId);
-                    if (selectedCase) {
-                      setActiveCase(selectedCase);
-                    }
+                    if (selectedCase) setActiveCase(selectedCase);
                   }}
                 />
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4">
+              <Button
+                asChild
+                className="bg-primary hover:bg-primary/90 text-primary-foreground h-9 sm:h-10"
+                size="sm"
+              >
+                <Link to="/intake?new=1">
+                  <Plus className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Start New Case</span>
+                </Link>
+              </Button>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-9 w-9 sm:h-10 sm:w-auto sm:px-4">
+                    <Settings className="h-4 w-4" />
+                    <span className="hidden sm:inline sm:ml-2">Settings</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-background border border-border shadow-lg z-50">
+                  <DropdownMenuItem onClick={handleSignOut} className="text-destructive hover:text-destructive">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        {/* Case Overview Header */}
+        <div className="mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">{activeCase.title}</h1>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="outline">{activeCase.case_number}</Badge>
+                <Badge className="bg-primary">{activeCase.category}</Badge>
+                {cases.length > 1 && (
+                  <Badge variant="secondary" className="text-xs">
+                    Active Case ({cases.findIndex(c => c.id === activeCase.id) + 1} of {cases.length})
+                  </Badge>
                 )}
-                <Button onClick={handleDownloadCaseSummary} variant="outline" size="sm">
-                  <Download className="mr-2 h-4 w-4" />
-                  Download Summary
-                </Button>
               </div>
             </div>
-          </CardContent>
-        </Card>
+            <div className="flex items-center space-x-2 mt-4 lg:mt-0">
+              <div className={`w-3 h-3 rounded-full ${getStatusColor(activeCase.status)}`} />
+              <span className="font-medium capitalize">
+                {formatCaseStatus(activeCase.status)}
+              </span>
+            </div>
+          </div>
 
-        
+          {/* Communication Inbox Section */}
+          <CommunicationInbox
+            caseId={activeCase.id}
+            caseTitle={activeCase.title}
+            caseStatus={activeCase.status}
+            consultationPaid={activeCase.consultation_paid || false}
+            paymentStatus={activeCase.payment_status || 'pending'}
+            userRole="client"
+            lawyerAssigned={!!activeCase.assigned_lawyer_id}
+          />
+        </div>
+
+        {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 bg-muted/30 backdrop-blur-sm">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="messages">
-              <MessageSquare className="mr-2 h-4 w-4" />
-              Messages
-            </TabsTrigger>
-            <TabsTrigger value="documents">
-              <FileText className="mr-2 h-4 w-4" />
-              Documents
-            </TabsTrigger>
+            <TabsTrigger value="details">Personal Details</TabsTrigger>
+            <TabsTrigger value="messages">Messages</TabsTrigger>
+            <TabsTrigger value="documents" id="documents-tab">Documents</TabsTrigger>
           </TabsList>
 
-          
+          {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              
+            <div className="grid lg:grid-cols-2 gap-6">
+              {/* Case Timeline */}
               <Card className="bg-gradient-card shadow-card">
                 <CardHeader>
-                  <CardTitle>Case Timeline</CardTitle>
-                  <CardDescription>Track your case progress</CardDescription>
+                  <CardTitle className="flex items-center">
+                    <Clock className="h-5 w-5 mr-2" />
+                    Case Timeline
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -476,76 +498,103 @@ const ClientDashboard = () => {
                 </CardContent>
               </Card>
 
-              
+              {/* Quick Actions */}
               <Card className="bg-gradient-card shadow-card">
                 <CardHeader>
-                  <CardTitle>Case Summary</CardTitle>
-                  <CardDescription>AI-generated case analysis</CardDescription>
+                  <CardTitle>Quick Actions</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  {activeCase.ai_summary ? (
-                    <p className="text-sm leading-relaxed">{activeCase.ai_summary}</p>
-                  ) : (
-                    <p className="text-sm text-muted-foreground italic">
-                      Case summary will be generated after initial review
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-
-              
-              <Card className="bg-gradient-card shadow-card lg:col-span-2">
-                <CardHeader>
-                  <CardTitle>Intake Progress</CardTitle>
-                  <CardDescription>Complete all steps to submit your case for review</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {stepCompletion.allComplete && activeCase.status === 'intake' ? (
-                      <div className="bg-success/10 border border-success/20 rounded-lg p-4 mb-4">
-                        <div className="flex items-center space-x-2">
-                          <CheckCircle className="h-5 w-5 text-success" />
-                          <span className="font-medium text-success">All intake steps completed!</span>
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-2">
-                          Your case is ready for review. Click below to submit it to our legal team.
+                <CardContent className="space-y-3">
+                  <Button 
+                    className="w-full justify-start" 
+                    variant="outline"
+                    onClick={handleInboxClick}
+                  >
+                    <Mail className="h-4 w-4 mr-2" />
+                    Inbox
+                  </Button>
+                  <Button 
+                    className="w-full justify-start" 
+                    variant="outline"
+                    onClick={handleDownloadCaseSummary}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download Case Summary
+                  </Button>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button className="w-full justify-start" variant="outline">
+                        <Receipt className="h-4 w-4 mr-2" />
+                        View Payments
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Payment History</DialogTitle>
+                        <DialogDescription>
+                          View your payment history and status for this case.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="py-6 text-center">
+                        <Receipt className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                        <h3 className="text-lg font-medium mb-2">No Payments Yet</h3>
+                        <p className="text-muted-foreground text-sm mb-4">
+                          No payments have been made for this case yet. Payment requirements will be communicated when your case progresses.
                         </p>
-                        <Button
-                          onClick={handleReviewCase}
-                          className="mt-3 bg-success hover:bg-success/90 text-success-foreground"
-                          size="sm"
-                        >
-                          Submit for Review
-                          <ArrowRight className="ml-2 h-4 w-4" />
-                        </Button>
+                        <div className="bg-muted p-3 rounded text-sm">
+                          <p className="font-medium mb-1">Need Help?</p>
+                          <p className="text-muted-foreground">
+                            Contact our billing department for payment questions or assistance.
+                          </p>
+                        </div>
                       </div>
-                    ) : null}
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="flex items-center space-x-3">
-                        {stepCompletion.step1 ? (
-                          <CheckCircle className="h-5 w-5 text-success" />
-                        ) : (
-                          <AlertCircle className="h-5 w-5 text-muted-foreground" />
-                        )}
-                        <span className="text-sm">Case Information</span>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        {stepCompletion.step2 ? (
-                          <CheckCircle className="h-5 w-5 text-success" />
-                        ) : (
-                          <AlertCircle className="h-5 w-5 text-muted-foreground" />
-                        )}
-                        <span className="text-sm">Personal Details</span>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        {stepCompletion.step3 ? (
-                          <CheckCircle className="h-5 w-5 text-success" />
-                        ) : (
-                          <AlertCircle className="h-5 w-5 text-muted-foreground" />
-                        )}
-                        <span className="text-sm">Required Documents</span>
-                      </div>
+                    </DialogContent>
+                  </Dialog>
+                  {/* Case setup actions - only show submit for intake status */}
+                  {stepCompletion.allComplete && activeCase.status === 'intake' ? (
+                    <Button 
+                      className="w-full justify-start bg-gradient-primary" 
+                      onClick={handleReviewCase}
+                    >
+                      <ArrowRight className="h-4 w-4 mr-2" />
+                      Review Case & Submit
+                    </Button>
+                  ) : !stepCompletion.allComplete ? (
+                    <Button 
+                      asChild 
+                      className="w-full justify-start bg-gradient-primary"
+                    >
+                      <Link to={`/intake?case=${activeCase.id}`}>
+                        <ArrowRight className="h-4 w-4 mr-2" />
+                        Continue Setup
+                      </Link>
+                    </Button>
+                  ) : null}
+                  
+                  {/* Progress indicators */}
+                  <div className="text-xs text-muted-foreground space-y-1">
+                    <div className="flex items-center gap-2">
+                      {stepCompletion.step1 ? (
+                        <CheckCircle className="h-3 w-3 text-green-600" />
+                      ) : (
+                        <div className="h-3 w-3 rounded-full border border-muted-foreground" />
+                      )}
+                      <span>AI Chat Complete</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {stepCompletion.step2 ? (
+                        <CheckCircle className="h-3 w-3 text-green-600" />
+                      ) : (
+                        <div className="h-3 w-3 rounded-full border border-muted-foreground" />
+                      )}
+                      <span>Personal Details</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {stepCompletion.step3 ? (
+                        <CheckCircle className="h-3 w-3 text-green-600" />
+                      ) : (
+                        <div className="h-3 w-3 rounded-full border border-muted-foreground" />
+                      )}
+                      <span>Required Documents</span>
                     </div>
                   </div>
                 </CardContent>
@@ -553,19 +602,124 @@ const ClientDashboard = () => {
             </div>
           </TabsContent>
 
-          
-          <TabsContent value="messages" className="space-y-6">
-            <CommunicationInbox
-              caseId={activeCase.id}
-              caseTitle={activeCase.title}
-              caseStatus={activeCase.status}
-              consultationPaid={false}
-              paymentStatus="unpaid"
-              userRole="client"
-            />
+          {/* Personal Details Tab */}
+          <TabsContent value="details" className="space-y-6">
+            <Card className="bg-gradient-card shadow-card">
+              <CardHeader>
+                <CardTitle>Personal Information</CardTitle>
+                <CardDescription>
+                  View and manage your contact information
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium">Full Name</Label>
+                    <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
+                      {activeCase?.client_name || 'Not provided'}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Email</Label>
+                    <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
+                      {activeCase?.client_email || 'Not provided'}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Phone</Label>
+                    <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
+                      {activeCase?.client_phone || 'Not provided'}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Language</Label>
+                    <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
+                      {activeCase?.language === 'en' && 'English'}
+                      {activeCase?.language === 'ar' && 'Arabic'}  
+                      {activeCase?.language === 'de' && 'German'}
+                      {!activeCase?.language && 'Not specified'}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="pt-4 border-t">
+                  <Button asChild variant="outline">
+                    <Link to={`/intake?case=${activeCase.id}&edit=personal`}>
+                      <FileText className="h-4 w-4 mr-2" />
+                      Edit Details
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
-          
+          {/* Messages Tab */}
+          <TabsContent value="messages" className="space-y-6">
+            <Card className="bg-gradient-card shadow-card">
+              <CardHeader>
+                <CardTitle>Secure Communication</CardTitle>
+                <CardDescription>
+                  All messages are encrypted and monitored for compliance
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {/* Messages */}
+                <div className="h-96 border rounded-lg p-4 overflow-y-auto mb-4 bg-background space-y-4">
+                  {messages.length > 0 ? messages.map((msg, index) => (
+                    <div key={index} className={`flex ${msg.sender === 'client' ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[70%] ${
+                        msg.sender === 'client' 
+                          ? 'bg-primary text-primary-foreground' 
+                          : 'bg-muted'
+                      } rounded-lg p-3`}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm font-medium">{msg.name}</span>
+                          <span className="text-xs opacity-70">{msg.time}</span>
+                        </div>
+                        <p className="text-sm">{msg.content}</p>
+                      </div>
+                    </div>
+                  )) : (
+                    <div className="text-center text-muted-foreground py-8">
+                      <MessageSquare className="h-8 w-8 mx-auto mb-2" />
+                      <p>No messages yet. Start a conversation with your lawyer.</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Message Input */}
+                <div className="flex space-x-2">
+                  <Textarea
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Type your message..."
+                    className="flex-1 min-h-[80px]"
+                  />
+                  <div className="flex flex-col space-y-2">
+                    <Button 
+                      size="sm" 
+                      className="bg-gradient-primary"
+                      onClick={handleSendMessage}
+                      disabled={!newMessage.trim()}
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="outline">
+                      <Upload className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="mt-2 p-2 bg-muted/50 rounded text-xs text-muted-foreground">
+                  <AlertCircle className="h-3 w-3 inline mr-1" />
+                  All communication must remain on platform. External contact details will be automatically redacted.
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Documents Tab */}
           <TabsContent value="documents" className="space-y-6">
             <Card className="bg-gradient-card shadow-card">
               <CardHeader>
@@ -575,7 +729,7 @@ const ClientDashboard = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                
+                {/* Uploaded Documents List */}
                 {documents.length > 0 && (
                   <div className="mb-6">
                     <h4 className="font-medium mb-4">Uploaded Documents</h4>
@@ -608,12 +762,13 @@ const ClientDashboard = () => {
                   </div>
                 )}
 
-                
+                {/* Document Upload Component */}
                 <DocumentUpload 
                   caseId={activeCase?.id}
                   existingDocuments={documents}
                   onFilesUploaded={(files) => {
                     console.log('Files uploaded:', files);
+                    // Documents will be refreshed via realtime subscription
                   }}
                   onRefreshRequested={refreshData}
                 />
@@ -622,21 +777,6 @@ const ClientDashboard = () => {
           </TabsContent>
         </Tabs>
       </div>
-      
-      
-      {activeCase && (
-        <ProposalReviewDialog
-          open={showProposalDialog}
-          onOpenChange={setShowProposalDialog}
-          caseId={activeCase.id}
-          caseTitle={activeCase.title}
-          proposal={messages.find(m => m.message_type === 'proposal') || null}
-          onProposalAction={() => {
-            refreshData();
-            setActiveTab("overview");
-          }}
-        />
-      )}
     </div>
   );
 };

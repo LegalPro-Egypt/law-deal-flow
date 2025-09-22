@@ -15,14 +15,12 @@ interface CommunicationLauncherProps {
   caseId: string;
   caseTitle: string;
   lawyerAssigned?: boolean;
-  showProposalReview?: boolean;
 }
 
 export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
   caseId,
   caseTitle,
-  lawyerAssigned = false,
-  showProposalReview = false
+  lawyerAssigned = false
 }) => {
   const { isRTL } = useLanguage();
   const {
@@ -135,29 +133,9 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
     );
   }
 
-  // If showing proposal review, return just the review button
-  if (showProposalReview) {
-  // If showing proposal review, return just the review button
-  if (showProposalReview) {
-    return (
-      <div className={`${isRTL() ? 'text-right' : ''}`}>
-        <Button className="w-full bg-primary hover:bg-primary/90" onClick={() => {}}>
-          Review Proposal
-        </Button>
-      </div>
-    );
-  }
-
-  return (
-      <div className={`${isRTL() ? 'text-right' : ''}`}>
-        <Button className="w-full bg-primary hover:bg-primary/90">
-          Review Proposal
-        </Button>
-      </div>
-    );
-  }
   return (
     <div className={`space-y-4 ${isRTL() ? 'rtl-dir' : ''}`}>
+      {/* Communication Controls */}
       <Card>
         <CardHeader>
           <CardTitle className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse justify-end' : ''}`}>

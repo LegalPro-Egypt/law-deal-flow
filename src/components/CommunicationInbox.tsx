@@ -138,17 +138,6 @@ export const CommunicationInbox: React.FC<CommunicationInboxProps> = ({
                   </Badge>
                 )}
               </div>
-              {/* Review Proposal Button for clients when proposal is sent */}
-              {userRole === 'client' && caseStatus === 'proposal_sent' && (
-                <div className="mt-3">
-                  <CommunicationLauncher 
-                    caseId={caseId}
-                    caseTitle={caseTitle}
-                    lawyerAssigned={lawyerAssigned}
-                    showProposalReview={true}
-                  />
-                </div>
-              )}
             </AlertDescription>
           </Alert>
         )}
