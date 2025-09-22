@@ -68,6 +68,11 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
 
     setIsGenerating(true);
     try {
+      toast({
+        title: "Generating proposal...",
+        description: "This may take 15-30 seconds",
+      });
+
       console.log('Generating proposal for case:', caseId, 'with data:', formData);
       
       const { data, error } = await supabase.functions.invoke('generate-proposal', {

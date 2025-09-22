@@ -136,59 +136,27 @@ serve(async (req) => {
       years_experience: lawyerResult.data.years_experience
     } : null;
 
-    const systemPrompt = `You are a professional legal proposal generator for the LegalPro platform. Create a comprehensive, bilingual legal proposal in both English and Arabic with identical content structure.
+    const systemPrompt = `Create a bilingual legal proposal (English first, then Arabic) with sections: Executive Summary, Legal Analysis, Scope of Work, Timeline, Fee Structure, Terms, Next Steps, Attorney Contact.
 
-CRITICAL BILINGUAL FORMATTING REQUIREMENTS:
-- Generate proposal in BOTH languages (English first, then Arabic)
-- Each section must have identical content in both languages
-- Use clear section headers to separate languages: "=== ENGLISH VERSION ===" and "=== النسخة العربية ==="
-- Timeline sections: Use structured bullet points or numbered lists, NEVER use pipe characters (|) or table formatting
-- Payment terms: ALL payments are processed through the LegalPro platform only
-- Lawyer information: Use the actual lawyer contact details provided, NEVER use placeholders like [Attorney Name]
-- Platform disclaimers: Include specific liability and payment processing disclaimers in both languages
+REQUIREMENTS:
+- Use "=== ENGLISH VERSION ===" and "=== النسخة العربية ==="
+- Timeline: numbered lists only, no tables
+- Payment: LegalPro platform only
+- Include disclaimers: "LegalPro is not liable for lawyer's work", "Contract between lawyer and client only", "Payments through LegalPro platform only"
+- Use real lawyer data: ${lawyerInfo ? `${lawyerInfo.first_name} ${lawyerInfo.last_name}, ${lawyerInfo.email}, ${lawyerInfo.phone}` : 'TBD'}
 
-STRUCTURE FOR BOTH LANGUAGES:
-1. Executive Summary
-2. Legal Analysis & Case Overview
-3. Scope of Work & Services
-4. Timeline & Milestones (use clean numbered lists or bullet points)
-5. Fee Structure & Payment Terms (LegalPro platform only)
-6. Terms & Conditions (include platform disclaimers)
-7. Next Steps
-8. Attorney Contact Information (use real data from assigned lawyer)
+Case: ${caseData.title} (${caseData.category})
+Details: ${caseData.description}
+Documents: ${caseContext.documents?.length || 0} files
+Analysis: ${JSON.stringify(caseContext.analysis)}
+Messages: ${caseContext.messages?.length || 0} exchanges
 
-MANDATORY PLATFORM DISCLAIMERS (in both languages):
-English:
-- "LegalPro is not liable for any work commenced by the lawyer"
-- "This scope of work contract is between the lawyer and the client only"
-- "Payment for security reasons is handled by Egyptlegalpro.com through the LegalPro platform"
-- "All payments must be processed through the LegalPro platform - no direct payments, wire transfers, or checks accepted"
+Fees: Consultation $${proposalInput.consultation_fee}, Remaining $${proposalInput.remaining_fee}
+Timeline: ${proposalInput.timeline}
+Strategy: ${proposalInput.strategy}`;
 
-Arabic:
-- "منصة LegalPro غير مسؤولة عن أي عمل يبدأه المحامي"
-- "عقد نطاق العمل هذا بين المحامي والعميل فقط"
-- "يتم التعامل مع الدفع لأسباب أمنية من خلال Egyptlegalpro.com عبر منصة LegalPro"
-- "يجب معالجة جميع المدفوعات من خلال منصة LegalPro - لا يُقبل أي دفع مباشر أو تحويل مصرفي أو شيكات"
-
-Use formal legal language appropriate for the jurisdiction (${caseData.jurisdiction}). Be specific about the legal issues identified and the proposed approach. Ensure both versions are professional and culturally appropriate.
-
-Case Information:
-${JSON.stringify(caseContext, null, 2)}
-
-Assigned Lawyer Information:
-${lawyerInfo ? JSON.stringify(lawyerInfo, null, 2) : 'No lawyer assigned yet'}
-
-Lawyer Input:
-- Consultation Fee: $${proposalInput.consultation_fee}
-- Remaining Fee: $${proposalInput.remaining_fee}
-- Total Fee: $${proposalInput.consultation_fee + proposalInput.remaining_fee}
-- Timeline: ${proposalInput.timeline}
-- Strategy: ${proposalInput.strategy}
-
-Generate a professional proposal document that combines all this information into a cohesive, persuasive legal proposal. Use the actual lawyer contact information in the attorney section, format timelines as clean numbered lists, and include all required platform disclaimers.`;
-
-    // Try multiple models with fallback
-    const models = ['gpt-5-2025-08-07', 'gpt-5-mini-2025-08-07', 'gpt-4.1-2025-04-14'];
+    // Try multiple models with fallback - prioritize working model
+    const models = ['gpt-4.1-2025-04-14', 'gpt-4o', 'gpt-4o-mini'];
     let generatedProposal = null;
     let lastError = null;
 
@@ -208,7 +176,7 @@ Generate a professional proposal document that combines all this information int
               { role: 'system', content: systemPrompt },
               { role: 'user', content: 'Generate the professional legal proposal based on the provided information.' }
             ],
-            max_completion_tokens: 2000,
+            max_tokens: 3500,
           }),
         });
 
