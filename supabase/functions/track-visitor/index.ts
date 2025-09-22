@@ -25,11 +25,11 @@ interface IpInfoResponse {
   timezone: string;
 }
 
-// Admin IPs to exclude (you can add your IP here)
+// Admin IPs to exclude
 const EXCLUDED_IPS = new Set([
   '127.0.0.1',
   '::1',
-  // Add your actual IP address here if known
+  '178.165.179.221', // Admin IP
 ]);
 
 async function hashIP(ip: string): Promise<string> {
