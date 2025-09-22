@@ -101,24 +101,29 @@ export const NotificationsInbox = () => {
                       : 'bg-background'
                   }`}
                 >
-                  <div className="flex items-start gap-3">
-                    <div className={`p-2 rounded-full ${
+                  <div className="flex items-start gap-3 overflow-hidden">
+                    <div className={`p-2 rounded-full flex-shrink-0 ${
                       !notification.is_read ? 'bg-primary/20' : 'bg-muted'
                     }`}>
                       {getNotificationIcon(notification.type)}
                     </div>
                     
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between">
-                        <h4 className="font-medium">{notification.title}</h4>
-                        <div className="flex items-center gap-2 ml-4">
-                          <Badge variant={getNotificationVariant(notification.type, notification.is_read)}>
-                            {notification.type.replace('_', ' ')}
-                          </Badge>
+                    <div className="flex-1 min-w-0 overflow-hidden">
+                      <div className="flex items-start gap-2 mb-1">
+                        <h4 className="font-medium flex-1 truncate">{notification.title}</h4>
+                        <div className="flex items-center gap-1 flex-shrink-0">
                           {!notification.is_read && (
                             <div className="w-2 h-2 bg-primary rounded-full"></div>
                           )}
                         </div>
+                      </div>
+                      <div className="mb-2">
+                        <Badge 
+                          variant={getNotificationVariant(notification.type, notification.is_read)}
+                          className="text-xs max-w-full truncate"
+                        >
+                          {notification.type.replace('_', ' ')}
+                        </Badge>
                       </div>
                       
                       <p className="text-sm text-muted-foreground mt-1">
