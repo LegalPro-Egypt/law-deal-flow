@@ -86,7 +86,7 @@ const AdminDashboard = () => {
   const [expandedImage, setExpandedImage] = useState<{url: string; title: string} | null>(null);
   const [showAssignLawyerDialog, setShowAssignLawyerDialog] = useState(false);
   const [caseToAssign, setCaseToAssign] = useState<{id: string, category?: string} | null>(null);
-  const [pendingProposals, setPendingProposals] = useState<any[]>([]);
+  const [allProposals, setAllProposals] = useState<any[]>([]);
   const [selectedProposal, setSelectedProposal] = useState<any>(null);
   const [showProposalReview, setShowProposalReview] = useState(false);
   const [proposalCaseDetails, setProposalCaseDetails] = useState<any>(null);
@@ -96,7 +96,7 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     fetchAllLawyers();
-    fetchPendingProposals();
+    fetchAllProposals();
   }, []);
 
   const fetchAllLawyers = async () => {
@@ -188,13 +188,12 @@ const AdminDashboard = () => {
     }
   };
 
-  const fetchPendingProposals = async () => {
+  const fetchAllProposals = async () => {
     try {
-      // First fetch proposals with pending_admin_review status
+      // Fetch all proposals regardless of status
       const { data: proposals, error } = await supabase
         .from('proposals')
         .select('*')
-        .eq('status', 'pending_admin_review')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -224,9 +223,9 @@ const AdminDashboard = () => {
         })
       );
 
-      setPendingProposals(proposalsWithDetails);
+      setAllProposals(proposalsWithDetails);
     } catch (error: any) {
-      console.error('Error fetching pending proposals:', error);
+      console.error('Error fetching proposals:', error);
     }
   };
 
@@ -238,7 +237,7 @@ const AdminDashboard = () => {
   };
 
   const handleProposalUpdate = () => {
-    fetchPendingProposals();
+    fetchAllProposals();
     refreshData();
   };
 
@@ -295,7 +294,7 @@ const AdminDashboard = () => {
         description: "The proposal has been permanently deleted and case status reverted",
       });
 
-      fetchPendingProposals();
+      fetchAllProposals();
       refreshData();
     } catch (error: any) {
       toast({
@@ -662,9 +661,9 @@ const AdminDashboard = () => {
                 <TabsTrigger value="intakes" className="whitespace-nowrap flex-shrink-0">AI Intakes</TabsTrigger>
                 <TabsTrigger value="cases" className="whitespace-nowrap flex-shrink-0">Cases</TabsTrigger>
                 <TabsTrigger value="proposals" className="whitespace-nowrap flex-shrink-0">
-                  Pending Proposals {pendingProposals.length > 0 && (
-                    <Badge variant="destructive" className="ml-1 text-xs">
-                      {pendingProposals.length}
+                  Proposals {allProposals.length > 0 && (
+                    <Badge variant="outline" className="ml-1 text-xs">
+                      {allProposals.length}
                     </Badge>
                   )}
                 </TabsTrigger>
@@ -925,33 +924,70 @@ const AdminDashboard = () => {
             )}
           </TabsContent>
 
-          {/* Pending Proposals Tab */}
+          {/* Proposals Tab */}
           <TabsContent value="proposals" className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold">Pending Proposals</h2>
+              <h2 className="text-2xl font-bold">Proposals</h2>
               <Badge variant="outline" className="text-sm">
-                {pendingProposals.length} awaiting review
+                {allProposals.length} total proposals
               </Badge>
             </div>
 
-            {pendingProposals.length === 0 ? (
+            {allProposals.length === 0 ? (
               <Card className="bg-gradient-card shadow-card">
                 <CardContent className="p-8 text-center">
                   <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No pending proposals</h3>
-                  <p className="text-muted-foreground">Lawyer proposals will appear here for admin review</p>
+                  <h3 className="text-lg font-semibold mb-2">No proposals</h3>
+                  <p className="text-muted-foreground">Lawyer proposals will appear here</p>
                 </CardContent>
               </Card>
             ) : (
               <div className="grid gap-4">
-                {pendingProposals.map((proposal) => (
-                  <Card key={proposal.id} className="bg-gradient-card shadow-card border-orange-200 border-2">
+                {allProposals.map((proposal) => {
+                  const getStatusBadge = (status: string) => {
+                    switch (status) {
+                      case 'pending_admin_review':
+                        return (
+                          <Badge className="bg-orange-500 text-white">
+                            <AlertCircle className="h-3 w-3 mr-1" />
+                            Needs Admin Review
+                          </Badge>
+                        );
+                      case 'approved':
+                        return (
+                          <Badge className="bg-green-500 text-white">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Approved
+                          </Badge>
+                        );
+                      case 'rejected':
+                        return (
+                          <Badge className="bg-red-500 text-white">
+                            <XCircle className="h-3 w-3 mr-1" />
+                            Rejected
+                          </Badge>
+                        );
+                      case 'sent':
+                        return (
+                          <Badge className="bg-blue-500 text-white">
+                            <Clock className="h-3 w-3 mr-1" />
+                            Awaiting Client Response
+                          </Badge>
+                        );
+                      default:
+                        return (
+                          <Badge variant="outline">
+                            {status}
+                          </Badge>
+                        );
+                    }
+                  };
+
+                  return (
+                  <Card key={proposal.id} className="bg-gradient-card shadow-card">
                     <CardContent className="p-6">
                       <div className="mb-4">
-                        <Badge className="bg-orange-500 text-white">
-                          <AlertCircle className="h-3 w-3 mr-1" />
-                          Needs Admin Review
-                        </Badge>
+                        {getStatusBadge(proposal.status)}
                       </div>
                       <div className="grid lg:grid-cols-3 gap-6">
                         {/* Proposal Info */}
@@ -1002,7 +1038,7 @@ const AdminDashboard = () => {
                               onClick={() => handleViewProposal(proposal)}
                             >
                               <Eye className="h-4 w-4 mr-2" />
-                              Review
+                              {proposal.status === 'pending_admin_review' ? 'Review' : 'View'}
                             </Button>
                             <Button
                               size="sm"
@@ -1016,7 +1052,8 @@ const AdminDashboard = () => {
                       </div>
                     </CardContent>
                   </Card>
-                ))}
+                  );
+                })}
               </div>
             )}
           </TabsContent>
