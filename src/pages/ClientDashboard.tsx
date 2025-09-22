@@ -35,6 +35,8 @@ import DocumentUpload from "@/components/DocumentUpload";
 import CaseSelector from "@/components/CaseSelector";
 import { CommunicationInbox } from "@/components/CommunicationInbox";
 import { NotificationsInbox } from "@/components/NotificationsInbox";
+import { useNotifications } from "@/hooks/useNotifications";
+import { NotificationBadge } from "@/components/ui/notification-badge";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
@@ -56,6 +58,8 @@ const ClientDashboard = () => {
     sendMessage,
     refreshData
   } = useClientData();
+  
+  const { unreadCount } = useNotifications();
 
 
   const handleSendMessage = async () => {
@@ -441,7 +445,10 @@ const ClientDashboard = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="flex w-full overflow-x-auto scrollbar-hide md:grid md:grid-cols-5 gap-1 pl-2 pr-2 h-12 justify-start">
             <TabsTrigger value="overview" className="flex-shrink-0 min-w-fit px-4">Overview</TabsTrigger>
-            <TabsTrigger value="inbox" className="flex-shrink-0 min-w-fit px-4">Inbox</TabsTrigger>
+            <TabsTrigger value="inbox" className="flex-shrink-0 min-w-fit px-4 relative">
+              Inbox
+              <NotificationBadge count={unreadCount} />
+            </TabsTrigger>
             <TabsTrigger value="details" className="flex-shrink-0 min-w-fit px-4">Personal Details</TabsTrigger>
             <TabsTrigger value="messages" className="flex-shrink-0 min-w-fit px-4">Messages</TabsTrigger>
             <TabsTrigger value="documents" id="documents-tab" className="flex-shrink-0 min-w-fit px-4">Documents</TabsTrigger>

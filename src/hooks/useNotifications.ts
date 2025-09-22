@@ -1,0 +1,186 @@
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from '@/hooks/use-toast';
+
+export interface Notification {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  is_read: boolean;
+  action_required: boolean;
+  created_at: string;
+}
+
+export interface Proposal {
+  id: string;
+  case_id: string;
+  lawyer_id: string;
+  consultation_fee: number;
+  remaining_fee: number;
+  total_fee: number;
+  timeline: string;
+  strategy: string;
+  generated_content: string;
+  status: string;
+  created_at: string;
+}
+
+export const useNotifications = () => {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [proposals, setProposals] = useState<Proposal[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+
+  const fetchNotifications = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setNotifications(data || []);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load notifications",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchProposals = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('proposals')
+        .select('*')
+        .in('status', ['approved', 'sent', 'viewed', 'accepted', 'rejected'])
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setProposals(data || []);
+    } catch (error) {
+      console.error('Error fetching proposals:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load proposals",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const markAsRead = async (notificationId: string) => {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('id', notificationId);
+
+      if (error) throw error;
+
+      setNotifications(prev => 
+        prev.map(notification => 
+          notification.id === notificationId 
+            ? { ...notification, is_read: true }
+            : notification
+        )
+      );
+
+      toast({
+        title: "Marked as read",
+        description: "Notification has been marked as read",
+      });
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+      toast({
+        title: "Error",
+        description: "Failed to mark notification as read",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleViewProposal = async (proposalId: string) => {
+    try {
+      const { error } = await supabase
+        .from('proposals')
+        .update({ status: 'viewed' })
+        .eq('id', proposalId);
+
+      if (error) throw error;
+
+      setProposals(prev => 
+        prev.map(proposal => 
+          proposal.id === proposalId 
+            ? { ...proposal, status: 'viewed' }
+            : proposal
+        )
+      );
+    } catch (error) {
+      console.error('Error updating proposal status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update proposal status",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const unreadCount = notifications.filter(n => !n.is_read).length;
+
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      await Promise.all([fetchNotifications(), fetchProposals()]);
+      setLoading(false);
+    };
+
+    if (user) {
+      loadData();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('notifications-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          const newNotification = payload.new as Notification;
+          setNotifications(prev => [newNotification, ...prev]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
+  return {
+    notifications,
+    proposals,
+    loading,
+    unreadCount,
+    markAsRead,
+    handleViewProposal,
+    fetchNotifications,
+    fetchProposals
+  };
+};

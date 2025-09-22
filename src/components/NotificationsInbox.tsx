@@ -1,163 +1,30 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Bell, FileText, Clock, CheckCircle } from "lucide-react";
-import { ProposalReviewDialog } from "./ProposalReviewDialog";
-import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Bell, MessageSquare, FileText, CheckCircle, Clock } from "lucide-react";
+import { ProposalReviewDialog } from "@/components/ProposalReviewDialog";
+import { useNotifications, type Notification, type Proposal } from "@/hooks/useNotifications";
 import { useLanguage } from "@/hooks/useLanguage";
 
-interface Notification {
-  id: string;
-  case_id?: string;
-  type: string;
-  title: string;
-  message: string;
-  is_read: boolean;
-  action_required: boolean;
-  created_at: string;
-  metadata?: any;
-}
-
-interface Proposal {
-  id: string;
-  case_id: string;
-  lawyer_id: string;
-  consultation_fee: number;
-  remaining_fee: number;
-  total_fee: number;
-  timeline: string;
-  strategy: string;
-  generated_content: string;
-  status: string;
-  created_at: string;
-  viewed_at?: string;
-}
-
 export const NotificationsInbox = () => {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [proposals, setProposals] = useState<Proposal[]>([]);
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
-  const [loading, setLoading] = useState(true);
   const { currentLanguage } = useLanguage();
-
-  useEffect(() => {
-    fetchNotifications();
-    fetchProposals();
-    
-    // Set up real-time subscription for notifications
-    let channel: any = null;
-    
-    const setupRealtimeSubscription = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      channel = supabase
-        .channel('notifications-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'notifications',
-            filter: `user_id=eq.${user.id}`
-          },
-          () => {
-            fetchNotifications();
-          }
-        )
-        .subscribe();
-    };
-
-    setupRealtimeSubscription();
-
-    return () => {
-      if (channel) {
-        supabase.removeChannel(channel);
-      }
-    };
-  }, []);
-
-  const fetchNotifications = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setNotifications(data || []);
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-      toast.error('Failed to load notifications');
-    }
-  };
-
-  const fetchProposals = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('proposals')
-        .select('*')
-        .in('status', ['approved', 'sent', 'viewed', 'accepted', 'rejected'])
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setProposals(data || []);
-    } catch (error) {
-      console.error('Error fetching proposals:', error);
-      toast.error('Failed to load proposals');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const markAsRead = async (notificationId: string) => {
-    try {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ 
-          is_read: true,
-          read_at: new Date().toISOString()
-        })
-        .eq('id', notificationId);
-
-      if (error) throw error;
-      
-      setNotifications(prev => 
-        prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
-      );
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
-    }
-  };
+  const { 
+    notifications, 
+    proposals, 
+    loading, 
+    unreadCount,
+    markAsRead, 
+    handleViewProposal: updateProposalStatus 
+  } = useNotifications();
 
   const handleViewProposal = async (proposalId: string) => {
+    await updateProposalStatus(proposalId);
     const proposal = proposals.find(p => p.id === proposalId);
-    if (!proposal) return;
-
-    // Mark proposal as viewed if not already
-    if (!proposal.viewed_at) {
-      try {
-        await supabase
-          .from('proposals')
-          .update({ 
-            viewed_at: new Date().toISOString(),
-            status: 'viewed'
-          })
-          .eq('id', proposalId);
-
-        setProposals(prev => 
-          prev.map(p => p.id === proposalId ? 
-            { ...p, viewed_at: new Date().toISOString(), status: 'viewed' } : p
-          )
-        );
-      } catch (error) {
-        console.error('Error updating proposal view status:', error);
-      }
+    if (proposal) {
+      setSelectedProposal(proposal);
     }
-
-    setSelectedProposal(proposal);
   };
 
   const getNotificationIcon = (type: string) => {
@@ -203,8 +70,6 @@ export const NotificationsInbox = () => {
       </Card>
     );
   }
-
-  const unreadCount = notifications.filter(n => !n.is_read).length;
 
   return (
     <>
@@ -270,7 +135,7 @@ export const NotificationsInbox = () => {
                           <Button
                             size="sm"
                             onClick={() => {
-                              const proposalId = notification.metadata?.proposal_id;
+                              const proposalId = (notification as any).metadata?.proposal_id;
                               if (proposalId) {
                                 handleViewProposal(proposalId);
                                 markAsRead(notification.id);
@@ -305,7 +170,7 @@ export const NotificationsInbox = () => {
           open={!!selectedProposal}
           onOpenChange={() => setSelectedProposal(null)}
           proposal={selectedProposal}
-          onProposalUpdate={fetchProposals}
+          onProposalUpdate={() => {}}
         />
       )}
     </>
