@@ -6,13 +6,22 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { FileText, Clock, DollarSign, Scale, CheckCircle, XCircle, User, Briefcase } from "lucide-react";
+import { FileText, Clock, DollarSign, Scale, CheckCircle, XCircle, User, Briefcase, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface Proposal {
@@ -50,6 +59,7 @@ export const AdminProposalReviewDialog = ({
 }: AdminProposalReviewDialogProps) => {
   const [loading, setLoading] = useState(false);
   const [adminNotes, setAdminNotes] = useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Return early if no proposal is provided
   if (!proposal) {
@@ -196,6 +206,53 @@ export const AdminProposalReviewDialog = ({
     } catch (error) {
       console.error('Error rejecting proposal:', error);
       toast.error('Error rejecting proposal');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteProposal = async () => {
+    setLoading(true);
+    try {
+      // Delete the proposal
+      const { error: deleteError } = await supabase
+        .from('proposals')
+        .delete()
+        .eq('id', proposal.id);
+
+      if (deleteError) throw deleteError;
+
+      // Revert case status back to lawyer_assigned
+      const { error: caseError } = await supabase
+        .from('cases')
+        .update({
+          status: 'lawyer_assigned',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', proposal.case_id);
+
+      if (caseError) throw caseError;
+
+      // Clean up any related notifications
+      const { error: notificationError } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('case_id', proposal.case_id)
+        .in('type', ['proposal_sent', 'proposal_approved', 'proposal_rejected']);
+
+      if (notificationError) {
+        console.warn('Failed to clean up notifications:', notificationError);
+      }
+
+      toast.success('Proposal deleted successfully and case status reverted');
+
+      onProposalUpdate();
+      onOpenChange(false);
+      setShowDeleteConfirm(false);
+
+    } catch (error) {
+      console.error('Error deleting proposal:', error);
+      toast.error('Error deleting proposal');
     } finally {
       setLoading(false);
     }
@@ -358,6 +415,17 @@ export const AdminProposalReviewDialog = ({
                   <XCircle className="h-4 w-4 mr-2" />
                   Reject & Return to Lawyer
                 </Button>
+
+                <Button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  disabled={loading}
+                  variant="outline"
+                  className="border-destructive text-destructive hover:bg-destructive hover:text-white"
+                  size="lg"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -367,6 +435,33 @@ export const AdminProposalReviewDialog = ({
             Proposal created on: {proposal ? new Date(proposal.created_at).toLocaleDateString() : 'N/A'} at {proposal ? new Date(proposal.created_at).toLocaleTimeString() : 'N/A'}
           </div>
         </div>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Proposal Permanently</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete the proposal and revert the case status back to "lawyer_assigned". 
+                The lawyer will be able to create a new proposal. This action cannot be undone.
+                Are you sure you want to proceed?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>
+                Cancel
+              </AlertDialogCancel>
+              <Button 
+                type="button" 
+                variant="destructive" 
+                onClick={handleDeleteProposal}
+                disabled={loading}
+              >
+                Delete Permanently
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </DialogContent>
     </Dialog>
   );

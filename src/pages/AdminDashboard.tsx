@@ -91,6 +91,8 @@ const AdminDashboard = () => {
   const [showProposalReview, setShowProposalReview] = useState(false);
   const [proposalCaseDetails, setProposalCaseDetails] = useState<any>(null);
   const [proposalLawyerDetails, setProposalLawyerDetails] = useState<any>(null);
+  const [proposalToDelete, setProposalToDelete] = useState<string | null>(null);
+  const [showProposalDeleteConfirm, setShowProposalDeleteConfirm] = useState(false);
 
   useEffect(() => {
     fetchAllLawyers();
@@ -238,6 +240,73 @@ const AdminDashboard = () => {
   const handleProposalUpdate = () => {
     fetchPendingProposals();
     refreshData();
+  };
+
+  const handleDeleteProposal = (proposalId: string) => {
+    setProposalToDelete(proposalId);
+    setShowProposalDeleteConfirm(true);
+  };
+
+  const confirmDeleteProposal = async () => {
+    if (!proposalToDelete) return;
+    
+    try {
+      // Get proposal details first to update case status
+      const { data: proposal, error: fetchError } = await supabase
+        .from('proposals')
+        .select('case_id, lawyer_id, client_id')
+        .eq('id', proposalToDelete)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Delete the proposal
+      const { error: deleteError } = await supabase
+        .from('proposals')
+        .delete()
+        .eq('id', proposalToDelete);
+
+      if (deleteError) throw deleteError;
+
+      // Revert case status back to lawyer_assigned
+      const { error: caseError } = await supabase
+        .from('cases')
+        .update({
+          status: 'lawyer_assigned',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', proposal.case_id);
+
+      if (caseError) throw caseError;
+
+      // Clean up any related notifications
+      const { error: notificationError } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('case_id', proposal.case_id)
+        .in('type', ['proposal_sent', 'proposal_approved', 'proposal_rejected']);
+
+      if (notificationError) {
+        console.warn('Failed to clean up notifications:', notificationError);
+      }
+
+      toast({
+        title: "Proposal Deleted",
+        description: "The proposal has been permanently deleted and case status reverted",
+      });
+
+      fetchPendingProposals();
+      refreshData();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to delete proposal: " + error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setShowProposalDeleteConfirm(false);
+      setProposalToDelete(null);
+    }
   };
 
   const handleApproveVerification = async (userId: string) => {
@@ -926,14 +995,23 @@ const AdminDashboard = () => {
                             </p>
                           </div>
                           
-                          <Button 
-                            size="sm" 
-                            className="mt-3 w-full bg-primary hover:bg-primary/90"
-                            onClick={() => handleViewProposal(proposal)}
-                          >
-                            <Eye className="h-4 w-4 mr-2" />
-                            Review Proposal
-                          </Button>
+                          <div className="flex gap-2 mt-3">
+                            <Button 
+                              size="sm" 
+                              className="flex-1 bg-primary hover:bg-primary/90"
+                              onClick={() => handleViewProposal(proposal)}
+                            >
+                              <Eye className="h-4 w-4 mr-2" />
+                              Review
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleDeleteProposal(proposal.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </CardContent>
@@ -1749,14 +1827,36 @@ const AdminDashboard = () => {
           </DialogContent>
         </Dialog>
 
-        <AdminProposalReviewDialog
-          open={showProposalReview && selectedProposal !== null}
-          onOpenChange={setShowProposalReview}
-          proposal={selectedProposal}
-          caseDetails={proposalCaseDetails}
-          lawyerDetails={proposalLawyerDetails}
-          onProposalUpdate={handleProposalUpdate}
-        />
+         <AdminProposalReviewDialog
+           open={showProposalReview && selectedProposal !== null}
+           onOpenChange={setShowProposalReview}
+           proposal={selectedProposal}
+           caseDetails={proposalCaseDetails}
+           lawyerDetails={proposalLawyerDetails}
+           onProposalUpdate={handleProposalUpdate}
+         />
+
+         {/* Proposal Delete Confirmation Dialog */}
+         <AlertDialog open={showProposalDeleteConfirm} onOpenChange={setShowProposalDeleteConfirm}>
+           <AlertDialogContent>
+             <AlertDialogHeader>
+               <AlertDialogTitle>Delete Proposal Permanently</AlertDialogTitle>
+               <AlertDialogDescription>
+                 This will permanently delete the proposal and revert the case status back to "lawyer_assigned". 
+                 The lawyer will be able to create a new proposal. This action cannot be undone.
+                 Are you sure you want to proceed?
+               </AlertDialogDescription>
+             </AlertDialogHeader>
+             <AlertDialogFooter>
+               <AlertDialogCancel onClick={() => setProposalToDelete(null)}>
+                 Cancel
+               </AlertDialogCancel>
+               <Button type="button" variant="destructive" onClick={confirmDeleteProposal}>
+                 Delete Permanently
+               </Button>
+             </AlertDialogFooter>
+           </AlertDialogContent>
+         </AlertDialog>
       </div>
     </div>
   );
