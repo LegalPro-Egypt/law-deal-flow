@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Brain, Shield, Bot, Heart, CheckCircle } from 'lucide-react';
+import { Brain, Shield, Sparkles, Heart, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useTranslation } from 'react-i18next';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
@@ -224,7 +224,7 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
 
               <Card className="neomorphism-feature" style={{ animationDelay: '0.4s' }}>
                 <CardContent className="p-8 text-center">
-                  <Bot className="w-12 h-12 text-neomorphism-accent mx-auto mb-6 icon-glow" />
+                  <Sparkles className="w-12 h-12 text-neomorphism-accent mx-auto mb-6 icon-glow" />
                   <h3 className="text-xl font-semibold font-futura text-gray-900 mb-4">
                     {getText('aiLegalAssistant')}
                   </h3>
