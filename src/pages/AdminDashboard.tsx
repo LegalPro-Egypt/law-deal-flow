@@ -546,7 +546,7 @@ const AdminDashboard = () => {
             <div className="flex items-center justify-between h-16">
               <Link to="/?force=true" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
                 <Scale className="h-8 w-8 text-primary" />
-                <span className="text-xl font-bold">LegalConnect</span>
+                <span className="text-xl font-bold">LegalPro</span>
                 <Badge variant="destructive" className="ml-2">Admin Portal</Badge>
               </Link>
               <Button variant="ghost" size="sm" onClick={handleSignOut}>
@@ -576,7 +576,7 @@ const AdminDashboard = () => {
           <div className="flex items-center justify-between h-16">
             <Link to="/?force=true" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
               <Scale className="h-8 w-8 text-primary" />
-              <span className="text-xl font-bold">LegalConnect</span>
+              <span className="text-xl font-bold">LegalPro</span>
               <Badge variant="destructive" className="ml-2">Admin Portal</Badge>
             </Link>
             <Button variant="ghost" size="sm" onClick={handleSignOut}>
