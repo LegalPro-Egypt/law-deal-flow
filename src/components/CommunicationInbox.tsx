@@ -5,6 +5,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { MessageSquare, Lock, CreditCard, Clock } from 'lucide-react';
 import { CommunicationLauncher } from '@/components/CommunicationLauncher';
 import { useLanguage } from '@/hooks/useLanguage';
+import { useNotifications } from '@/hooks/useNotifications';
+import { NotificationBadge } from '@/components/ui/notification-badge';
 
 interface CommunicationInboxProps {
   caseId: string;
@@ -26,6 +28,7 @@ export const CommunicationInbox: React.FC<CommunicationInboxProps> = ({
   lawyerAssigned = false
 }) => {
   const { t, isRTL } = useLanguage();
+  const { unreadCount } = useNotifications();
 
   // Determine if communication should be enabled
   const shouldEnableCommunication = () => {
@@ -93,9 +96,10 @@ export const CommunicationInbox: React.FC<CommunicationInboxProps> = ({
   return (
     <Card className={`bg-gradient-card shadow-card ${isRTL() ? 'rtl-card' : ''}`}>
       <CardHeader>
-        <CardTitle className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse justify-end' : ''}`}>
+        <CardTitle className={`flex items-center gap-2 relative ${isRTL() ? 'flex-row-reverse justify-end' : ''}`}>
           <MessageSquare className="h-5 w-5" />
           {t('communication.inbox.title')}
+          <NotificationBadge count={unreadCount} />
         </CardTitle>
         <CardDescription className={isRTL() ? 'text-right' : ''}>
           {t(`communication.inbox.description.${userRole}`)}
