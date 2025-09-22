@@ -35,6 +35,7 @@ interface AnonymousSession {
   created_at: string;
   updated_at: string;
   total_messages: number;
+  actual_message_count: number;
   first_message_preview: string | null;
   last_activity: string;
   status: string;
@@ -179,6 +180,9 @@ const AnonymousQAManager = () => {
   };
 
   const filteredSessions = sessions.filter(session => {
+    // Filter out sessions with no actual user messages by default
+    const hasRealMessages = session.actual_message_count > 0;
+    
     const matchesSearch = 
       session.first_message_preview?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       session.session_id.toLowerCase().includes(searchTerm.toLowerCase());
@@ -186,7 +190,7 @@ const AnonymousQAManager = () => {
     const matchesStatus = statusFilter === 'all' || session.status === statusFilter;
     const matchesLanguage = languageFilter === 'all' || session.language === languageFilter;
     
-    return matchesSearch && matchesStatus && matchesLanguage;
+    return hasRealMessages && matchesSearch && matchesStatus && matchesLanguage;
   });
 
   const handleCleanupOldSessions = async () => {

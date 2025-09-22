@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       anonymous_qa_sessions: {
         Row: {
+          actual_message_count: number | null
           conversation_id: string | null
           created_at: string
           first_message_preview: string | null
@@ -28,6 +29,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          actual_message_count?: number | null
           conversation_id?: string | null
           created_at?: string
           first_message_preview?: string | null
@@ -40,6 +42,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          actual_message_count?: number | null
           conversation_id?: string | null
           created_at?: string
           first_message_preview?: string | null

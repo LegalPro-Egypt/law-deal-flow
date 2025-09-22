@@ -367,28 +367,9 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
       conversationIdRef.current = newConversationId;
       setGlobalConversationId(newConversationId);
 
-      // For anonymous Q&A sessions, create an anonymous session entry
+      // For anonymous Q&A sessions, we'll create the session entry when user sends first message
       let anonymousSessionId = null;
-      if (!userId && state.mode === 'qa') {
-        const { data: anonymousSession, error: anonymousError } = await supabase
-          .from('anonymous_qa_sessions')
-          .insert({
-            session_id: sessionId,
-            conversation_id: newConversationId,
-            language: state.language,
-            status: 'active',
-            total_messages: 1, // welcome message
-            last_activity: new Date().toISOString()
-          })
-          .select('id')
-          .single();
-
-        if (anonymousError) {
-          console.error('Error creating anonymous session:', anonymousError);
-        } else {
-          anonymousSessionId = anonymousSession.id;
-        }
-      }
+      // Don't create anonymous session immediately - wait for first user message
 
       setState(prev => ({
         ...prev,
@@ -508,26 +489,50 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
       isLoading: true,
     }));
 
-    // Update anonymous session metadata if applicable
-    if (state.anonymousSessionId) {
-      const messageCount = state.messages.length + 1; // +1 for the message we just added
-      const updateData: any = {
-        total_messages: messageCount,
-        last_activity: new Date().toISOString()
-      };
+    // Create or update anonymous session if this is anonymous QA mode
+    if (state.mode === 'qa' && !caseId) {
+      if (!state.anonymousSessionId) {
+        // Create anonymous session on first user message
+        try {
+          const { data: anonymousSession, error: anonymousError } = await supabase
+            .from('anonymous_qa_sessions')
+            .insert({
+              session_id: crypto.randomUUID(),
+              conversation_id: activeConversationId,
+              language: state.language,
+              status: 'active',
+              total_messages: 1,
+              actual_message_count: 1,
+              first_message_preview: trimmed.substring(0, 100),
+              last_activity: new Date().toISOString()
+            })
+            .select('id')
+            .single();
 
-      // Store first message preview if this is the first user message
-      if (messageCount === 2) { // 1 welcome + 1 user message
-        updateData.first_message_preview = trimmed.substring(0, 100);
-      }
-
-      try {
-        await supabase
-          .from('anonymous_qa_sessions')
-          .update(updateData)
-          .eq('id', state.anonymousSessionId);
-      } catch (err) {
-        console.error('Error updating anonymous session:', err);
+          if (!anonymousError && anonymousSession) {
+            setState(prev => ({
+              ...prev,
+              anonymousSessionId: anonymousSession.id
+            }));
+          }
+        } catch (err) {
+          console.error('Error creating anonymous session:', err);
+        }
+      } else {
+        // Update existing anonymous session
+        const userMessageCount = state.messages.filter(m => m.role === 'user').length + 1;
+        try {
+          await supabase
+            .from('anonymous_qa_sessions')
+            .update({
+              total_messages: state.messages.length + 1,
+              actual_message_count: userMessageCount,
+              last_activity: new Date().toISOString()
+            })
+            .eq('id', state.anonymousSessionId);
+        } catch (err) {
+          console.error('Error updating anonymous session:', err);
+        }
       }
     }
 
