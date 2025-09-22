@@ -34,6 +34,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import DocumentUpload from "@/components/DocumentUpload";
 import CaseSelector from "@/components/CaseSelector";
 import { CommunicationInbox } from "@/components/CommunicationInbox";
+import { NotificationsInbox } from "@/components/NotificationsInbox";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
@@ -194,7 +195,7 @@ const ClientDashboard = () => {
   };
 
   const handleInboxClick = () => {
-    setActiveTab("messages");
+    setActiveTab("inbox");
   };
 
   const handleReviewCase = async () => {
@@ -438,8 +439,9 @@ const ClientDashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="inbox">Inbox</TabsTrigger>
             <TabsTrigger value="details">Personal Details</TabsTrigger>
             <TabsTrigger value="messages">Messages</TabsTrigger>
             <TabsTrigger value="documents" id="documents-tab">Documents</TabsTrigger>
@@ -654,7 +656,10 @@ const ClientDashboard = () => {
             </Card>
           </TabsContent>
 
-          {/* Messages Tab */}
+          {/* Inbox Tab */}
+          <TabsContent value="inbox" className="space-y-6">
+            <NotificationsInbox />
+          </TabsContent>
           <TabsContent value="messages" className="space-y-6">
             <Card className="bg-gradient-card shadow-card">
               <CardHeader>

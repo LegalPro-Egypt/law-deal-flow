@@ -716,6 +716,51 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          action_required: boolean
+          action_url: string | null
+          case_id: string | null
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          metadata: Json | null
+          read_at: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          action_required?: boolean
+          action_url?: string | null
+          case_id?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          metadata?: Json | null
+          read_at?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          action_required?: boolean
+          action_url?: string | null
+          case_id?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          metadata?: Json | null
+          read_at?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       pro_bono_applications: {
         Row: {
           admin_notes: string | null
@@ -893,6 +938,60 @@ export type Database = {
             | Database["public"]["Enums"]["verification_status"]
             | null
           years_experience?: number | null
+        }
+        Relationships: []
+      }
+      proposals: {
+        Row: {
+          case_id: string
+          client_id: string
+          consultation_fee: number | null
+          created_at: string
+          generated_content: string
+          id: string
+          lawyer_id: string
+          metadata: Json | null
+          remaining_fee: number | null
+          response_at: string | null
+          status: string
+          strategy: string | null
+          timeline: string | null
+          total_fee: number | null
+          viewed_at: string | null
+        }
+        Insert: {
+          case_id: string
+          client_id: string
+          consultation_fee?: number | null
+          created_at?: string
+          generated_content: string
+          id?: string
+          lawyer_id: string
+          metadata?: Json | null
+          remaining_fee?: number | null
+          response_at?: string | null
+          status?: string
+          strategy?: string | null
+          timeline?: string | null
+          total_fee?: number | null
+          viewed_at?: string | null
+        }
+        Update: {
+          case_id?: string
+          client_id?: string
+          consultation_fee?: number | null
+          created_at?: string
+          generated_content?: string
+          id?: string
+          lawyer_id?: string
+          metadata?: Json | null
+          remaining_fee?: number | null
+          response_at?: string | null
+          status?: string
+          strategy?: string | null
+          timeline?: string | null
+          total_fee?: number | null
+          viewed_at?: string | null
         }
         Relationships: []
       }

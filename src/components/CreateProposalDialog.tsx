@@ -141,57 +141,62 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
 
     setIsSending(true);
     try {
-      // Update case with proposal details
-      const { error: updateError } = await supabase
-        .from('cases')
-        .update({
+      // Create proposal record in dedicated proposals table
+      const { data: proposalData, error: proposalError } = await supabase
+        .from('proposals')
+        .insert({
+          case_id: caseId,
+          lawyer_id: (await supabase.auth.getUser()).data.user?.id,
+          client_id: (await supabase.from('cases').select('user_id').eq('id', caseId).single()).data?.user_id,
           consultation_fee: formData.consultation_fee,
           remaining_fee: formData.remaining_fee,
           total_fee: formData.consultation_fee + formData.remaining_fee,
-          status: 'proposal_sent'
+          timeline: formData.timeline,
+          strategy: formData.strategy,
+          generated_content: generatedProposal,
+          status: 'sent'
+        })
+        .select()
+        .single();
+
+      if (proposalError) throw proposalError;
+
+      // Update case status
+      const { error: caseError } = await supabase
+        .from('cases')
+        .update({
+          status: 'proposal_sent',
+          updated_at: new Date().toISOString(),
         })
         .eq('id', caseId);
 
-      if (updateError) throw updateError;
+      if (caseError) throw caseError;
 
-      // Send proposal as a message
-      const { data: conversation } = await supabase
-        .from('conversations')
-        .select('id')
-        .eq('case_id', caseId)
+      // Get client ID for notification
+      const { data: caseData } = await supabase
+        .from('cases')
+        .select('user_id')
+        .eq('id', caseId)
         .single();
 
-      if (conversation) {
-        const { error: messageError } = await supabase
-          .from('messages')
+      if (caseData) {
+        // Create notification for client
+        const { error: notificationError } = await supabase
+          .from('notifications')
           .insert({
-            conversation_id: conversation.id,
-            role: 'lawyer',
-            content: `📋 **Legal Proposal - ${caseTitle}**
-
-${generatedProposal}
-
----
-**Quick Summary:**
-• Consultation Fee: $${formData.consultation_fee.toLocaleString()}
-• Remaining Fee: $${formData.remaining_fee.toLocaleString()}
-• **Total Fee: $${(formData.consultation_fee + formData.remaining_fee).toLocaleString()}**
-• Estimated Timeline: ${formData.timeline}
-
-Please review this proposal and let me know if you have any questions or would like to discuss any aspects further.`,
-            message_type: 'proposal',
-            metadata: {
-              proposal_data: {
-                consultation_fee: formData.consultation_fee,
-                remaining_fee: formData.remaining_fee,
-                total_fee: formData.consultation_fee + formData.remaining_fee,
-                timeline: formData.timeline,
-                strategy: formData.strategy
-              }
+            user_id: caseData.user_id,
+            case_id: caseId,
+            type: 'proposal_received',
+            title: 'New Legal Proposal Received',
+            message: 'You have received a new legal proposal for your case. Please review and respond.',
+            action_required: true,
+            metadata: { 
+              proposal_id: proposalData.id,
+              total_fee: formData.consultation_fee + formData.remaining_fee
             }
           });
 
-        if (messageError) throw messageError;
+        if (notificationError) throw notificationError;
       }
 
       toast({
