@@ -439,12 +439,12 @@ const ClientDashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="flex w-full overflow-x-auto scrollbar-hide md:grid md:grid-cols-5 gap-1 pl-6 pr-2 h-12">
-            <TabsTrigger value="overview" className="flex-shrink-0 min-w-fit px-4">Overview</TabsTrigger>
-            <TabsTrigger value="inbox" className="flex-shrink-0 min-w-fit px-4">Inbox</TabsTrigger>
-            <TabsTrigger value="details" className="flex-shrink-0 min-w-fit px-4">Personal Details</TabsTrigger>
-            <TabsTrigger value="messages" className="flex-shrink-0 min-w-fit px-4">Messages</TabsTrigger>
-            <TabsTrigger value="documents" id="documents-tab" className="flex-shrink-0 min-w-fit px-4">Documents</TabsTrigger>
+          <TabsList className="flex w-full overflow-x-auto scrollbar-hide md:grid md:grid-cols-5 gap-1 pl-6 pr-2 h-12 justify-start">
+            <TabsTrigger value="overview" className="flex-shrink-0 min-w-fit px-4 first:ml-2 last:mr-2">Overview</TabsTrigger>
+            <TabsTrigger value="inbox" className="flex-shrink-0 min-w-fit px-4 first:ml-2 last:mr-2">Inbox</TabsTrigger>
+            <TabsTrigger value="details" className="flex-shrink-0 min-w-fit px-4 first:ml-2 last:mr-2">Personal Details</TabsTrigger>
+            <TabsTrigger value="messages" className="flex-shrink-0 min-w-fit px-4 first:ml-2 last:mr-2">Messages</TabsTrigger>
+            <TabsTrigger value="documents" id="documents-tab" className="flex-shrink-0 min-w-fit px-4 first:ml-2 last:mr-2">Documents</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
