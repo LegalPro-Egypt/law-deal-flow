@@ -69,15 +69,15 @@ export const AdminProposalReviewDialog = ({
   const handleApproveProposal = async () => {
     setLoading(true);
     try {
-      // Update proposal status to approved
+      // Update proposal status to sent (awaiting client response)
       const { error: proposalError } = await supabase
         .from('proposals')
         .update({
-          status: 'approved',
+          status: 'sent',
           metadata: { 
             admin_notes: adminNotes,
-            approved_at: new Date().toISOString(),
-            approved_by: (await supabase.auth.getUser()).data.user?.id
+            admin_approved_at: new Date().toISOString(),
+            admin_approved_by: (await supabase.auth.getUser()).data.user?.id
           }
         })
         .eq('id', proposal.id);
@@ -238,7 +238,7 @@ export const AdminProposalReviewDialog = ({
         .from('notifications')
         .delete()
         .eq('case_id', proposal.case_id)
-        .in('type', ['proposal_sent', 'proposal_approved', 'proposal_rejected']);
+        .in('type', ['proposal_received', 'proposal_approved', 'proposal_rejected']);
 
       if (notificationError) {
         console.warn('Failed to clean up notifications:', notificationError);
