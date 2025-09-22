@@ -175,6 +175,145 @@
   }
 }
 
+/* Neumorphism Design System */
+.neomorphism-background {
+  background: linear-gradient(135deg, hsl(248, 17%, 98%) 0%, hsl(240, 13%, 96%) 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.neomorphism-card {
+  background: hsl(240, 13%, 96%);
+  border-radius: 20px;
+  box-shadow: 
+    8px 8px 16px hsl(240, 4%, 85%),
+    -8px -8px 16px hsl(0, 0%, 100%);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.neomorphism-card:hover {
+  box-shadow: 
+    12px 12px 24px hsl(240, 4%, 82%),
+    -12px -12px 24px hsl(0, 0%, 100%);
+  transform: translateY(-2px);
+}
+
+.neomorphism-input {
+  background: hsl(240, 13%, 96%);
+  border: none;
+  border-radius: 16px;
+  box-shadow: 
+    inset 4px 4px 8px hsl(240, 4%, 85%),
+    inset -4px -4px 8px hsl(0, 0%, 100%);
+  transition: all 0.3s ease;
+}
+
+.neomorphism-input:focus {
+  box-shadow: 
+    inset 6px 6px 12px hsl(240, 4%, 82%),
+    inset -6px -6px 12px hsl(0, 0%, 100%),
+    0 0 0 2px hsl(217, 91%, 60%, 0.3);
+}
+
+.neomorphism-button {
+  background: linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(262, 83%, 68%) 100%);
+  border: none;
+  border-radius: 16px;
+  box-shadow: 
+    4px 4px 12px hsl(217, 91%, 45%, 0.3),
+    -2px -2px 8px hsl(0, 0%, 100%, 0.8);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.neomorphism-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s;
+}
+
+.neomorphism-button:hover::before {
+  left: 100%;
+}
+
+.neomorphism-button:hover {
+  box-shadow: 
+    6px 6px 16px hsl(217, 91%, 45%, 0.4),
+    -3px -3px 12px hsl(0, 0%, 100%, 0.9),
+    0 0 20px hsl(217, 91%, 60%, 0.4);
+  transform: translateY(-1px);
+}
+
+.neomorphism-feature {
+  background: hsl(240, 13%, 96%);
+  border-radius: 20px;
+  box-shadow: 
+    6px 6px 12px hsl(240, 4%, 88%),
+    -6px -6px 12px hsl(0, 0%, 100%);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.neomorphism-feature:hover {
+  box-shadow: 
+    8px 8px 16px hsl(240, 4%, 85%),
+    -8px -8px 16px hsl(0, 0%, 100%),
+    0 0 25px hsl(217, 91%, 60%, 0.2);
+  transform: translateY(-3px);
+}
+
+.icon-glow {
+  transition: all 0.3s ease;
+}
+
+.icon-glow:hover {
+  filter: drop-shadow(0 0 10px hsl(217, 91%, 60%, 0.6));
+  transform: scale(1.1);
+}
+
+/* Animated Background Orbs */
+.floating-orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0.1;
+}
+
+.floating-orb-1 {
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, hsl(217, 91%, 60%) 0%, transparent 70%);
+  top: 10%;
+  left: 10%;
+  animation: float-orb 25s ease-in-out infinite;
+  animation-delay: 0s;
+}
+
+.floating-orb-2 {
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, hsl(262, 83%, 68%) 0%, transparent 70%);
+  top: 60%;
+  right: 15%;
+  animation: float-orb 30s ease-in-out infinite;
+  animation-delay: 5s;
+}
+
+.floating-orb-3 {
+  width: 150px;
+  height: 150px;
+  background: radial-gradient(circle, hsl(217, 91%, 60%) 0%, transparent 70%);
+  bottom: 20%;
+  left: 50%;
+  animation: float-orb 20s ease-in-out infinite;
+  animation-delay: 10s;
+}
+
 /* RTL Support */
 .rtl {
   direction: rtl;

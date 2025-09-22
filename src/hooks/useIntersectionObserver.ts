@@ -9,7 +9,7 @@ interface UseIntersectionObserverOptions {
 export const useIntersectionObserver = (options: UseIntersectionObserverOptions = {}) => {
   const [isVisible, setIsVisible] = useState(false);
   const [hasTriggered, setHasTriggered] = useState(false);
-  const elementRef = useRef<HTMLElement | null>(null);
+  const elementRef = useRef<HTMLDivElement | null>(null);
 
   const { 
     threshold = 0.1, 

@@ -1,24 +1,31 @@
-import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
-import { useLanguage } from '@/hooks/useLanguage';
+import React, { useState, useEffect } from 'react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Brain, Shield, DollarSign, Heart, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useTranslation } from 'react-i18next';
+import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
 import { useToast } from '@/hooks/use-toast';
-import { Mail, Rocket, Scale, Heart, Globe, Users } from 'lucide-react';
 
 interface LaunchingSoonProps {
   onPasswordAccess: () => void;
 }
 
 export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
-  const { t } = useTranslation();
-  const { isRTL } = useLanguage();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const { t } = useTranslation();
   const { toast } = useToast();
+  
+  const { elementRef: featuresRef, isVisible: featuresVisible } = useIntersectionObserver({ threshold: 0.2 });
+  const { elementRef: proBonoRef, isVisible: proBonoVisible } = useIntersectionObserver({ threshold: 0.3 });
+
+  useEffect(() => {
+    setIsLoaded(true);
+  }, []);
 
   const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +42,7 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
           user_agent: navigator.userAgent,
           metadata: {
             timestamp: new Date().toISOString(),
-            language: isRTL ? 'ar' : 'en'
+            language: 'en'
           }
         });
 
@@ -70,166 +77,149 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+    <div className="min-h-screen neomorphism-background">
+      {/* Animated Background Orbs */}
+      <div className="floating-orb floating-orb-1"></div>
+      <div className="floating-orb floating-orb-2"></div>
+      <div className="floating-orb floating-orb-3"></div>
+      
       {/* Header */}
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="flex items-center justify-center w-10 h-10 bg-primary rounded-lg">
-                <Scale className="h-6 w-6 text-primary-foreground" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-foreground">LegalPro</h1>
-                <p className="text-xs text-muted-foreground">{t('legalServicesplatform')}</p>
-              </div>
-            </div>
-            <Button 
-              variant="outline" 
-              onClick={onPasswordAccess}
-              className="hidden sm:flex"
-            >
-              {t('accessPlatform')}
-            </Button>
+      <header className="px-4 py-6 relative z-10">
+        <div className="max-w-6xl mx-auto flex justify-between items-center">
+          <div className="text-2xl font-bold font-futura text-neomorphism-primary">
+            LegalPro
           </div>
+          <Button 
+            onClick={onPasswordAccess}
+            className="hidden md:flex neomorphism-button text-white font-medium px-6 py-3"
+          >
+            {t('accessPlatform')}
+          </Button>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-12">
-        <div className="max-w-4xl mx-auto text-center space-y-12">
-          
-          {/* Hero Section */}
-          <div className="space-y-6">
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium">
-              <Rocket className="w-4 h-4 mr-2" />
+      {/* Hero Section */}
+      <main className="px-4 py-16 relative z-10">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className={`transition-all duration-1000 ${isLoaded ? 'animate-hero-fade-in' : 'opacity-0'}`}>
+            <h1 className="text-5xl md:text-7xl font-bold font-futura text-gray-900 mb-6 leading-tight">
               {t('comingSoon')}
-            </div>
-            
-            <h1 className="text-4xl md:text-6xl font-bold text-foreground leading-tight">
-              {t('revolutionizingLegalServices')}
             </h1>
-            
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            <p className="text-xl md:text-2xl font-modern text-gray-700 mb-8 max-w-3xl mx-auto leading-relaxed">
+              {t('revolutionizingLegalServices')}
+            </p>
+            <p className="text-lg font-modern text-gray-600 mb-12 max-w-2xl mx-auto">
               {t('launchingDescription')}
             </p>
           </div>
 
-          {/* Email Signup */}
-          <Card className="max-w-md mx-auto">
-            <CardContent className="p-6">
-              {!isSubscribed ? (
-                <form onSubmit={handleEmailSignup} className="space-y-4">
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-semibold text-foreground">
+          {/* Email Signup Card */}
+          <div className={`transition-all duration-1000 delay-300 ${isLoaded ? 'animate-hero-fade-in' : 'opacity-0'}`}>
+            <Card className="max-w-md mx-auto neomorphism-card">
+              <CardContent className="p-8">
+                {!isSubscribed ? (
+                  <form onSubmit={handleEmailSignup}>
+                    <h3 className="text-2xl font-semibold font-futura text-gray-900 mb-4">
                       {t('getNotified')}
                     </h3>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-gray-600 font-modern mb-6 leading-relaxed">
                       {t('getNotifiedDescription')}
                     </p>
+                    <div className="space-y-4">
+                      <Input
+                        type="email"
+                        placeholder={t('enterYourEmail')}
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full neomorphism-input text-gray-700 placeholder:text-gray-500 font-modern"
+                        required
+                      />
+                      <Button
+                        type="submit"
+                        disabled={isLoading || !email}
+                        className="w-full neomorphism-button text-white font-medium font-modern py-3"
+                      >
+                        {isLoading ? 'Joining...' : 'Get Early Access'}
+                      </Button>
+                    </div>
+                  </form>
+                ) : (
+                  <div className="text-center">
+                    <CheckCircle className="w-16 h-16 text-neomorphism-primary mx-auto mb-4 animate-glow-pulse" />
+                    <h3 className="text-2xl font-semibold font-futura text-gray-900 mb-4">
+                      {t('thankYou')}
+                    </h3>
+                    <p className="text-gray-600 font-modern leading-relaxed">
+                      {t('emailRegisteredSuccess')}
+                    </p>
                   </div>
-                  
-                  <div className="flex space-x-2">
-                    <Input
-                      type="email"
-                      placeholder={t('enterYourEmail')}
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      disabled={isLoading}
-                      className="flex-1"
-                    />
-                    <Button 
-                      type="submit" 
-                      disabled={isLoading || !email}
-                      className="shrink-0"
-                    >
-                      {isLoading ? (
-                        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                        <Mail className="w-4 h-4" />
-                      )}
-                    </Button>
-                  </div>
-                </form>
-              ) : (
-                <div className="text-center space-y-2">
-                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                    <Mail className="w-6 h-6 text-green-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-foreground">
-                    {t('thankYou')}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {t('emailRegisteredSuccess')}
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                )}
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Features Preview */}
-          <div className="grid md:grid-cols-3 gap-8 max-w-3xl mx-auto">
-            <div className="text-center space-y-3">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-                <Users className="w-8 h-8 text-primary" />
-              </div>
-              <h3 className="text-lg font-semibold text-foreground">
-                {t('expertLawyers')}
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                {t('expertLawyersDescription')}
-              </p>
-            </div>
+          <div className="mt-24 max-w-6xl mx-auto" ref={featuresRef}>
+            <div className={`grid md:grid-cols-3 gap-8 transition-all duration-1000 ${featuresVisible ? 'animate-card-slide-up' : 'opacity-0 translate-y-10'}`}>
+              <Card className="neomorphism-feature">
+                <CardContent className="p-8 text-center">
+                  <Brain className="w-12 h-12 text-neomorphism-primary mx-auto mb-6 icon-glow" />
+                  <h3 className="text-xl font-semibold font-futura text-gray-900 mb-4">
+                    {t('expertLawyers')}
+                  </h3>
+                  <p className="text-gray-600 font-modern leading-relaxed">
+                    {t('expertLawyersDescription')}
+                  </p>
+                </CardContent>
+              </Card>
 
-            <div className="text-center space-y-3">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-                <Globe className="w-8 h-8 text-primary" />
-              </div>
-              <h3 className="text-lg font-semibold text-foreground">
-                {t('multilingualSupport')}
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                {t('multilingualSupportDescription')}
-              </p>
-            </div>
+              <Card className="neomorphism-feature" style={{ animationDelay: '0.2s' }}>
+                <CardContent className="p-8 text-center">
+                  <Shield className="w-12 h-12 text-neomorphism-primary mx-auto mb-6 icon-glow" />
+                  <h3 className="text-xl font-semibold font-futura text-gray-900 mb-4">
+                    {t('multilingualSupport')}
+                  </h3>
+                  <p className="text-gray-600 font-modern leading-relaxed">
+                    {t('multilingualSupportDescription')}
+                  </p>
+                </CardContent>
+              </Card>
 
-            <div className="text-center space-y-3">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-                <Heart className="w-8 h-8 text-primary" />
-              </div>
-              <h3 className="text-lg font-semibold text-foreground">
-                {t('proBonoServices')}
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                {t('proBonoServicesDescription')}
-              </p>
+              <Card className="neomorphism-feature" style={{ animationDelay: '0.4s' }}>
+                <CardContent className="p-8 text-center">
+                  <DollarSign className="w-12 h-12 text-neomorphism-accent mx-auto mb-6 icon-glow" />
+                  <h3 className="text-xl font-semibold font-futura text-gray-900 mb-4">
+                    {t('proBonoServices')}
+                  </h3>
+                  <p className="text-gray-600 font-modern leading-relaxed">
+                    {t('proBonoServicesDescription')}
+                  </p>
+                </CardContent>
+              </Card>
             </div>
           </div>
 
-          {/* Pro Bono Mission */}
-          <Card className="bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20">
-            <CardContent className="p-8">
-              <div className="max-w-2xl mx-auto text-center space-y-4">
-                <div className="flex items-center justify-center space-x-2">
-                  <Heart className="w-6 h-6 text-primary" />
-                  <h3 className="text-2xl font-bold text-foreground">
-                    {t('givingBackToCommunity')}
-                  </h3>
-                </div>
-                <p className="text-muted-foreground leading-relaxed">
+          {/* Pro Bono Section */}
+          <div className="mt-24 max-w-4xl mx-auto" ref={proBonoRef}>
+            <Card className={`neomorphism-card bg-gradient-to-r from-neomorphism-light to-neomorphism-base transition-all duration-1000 ${proBonoVisible ? 'animate-card-slide-up' : 'opacity-0 translate-y-10'}`}>
+              <CardContent className="p-12 text-center">
+                <Heart className="w-16 h-16 text-red-500 mx-auto mb-8 icon-glow animate-gentle-pulse" />
+                <h2 className="text-3xl font-bold font-futura text-gray-900 mb-6">
+                  {t('givingBackToCommunity')}
+                </h2>
+                <p className="text-lg font-modern text-gray-700 leading-relaxed max-w-2xl mx-auto">
                   {t('proBonoMissionDescription')}
                 </p>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Mobile Access Button */}
-          <div className="sm:hidden">
+          <div className="mt-16 md:hidden text-center">
             <Button 
               onClick={onPasswordAccess}
-              className="w-full"
               size="lg"
+              className="neomorphism-button text-white font-medium px-8 py-4"
             >
               {t('accessPlatform')}
             </Button>
@@ -238,13 +228,13 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
       </main>
 
       {/* Footer */}
-      <footer className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 mt-16">
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center space-y-2">
-            <p className="text-sm text-muted-foreground">
-              © 2024 LegalPro. {t('allRightsReserved')}
+      <footer className="px-4 py-8 relative z-10">
+        <div className="max-w-6xl mx-auto text-center">
+          <div className="neomorphism-card p-6">
+            <p className="text-gray-600 font-modern">
+              &copy; 2024 LegalPro. Revolutionizing legal services in Egypt.
             </p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm text-gray-500 font-modern mt-2">
               {t('launchingFooterText')}
             </p>
           </div>
