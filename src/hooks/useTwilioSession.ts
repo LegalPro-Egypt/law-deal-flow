@@ -63,7 +63,7 @@ export const useTwilioSession = () => {
   // Create access token for joining a session
   const createAccessToken = useCallback(async (
     caseId: string, 
-    sessionType: 'video' | 'voice' = 'video'
+    sessionType: 'video' | 'voice' | 'chat' = 'video'
   ): Promise<TwilioAccessToken | null> => {
     if (!user) return null;
 

@@ -9,6 +9,7 @@ import { useTwilioSession } from '@/hooks/useTwilioSession';
 import { useLanguage } from '@/hooks/useLanguage';
 import { TwilioVideoInterface } from './TwilioVideoInterface';
 import { TwilioVoiceInterface } from './TwilioVoiceInterface';
+import { TwilioChatInterface } from './TwilioChatInterface';
 import { SessionRecordingsPlayer } from './SessionRecordingsPlayer';
 
 interface CommunicationLauncherProps {
@@ -35,13 +36,13 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
     stopRecording
   } = useTwilioSession();
 
-  const [communicationMode, setCommunicationMode] = useState<'video' | 'voice' | null>(null);
+  const [communicationMode, setCommunicationMode] = useState<'video' | 'voice' | 'chat' | null>(null);
   const [showRecordings, setShowRecordings] = useState(false);
 
   const caseSessions = sessions.filter(session => session.case_id === caseId);
   const activeCaseSession = caseSessions.find(session => session.status === 'active');
 
-  const handleStartCommunication = async (mode: 'video' | 'voice') => {
+  const handleStartCommunication = async (mode: 'video' | 'voice' | 'chat') => {
     if (!lawyerAssigned) {
       toast({
         title: 'No Lawyer Assigned',
@@ -121,8 +122,15 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
             onRecordingToggle={handleRecordingToggle}
             recordingEnabled={activeSession?.recording_enabled || false}
           />
-        ) : (
+        ) : communicationMode === 'voice' ? (
           <TwilioVoiceInterface
+            accessToken={accessToken}
+            onDisconnect={handleEndCommunication}
+            onRecordingToggle={handleRecordingToggle}
+            recordingEnabled={activeSession?.recording_enabled || false}
+          />
+        ) : (
+          <TwilioChatInterface
             accessToken={accessToken}
             onDisconnect={handleEndCommunication}
             onRecordingToggle={handleRecordingToggle}
@@ -152,14 +160,14 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <Button
                 onClick={() => handleStartCommunication('video')}
                 disabled={connecting || !!activeCaseSession}
                 className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}
               >
                 <Video className="w-4 h-4" />
-                {connecting ? 'Connecting...' : 'Start Video Call'}
+                {connecting ? 'Connecting...' : 'Video Call'}
               </Button>
               
               <Button
@@ -171,17 +179,27 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
                 <Phone className="w-4 h-4" />
                 Voice Call
               </Button>
+
+              <Button
+                variant="outline"
+                onClick={() => handleStartCommunication('chat')}
+                disabled={connecting || !!activeCaseSession}
+                className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}
+              >
+                <MessageCircle className="w-4 h-4" />
+                Start Chat
+              </Button>
               
               <Dialog open={showRecordings} onOpenChange={setShowRecordings}>
                 <DialogTrigger asChild>
                   <Button variant="outline" className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}>
-                    <MessageCircle className="w-4 h-4" />
-                    View Recordings
+                    <Calendar className="w-4 h-4" />
+                    View History
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
                   <DialogHeader>
-                    <DialogTitle>Session Recordings - {caseTitle}</DialogTitle>
+                    <DialogTitle>Session History - {caseTitle}</DialogTitle>
                   </DialogHeader>
                   <SessionRecordingsPlayer caseId={caseId} />
                 </DialogContent>
@@ -228,8 +246,10 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
                   <div className={`flex items-center gap-3 ${isRTL() ? 'flex-row-reverse' : ''}`}>
                     {session.session_type === 'video' ? (
                       <Video className="w-4 h-4 text-primary" />
-                    ) : (
+                    ) : session.session_type === 'voice' ? (
                       <Phone className="w-4 h-4 text-primary" />
+                    ) : (
+                      <MessageCircle className="w-4 h-4 text-primary" />
                     )}
                     <div className={isRTL() ? 'text-right' : ''}>
                       <p className="text-sm font-medium capitalize">

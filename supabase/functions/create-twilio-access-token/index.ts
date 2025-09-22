@@ -9,7 +9,7 @@ const corsHeaders = {
 
 interface AccessTokenRequest {
   caseId: string;
-  sessionType: 'video' | 'voice';
+  sessionType: 'video' | 'voice' | 'chat';
   participantRole: 'client' | 'lawyer';
 }
 
@@ -60,6 +60,13 @@ serve(async (req) => {
     // Create or get existing communication session
     const roomName = `case-${caseId}-${sessionType}-${Date.now()}`;
     
+    // For chat sessions, create or reuse conversation
+    let conversationSid = null;
+    if (sessionType === 'chat') {
+      // Create Twilio Conversation for chat
+      conversationSid = `case-${caseId}-chat`;
+    }
+    
     const { data: sessionData, error: sessionError } = await supabaseClient
       .from('communication_sessions')
       .insert({
@@ -68,6 +75,7 @@ serve(async (req) => {
         lawyer_id: caseData.assigned_lawyer_id,
         session_type: sessionType,
         room_name: roomName,
+        twilio_conversation_sid: conversationSid,
         status: 'scheduled',
         scheduled_at: new Date().toISOString()
       })
@@ -98,18 +106,28 @@ serve(async (req) => {
     };
 
     const now = Math.floor(Date.now() / 1000);
+    const grants: any = {
+      "identity": identity
+    };
+
+    // Add appropriate grants based on session type
+    if (sessionType === 'video' || sessionType === 'voice') {
+      grants.video = {
+        "room": roomName
+      };
+    } else if (sessionType === 'chat') {
+      grants.chat = {
+        "service_sid": conversationSid
+      };
+    }
+
     const payload = {
       "iss": twilioApiKey,
       "sub": twilioAccountSid,
       "nbf": now,
       "exp": now + 3600, // 1 hour
       "jti": `${twilioApiKey}-${now}`,
-      "grants": {
-        "identity": identity,
-        "video": {
-          "room": roomName
-        }
-      }
+      "grants": grants
     };
 
     // Simple JWT creation (in production, use a proper JWT library)
