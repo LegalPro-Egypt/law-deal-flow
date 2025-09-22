@@ -439,12 +439,12 @@ const ClientDashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="inbox">Inbox</TabsTrigger>
-            <TabsTrigger value="details">Personal Details</TabsTrigger>
-            <TabsTrigger value="messages">Messages</TabsTrigger>
-            <TabsTrigger value="documents" id="documents-tab">Documents</TabsTrigger>
+          <TabsList className="flex w-full overflow-x-auto scrollbar-hide md:grid md:grid-cols-5 gap-1">
+            <TabsTrigger value="overview" className="flex-shrink-0 min-w-fit px-4">Overview</TabsTrigger>
+            <TabsTrigger value="inbox" className="flex-shrink-0 min-w-fit px-4">Inbox</TabsTrigger>
+            <TabsTrigger value="details" className="flex-shrink-0 min-w-fit px-4">Personal Details</TabsTrigger>
+            <TabsTrigger value="messages" className="flex-shrink-0 min-w-fit px-4">Messages</TabsTrigger>
+            <TabsTrigger value="documents" id="documents-tab" className="flex-shrink-0 min-w-fit px-4">Documents</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
