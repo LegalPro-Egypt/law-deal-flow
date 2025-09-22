@@ -124,14 +124,10 @@ serve(async (req) => {
       conversation_history: messagesResult.data || [] // Last 10 messages from case_messages
     };
 
-    // Prepare lawyer information
+    // Prepare lawyer information (privacy-protected)
     const lawyerInfo = lawyerResult.data ? {
       name: `${lawyerResult.data.first_name || ''} ${lawyerResult.data.last_name || ''}`.trim(),
       law_firm: lawyerResult.data.law_firm,
-      office_address: lawyerResult.data.office_address,
-      phone: lawyerResult.data.phone || lawyerResult.data.office_phone,
-      email: lawyerResult.data.email,
-      license_number: lawyerResult.data.license_number,
       specializations: lawyerResult.data.specializations,
       years_experience: lawyerResult.data.years_experience
     } : null;
@@ -143,7 +139,7 @@ REQUIREMENTS:
 - Timeline: numbered lists only, no tables
 - Payment: LegalPro platform only
 - Include disclaimers: "LegalPro is not liable for lawyer's work", "Contract between lawyer and client only", "Payments through LegalPro platform only"
-- Use real lawyer data: ${lawyerInfo ? `${lawyerInfo.first_name} ${lawyerInfo.last_name}, ${lawyerInfo.email}, ${lawyerInfo.phone}` : 'TBD'}
+- Use real lawyer data: ${lawyerInfo ? `${lawyerInfo.name}${lawyerInfo.law_firm ? `, ${lawyerInfo.law_firm}` : ''}` : 'TBD'}
 
 Case: ${caseData.title} (${caseData.category})
 Details: ${caseData.description}
