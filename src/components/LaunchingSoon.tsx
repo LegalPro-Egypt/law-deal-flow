@@ -139,7 +139,7 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
                         disabled={isLoading || !email}
                         className="w-full neomorphism-button text-white font-medium font-modern py-3"
                       >
-                        {isLoading ? 'Joining...' : 'Get Early Access'}
+                        {isLoading ? 'Joining...' : 'Join the Waitlist'}
                       </Button>
                     </div>
                   </form>
