@@ -449,6 +449,8 @@
     "emailSignupError": "فشل التسجيل",
     "emailSignupErrorDescription": "فشل في تسجيل بريدك الإلكتروني. يرجى المحاولة مرة أخرى.",
     "legalServicesplatform": "منصة الخدمات القانونية",
-    "allRightsReserved": "جميع الحقوق محفوظة."
+    "allRightsReserved": "جميع الحقوق محفوظة.",
+    "aiLegalAssistant": "مساعد قانوني ذكي",
+    "aiLegalAssistantDescription": "احصل على إرشادات قانونية فورية مدعومة بالذكاء الاصطناعي المدرب على القانون المصري."
   }
 }

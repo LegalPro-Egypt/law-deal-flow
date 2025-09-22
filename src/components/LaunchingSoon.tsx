@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Brain, Shield, DollarSign, Heart, CheckCircle } from 'lucide-react';
+import { Brain, Shield, Bot, Heart, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useTranslation } from 'react-i18next';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
@@ -34,6 +34,8 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
     multilingualSupportDescription: "Seamless service in Arabic, English, and more.",
     proBonoServices: "Pro Bono Services",
     proBonoServicesDescription: "Part of our revenue funds free legal aid for those in need.",
+    aiLegalAssistant: "AI Legal Assistant",
+    aiLegalAssistantDescription: "Get instant legal guidance powered by advanced AI trained on Egyptian law.",
     givingBackToCommunity: "Giving Back to the Community",
     proBonoMissionDescription: "We reinvest to make legal services accessible for everyone.",
     accessPlatform: "Access Platform",
@@ -222,12 +224,12 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
 
               <Card className="neomorphism-feature" style={{ animationDelay: '0.4s' }}>
                 <CardContent className="p-8 text-center">
-                  <DollarSign className="w-12 h-12 text-neomorphism-accent mx-auto mb-6 icon-glow" />
+                  <Bot className="w-12 h-12 text-neomorphism-accent mx-auto mb-6 icon-glow" />
                   <h3 className="text-xl font-semibold font-futura text-gray-900 mb-4">
-                    {getText('proBonoServices')}
+                    {getText('aiLegalAssistant')}
                   </h3>
                   <p className="text-gray-600 font-modern leading-relaxed">
-                    {getText('proBonoServicesDescription')}
+                    {getText('aiLegalAssistantDescription')}
                   </p>
                 </CardContent>
               </Card>

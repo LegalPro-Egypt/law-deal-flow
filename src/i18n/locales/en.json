@@ -541,6 +541,8 @@
     "emailSignupError": "Registration Failed",
     "emailSignupErrorDescription": "Failed to register your email. Please try again.",
     "legalServicesplatform": "Legal Services Platform",
-    "allRightsReserved": "All rights reserved."
+    "allRightsReserved": "All rights reserved.",
+    "aiLegalAssistant": "AI Legal Assistant",
+    "aiLegalAssistantDescription": "Get instant legal guidance powered by advanced AI trained on Egyptian law."
   }
 }
