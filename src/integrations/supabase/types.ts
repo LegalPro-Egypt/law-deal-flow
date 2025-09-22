@@ -555,6 +555,39 @@ export type Database = {
           },
         ]
       }
+      email_signups: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          notified: boolean
+          source: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          notified?: boolean
+          source?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          notified?: boolean
+          source?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       lawyer_invitations: {
         Row: {
           created_at: string

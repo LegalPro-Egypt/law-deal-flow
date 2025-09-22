@@ -5,6 +5,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { useVisitorTracking } from "@/hooks/useVisitorTracking";
+import { SiteProtectionProvider, useSiteProtection } from "@/contexts/SiteProtectionContext";
+import { LaunchingSoon } from "@/components/LaunchingSoon";
+import { SitePasswordProtection } from "@/components/SitePasswordProtection";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Intake from "./pages/Intake";
@@ -20,12 +23,54 @@ import TermsOfService from "./pages/TermsOfService";
 import ProBono from "./pages/ProBono";
 import Payment from "./pages/Payment";
 import NotFound from "./pages/NotFound";
+import { useState } from "react";
 
 const queryClient = new QueryClient();
 
 function AppContent() {
-  useVisitorTracking();
+  const { 
+    isProtectionEnabled, 
+    showLaunchingPage, 
+    hasValidSession, 
+    isAdminBypassed,
+    grantAccess 
+  } = useSiteProtection();
+  const [showPasswordScreen, setShowPasswordScreen] = useState(false);
   
+  useVisitorTracking();
+
+  // If protection is enabled and user doesn't have valid session or admin bypass
+  if (isProtectionEnabled && !hasValidSession && !isAdminBypassed) {
+    // Show password screen if requested
+    if (showPasswordScreen) {
+      return (
+        <SitePasswordProtection 
+          onSuccess={() => {
+            grantAccess();
+            setShowPasswordScreen(false);
+          }} 
+        />
+      );
+    }
+    
+    // Show launching soon page by default
+    if (showLaunchingPage) {
+      return (
+        <LaunchingSoon 
+          onPasswordAccess={() => setShowPasswordScreen(true)} 
+        />
+      );
+    }
+    
+    // If launching page is disabled, show password screen directly
+    return (
+      <SitePasswordProtection 
+        onSuccess={grantAccess} 
+      />
+    );
+  }
+
+  // Normal application flow
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
@@ -74,7 +119,9 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AppContent />
+        <SiteProtectionProvider>
+          <AppContent />
+        </SiteProtectionProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
