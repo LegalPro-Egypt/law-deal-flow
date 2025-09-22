@@ -165,7 +165,7 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
       const { error: caseError } = await supabase
         .from('cases')
         .update({
-          status: 'proposal_under_review',
+          status: 'proposal_sent',
           updated_at: new Date().toISOString(),
         })
         .eq('id', caseId);
