@@ -55,6 +55,7 @@ import { LawyerChatHistoryDialog } from "@/components/LawyerChatHistoryDialog";
 import AnonymousQAManager from "@/components/AnonymousQAManager";
 import { ProBonoApplicationsManager } from "@/components/ProBonoApplicationsManager";
 import { AdminProposalReviewDialog } from "@/components/AdminProposalReviewDialog";
+import { formatCaseStatus, getCaseCompletionStatus } from "@/utils/caseUtils";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -737,27 +738,36 @@ const AdminDashboard = () => {
               <div className="grid gap-4">
                 {cases
                   .sort((a, b) => {
-                    // Priority: submitted cases (pending review) first
-                    if (a.status === 'submitted' && b.status !== 'submitted') return -1;
-                    if (a.status !== 'submitted' && b.status === 'submitted') return 1;
+                    // Priority: complete cases (ready for review) first, then incomplete by step progress
+                    const aStatus = getCaseCompletionStatus(a);
+                    const bStatus = getCaseCompletionStatus(b);
+                    
+                    if (aStatus.isComplete && !bStatus.isComplete) return -1;
+                    if (!aStatus.isComplete && bStatus.isComplete) return 1;
+                    
+                    // Within each group, sort by creation date (newest first)
                     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
                   })
-                  .map((caseItem) => (
+                  .map((caseItem) => {
+                    const completionStatus = getCaseCompletionStatus(caseItem);
+                    return (
                   <Card 
                     key={caseItem.id} 
                     className={`bg-gradient-card shadow-card ${
-                      caseItem.status === 'submitted' ? 'border-primary border-2' : ''
+                      completionStatus.isComplete ? 'border-green-300 border-2' : 'border-orange-200 border'
                     }`}
                   >
                     <CardContent className="p-6">
-                      {caseItem.status === 'submitted' && (
-                        <div className="mb-4">
-                          <Badge className="bg-primary text-primary-foreground">
-                            <AlertCircle className="h-3 w-3 mr-1" />
-                            Needs Review
+                      <div className="mb-4">
+                        <Badge className={completionStatus.className}>
+                          {completionStatus.label}
+                        </Badge>
+                        {!completionStatus.isComplete && (
+                          <Badge variant="outline" className="ml-2 text-xs">
+                            {completionStatus.stepProgress}
                           </Badge>
-                        </div>
-                      )}
+                        )}
+                      </div>
                       <div className="grid lg:grid-cols-3 gap-6">
                         {/* Case Info */}
                         <div>
@@ -781,9 +791,8 @@ const AdminDashboard = () => {
                           <h4 className="font-medium mb-2 text-sm">Case Details</h4>
                           <div className="space-y-1 text-xs">
                             <p><span className="font-medium">Category:</span> {caseItem.category}</p>
-                            <p><span className="font-medium">Status:</span> {
-                              caseItem.status === 'submitted' ? 'Under Review' : caseItem.status.replace('_', ' ')
-                            }</p>
+                            <p><span className="font-medium">Status:</span> {formatCaseStatus(caseItem.status)}</p>
+                            <p><span className="font-medium">Progress:</span> Step {caseItem.step || 1}/4</p>
                             <p><span className="font-medium">Email:</span> {caseItem.client_email}</p>
                           </div>
                           {caseItem.ai_summary && (
@@ -841,7 +850,8 @@ const AdminDashboard = () => {
                       </div>
                     </CardContent>
                   </Card>
-                ))}
+                  );
+                })}
               </div>
             )}
           </TabsContent>

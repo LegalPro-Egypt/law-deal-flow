@@ -37,6 +37,7 @@ interface CaseItem {
   client_email: string;
   created_at: string;
   language: string;
+  step?: number;
   ai_summary?: string;
   extracted_entities?: any;
 }
