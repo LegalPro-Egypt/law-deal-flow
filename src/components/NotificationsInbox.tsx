@@ -39,19 +39,6 @@ export const NotificationsInbox = () => {
     }
   };
 
-  const getNotificationVariant = (type: string, isRead: boolean) => {
-    if (isRead) return "secondary";
-    switch (type) {
-      case 'proposal_received':
-        return "default";
-      case 'proposal_accepted':
-        return "default";
-      case 'proposal_rejected':
-        return "destructive";
-      default:
-        return "outline";
-    }
-  };
 
   if (loading) {
     return (
@@ -109,21 +96,8 @@ export const NotificationsInbox = () => {
                     </div>
                     
                     <div className="flex-1 min-w-0 overflow-hidden">
-                      <div className="flex items-start gap-2 mb-1">
-                        <h4 className="font-medium flex-1 truncate">{notification.title}</h4>
-                        <div className="flex items-center gap-1 flex-shrink-0">
-                          {!notification.is_read && (
-                            <div className="w-2 h-2 bg-primary rounded-full"></div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="mb-2">
-                        <Badge 
-                          variant={getNotificationVariant(notification.type, notification.is_read)}
-                          className="text-xs max-w-full truncate"
-                        >
-                          {notification.type.replace('_', ' ')}
-                        </Badge>
+                      <div className="mb-1">
+                        <h4 className="font-medium truncate">{notification.title}</h4>
                       </div>
                       
                       <p className="text-sm text-muted-foreground mt-1">
@@ -151,15 +125,6 @@ export const NotificationsInbox = () => {
                           </Button>
                         )}
                         
-                        {!notification.is_read && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => markAsRead(notification.id)}
-                          >
-                            {currentLanguage === 'ar' ? 'تم القراءة' : 'Mark as Read'}
-                          </Button>
-                        )}
                       </div>
                     </div>
                   </div>
