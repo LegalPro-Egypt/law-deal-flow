@@ -99,6 +99,7 @@ export const NotificationsInbox = () => {
       const { data, error } = await supabase
         .from('proposals')
         .select('*')
+        .in('status', ['approved', 'sent', 'viewed', 'accepted', 'rejected'])
         .order('created_at', { ascending: false });
 
       if (error) throw error;

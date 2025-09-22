@@ -154,54 +154,27 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
           timeline: formData.timeline,
           strategy: formData.strategy,
           generated_content: generatedProposal,
-          status: 'sent'
+          status: 'pending_admin_review'
         })
         .select()
         .single();
 
       if (proposalError) throw proposalError;
 
-      // Update case status
+      // Update case status to indicate proposal is under admin review
       const { error: caseError } = await supabase
         .from('cases')
         .update({
-          status: 'proposal_sent',
+          status: 'proposal_under_review',
           updated_at: new Date().toISOString(),
         })
         .eq('id', caseId);
 
       if (caseError) throw caseError;
 
-      // Get client ID for notification
-      const { data: caseData } = await supabase
-        .from('cases')
-        .select('user_id')
-        .eq('id', caseId)
-        .single();
-
-      if (caseData) {
-        // Create notification for client
-        const { error: notificationError } = await supabase
-          .from('notifications')
-          .insert({
-            user_id: caseData.user_id,
-            case_id: caseId,
-            type: 'proposal_received',
-            title: 'New Legal Proposal Received',
-            message: 'You have received a new legal proposal for your case. Please review and respond.',
-            action_required: true,
-            metadata: { 
-              proposal_id: proposalData.id,
-              total_fee: formData.consultation_fee + formData.remaining_fee
-            }
-          });
-
-        if (notificationError) throw notificationError;
-      }
-
       toast({
-        title: t('proposal.messages.sent'),
-        description: t('proposal.messages.sentDesc', { clientName })
+        title: "Proposal Sent for Review",
+        description: "Your proposal has been sent to the admin for review and approval."
       });
 
       onProposalSent();

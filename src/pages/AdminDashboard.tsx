@@ -54,6 +54,7 @@ import { AssignLawyerDialog } from "@/components/AssignLawyerDialog";
 import { LawyerChatHistoryDialog } from "@/components/LawyerChatHistoryDialog";
 import AnonymousQAManager from "@/components/AnonymousQAManager";
 import { ProBonoApplicationsManager } from "@/components/ProBonoApplicationsManager";
+import { AdminProposalReviewDialog } from "@/components/AdminProposalReviewDialog";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -84,9 +85,15 @@ const AdminDashboard = () => {
   const [expandedImage, setExpandedImage] = useState<{url: string; title: string} | null>(null);
   const [showAssignLawyerDialog, setShowAssignLawyerDialog] = useState(false);
   const [caseToAssign, setCaseToAssign] = useState<{id: string, category?: string} | null>(null);
+  const [pendingProposals, setPendingProposals] = useState<any[]>([]);
+  const [selectedProposal, setSelectedProposal] = useState<any>(null);
+  const [showProposalReview, setShowProposalReview] = useState(false);
+  const [proposalCaseDetails, setProposalCaseDetails] = useState<any>(null);
+  const [proposalLawyerDetails, setProposalLawyerDetails] = useState<any>(null);
 
   useEffect(() => {
     fetchAllLawyers();
+    fetchPendingProposals();
   }, []);
 
   const fetchAllLawyers = async () => {
@@ -176,6 +183,55 @@ const AdminDashboard = () => {
     } catch (error: any) {
       console.error('Error fetching lawyers:', error);
     }
+  };
+
+  const fetchPendingProposals = async () => {
+    try {
+      const { data: proposals, error } = await supabase
+        .from('proposals')
+        .select(`
+          *,
+          cases!inner(
+            id, title, category, client_name, case_number, client_email
+          )
+        `)
+        .eq('status', 'pending_admin_review')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Fetch lawyer details for each proposal
+      const proposalsWithLawyers = await Promise.all(
+        (proposals || []).map(async (proposal) => {
+          const { data: lawyer, error: lawyerError } = await supabase
+            .from('profiles')
+            .select('first_name, last_name, law_firm, years_experience, email')
+            .eq('user_id', proposal.lawyer_id)
+            .single();
+
+          return {
+            ...proposal,
+            lawyer: lawyer || {}
+          };
+        })
+      );
+
+      setPendingProposals(proposalsWithLawyers);
+    } catch (error: any) {
+      console.error('Error fetching pending proposals:', error);
+    }
+  };
+
+  const handleViewProposal = async (proposal: any) => {
+    setSelectedProposal(proposal);
+    setProposalCaseDetails(proposal.cases);
+    setProposalLawyerDetails(proposal.lawyer);
+    setShowProposalReview(true);
+  };
+
+  const handleProposalUpdate = () => {
+    fetchPendingProposals();
+    refreshData();
   };
 
   const handleApproveVerification = async (userId: string) => {
@@ -530,6 +586,13 @@ const AdminDashboard = () => {
               <TabsList className="inline-flex w-max min-w-full">
                 <TabsTrigger value="intakes" className="whitespace-nowrap flex-shrink-0">AI Intakes</TabsTrigger>
                 <TabsTrigger value="cases" className="whitespace-nowrap flex-shrink-0">Cases</TabsTrigger>
+                <TabsTrigger value="proposals" className="whitespace-nowrap flex-shrink-0">
+                  Pending Proposals {pendingProposals.length > 0 && (
+                    <Badge variant="destructive" className="ml-1 text-xs">
+                      {pendingProposals.length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
                 <TabsTrigger value="lawyers" className="whitespace-nowrap flex-shrink-0">
                   Lawyers {stats.pendingVerifications > 0 && (
                     <Badge variant="destructive" className="ml-1 text-xs">
@@ -769,6 +832,93 @@ const AdminDashboard = () => {
                               </Button>
                             </>
                           )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Pending Proposals Tab */}
+          <TabsContent value="proposals" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">Pending Proposals</h2>
+              <Badge variant="outline" className="text-sm">
+                {pendingProposals.length} awaiting review
+              </Badge>
+            </div>
+
+            {pendingProposals.length === 0 ? (
+              <Card className="bg-gradient-card shadow-card">
+                <CardContent className="p-8 text-center">
+                  <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No pending proposals</h3>
+                  <p className="text-muted-foreground">Lawyer proposals will appear here for admin review</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4">
+                {pendingProposals.map((proposal) => (
+                  <Card key={proposal.id} className="bg-gradient-card shadow-card border-orange-200 border-2">
+                    <CardContent className="p-6">
+                      <div className="mb-4">
+                        <Badge className="bg-orange-500 text-white">
+                          <AlertCircle className="h-3 w-3 mr-1" />
+                          Needs Admin Review
+                        </Badge>
+                      </div>
+                      <div className="grid lg:grid-cols-3 gap-6">
+                        {/* Proposal Info */}
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <Badge variant="outline">
+                              ${proposal.total_fee?.toLocaleString() || '0'} Total
+                            </Badge>
+                            <Badge variant="secondary">
+                              {new Date(proposal.created_at).toLocaleDateString()}
+                            </Badge>
+                          </div>
+                          <h3 className="font-semibold mb-1">{proposal.cases?.title}</h3>
+                          <p className="text-sm text-muted-foreground mb-2">
+                            Case: {proposal.cases?.case_number}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Client: {proposal.cases?.client_name}
+                          </p>
+                        </div>
+
+                        {/* Lawyer Info */}
+                        <div>
+                          <h4 className="font-medium mb-2 text-sm">Lawyer Details</h4>
+                          <div className="space-y-1 text-xs">
+                            <p><span className="font-medium">Name:</span> {proposal.lawyer?.first_name} {proposal.lawyer?.last_name}</p>
+                            <p><span className="font-medium">Firm:</span> {proposal.lawyer?.law_firm || 'N/A'}</p>
+                            <p><span className="font-medium">Experience:</span> {proposal.lawyer?.years_experience || 'N/A'} years</p>
+                            <p><span className="font-medium">Timeline:</span> {proposal.timeline}</p>
+                          </div>
+                        </div>
+
+                        {/* Fee Breakdown */}
+                        <div>
+                          <h4 className="font-medium mb-2 text-sm">Fee Structure</h4>
+                          <div className="space-y-1 text-xs">
+                            <p><span className="font-medium">Consultation:</span> ${proposal.consultation_fee?.toLocaleString() || '0'}</p>
+                            <p><span className="font-medium">Remaining:</span> ${proposal.remaining_fee?.toLocaleString() || '0'}</p>
+                            <p className="font-semibold text-primary">
+                              <span className="font-medium">Total:</span> ${proposal.total_fee?.toLocaleString() || '0'}
+                            </p>
+                          </div>
+                          
+                          <Button 
+                            size="sm" 
+                            className="mt-3 w-full bg-primary hover:bg-primary/90"
+                            onClick={() => handleViewProposal(proposal)}
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            Review Proposal
+                          </Button>
                         </div>
                       </div>
                     </CardContent>
@@ -1583,6 +1733,15 @@ const AdminDashboard = () => {
             </div>
           </DialogContent>
         </Dialog>
+
+        <AdminProposalReviewDialog
+          open={showProposalReview}
+          onOpenChange={setShowProposalReview}
+          proposal={selectedProposal}
+          caseDetails={proposalCaseDetails}
+          lawyerDetails={proposalLawyerDetails}
+          onProposalUpdate={handleProposalUpdate}
+        />
       </div>
     </div>
   );
