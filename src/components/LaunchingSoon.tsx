@@ -17,8 +17,43 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { toast } = useToast();
+
+  // Fallback text in case translations aren't loaded
+  const fallbackText = {
+    comingSoon: "Coming Soon",
+    revolutionizingLegalServices: "Revolutionizing Legal Services",
+    launchingDescription: "We're building Egypt's first AI-powered legal platform to modernize how clients and lawyers connect.",
+    getNotified: "Get Notified",
+    getNotifiedDescription: "Sign up to be the first to know when we launch.",
+    enterYourEmail: "Enter your email",
+    expertLawyers: "Expert Lawyers",
+    expertLawyersDescription: "Connect with top-rated, vetted legal professionals.",
+    multilingualSupport: "Multilingual Support", 
+    multilingualSupportDescription: "Seamless service in Arabic, English, and more.",
+    proBonoServices: "Pro Bono Services",
+    proBonoServicesDescription: "Part of our revenue funds free legal aid for those in need.",
+    givingBackToCommunity: "Giving Back to the Community",
+    proBonoMissionDescription: "We reinvest to make legal services accessible for everyone.",
+    accessPlatform: "Access Platform",
+    thankYou: "Thank You!",
+    emailRegisteredSuccess: "You'll be among the first to know when we launch!",
+    launchingFooterText: "Built with passion for justice and innovation.",
+    emailAlreadyRegistered: "Already Registered",
+    emailAlreadyRegisteredDescription: "This email is already on our waitlist!",
+    emailSignupSuccess: "Welcome to the Waitlist!",
+    emailSignupSuccessDescription: "You'll receive updates about our launch.",
+    emailSignupError: "Registration Error",
+    emailSignupErrorDescription: "Please try again later."
+  };
+
+  // Helper function to get text with fallback
+  const getText = (key: keyof typeof fallbackText) => {
+    const translated = t(key);
+    // If translation key is returned as-is, use fallback
+    return translated === key ? fallbackText[key] : translated;
+  };
   
   const { elementRef: featuresRef, isVisible: featuresVisible } = useIntersectionObserver({ threshold: 0.2 });
   const { elementRef: proBonoRef, isVisible: proBonoVisible } = useIntersectionObserver({ threshold: 0.3 });
@@ -49,8 +84,8 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
       if (error) {
         if (error.code === '23505') { // Unique constraint violation
           toast({
-            title: t('emailAlreadyRegistered'),
-            description: t('emailAlreadyRegisteredDescription'),
+            title: getText('emailAlreadyRegistered'),
+            description: getText('emailAlreadyRegisteredDescription'),
             variant: 'default'
           });
         } else {
@@ -59,16 +94,16 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
       } else {
         setIsSubscribed(true);
         toast({
-          title: t('emailSignupSuccess'),
-          description: t('emailSignupSuccessDescription'),
+          title: getText('emailSignupSuccess'),
+          description: getText('emailSignupSuccessDescription'),
           variant: 'default'
         });
       }
     } catch (error) {
       console.error('Email signup error:', error);
       toast({
-        title: t('emailSignupError'),
-        description: t('emailSignupErrorDescription'),
+        title: getText('emailSignupError'),
+        description: getText('emailSignupErrorDescription'),
         variant: 'destructive'
       });
     } finally {
@@ -93,7 +128,7 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
             onClick={onPasswordAccess}
             className="hidden md:flex neomorphism-button text-white font-medium px-6 py-3"
           >
-            {t('accessPlatform')}
+            {getText('accessPlatform')}
           </Button>
         </div>
       </header>
@@ -103,13 +138,13 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
         <div className="max-w-4xl mx-auto text-center">
           <div className={`transition-all duration-1000 ${isLoaded ? 'animate-hero-fade-in' : 'opacity-0'}`}>
             <h1 className="text-5xl md:text-7xl font-bold font-futura text-gray-900 mb-6 leading-tight">
-              {t('comingSoon')}
+              {getText('comingSoon')}
             </h1>
             <p className="text-xl md:text-2xl font-modern text-gray-700 mb-8 max-w-3xl mx-auto leading-relaxed">
-              {t('revolutionizingLegalServices')}
+              {getText('revolutionizingLegalServices')}
             </p>
             <p className="text-lg font-modern text-gray-600 mb-12 max-w-2xl mx-auto">
-              {t('launchingDescription')}
+              {getText('launchingDescription')}
             </p>
           </div>
 
@@ -120,15 +155,15 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
                 {!isSubscribed ? (
                   <form onSubmit={handleEmailSignup}>
                     <h3 className="text-2xl font-semibold font-futura text-gray-900 mb-4">
-                      {t('getNotified')}
+                      {getText('getNotified')}
                     </h3>
                     <p className="text-gray-600 font-modern mb-6 leading-relaxed">
-                      {t('getNotifiedDescription')}
+                      {getText('getNotifiedDescription')}
                     </p>
                     <div className="space-y-4">
                       <Input
                         type="email"
-                        placeholder={t('enterYourEmail')}
+                        placeholder={getText('enterYourEmail')}
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="w-full neomorphism-input text-gray-700 placeholder:text-gray-500 font-modern"
@@ -147,10 +182,10 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
                   <div className="text-center">
                     <CheckCircle className="w-16 h-16 text-neomorphism-primary mx-auto mb-4 animate-glow-pulse" />
                     <h3 className="text-2xl font-semibold font-futura text-gray-900 mb-4">
-                      {t('thankYou')}
+                      {getText('thankYou')}
                     </h3>
                     <p className="text-gray-600 font-modern leading-relaxed">
-                      {t('emailRegisteredSuccess')}
+                      {getText('emailRegisteredSuccess')}
                     </p>
                   </div>
                 )}
@@ -165,10 +200,10 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
                 <CardContent className="p-8 text-center">
                   <Brain className="w-12 h-12 text-neomorphism-primary mx-auto mb-6 icon-glow" />
                   <h3 className="text-xl font-semibold font-futura text-gray-900 mb-4">
-                    {t('expertLawyers')}
+                    {getText('expertLawyers')}
                   </h3>
                   <p className="text-gray-600 font-modern leading-relaxed">
-                    {t('expertLawyersDescription')}
+                    {getText('expertLawyersDescription')}
                   </p>
                 </CardContent>
               </Card>
@@ -177,10 +212,10 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
                 <CardContent className="p-8 text-center">
                   <Shield className="w-12 h-12 text-neomorphism-primary mx-auto mb-6 icon-glow" />
                   <h3 className="text-xl font-semibold font-futura text-gray-900 mb-4">
-                    {t('multilingualSupport')}
+                    {getText('multilingualSupport')}
                   </h3>
                   <p className="text-gray-600 font-modern leading-relaxed">
-                    {t('multilingualSupportDescription')}
+                    {getText('multilingualSupportDescription')}
                   </p>
                 </CardContent>
               </Card>
@@ -189,10 +224,10 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
                 <CardContent className="p-8 text-center">
                   <DollarSign className="w-12 h-12 text-neomorphism-accent mx-auto mb-6 icon-glow" />
                   <h3 className="text-xl font-semibold font-futura text-gray-900 mb-4">
-                    {t('proBonoServices')}
+                    {getText('proBonoServices')}
                   </h3>
                   <p className="text-gray-600 font-modern leading-relaxed">
-                    {t('proBonoServicesDescription')}
+                    {getText('proBonoServicesDescription')}
                   </p>
                 </CardContent>
               </Card>
@@ -205,10 +240,10 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
               <CardContent className="p-12 text-center">
                 <Heart className="w-16 h-16 text-red-500 mx-auto mb-8 icon-glow animate-gentle-pulse" />
                 <h2 className="text-3xl font-bold font-futura text-gray-900 mb-6">
-                  {t('givingBackToCommunity')}
+                  {getText('givingBackToCommunity')}
                 </h2>
                 <p className="text-lg font-modern text-gray-700 leading-relaxed max-w-2xl mx-auto">
-                  {t('proBonoMissionDescription')}
+                  {getText('proBonoMissionDescription')}
                 </p>
               </CardContent>
             </Card>
@@ -221,7 +256,7 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
               size="lg"
               className="neomorphism-button text-white font-medium px-8 py-4"
             >
-              {t('accessPlatform')}
+              {getText('accessPlatform')}
             </Button>
           </div>
         </div>
@@ -235,7 +270,7 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
               &copy; 2024 LegalPro. Revolutionizing legal services in Egypt.
             </p>
             <p className="text-sm text-gray-500 font-modern mt-2">
-              {t('launchingFooterText')}
+              {getText('launchingFooterText')}
             </p>
           </div>
         </div>
