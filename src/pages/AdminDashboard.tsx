@@ -48,6 +48,7 @@ import { Separator } from "@/components/ui/separator";
 import { LawyerRequestsManager } from "@/components/LawyerRequestsManager";
 import { CaseDetailsDialog } from "@/components/CaseDetailsDialog";
 import { ConversationDialog } from "@/components/ConversationDialog";
+import { AdminAnalytics } from "@/components/AdminAnalytics";
 import { InviteLawyerDialog } from "@/components/InviteLawyerDialog";
 import { LawyerDetailsDialog } from "@/components/LawyerDetailsDialog";
 import { AssignLawyerDialog } from "@/components/AssignLawyerDialog";
@@ -660,6 +661,7 @@ const AdminDashboard = () => {
               <TabsList className="inline-flex w-max min-w-full">
                 <TabsTrigger value="intakes" className="whitespace-nowrap flex-shrink-0">AI Intakes</TabsTrigger>
                 <TabsTrigger value="cases" className="whitespace-nowrap flex-shrink-0">Cases</TabsTrigger>
+                <TabsTrigger value="analytics" className="whitespace-nowrap flex-shrink-0">Analytics</TabsTrigger>
                 <TabsTrigger value="proposals" className="whitespace-nowrap flex-shrink-0">
                   Proposals {allProposals.length > 0 && (
                     <Badge variant="outline" className="ml-1 text-xs">
@@ -922,6 +924,11 @@ const AdminDashboard = () => {
                 })}
               </div>
             )}
+          </TabsContent>
+
+          {/* Analytics Tab */}
+          <TabsContent value="analytics" className="space-y-6">
+            <AdminAnalytics />
           </TabsContent>
 
           {/* Proposals Tab */}

@@ -1298,6 +1298,72 @@ export type Database = {
           },
         ]
       }
+      visitor_analytics: {
+        Row: {
+          browser: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          device_type: string | null
+          first_visit: string
+          id: string
+          ip_info: Json | null
+          is_excluded: boolean
+          last_visit: string
+          page_path: string
+          page_views_count: number
+          referrer_url: string | null
+          region: string | null
+          session_duration: number | null
+          session_id: string
+          updated_at: string
+          user_agent: string | null
+          visitor_hash: string
+        }
+        Insert: {
+          browser?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          device_type?: string | null
+          first_visit?: string
+          id?: string
+          ip_info?: Json | null
+          is_excluded?: boolean
+          last_visit?: string
+          page_path: string
+          page_views_count?: number
+          referrer_url?: string | null
+          region?: string | null
+          session_duration?: number | null
+          session_id?: string
+          updated_at?: string
+          user_agent?: string | null
+          visitor_hash: string
+        }
+        Update: {
+          browser?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          device_type?: string | null
+          first_visit?: string
+          id?: string
+          ip_info?: Json | null
+          is_excluded?: boolean
+          last_visit?: string
+          page_path?: string
+          page_views_count?: number
+          referrer_url?: string | null
+          region?: string | null
+          session_duration?: number | null
+          session_id?: string
+          updated_at?: string
+          user_agent?: string | null
+          visitor_hash?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
