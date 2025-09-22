@@ -996,7 +996,15 @@ export type Database = {
           updated_at?: string
           viewed_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_proposals_case_id"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       session_participants: {
         Row: {
