@@ -56,6 +56,7 @@ interface CaseCompletionStatus {
 export function getCaseCompletionStatus(caseItem: any): CaseCompletionStatus {
   const step = caseItem.step || 1;
   const status = caseItem.status;
+  const consultationPaid = caseItem.consultation_paid;
   
   // Define statuses that indicate completion beyond intake
   const advancedStatuses = [
@@ -72,9 +73,11 @@ export function getCaseCompletionStatus(caseItem: any): CaseCompletionStatus {
   const isComplete = advancedStatuses.includes(status) || (status === 'submitted' && step >= 4);
   
   if (isComplete) {
-    // Provide more specific labels based on status
+    // Provide more specific labels based on status and payment
     let label = '✓ Complete & Ready for Review';
     let stepProgress = 'Submitted for Review';
+    let variant: 'default' | 'secondary' | 'destructive' | 'outline' = 'default';
+    let className = 'bg-green-100 text-green-800 hover:bg-green-100 border-green-300';
     
     if (status === 'lawyer_assigned') {
       label = '✓ Complete - Lawyer Assigned';
@@ -83,8 +86,15 @@ export function getCaseCompletionStatus(caseItem: any): CaseCompletionStatus {
       label = '✓ Complete - Proposal Sent';
       stepProgress = 'Client Review Pending';
     } else if (status === 'proposal_accepted') {
-      label = '✓ Complete - Proposal Accepted';
-      stepProgress = 'Case in Progress';
+      if (consultationPaid === false) {
+        label = '✓ Complete - Awaiting Payment';
+        stepProgress = 'Payment Required to Proceed';
+        variant = 'secondary';
+        className = 'bg-orange-100 text-orange-800 hover:bg-orange-100 border-orange-300';
+      } else {
+        label = '✓ Complete - Proposal Accepted';
+        stepProgress = 'Case in Progress';
+      }
     } else if (status === 'in_progress') {
       label = '✓ Complete - Active Case';
       stepProgress = 'Work in Progress';
@@ -97,8 +107,8 @@ export function getCaseCompletionStatus(caseItem: any): CaseCompletionStatus {
       isComplete: true,
       label,
       stepProgress,
-      variant: 'default',
-      className: 'bg-green-100 text-green-800 hover:bg-green-100 border-green-300'
+      variant,
+      className
     };
   }
   
@@ -115,12 +125,21 @@ export function getCaseCompletionStatus(caseItem: any): CaseCompletionStatus {
   };
 }
 
-export function formatCaseStatus(status: string): string {
+export function formatCaseStatus(status: string, consultationPaid?: boolean, paymentStatus?: string): string {
+  // Handle proposal_accepted with pending payment
+  if (status === 'proposal_accepted' && consultationPaid === false) {
+    return 'Awaiting Payment';
+  }
+
   switch (status) {
     case 'submitted':
       return 'Under Review';
     case 'lawyer_assigned':
       return 'Awaiting Proposal';
+    case 'proposal_sent':
+      return 'Proposal Sent';
+    case 'proposal_accepted':
+      return 'Proposal Accepted';
     case 'intake':
       return 'In Progress';
     case 'in_progress':

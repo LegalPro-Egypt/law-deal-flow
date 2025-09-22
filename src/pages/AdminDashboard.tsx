@@ -859,7 +859,7 @@ const AdminDashboard = () => {
                           <h4 className="font-medium mb-2 text-sm">Case Details</h4>
                           <div className="space-y-1 text-xs">
                             <p><span className="font-medium">Category:</span> {caseItem.category}</p>
-                            <p><span className="font-medium">Status:</span> {formatCaseStatus(caseItem.status)}</p>
+                            <p><span className="font-medium">Status:</span> {formatCaseStatus(caseItem.status, (caseItem as any).consultation_paid, (caseItem as any).payment_status)}</p>
                             <p><span className="font-medium">Progress:</span> Step {caseItem.step || 1}/4</p>
                             <p><span className="font-medium">Email:</span> {caseItem.client_email}</p>
                           </div>

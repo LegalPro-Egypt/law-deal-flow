@@ -32,6 +32,8 @@
         "intake": "استقبال",
         "lawyer_assigned": "في انتظار العرض",
         "proposal_sent": "تم إرسال العرض",
+        "proposal_accepted": "تم قبول العرض",
+        "awaiting_payment": "في انتظار الدفع",
         "accepted": "مقبولة",
         "in_progress": "قيد التنفيذ",
         "completed": "مكتملة",

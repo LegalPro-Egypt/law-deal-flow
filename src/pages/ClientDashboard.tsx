@@ -134,7 +134,7 @@ const ClientDashboard = () => {
       pdf.text(`Case Number: ${activeCase.case_number}`, 20, 40);
       pdf.text(`Title: ${activeCase.title}`, 20, 50);
       pdf.text(`Category: ${activeCase.category}`, 20, 60);
-      pdf.text(`Status: ${formatCaseStatus(activeCase.status)}`, 20, 70);
+      pdf.text(`Status: ${formatCaseStatus(activeCase.status, activeCase.consultation_paid, activeCase.payment_status)}`, 20, 70);
       pdf.text(`Created: ${formatDate(activeCase.created_at)}`, 20, 80);
       
       // Client Information
@@ -424,7 +424,7 @@ const ClientDashboard = () => {
             <div className="flex items-center space-x-2 mt-4 lg:mt-0">
               <div className={`w-3 h-3 rounded-full ${getStatusColor(activeCase.status)}`} />
               <span className="font-medium capitalize">
-                {formatCaseStatus(activeCase.status)}
+                {formatCaseStatus(activeCase.status, activeCase.consultation_paid, activeCase.payment_status)}
               </span>
             </div>
           </div>
@@ -496,7 +496,7 @@ const ClientDashboard = () => {
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
                           <span className="font-medium">
-                            Current Status: {formatCaseStatus(activeCase.status)}
+                            Current Status: {formatCaseStatus(activeCase.status, activeCase.consultation_paid, activeCase.payment_status)}
                           </span>
                           <span className="text-sm text-muted-foreground">{formatDate(activeCase.updated_at)}</span>
                         </div>

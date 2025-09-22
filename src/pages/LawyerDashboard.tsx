@@ -143,10 +143,21 @@ const LawyerDashboard = () => {
 
   const getStatusVariant = (status: string) => {
     switch (status) {
-      case 'active': return 'default';
-      case 'completed': return 'secondary';
-      case 'pending': return 'outline';
-      default: return 'outline';
+      case 'active': 
+      case 'in_progress': 
+        return 'default';
+      case 'completed': 
+        return 'secondary';
+      case 'proposal_accepted':
+        return 'default';
+      case 'proposal_sent':
+        return 'secondary';
+      case 'lawyer_assigned':
+        return 'outline';
+      case 'pending': 
+        return 'outline';
+      default: 
+        return 'outline';
     }
   };
 
@@ -455,9 +466,12 @@ const LawyerDashboard = () => {
                            <Badge variant="outline" className="font-mono text-xs">
                              {caseItem.case_number}
                            </Badge>
-                           <Badge variant={getStatusVariant(caseItem.status)}>
-                             {t(`dashboard.cases.status.${caseItem.status}`)}
-                           </Badge>
+                            <Badge variant={getStatusVariant(caseItem.status)}>
+                              {caseItem.status === 'proposal_accepted' && caseItem.consultation_paid === false 
+                                ? (isRTL() ? 'في انتظار الدفع' : 'Awaiting Payment')
+                                : t(`dashboard.cases.status.${caseItem.status}`)
+                              }
+                            </Badge>
                            <Badge variant={getUrgencyVariant(caseItem.urgency)}>
                              {t(`dashboard.cases.urgency.${caseItem.urgency}`)} {isRTL() ? 'أولوية' : 'Priority'}
                            </Badge>

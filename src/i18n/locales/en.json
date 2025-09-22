@@ -32,6 +32,8 @@
         "intake": "Intake",
         "lawyer_assigned": "Awaiting Proposal",
         "proposal_sent": "Proposal Sent",
+        "proposal_accepted": "Proposal Accepted",
+        "awaiting_payment": "Awaiting Payment",
         "accepted": "Accepted",
         "in_progress": "In Progress",
         "completed": "Completed",
