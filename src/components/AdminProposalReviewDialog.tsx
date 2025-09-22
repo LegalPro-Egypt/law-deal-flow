@@ -68,6 +68,12 @@ export const AdminProposalReviewDialog = ({
   }
 
   const handleApproveProposal = async () => {
+    // Prevent multiple approvals of the same proposal
+    if (proposal.status === 'sent') {
+      toast.error('This proposal has already been approved');
+      return;
+    }
+
     setLoading(true);
     try {
       // Get current user ID first
@@ -99,6 +105,17 @@ export const AdminProposalReviewDialog = ({
         .eq('id', proposal.case_id);
 
       if (caseError) throw caseError;
+
+      // Clean up any existing proposal notifications for this case to prevent duplicates
+      const { error: cleanupError } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('case_id', proposal.case_id)
+        .in('type', ['proposal_received', 'proposal_approved']);
+
+      if (cleanupError) {
+        console.warn('Failed to clean up existing notifications:', cleanupError);
+      }
 
       // Create notification for client
       const { error: clientNotificationError } = await supabase
