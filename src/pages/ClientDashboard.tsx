@@ -439,7 +439,7 @@ const ClientDashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="flex w-full overflow-x-auto scrollbar-hide md:grid md:grid-cols-5 gap-1 px-2">
+          <TabsList className="flex w-full overflow-x-auto scrollbar-hide md:grid md:grid-cols-5 gap-1 pl-6 pr-2">
             <TabsTrigger value="overview" className="flex-shrink-0 min-w-fit px-4">Overview</TabsTrigger>
             <TabsTrigger value="inbox" className="flex-shrink-0 min-w-fit px-4">Inbox</TabsTrigger>
             <TabsTrigger value="details" className="flex-shrink-0 min-w-fit px-4">Personal Details</TabsTrigger>
