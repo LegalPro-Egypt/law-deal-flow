@@ -47,24 +47,35 @@ export const NotificationsInbox = () => {
     fetchProposals();
     
     // Set up real-time subscription for notifications
-    const channel = supabase
-      .channel('notifications-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${supabase.auth.getUser().then(u => u.data.user?.id)}`
-        },
-        () => {
-          fetchNotifications();
-        }
-      )
-      .subscribe();
+    let channel: any = null;
+    
+    const setupRealtimeSubscription = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      channel = supabase
+        .channel('notifications-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${user.id}`
+          },
+          () => {
+            fetchNotifications();
+          }
+        )
+        .subscribe();
+    };
+
+    setupRealtimeSubscription();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     };
   }, []);
 
