@@ -283,7 +283,7 @@ const AdminDashboard = () => {
         .from('notifications')
         .delete()
         .eq('case_id', proposal.case_id)
-        .in('type', ['proposal_sent', 'proposal_approved', 'proposal_rejected']);
+        .in('type', ['proposal_sent', 'proposal_received', 'proposal_approved', 'proposal_rejected']);
 
       if (notificationError) {
         console.warn('Failed to clean up notifications:', notificationError);

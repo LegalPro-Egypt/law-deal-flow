@@ -957,6 +957,7 @@ export type Database = {
           strategy: string | null
           timeline: string | null
           total_fee: number | null
+          updated_at: string
           viewed_at: string | null
         }
         Insert: {
@@ -974,6 +975,7 @@ export type Database = {
           strategy?: string | null
           timeline?: string | null
           total_fee?: number | null
+          updated_at?: string
           viewed_at?: string | null
         }
         Update: {
@@ -991,6 +993,7 @@ export type Database = {
           strategy?: string | null
           timeline?: string | null
           total_fee?: number | null
+          updated_at?: string
           viewed_at?: string | null
         }
         Relationships: []
