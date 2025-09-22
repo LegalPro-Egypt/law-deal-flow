@@ -11,9 +11,10 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FileText, Clock, DollarSign, Scale, CheckCircle, XCircle } from "lucide-react";
+import { FileText, Clock, DollarSign, CheckCircle, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/hooks/useLanguage";
+import { Link } from "react-router-dom";
 
 interface Proposal {
   id: string;
@@ -207,7 +208,7 @@ export const ProposalReviewDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-full md:max-w-4xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
@@ -226,7 +227,7 @@ export const ProposalReviewDialog = ({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="text-center p-4 bg-primary/5 rounded-lg">
                   <div className="font-semibold text-lg">
                     ${proposal.consultation_fee?.toLocaleString() || '0'}
@@ -268,18 +269,6 @@ export const ProposalReviewDialog = ({
             </CardContent>
           </Card>
 
-          {/* Strategy */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Scale className="h-4 w-4" />
-                {currentLanguage === 'ar' ? 'الاستراتيجية القانونية' : 'Legal Strategy'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="whitespace-pre-wrap">{proposal.strategy}</p>
-            </CardContent>
-          </Card>
 
           {/* Full Proposal Content */}
           <Card>
@@ -320,8 +309,32 @@ export const ProposalReviewDialog = ({
                       className="text-sm leading-relaxed cursor-pointer"
                     >
                       {currentLanguage === 'ar' 
-                        ? 'أوافق على شروط وأحكام الخدمة وأفهم أن قبول هذا العرض يُشكل اتفاقية ملزمة قانونياً بيني وبين المحامي المذكور.'
-                        : 'I agree to the terms and conditions of service and understand that accepting this proposal constitutes a legally binding agreement between myself and the mentioned lawyer.'
+                        ? (
+                          <>
+                            أوافق على{' '}
+                            <Link 
+                              to="/terms-of-service" 
+                              className="text-primary hover:underline font-medium"
+                              target="_blank"
+                            >
+                              شروط وأحكام الخدمة
+                            </Link>
+                            {' '}وأفهم أن قبول هذا العرض يُشكل اتفاقية ملزمة قانونياً بيني وبين المحامي المذكور.
+                          </>
+                        )
+                        : (
+                          <>
+                            I agree to the{' '}
+                            <Link 
+                              to="/terms-of-service" 
+                              className="text-primary hover:underline font-medium"
+                              target="_blank"
+                            >
+                              terms and conditions
+                            </Link>
+                            {' '}of service and understand that accepting this proposal constitutes a legally binding agreement between myself and the mentioned lawyer.
+                          </>
+                        )
                       }
                     </label>
                   </div>
