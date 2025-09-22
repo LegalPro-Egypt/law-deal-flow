@@ -1,8 +1,9 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Bell, MessageSquare, FileText, CheckCircle, Clock } from "lucide-react";
+import { Bell, MessageSquare, FileText, CheckCircle, Clock, CreditCard } from "lucide-react";
 import { ProposalReviewDialog } from "@/components/ProposalReviewDialog";
 import { useNotifications, type Notification, type Proposal } from "@/hooks/useNotifications";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -10,13 +11,16 @@ import { useLanguage } from "@/hooks/useLanguage";
 export const NotificationsInbox = () => {
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
   const { currentLanguage } = useLanguage();
+  const navigate = useNavigate();
   const { 
     notifications, 
     proposals, 
+    proposalsWithCases,
     loading, 
     unreadCount,
     markAsRead, 
-    handleViewProposal: updateProposalStatus 
+    handleViewProposal: updateProposalStatus,
+    needsPayment
   } = useNotifications();
 
   const handleViewProposal = async (proposalId: string) => {
@@ -24,6 +28,22 @@ export const NotificationsInbox = () => {
     const proposal = proposals.find(p => p.id === proposalId);
     if (proposal) {
       setSelectedProposal(proposal);
+    }
+  };
+
+  const handleCompletePayment = (proposalId: string) => {
+    const proposalWithCase = proposalsWithCases.find(p => p.id === proposalId);
+    if (proposalWithCase && proposalWithCase.case) {
+      navigate('/payment', {
+        state: {
+          caseId: proposalWithCase.case.id,
+          proposalId: proposalWithCase.id,
+          consultationFee: proposalWithCase.consultation_fee,
+          totalFee: proposalWithCase.total_fee,
+          lawyerName: proposalWithCase.case.assigned_lawyer_name || 'Your Lawyer',
+          caseTitle: proposalWithCase.case.title
+        }
+      });
     }
   };
 
@@ -124,6 +144,22 @@ export const NotificationsInbox = () => {
                             {currentLanguage === 'ar' ? 'مراجعة العرض' : 'View Proposal'}
                           </Button>
                         )}
+                        
+                        {(() => {
+                          const proposalId = (notification as any).metadata?.proposal_id;
+                          const proposalWithCase = proposalsWithCases.find(p => p.id === proposalId);
+                          return proposalWithCase && needsPayment(proposalWithCase) && (
+                            <Button
+                              size="sm"
+                              variant="default"
+                              className="bg-primary hover:bg-primary/90"
+                              onClick={() => handleCompletePayment(proposalId)}
+                            >
+                              <CreditCard className="h-4 w-4 mr-2" />
+                              {currentLanguage === 'ar' ? 'إكمال الدفع' : 'Complete Payment'}
+                            </Button>
+                          );
+                        })()}
                         
                       </div>
                     </div>

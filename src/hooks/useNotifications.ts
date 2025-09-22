@@ -30,6 +30,7 @@ export interface Proposal {
 export const useNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [proposals, setProposals] = useState<Proposal[]>([]);
+  const [proposalsWithCases, setProposalsWithCases] = useState<(Proposal & { case: any })[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
@@ -61,12 +62,16 @@ export const useNotifications = () => {
     try {
       const { data, error } = await supabase
         .from('proposals')
-        .select('*')
+        .select(`
+          *,
+          case:cases(*)
+        `)
         .in('status', ['approved', 'sent', 'viewed', 'accepted', 'rejected'])
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       setProposals(data || []);
+      setProposalsWithCases(data || []);
     } catch (error) {
       console.error('Error fetching proposals:', error);
       toast({
@@ -173,14 +178,22 @@ export const useNotifications = () => {
     };
   }, [user]);
 
+  const needsPayment = (proposal: Proposal & { case: any }) => {
+    return proposal.status === 'accepted' && 
+           proposal.case && 
+           !proposal.case.consultation_paid;
+  };
+
   return {
     notifications,
     proposals,
+    proposalsWithCases,
     loading,
     unreadCount,
     markAsRead,
     handleViewProposal,
     fetchNotifications,
-    fetchProposals
+    fetchProposals,
+    needsPayment
   };
 };
