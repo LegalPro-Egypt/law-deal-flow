@@ -208,16 +208,18 @@ export const ProposalReviewDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-full md:max-w-4xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
+      <DialogContent className="w-[95vw] max-w-2xl lg:max-w-4xl max-h-[90vh] overflow-y-auto overflow-x-hidden p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            {currentLanguage === 'ar' ? 'مراجعة العرض القانوني' : 'Legal Proposal Review'}
+          <DialogTitle className="flex items-center gap-2 text-left rtl:text-right break-words">
+            <FileText className="h-5 w-5 flex-shrink-0" />
+            <span className="flex-1 min-w-0">
+              {currentLanguage === 'ar' ? 'مراجعة العرض القانوني' : 'Legal Proposal Review'}
+            </span>
             {getStatusBadge(proposal.status)}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Fee Structure */}
           <Card>
             <CardHeader>
@@ -227,28 +229,28 @@ export const ProposalReviewDialog = ({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="text-center p-4 bg-primary/5 rounded-lg">
-                  <div className="font-semibold text-lg">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                <div className="text-center p-3 sm:p-4 bg-primary/5 rounded-lg min-w-0">
+                  <div className="font-semibold text-base sm:text-lg break-words">
                     ${proposal.consultation_fee?.toLocaleString() || '0'}
                   </div>
-                  <div className="text-sm text-muted-foreground">
+                  <div className="text-xs sm:text-sm text-muted-foreground break-words">
                     {currentLanguage === 'ar' ? 'رسوم الاستشارة' : 'Consultation Fee'}
                   </div>
                 </div>
-                <div className="text-center p-4 bg-secondary/5 rounded-lg">
-                  <div className="font-semibold text-lg">
+                <div className="text-center p-3 sm:p-4 bg-secondary/5 rounded-lg min-w-0">
+                  <div className="font-semibold text-base sm:text-lg break-words">
                     ${proposal.remaining_fee?.toLocaleString() || '0'}
                   </div>
-                  <div className="text-sm text-muted-foreground">
+                  <div className="text-xs sm:text-sm text-muted-foreground break-words">
                     {currentLanguage === 'ar' ? 'الرسوم المتبقية' : 'Remaining Fee'}
                   </div>
                 </div>
-                <div className="text-center p-4 bg-accent/5 rounded-lg">
-                  <div className="font-semibold text-lg text-primary">
+                <div className="text-center p-3 sm:p-4 bg-accent/5 rounded-lg min-w-0 sm:col-span-2 lg:col-span-1">
+                  <div className="font-semibold text-base sm:text-lg text-primary break-words">
                     ${proposal.total_fee?.toLocaleString() || '0'}
                   </div>
-                  <div className="text-sm text-muted-foreground">
+                  <div className="text-xs sm:text-sm text-muted-foreground break-words">
                     {currentLanguage === 'ar' ? 'إجمالي الرسوم' : 'Total Fee'}
                   </div>
                 </div>
@@ -265,7 +267,7 @@ export const ProposalReviewDialog = ({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="whitespace-pre-wrap">{proposal.timeline}</p>
+              <p className="break-words overflow-wrap-anywhere hyphens-auto text-sm sm:text-base leading-relaxed whitespace-pre-wrap">{proposal.timeline}</p>
             </CardContent>
           </Card>
 
@@ -279,7 +281,7 @@ export const ProposalReviewDialog = ({
             </CardHeader>
             <CardContent>
               <div className="prose max-w-none">
-                <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                <div className="break-words overflow-wrap-anywhere hyphens-auto text-sm sm:text-base leading-relaxed whitespace-pre-wrap">
                   {proposal.generated_content}
                 </div>
               </div>
@@ -298,15 +300,16 @@ export const ProposalReviewDialog = ({
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-start space-x-2">
+                  <div className="flex items-start gap-2 rtl:gap-2 rtl:flex-row-reverse">
                     <Checkbox
                       id="terms"
                       checked={acceptedTerms}
                       onCheckedChange={(checked) => setAcceptedTerms(!!checked)}
+                      className="mt-1 flex-shrink-0"
                     />
                     <label
                       htmlFor="terms"
-                      className="text-sm leading-relaxed cursor-pointer"
+                      className="text-xs sm:text-sm leading-relaxed cursor-pointer break-words overflow-wrap-anywhere flex-1 min-w-0"
                     >
                       {currentLanguage === 'ar' 
                         ? (
@@ -314,7 +317,7 @@ export const ProposalReviewDialog = ({
                             أوافق على{' '}
                             <Link 
                               to="/terms-of-service" 
-                              className="text-primary hover:underline font-medium"
+                              className="text-primary hover:underline font-medium break-words"
                               target="_blank"
                             >
                               شروط وأحكام الخدمة
@@ -327,7 +330,7 @@ export const ProposalReviewDialog = ({
                             I agree to the{' '}
                             <Link 
                               to="/terms-of-service" 
-                              className="text-primary hover:underline font-medium"
+                              className="text-primary hover:underline font-medium break-words"
                               target="_blank"
                             >
                               terms and conditions
@@ -339,26 +342,30 @@ export const ProposalReviewDialog = ({
                     </label>
                   </div>
                   
-                  <div className="flex gap-4">
+                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                     <Button
                       onClick={handleAcceptProposal}
                       disabled={loading || !acceptedTerms}
-                      className="flex-1"
+                      className="flex-1 min-w-0"
                       size="lg"
                     >
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      {currentLanguage === 'ar' ? 'قبول العرض' : 'Accept Proposal'}
+                      <CheckCircle className="h-4 w-4 ltr:mr-2 rtl:ml-2 flex-shrink-0" />
+                      <span className="truncate">
+                        {currentLanguage === 'ar' ? 'قبول العرض' : 'Accept Proposal'}
+                      </span>
                     </Button>
                     
                     <Button
                       onClick={handleRejectProposal}
                       disabled={loading}
                       variant="destructive"
-                      className="flex-1"
+                      className="flex-1 min-w-0"
                       size="lg"
                     >
-                      <XCircle className="h-4 w-4 mr-2" />
-                      {currentLanguage === 'ar' ? 'رفض العرض' : 'Reject Proposal'}
+                      <XCircle className="h-4 w-4 ltr:mr-2 rtl:ml-2 flex-shrink-0" />
+                      <span className="truncate">
+                        {currentLanguage === 'ar' ? 'رفض العرض' : 'Reject Proposal'}
+                      </span>
                     </Button>
                   </div>
                 </CardContent>
