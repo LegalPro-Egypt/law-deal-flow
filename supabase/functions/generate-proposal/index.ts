@@ -92,7 +92,7 @@ serve(async (req) => {
       
       caseData.assigned_lawyer_id ? supabase
         .from('profiles')
-        .select('first_name, last_name, law_firm, office_address, phone, office_phone, email, license_number, specializations, years_experience')
+        .select('first_name, last_name, law_firm, specializations, years_experience')
         .eq('user_id', caseData.assigned_lawyer_id)
         .single() : { data: null, error: null }
     ]);
@@ -132,14 +132,16 @@ serve(async (req) => {
       years_experience: lawyerResult.data.years_experience
     } : null;
 
-    const systemPrompt = `Create a bilingual legal proposal (English first, then Arabic) with sections: Executive Summary, Legal Analysis, Scope of Work, Timeline, Fee Structure, Terms, Next Steps, Attorney Contact.
+    const systemPrompt = `Create a bilingual legal proposal (English first, then Arabic) with sections: Executive Summary, Legal Analysis, Scope of Work, Timeline, Fee Structure, Terms, Next Steps.
 
 REQUIREMENTS:
 - Use "=== ENGLISH VERSION ===" and "=== النسخة العربية ==="
 - Timeline: numbered lists only, no tables
 - Payment: LegalPro platform only
 - Include disclaimers: "LegalPro is not liable for lawyer's work", "Contract between lawyer and client only", "Payments through LegalPro platform only"
-- Use real lawyer data: ${lawyerInfo ? `${lawyerInfo.name}${lawyerInfo.law_firm ? `, ${lawyerInfo.law_firm}` : ''}` : 'TBD'}
+- DO NOT include any contact information (phone, email, address) - all communication must go through the LegalPro platform
+- Attorney identification: ${lawyerInfo ? `${lawyerInfo.name}${lawyerInfo.law_firm ? `, ${lawyerInfo.law_firm}` : ''}` : 'TBD'}
+- Emphasize that all communication and coordination will be handled through the secure LegalPro platform
 
 Case: ${caseData.title} (${caseData.category})
 Details: ${caseData.description}
