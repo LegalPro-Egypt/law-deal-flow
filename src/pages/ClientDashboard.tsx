@@ -60,7 +60,9 @@ const ClientDashboard = () => {
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !activeCase) return;
 
-    await sendMessage(newMessage, activeCase.id);
+    // Get conversation ID for this case
+    const conversationId = `conv_${activeCase.id}`;
+    await sendMessage(newMessage, conversationId);
     setNewMessage("");
   };
 
@@ -663,45 +665,22 @@ const ClientDashboard = () => {
               </CardHeader>
               <CardContent>
                 {/* Messages */}
-                 <div className="h-96 border rounded-lg p-4 overflow-y-auto mb-4 bg-background space-y-4">
-                   {messages.length > 0 ? messages.map((msg, index) => (
-                     <div key={index} className={`flex ${msg.sender === 'client' ? 'justify-end' : 'justify-start'}`}>
-                       <div className={`max-w-[70%] ${
-                         msg.sender === 'client' 
-                           ? 'bg-primary text-primary-foreground' 
-                           : msg.message_type === 'proposal'
-                           ? 'bg-accent text-accent-foreground border-2 border-primary'
-                           : 'bg-muted'
-                       } rounded-lg p-3`}>
-                         <div className="flex items-center justify-between mb-1">
-                           <span className="text-sm font-medium">
-                             {msg.name}
-                             {msg.message_type === 'proposal' && (
-                               <Badge variant="secondary" className="ml-2 text-xs">
-                                 Legal Proposal
-                               </Badge>
-                             )}
-                           </span>
-                           <span className="text-xs opacity-70">{msg.time}</span>
-                         </div>
-                         <div className={`text-sm ${msg.message_type === 'proposal' ? 'whitespace-pre-wrap font-mono' : ''}`}>
-                           {msg.content}
-                         </div>
-                         {msg.message_type === 'proposal' && (
-                           <div className="mt-3 pt-3 border-t border-primary/20">
-                             <div className="flex gap-2 text-xs">
-                               <Button size="sm" className="bg-success hover:bg-success/90">
-                                 Accept Proposal
-                               </Button>
-                               <Button size="sm" variant="outline">
-                                 Request Changes
-                               </Button>
-                             </div>
-                           </div>
-                         )}
-                       </div>
-                     </div>
-                   )) : (
+                <div className="h-96 border rounded-lg p-4 overflow-y-auto mb-4 bg-background space-y-4">
+                  {messages.length > 0 ? messages.map((msg, index) => (
+                    <div key={index} className={`flex ${msg.sender === 'client' ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[70%] ${
+                        msg.sender === 'client' 
+                          ? 'bg-primary text-primary-foreground' 
+                          : 'bg-muted'
+                      } rounded-lg p-3`}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm font-medium">{msg.name}</span>
+                          <span className="text-xs opacity-70">{msg.time}</span>
+                        </div>
+                        <p className="text-sm">{msg.content}</p>
+                      </div>
+                    </div>
+                  )) : (
                     <div className="text-center text-muted-foreground py-8">
                       <MessageSquare className="h-8 w-8 mx-auto mb-2" />
                       <p>No messages yet. Start a conversation with your lawyer.</p>

@@ -39,9 +39,7 @@ interface ClientMessage {
   content: string;
   role: string;
   created_at: string;
-  case_id: string;
-  message_type: string;
-  metadata?: any;
+  conversation_id: string;
   sender?: 'user' | 'lawyer' | 'client';
   name?: string;
   time?: string;
@@ -122,10 +120,20 @@ export const useClientData = () => {
     if (!user || !caseId) return;
     
     try {
-      const { data, error } = await supabase
-        .from('case_messages')
-        .select('*')
+      // First get the conversation for this case
+      const { data: conversations, error: convError } = await supabase
+        .from('conversations')
+        .select('id')
         .eq('case_id', caseId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (convError || !conversations) return;
+
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('conversation_id', conversations.id)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
@@ -160,23 +168,24 @@ export const useClientData = () => {
     }
   };
 
-  const sendMessage = async (content: string, caseId: string) => {
-    if (!user || !activeCase) return;
+  const sendMessage = async (content: string, conversationId: string) => {
+    if (!user) return;
 
     try {
       const { error } = await supabase
-        .from('case_messages')
+        .from('messages')
         .insert({
-          case_id: caseId,
+          conversation_id: conversationId,
           role: 'user',
           content,
-          message_type: 'text'
         });
 
       if (error) throw error;
       
       // Refresh messages
-      await fetchMessages(activeCase.id);
+      if (activeCase) {
+        await fetchMessages(activeCase.id);
+      }
       
       toast({
         title: "Message sent",
@@ -231,8 +240,7 @@ export const useClientData = () => {
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'case_messages',
-          filter: `case_id=eq.${activeCase.id}`
+          table: 'messages'
         },
         () => {
           fetchMessages(activeCase.id);

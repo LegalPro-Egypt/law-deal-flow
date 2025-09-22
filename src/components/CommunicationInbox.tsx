@@ -33,8 +33,8 @@ export const CommunicationInbox: React.FC<CommunicationInboxProps> = ({
       // Lawyers can communicate once proposal is accepted
       return ['proposal_accepted', 'consultation_paid', 'active', 'in_progress', 'completed'].includes(caseStatus);
     } else {
-      // Clients can communicate once they've paid for consultation, OR when proposal is sent (for viewing only)
-      return (consultationPaid && paymentStatus === 'paid') || caseStatus === 'proposal_sent';
+      // Clients can communicate once they've paid for consultation
+      return consultationPaid && paymentStatus === 'paid';
     }
   };
 
