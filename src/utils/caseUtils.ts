@@ -57,14 +57,46 @@ export function getCaseCompletionStatus(caseItem: any): CaseCompletionStatus {
   const step = caseItem.step || 1;
   const status = caseItem.status;
   
-  // A case is complete if it has reached step 4 (all intake steps) AND has been submitted
-  const isComplete = step >= 4 && status === 'submitted';
+  // Define statuses that indicate completion beyond intake
+  const advancedStatuses = [
+    'lawyer_assigned', 
+    'in_progress', 
+    'proposal_sent', 
+    'proposal_accepted', 
+    'proposal_reviewed',
+    'completed', 
+    'closed'
+  ];
+  
+  // Case is complete if it has an advanced status OR if it's submitted with full intake
+  const isComplete = advancedStatuses.includes(status) || (status === 'submitted' && step >= 4);
   
   if (isComplete) {
+    // Provide more specific labels based on status
+    let label = '✓ Complete & Ready for Review';
+    let stepProgress = 'Submitted for Review';
+    
+    if (status === 'lawyer_assigned') {
+      label = '✓ Complete - Lawyer Assigned';
+      stepProgress = 'Awaiting Proposal';
+    } else if (status === 'proposal_sent') {
+      label = '✓ Complete - Proposal Sent';
+      stepProgress = 'Client Review Pending';
+    } else if (status === 'proposal_accepted') {
+      label = '✓ Complete - Proposal Accepted';
+      stepProgress = 'Case in Progress';
+    } else if (status === 'in_progress') {
+      label = '✓ Complete - Active Case';
+      stepProgress = 'Work in Progress';
+    } else if (status === 'completed') {
+      label = '✓ Complete - Case Closed';
+      stepProgress = 'Successfully Completed';
+    }
+    
     return {
       isComplete: true,
-      label: '✓ Complete & Ready for Review',
-      stepProgress: 'Submitted for Review',
+      label,
+      stepProgress,
       variant: 'default',
       className: 'bg-green-100 text-green-800 hover:bg-green-100 border-green-300'
     };
