@@ -394,11 +394,11 @@ export const AdminProposalReviewDialog = ({
                 />
               </div>
               
-              <div className="flex gap-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <Button
                   onClick={handleApproveProposal}
                   disabled={loading}
-                  className="flex-1 bg-success hover:bg-success/90"
+                  className="w-full sm:flex-1 bg-success hover:bg-success/90"
                   size="lg"
                 >
                   <CheckCircle className="h-4 w-4 mr-2" />
@@ -409,7 +409,7 @@ export const AdminProposalReviewDialog = ({
                   onClick={handleRejectProposal}
                   disabled={loading || !adminNotes.trim()}
                   variant="destructive"
-                  className="flex-1"
+                  className="w-full sm:flex-1"
                   size="lg"
                 >
                   <XCircle className="h-4 w-4 mr-2" />
@@ -420,7 +420,7 @@ export const AdminProposalReviewDialog = ({
                   onClick={() => setShowDeleteConfirm(true)}
                   disabled={loading}
                   variant="outline"
-                  className="border-destructive text-destructive hover:bg-destructive hover:text-white"
+                  className="w-full sm:w-auto border-destructive text-destructive hover:bg-destructive hover:text-white"
                   size="lg"
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
