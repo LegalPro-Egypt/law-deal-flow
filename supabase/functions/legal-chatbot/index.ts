@@ -147,7 +147,24 @@ serve(async (req) => {
           extractedData = JSON.parse(functionCall.arguments);
           console.log('Extracted case data:', extractedData);
 
-          // Create or update draft case when AI extracts data
+          // Validate jurisdiction before creating/updating case
+          const isEgyptCase = validateJurisdiction(extractedData);
+          
+          if (!isEgyptCase) {
+            console.log('Case rejected - not in Egypt jurisdiction:', extractedData.entities?.location);
+            // Don't create case, but still save the conversation for tracking
+            return new Response(
+              JSON.stringify({ 
+                response: getJurisdictionDeclineMessage(language),
+                extractedData: undefined,
+                conversation_id: conversation_id,
+                jurisdictionRejected: true
+              }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+
+          // Create or update draft case when AI extracts data (only for Egypt cases)
           if (conversation_id && extractedData) {
             try {
               // Get conversation to check if it already has a case linked
@@ -185,6 +202,8 @@ serve(async (req) => {
                     .from('conversations')
                     .update({ case_id: caseId })
                     .eq('id', conversation_id);
+                  
+                  console.log('Created new Egypt case:', caseId);
                 }
               } else if (caseId) {
                 // Update existing draft case
@@ -197,6 +216,8 @@ serve(async (req) => {
                     description: extractedData.summary || 'Updated from AI conversation'
                   })
                   .eq('id', caseId);
+                
+                console.log('Updated existing Egypt case:', caseId);
               }
             } catch (error) {
               console.error('Error handling draft case:', error);
@@ -342,14 +363,21 @@ function buildQASystemPrompt(language: string): string {
 
 function buildIntakeSystemPrompt(language: string): string {
   const prompts = {
-    en: `You are a professional legal intake specialist gathering case information. Your goal is to:
+    en: `You are a professional legal intake specialist for a law firm that ONLY operates in Egypt. Your goal is to:
 
-1. Professionally greet users and inquire about their legal matter
-2. Ask direct, factual questions to understand their situation (never ask about emotions or feelings)
-3. Automatically determine and categorize their case based on their description (e.g., "Marriage/Divorce", "Visas/Residency", "Real Estate", "Business Law", "Criminal Law", etc.)
-4. Extract key information like parties involved, important dates, location, and urgency level
-5. Create a case summary for admin review
-6. When you have comprehensive information (category, summary, urgency, key parties/dates), set readyForNextStep to true
+1. IMMEDIATELY after greeting, ask where the user is located/which country their legal matter involves
+2. If the location is NOT Egypt, politely inform them that you only handle cases within Egypt and cannot assist with matters in other jurisdictions. Suggest they seek local legal counsel in their country.
+3. For Egypt-based cases, gather case information professionally:
+   - Ask direct, factual questions to understand their situation (never ask about emotions or feelings)
+   - Automatically determine and categorize their case based on their description (e.g., "Marriage/Divorce", "Visas/Residency", "Real Estate", "Business Law", "Criminal Law", etc.)
+   - Extract key information like parties involved, important dates, location within Egypt, and urgency level
+   - Create a case summary for admin review
+   - When you have comprehensive information (category, summary, urgency, key parties/dates), set readyForNextStep to true
+
+JURISDICTION VALIDATION: 
+- You MUST ask about location in your first or second message
+- Only proceed with case intake if the matter involves Egypt
+- For non-Egypt cases, politely decline and end the conversation professionally
 
 CRITICAL: Never ask users to confirm categories - determine them automatically from context. For example:
 - Squatting/property disputes = "Real Estate"
@@ -358,22 +386,29 @@ CRITICAL: Never ask users to confirm categories - determine them automatically f
 - Employment disputes = "Employment Law"
 - Criminal charges = "Criminal Law"
 
-Focus on gathering facts efficiently. Ask one or two relevant questions at a time about what happened, when it occurred, who was involved, and what outcome they're seeking. Maintain professional courtesy without emotional language. When you have enough factual information about their legal matter, use the extract_case_data function with readyForNextStep set to true to signal that you're ready to proceed to personal details collection.
+Focus on gathering facts efficiently for Egypt-based cases only. Ask one or two relevant questions at a time about what happened, when it occurred, who was involved, and what outcome they're seeking. Maintain professional courtesy without emotional language.
 
-IMPORTANT DISCLAIMER: Always remind users that you're not providing legal advice, only gathering information for lawyers to review.`,
+IMPORTANT DISCLAIMER: Always remind users that you're not providing legal advice, only gathering information for lawyers to review, and that your services are limited to Egyptian jurisdiction only.`,
 
-    ar: `أنت متخصص استقبال قانوني محترف تقوم بجمع معلومات القضايا. هدفك هو:
+    ar: `أنت متخصص استقبال قانوني محترف لمكتب محاماة يعمل فقط في مصر. هدفك هو:
 
-1. الترحيب المهني بالمستخدمين والاستفسار عن مسألتهم القانونية
-2. طرح أسئلة مباشرة وواقعية لفهم وضعهم (لا تسأل أبداً عن المشاعر أو العواطف)
-3. تحديد وتصنيف قضيتهم تلقائياً بناءً على وصفهم (مثل "الزواج/الطلاق"، "التأشيرات/الإقامة"، "العقارات"، "قانون الأعمال"، "القانون الجنائي"، إلخ)
-4. استخراج المعلومات الرئيسية مثل الأطراف المعنية، التواريخ المهمة، الموقع، ومستوى الإلحاح
-5. إنشاء ملخص للقضية لمراجعة الإدارة
-6. عندما تحصل على معلومات شاملة (الفئة، الملخص، الإلحاح، الأطراف/التواريخ الرئيسية)، اضبط readyForNextStep على true
+1. فوراً بعد الترحيب، اسأل أين يقع المستخدم/أي دولة تتعلق بها مسألتهم القانونية
+2. إذا كان الموقع ليس مصر، أخبرهم بأدب أنك تتعامل فقط مع القضايا داخل مصر ولا يمكنك المساعدة في مسائل في ولايات قضائية أخرى. اقترح عليهم طلب المشورة القانونية المحلية في بلدهم.
+3. للقضايا المصرية، اجمع معلومات القضية بمهنية:
+   - طرح أسئلة مباشرة وواقعية لفهم وضعهم (لا تسأل أبداً عن المشاعر أو العواطف)
+   - تحديد وتصنيف قضيتهم تلقائياً بناءً على وصفهم (مثل "الزواج/الطلاق"، "التأشيرات/الإقامة"، "العقارات"، "قانون الأعمال"، "القانون الجنائي"، إلخ)
+   - استخراج المعلومات الرئيسية مثل الأطراف المعنية، التواريخ المهمة، الموقع داخل مصر، ومستوى الإلحاح
+   - إنشاء ملخص للقضية لمراجعة الإدارة
+   - عندما تحصل على معلومات شاملة (الفئة، الملخص، الإلحاح، الأطراف/التواريخ الرئيسية)، اضبط readyForNextStep على true
 
-ركز على جمع الحقائق بكفاءة. اطرح سؤالاً أو سؤالين ذا صلة في المرة الواحدة حول ما حدث، ومتى حدث، ومن كان متورطاً، وما النتيجة التي يسعون إليها. حافظ على اللياقة المهنية دون استخدام لغة عاطفية.
+التحقق من الولاية القضائية:
+- يجب أن تسأل عن الموقع في رسالتك الأولى أو الثانية
+- تابع فقط مع استقبال القضية إذا كانت المسألة تتعلق بمصر
+- للقضايا غير المصرية، ارفض بأدب وأنهي المحادثة بمهنية
 
-تنبيه مهم: ذكّر المستخدمين دائماً أنك لا تقدم استشارة قانونية، بل تجمع المعلومات فقط للمحامين لمراجعتها.`,
+ركز على جمع الحقائق بكفاءة للقضايا المصرية فقط. اطرح سؤالاً أو سؤالين ذا صلة في المرة الواحدة حول ما حدث، ومتى حدث، ومن كان متورطاً، وما النتيجة التي يسعون إليها. حافظ على اللياقة المهنية دون استخدام لغة عاطفية.
+
+تنبيه مهم: ذكّر المستخدمين دائماً أنك لا تقدم استشارة قانونية، بل تجمع المعلومات فقط للمحامين لمراجعتها، وأن خدماتك مقتصرة على الولاية القضائية المصرية فقط.`,
 
     de: `Sie sind ein professioneller juristischer Aufnahmespezialist, der Fallinformationen sammelt. Ihr Ziel ist es:
 
@@ -392,10 +427,78 @@ WICHTIGER HAFTUNGSAUSSCHLUSS: Erinnern Sie Benutzer immer daran, dass Sie keine 
   return prompts[language as keyof typeof prompts] || prompts.en;
 }
 
+// Validate if the case is within Egypt jurisdiction
+function validateJurisdiction(extractedData: CaseData): boolean {
+  const location = extractedData.entities?.location?.toLowerCase();
+  
+  if (!location) {
+    return false; // No location provided
+  }
+  
+  // Check for Egypt-related keywords
+  const egyptKeywords = [
+    'egypt', 'egyptian', 'cairo', 'alexandria', 'giza', 'luxor', 'aswan', 
+    'شرم الشيخ', 'الغردقة', 'مصر', 'القاهرة', 'الاسكندرية', 'الجيزة', 
+    'الأقصر', 'أسوان', 'بورسعيد', 'السويس', 'طنطا', 'المنيا',
+    'ägypten', 'kairo', 'alexandria'
+  ];
+  
+  // Check for non-Egypt countries/keywords that should be rejected
+  const nonEgyptKeywords = [
+    'kuwait', 'saudi', 'uae', 'emirates', 'qatar', 'bahrain', 'oman',
+    'jordan', 'lebanon', 'syria', 'iraq', 'morocco', 'tunisia', 'algeria',
+    'libya', 'sudan', 'usa', 'america', 'uk', 'britain', 'france', 'germany',
+    'الكويت', 'السعودية', 'الإمارات', 'قطر', 'البحرين', 'عمان',
+    'الأردن', 'لبنان', 'سوريا', 'العراق', 'المغرب', 'تونس', 'الجزائر',
+    'ليبيا', 'السودان'
+  ];
+  
+  // If location mentions non-Egypt country, reject
+  const hasNonEgyptKeyword = nonEgyptKeywords.some(keyword => 
+    location.includes(keyword)
+  );
+  
+  if (hasNonEgyptKeyword) {
+    return false;
+  }
+  
+  // If location mentions Egypt, accept
+  const hasEgyptKeyword = egyptKeywords.some(keyword => 
+    location.includes(keyword)
+  );
+  
+  return hasEgyptKeyword;
+}
+
+// Get jurisdiction decline message in appropriate language
+function getJurisdictionDeclineMessage(language: string): string {
+  const messages = {
+    en: `I appreciate you reaching out to us. However, our law firm only provides services within Egypt's jurisdiction. Since your legal matter involves a different country, I'm unable to assist you with this case.
+
+I recommend seeking legal counsel in your local jurisdiction, as they will be better equipped to handle matters under the laws of your country. You can typically find qualified lawyers through your local bar association or legal directories.
+
+Thank you for your understanding, and I wish you the best in resolving your legal matter.`,
+
+    ar: `أشكرك لتواصلك معنا. لكن مكتب المحاماة الخاص بنا يقدم الخدمات فقط داخل الولاية القضائية المصرية. نظراً لأن مسألتك القانونية تتعلق بدولة أخرى، لا يمكنني مساعدتك في هذه القضية.
+
+أوصي بطلب المشورة القانونية في ولايتك القضائية المحلية، حيث سيكونون أكثر قدرة على التعامل مع المسائل تحت قوانين بلدك. يمكنك عادة العثور على محامين مؤهلين من خلال نقابة المحامين المحلية أو الأدلة القانونية.
+
+شكراً لتفهمك، وأتمنى لك التوفيق في حل مسألتك القانونية.`,
+
+    de: `Ich schätze es, dass Sie sich an uns gewandt haben. Unsere Anwaltskanzlei bietet jedoch nur Dienstleistungen innerhalb der ägyptischen Jurisdiktion an. Da Ihre rechtliche Angelegenheit ein anderes Land betrifft, kann ich Ihnen bei diesem Fall nicht behilflich sein.
+
+Ich empfehle, Rechtsberatung in Ihrer örtlichen Jurisdiktion zu suchen, da diese besser ausgerüstet sind, um Angelegenheiten unter den Gesetzen Ihres Landes zu behandeln. Sie können normalerweise qualifizierte Anwälte über Ihre örtliche Anwaltskammer oder rechtliche Verzeichnisse finden.
+
+Vielen Dank für Ihr Verständnis, und ich wünsche Ihnen alles Gute bei der Lösung Ihrer rechtlichen Angelegenheit.`
+  };
+  
+  return messages[language as keyof typeof messages] || messages.en;
+}
+
 function getIntakeFunctions(): any[] {
   return [{
     name: 'extract_case_data',
-    description: 'Automatically extract and structure case information from the conversation. Call this when you have determined the case category and gathered sufficient information.',
+    description: 'Automatically extract and structure case information from the conversation. Call this when you have determined the case category and gathered sufficient information. CRITICAL: Only extract data for cases within Egypt - reject cases from other countries.',
     parameters: {
       type: 'object',
       properties: {
@@ -423,7 +526,7 @@ function getIntakeFunctions(): any[] {
             },
             location: {
               type: 'string',
-              description: 'Location or jurisdiction relevant to the case',
+              description: 'Location or jurisdiction relevant to the case - MUST be within Egypt for case to proceed',
             }
           }
         },
