@@ -29,7 +29,6 @@ import { CompleteVerificationForm } from "@/components/CompleteVerificationForm"
 import { CaseDetailsDialog } from "@/components/CaseDetailsDialog";
 import { CreateProposalDialog } from "@/components/CreateProposalDialog";
 import { CommunicationInbox } from "@/components/CommunicationInbox";
-import { LawyerDirectChatInterface } from "@/components/LawyerDirectChatInterface";
 import { getClientNameForRole } from "@/utils/clientPrivacy";
 import { useLanguage } from "@/hooks/useLanguage";
 import { LanguageToggle } from "@/components/LanguageToggle";
@@ -78,37 +77,8 @@ const LawyerDashboard = () => {
   const [caseDetailsOpen, setCaseDetailsOpen] = useState(false);
   const [selectedCaseForProposal, setSelectedCaseForProposal] = useState<Case | null>(null);
   const [incomingCalls, setIncomingCalls] = useState<TwilioSession[]>([]);
-  const [showDirectChat, setShowDirectChat] = useState(false);
-  const [selectedChatCase, setSelectedChatCase] = useState<Case | null>(null);
   const { sessions, createAccessToken } = useTwilioSession();
 
-  // Persist chat open state and selected case across remounts
-  useEffect(() => {
-    if (showDirectChat && selectedChatCase?.id) {
-      sessionStorage.setItem('lawyerDirectChatOpen', '1');
-      sessionStorage.setItem('lawyerDirectChatCaseId', selectedChatCase.id);
-    } else {
-      sessionStorage.removeItem('lawyerDirectChatOpen');
-    }
-  }, [showDirectChat, selectedChatCase?.id]);
-
-  // Restore chat after cases load
-  useEffect(() => {
-    const shouldOpen = sessionStorage.getItem('lawyerDirectChatOpen') === '1';
-    const caseId = sessionStorage.getItem('lawyerDirectChatCaseId');
-    if (!showDirectChat && !selectedChatCase && shouldOpen && caseId && cases.length > 0) {
-      const found = cases.find(c => c.id === caseId);
-      if (found) {
-        console.log('LawyerDashboard: Restoring direct chat for case', caseId);
-        setSelectedChatCase(found);
-        setShowDirectChat(true);
-      } else {
-        console.log('LawyerDashboard: Stored chat case not found; clearing session storage');
-        sessionStorage.removeItem('lawyerDirectChatOpen');
-        sessionStorage.removeItem('lawyerDirectChatCaseId');
-      }
-    }
-  }, [cases, showDirectChat, selectedChatCase]);
   const { unreadCounts, getTotalUnreadCount } = useLawyerChatNotifications();
 
   useEffect(() => {
@@ -671,25 +641,6 @@ const LawyerDashboard = () => {
                             <FileText className={`h-4 w-4 ${isRTL() ? 'ml-2' : 'mr-2'}`} />
                             {t('dashboard.cases.createProposal')}
                           </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => {
-                              setSelectedChatCase(caseItem);
-                              setShowDirectChat(true);
-                              try {
-                                sessionStorage.setItem('lawyerDirectChatOpen', '1');
-                                sessionStorage.setItem('lawyerDirectChatCaseId', caseItem.id);
-                              } catch {}
-                            }}
-                            className="flex-shrink-0 relative"
-                          >
-                            <MessageSquare className={`h-4 w-4 ${isRTL() ? 'ml-2' : 'mr-2'}`} />
-                            {isRTL() ? 'محادثة' : 'Chat'}
-                            {unreadCounts[caseItem.id] > 0 && (
-                              <NotificationBadge count={unreadCounts[caseItem.id]} />
-                            )}
-                          </Button>
                          </div>
                       </CardContent>
                   </Card>
@@ -735,27 +686,6 @@ const LawyerDashboard = () => {
         }}
       />
 
-      {/* Direct Chat Interface */}
-      {showDirectChat && selectedChatCase && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="w-full max-w-2xl" onClick={(e) => e.stopPropagation()}>
-            <LawyerDirectChatInterface
-              caseId={selectedChatCase.id}
-              caseTitle={selectedChatCase.title}
-              clientName={getClientNameForRole(selectedChatCase.client_name, profile?.role)}
-              onClose={() => {
-                console.log('LawyerDashboard: Direct chat closed via onClose');
-                setShowDirectChat(false);
-                setSelectedChatCase(null);
-                try {
-                  sessionStorage.removeItem('lawyerDirectChatOpen');
-                  sessionStorage.removeItem('lawyerDirectChatCaseId');
-                } catch {}
-              }}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 };
