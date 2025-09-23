@@ -500,7 +500,8 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
                   </Badge>
                   <span className="text-sm">
                     {(() => {
-                      const type = waitingMode || pendingSession.session_type;
+                      // Use waitingMode as primary source of truth for what user clicked
+                      const type = waitingMode || 'voice'; // fallback to voice if no waitingMode
                       const label = type === 'video' ? 'video' : 'voice';
                       return pendingSession.initiated_by === pendingSession.client_id
                         ? `Waiting for lawyer to accept a ${label} call...`
