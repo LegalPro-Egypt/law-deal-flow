@@ -30,15 +30,14 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 interface AnonymousSession {
   id: string;
   session_id: string;
-  conversation_id: string;
   language: string;
   created_at: string;
   updated_at: string;
-  total_messages: number;
-  actual_message_count: number;
+  status: string;
+  metadata: any;
+  message_count: number;
   first_message_preview: string | null;
   last_activity: string;
-  status: string;
   source: string;
 }
 
@@ -77,13 +76,60 @@ const AnonymousQAManager = () => {
   const fetchSessions = async () => {
     try {
       setLoading(true);
-      const { data: sessionsData, error } = await supabase
-        .from('anonymous_qa_sessions')
-        .select('*')
+      
+      // Fetch anonymous conversations with message counts
+      const { data: conversationsData, error: conversationsError } = await supabase
+        .from('conversations')
+        .select(`
+          id,
+          session_id,
+          language,
+          created_at,
+          updated_at,
+          status,
+          metadata
+        `)
+        .is('user_id', null)
+        .eq('mode', 'qa')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setSessions(sessionsData || []);
+      if (conversationsError) throw conversationsError;
+
+      // Get message counts and first message for each conversation
+      const sessionsWithDetails = await Promise.all(
+        (conversationsData || []).map(async (conversation) => {
+          // Get message count and first user message
+          const { data: messages, error: messagesError } = await supabase
+            .from('messages')
+            .select('id, content, role, created_at')
+            .eq('conversation_id', conversation.id)
+            .order('created_at', { ascending: true });
+
+          if (messagesError) {
+            console.error('Error fetching messages for conversation:', conversation.id, messagesError);
+            return null;
+          }
+
+          const userMessages = messages?.filter(m => m.role === 'user') || [];
+          const firstUserMessage = userMessages[0];
+          
+          return {
+            ...conversation,
+            message_count: messages?.length || 0,
+            first_message_preview: firstUserMessage?.content || null,
+            last_activity: conversation.updated_at,
+            source: (conversation.metadata as any)?.source || 'unknown'
+          };
+        })
+      );
+
+      // Filter out null results and sessions with no user messages
+      const validSessions = sessionsWithDetails
+        .filter((session): session is AnonymousSession => 
+          session !== null && session.first_message_preview !== null
+        );
+
+      setSessions(validSessions);
     } catch (error: any) {
       console.error('Error fetching sessions:', error);
       toast({
@@ -122,17 +168,26 @@ const AnonymousQAManager = () => {
   const handleViewConversation = async (session: AnonymousSession) => {
     setSelectedSession(session);
     setShowConversation(true);
-    await fetchConversation(session.conversation_id);
+    await fetchConversation(session.id);
   };
 
   const handleDeleteSession = async (sessionId: string) => {
     try {
-      const { error } = await supabase
-        .from('anonymous_qa_sessions')
+      // First delete all messages for this conversation
+      const { error: messagesError } = await supabase
+        .from('messages')
+        .delete()
+        .eq('conversation_id', sessionId);
+
+      if (messagesError) throw messagesError;
+
+      // Then delete the conversation
+      const { error: conversationError } = await supabase
+        .from('conversations')
         .delete()
         .eq('id', sessionId);
 
-      if (error) throw error;
+      if (conversationError) throw conversationError;
 
       setSessions(prev => prev.filter(s => s.id !== sessionId));
       toast({
@@ -182,9 +237,6 @@ const AnonymousQAManager = () => {
   };
 
   const filteredSessions = sessions.filter(session => {
-    // Filter out sessions with no actual user messages by default
-    const hasRealMessages = session.actual_message_count > 0;
-    
     const matchesSearch = 
       session.first_message_preview?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       session.session_id.toLowerCase().includes(searchTerm.toLowerCase());
@@ -193,7 +245,7 @@ const AnonymousQAManager = () => {
     const matchesLanguage = languageFilter === 'all' || session.language === languageFilter;
     const matchesSource = sourceFilter === 'all' || session.source === sourceFilter;
     
-    return hasRealMessages && matchesSearch && matchesStatus && matchesLanguage && matchesSource;
+    return matchesSearch && matchesStatus && matchesLanguage && matchesSource;
   });
 
   const handleCleanupOldSessions = async () => {
@@ -441,7 +493,7 @@ const AnonymousQAManager = () => {
                         </div>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <MessageSquare className="h-4 w-4" />
-                          <span>{session.total_messages} messages</span>
+                          <span>{session.message_count} messages</span>
                           <span>•</span>
                           <span>{formatDate(session.created_at)}</span>
                         </div>
@@ -530,7 +582,7 @@ const AnonymousQAManager = () => {
                 </div>
                 <div>
                   <strong>Messages:</strong>
-                  <p>{selectedSession.total_messages}</p>
+                  <p>{selectedSession.message_count}</p>
                 </div>
                 <div>
                   <strong>Created:</strong>
