@@ -94,10 +94,12 @@ const AdminDashboard = () => {
   const [proposalLawyerDetails, setProposalLawyerDetails] = useState<any>(null);
   const [proposalToDelete, setProposalToDelete] = useState<string | null>(null);
   const [showProposalDeleteConfirm, setShowProposalDeleteConfirm] = useState(false);
+  const [emailSignups, setEmailSignups] = useState<any[]>([]);
 
   useEffect(() => {
     fetchAllLawyers();
     fetchAllProposals();
+    fetchEmailSignups();
   }, []);
 
   const fetchAllLawyers = async () => {
@@ -227,6 +229,20 @@ const AdminDashboard = () => {
       setAllProposals(proposalsWithDetails);
     } catch (error: any) {
       console.error('Error fetching proposals:', error);
+    }
+  };
+
+  const fetchEmailSignups = async () => {
+    try {
+      const { data: signups, error } = await supabase
+        .from('email_signups')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setEmailSignups(signups || []);
+    } catch (error: any) {
+      console.error('Error fetching email signups:', error);
     }
   };
 
@@ -678,6 +694,7 @@ const AdminDashboard = () => {
                 </TabsTrigger>
                 <TabsTrigger value="probono" className="whitespace-nowrap flex-shrink-0">Pro Bono</TabsTrigger>
                 <TabsTrigger value="requests" className="whitespace-nowrap flex-shrink-0">Lawyer Requests</TabsTrigger>
+                <TabsTrigger value="waiting-list" className="whitespace-nowrap flex-shrink-0">Waiting List</TabsTrigger>
                 <TabsTrigger value="anonymous-qa" className="whitespace-nowrap flex-shrink-0">Anonymous Q&A</TabsTrigger>
               </TabsList>
             </div>
@@ -1707,6 +1724,90 @@ const AdminDashboard = () => {
           {/* Lawyer Requests Tab */}
           <TabsContent value="requests" className="space-y-6">
             <LawyerRequestsManager />
+          </TabsContent>
+
+          {/* Waiting List Tab */}
+          <TabsContent value="waiting-list" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">Waiting List Signups</h2>
+              <Badge variant="outline" className="text-sm">
+                {emailSignups.length} Total
+              </Badge>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Email Signups</CardTitle>
+                <CardDescription>
+                  Users who signed up for notifications about the platform launch
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <div className="space-y-4">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="border rounded-lg p-4">
+                        <Skeleton className="h-4 w-1/3 mb-2" />
+                        <Skeleton className="h-3 w-full mb-1" />
+                        <Skeleton className="h-3 w-2/3" />
+                      </div>
+                    ))}
+                  </div>
+                ) : emailSignups.length === 0 ? (
+                  <div className="flex flex-col items-center py-8 text-center">
+                    <Mail className="h-12 w-12 text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-medium">No signups yet</h3>
+                    <p className="text-muted-foreground">
+                      No one has signed up for the waiting list yet.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {emailSignups.map((signup) => (
+                      <div key={signup.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
+                        <div className="flex items-start justify-between">
+                          <div className="space-y-2 flex-1">
+                            <div className="flex items-center gap-3">
+                              <Mail className="h-4 w-4 text-primary" />
+                              <span className="font-medium">{signup.email}</span>
+                              <Badge variant={signup.notified ? "default" : "secondary"} className="text-xs">
+                                {signup.notified ? "Notified" : "Pending"}
+                              </Badge>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-muted-foreground">
+                              <div>
+                                <span className="font-medium">Source:</span> {signup.source || 'Unknown'}
+                              </div>
+                              <div>
+                                <span className="font-medium">Signed up:</span> {new Date(signup.created_at).toLocaleDateString()}
+                              </div>
+                              {signup.ip_address && (
+                                <div>
+                                  <span className="font-medium">IP:</span> {signup.ip_address}
+                                </div>
+                              )}
+                            </div>
+
+                            {signup.user_agent && (
+                              <div className="text-xs text-muted-foreground">
+                                <span className="font-medium">User Agent:</span> {signup.user_agent}
+                              </div>
+                            )}
+
+                            {signup.metadata && Object.keys(signup.metadata).length > 0 && (
+                              <div className="text-xs text-muted-foreground">
+                                <span className="font-medium">Metadata:</span> {JSON.stringify(signup.metadata)}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Anonymous Q&A Tab */}
