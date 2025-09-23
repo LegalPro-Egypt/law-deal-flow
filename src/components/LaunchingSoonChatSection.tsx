@@ -30,17 +30,21 @@ export function LaunchingSoonChatSection({ className = "" }: LaunchingSoonChatSe
 
   // Scroll to bottom using sentinel element
   const scrollToBottom = () => {
-    bottomRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' });
+    bottomRef.current?.scrollIntoView({ 
+      behavior: 'smooth', 
+      block: 'nearest',
+      inline: 'nearest'
+    });
   };
 
   // Auto-scroll: first message and when user sends a message
   useEffect(() => {
     if (messages.length === 1) {
-      setTimeout(scrollToBottom, 60);
+      requestAnimationFrame(scrollToBottom);
       return;
     }
     if (userSentMessage) {
-      setTimeout(scrollToBottom, 60);
+      requestAnimationFrame(scrollToBottom);
       setUserSentMessage(false);
     }
   }, [messages, userSentMessage]);
