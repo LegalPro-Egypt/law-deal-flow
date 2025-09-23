@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Brain, Shield, Sparkles, Heart, CheckCircle } from 'lucide-react';
+import { Brain, Shield, Sparkles, Heart, CheckCircle, ShieldCheck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useTranslation } from 'react-i18next';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
@@ -38,6 +38,8 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
     proBonoServicesDescription: "Part of our revenue funds free legal aid for those in need.",
     aiLegalAssistant: "AI Legal Assistant",
     aiLegalAssistantDescription: "Get instant legal guidance powered by advanced AI trained on Egyptian law.",
+    clientProtectionGuarantee: "Client Protection Guarantee",
+    clientProtectionGuaranteeDescription: "LegalPro safeguards clients by paying back part or all of the case in case of misconduct or malpractice* *Evidence based and reviewed on per case basis",
     givingBackToCommunity: "Giving Back to the Community",
     proBonoMissionDescription: "We reinvest to make legal services accessible for everyone.",
     accessPlatform: "Access Platform",
@@ -199,7 +201,7 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
 
           {/* Features Preview */}
           <div className="mt-24 max-w-6xl mx-auto" ref={featuresRef}>
-            <div className={`grid md:grid-cols-3 gap-8 transition-all duration-1000 ${featuresVisible ? 'animate-card-slide-up' : 'opacity-0 translate-y-10'}`}>
+            <div className={`grid md:grid-cols-2 lg:grid-cols-4 gap-8 transition-all duration-1000 ${featuresVisible ? 'animate-card-slide-up' : 'opacity-0 translate-y-10'}`}>
               <Card className="neomorphism-feature">
                 <CardContent className="p-8 text-center">
                   <Brain className="w-12 h-12 text-neomorphism-primary mx-auto mb-6 icon-glow" />
@@ -232,6 +234,18 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
                   </h3>
                   <p className="text-gray-600 font-modern leading-relaxed">
                     {getText('aiLegalAssistantDescription')}
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="neomorphism-feature" style={{ animationDelay: '0.6s' }}>
+                <CardContent className="p-8 text-center">
+                  <ShieldCheck className="w-12 h-12 text-neomorphism-primary mx-auto mb-6 icon-glow" />
+                  <h3 className="text-xl font-semibold font-futura text-gray-900 mb-4">
+                    {getText('clientProtectionGuarantee')}
+                  </h3>
+                  <p className="text-gray-600 font-modern leading-relaxed text-sm">
+                    {getText('clientProtectionGuaranteeDescription')}
                   </p>
                 </CardContent>
               </Card>
