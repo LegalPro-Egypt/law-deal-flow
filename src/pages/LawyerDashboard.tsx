@@ -22,13 +22,16 @@ import {
   ShieldCheck,
   AlertTriangle,
   Settings,
-  PhoneCall
+  PhoneCall,
+  ChevronDown,
+  ChevronRight
 } from "lucide-react";
 import { LawyerQAChatbot } from "@/components/LawyerQAChatbot";
 import { CompleteVerificationForm } from "@/components/CompleteVerificationForm";
 import { CaseDetailsDialog } from "@/components/CaseDetailsDialog";
 import { CreateProposalDialog } from "@/components/CreateProposalDialog";
 import { CommunicationInbox } from "@/components/CommunicationInbox";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { getClientNameForRole } from "@/utils/clientPrivacy";
 import { useLanguage } from "@/hooks/useLanguage";
 import { LanguageToggle } from "@/components/LanguageToggle";
@@ -77,6 +80,7 @@ const LawyerDashboard = () => {
   const [caseDetailsOpen, setCaseDetailsOpen] = useState(false);
   const [selectedCaseForProposal, setSelectedCaseForProposal] = useState<Case | null>(null);
   const [incomingCalls, setIncomingCalls] = useState<TwilioSession[]>([]);
+  const [expandedCases, setExpandedCases] = useState<Set<string>>(new Set());
   const { sessions, createAccessToken } = useTwilioSession();
 
   const { unreadCounts, getTotalUnreadCount } = useLawyerChatNotifications();
@@ -288,6 +292,18 @@ const LawyerDashboard = () => {
     toast({
       title: 'Call Declined',
       description: 'Communication request has been declined',
+    });
+  };
+
+  const toggleCaseExpansion = (caseId: string) => {
+    setExpandedCases(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(caseId)) {
+        newSet.delete(caseId);
+      } else {
+        newSet.add(caseId);
+      }
+      return newSet;
     });
   };
 
@@ -587,64 +603,156 @@ const LawyerDashboard = () => {
                 </p>
               </div>
             ) : (
-              <div className="grid gap-4">
-                {cases.map((caseItem) => (
-                  <Card key={caseItem.id} className="hover:shadow-md transition-shadow">
-                    <CardHeader className="pb-3">
-                       <div className="flex items-center justify-between">
-                         <div className="flex items-center gap-2 flex-wrap">
-                           <Badge variant="outline" className="font-mono text-xs">
-                             {caseItem.case_number}
-                           </Badge>
-                            <Badge variant={getStatusVariant(caseItem.status)}>
-                              {caseItem.status === 'proposal_accepted' && caseItem.consultation_paid === false 
-                                ? (isRTL() ? 'في انتظار الدفع' : 'Awaiting Payment')
-                                : t(`dashboard.cases.status.${caseItem.status}`)
-                              }
-                            </Badge>
-                           <Badge variant={getUrgencyVariant(caseItem.urgency)}>
-                             {t(`dashboard.cases.urgency.${caseItem.urgency}`)} {isRTL() ? 'أولوية' : 'Priority'}
-                           </Badge>
-                         </div>
-                         <div className={`text-xs text-muted-foreground flex-shrink-0 ${isRTL() ? 'text-left' : 'text-right'}`}>
-                           <div>Created: {formatDate(caseItem.created_at)}</div>
-                           <div>Updated: {formatDate(caseItem.updated_at)}</div>
-                         </div>
-                       </div>
-                      <CardTitle className="text-lg">{caseItem.title}</CardTitle>
-                      <CardDescription>
-                        <div className="flex items-center gap-2 text-sm">
-                          <Users className="h-4 w-4" />
-                          Client: {getClientNameForRole(caseItem.client_name, profile?.role)}
-                        </div>
-                        <div className="flex items-center gap-2 text-sm mt-1">
-                          <FileText className="h-4 w-4" />
-                          Category: {caseItem.category}
-                        </div>
-                      </CardDescription>
-                    </CardHeader>
-                     <CardContent className="pt-0 space-y-4">
-                        <div className="flex gap-2 flex-wrap">
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => handleViewDetails(caseItem.id)}
-                            className="flex-shrink-0"
-                          >
-                            {t('dashboard.cases.viewDetails')}
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            className="bg-primary hover:bg-primary/90 flex-shrink-0"
-                            onClick={() => setSelectedCaseForProposal(caseItem)}
-                          >
-                            <FileText className={`h-4 w-4 ${isRTL() ? 'ml-2' : 'mr-2'}`} />
-                            {t('dashboard.cases.createProposal')}
-                          </Button>
-                         </div>
-                      </CardContent>
-                  </Card>
-                ))}
+              <div className="space-y-3">
+                {cases.map((caseItem) => {
+                  const isExpanded = expandedCases.has(caseItem.id);
+                  
+                  return (
+                    <Collapsible
+                      key={caseItem.id}
+                      open={isExpanded}
+                      onOpenChange={() => toggleCaseExpansion(caseItem.id)}
+                    >
+                      <CollapsibleTrigger asChild>
+                        <Card className="hover:shadow-md transition-shadow cursor-pointer md:hidden">
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Badge variant="outline" className="font-mono text-xs flex-shrink-0">
+                                    {caseItem.case_number}
+                                  </Badge>
+                                  <Badge variant={getStatusVariant(caseItem.status)} className="flex-shrink-0">
+                                    {caseItem.status === 'proposal_accepted' && caseItem.consultation_paid === false 
+                                      ? (isRTL() ? 'في انتظار الدفع' : 'Awaiting Payment')
+                                      : t(`dashboard.cases.status.${caseItem.status}`)
+                                    }
+                                  </Badge>
+                                </div>
+                                <div className="text-sm font-medium truncate">
+                                  {getClientNameForRole(caseItem.client_name, profile?.role)} • {caseItem.category}
+                                </div>
+                              </div>
+                              <div className="flex-shrink-0 ml-2">
+                                {isExpanded ? (
+                                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                ) : (
+                                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                                )}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </CollapsibleTrigger>
+                      
+                      <CollapsibleContent className="md:hidden">
+                        <Card className="mt-2 border-l-4 border-l-primary">
+                          <CardHeader className="pb-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <Badge variant={getUrgencyVariant(caseItem.urgency)}>
+                                  {t(`dashboard.cases.urgency.${caseItem.urgency}`)} {isRTL() ? 'أولوية' : 'Priority'}
+                                </Badge>
+                              </div>
+                              <div className={`text-xs text-muted-foreground flex-shrink-0 ${isRTL() ? 'text-left' : 'text-right'}`}>
+                                <div>Created: {formatDate(caseItem.created_at)}</div>
+                                <div>Updated: {formatDate(caseItem.updated_at)}</div>
+                              </div>
+                            </div>
+                            <CardTitle className="text-lg">{caseItem.title}</CardTitle>
+                            <CardDescription>
+                              <div className="flex items-center gap-2 text-sm">
+                                <Users className="h-4 w-4" />
+                                Client: {getClientNameForRole(caseItem.client_name, profile?.role)}
+                              </div>
+                              <div className="flex items-center gap-2 text-sm mt-1">
+                                <FileText className="h-4 w-4" />
+                                Category: {caseItem.category}
+                              </div>
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent className="pt-0 space-y-4">
+                            <div className="flex gap-2 flex-wrap">
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => handleViewDetails(caseItem.id)}
+                                className="flex-shrink-0"
+                              >
+                                {t('dashboard.cases.viewDetails')}
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                className="bg-primary hover:bg-primary/90 flex-shrink-0"
+                                onClick={() => setSelectedCaseForProposal(caseItem)}
+                              >
+                                <FileText className={`h-4 w-4 ${isRTL() ? 'ml-2' : 'mr-2'}`} />
+                                {t('dashboard.cases.createProposal')}
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </CollapsibleContent>
+                      
+                      {/* Desktop view - always show full card */}
+                      <Card className="hover:shadow-md transition-shadow hidden md:block">
+                        <CardHeader className="pb-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Badge variant="outline" className="font-mono text-xs">
+                                {caseItem.case_number}
+                              </Badge>
+                              <Badge variant={getStatusVariant(caseItem.status)}>
+                                {caseItem.status === 'proposal_accepted' && caseItem.consultation_paid === false 
+                                  ? (isRTL() ? 'في انتظار الدفع' : 'Awaiting Payment')
+                                  : t(`dashboard.cases.status.${caseItem.status}`)
+                                }
+                              </Badge>
+                              <Badge variant={getUrgencyVariant(caseItem.urgency)}>
+                                {t(`dashboard.cases.urgency.${caseItem.urgency}`)} {isRTL() ? 'أولوية' : 'Priority'}
+                              </Badge>
+                            </div>
+                            <div className={`text-xs text-muted-foreground flex-shrink-0 ${isRTL() ? 'text-left' : 'text-right'}`}>
+                              <div>Created: {formatDate(caseItem.created_at)}</div>
+                              <div>Updated: {formatDate(caseItem.updated_at)}</div>
+                            </div>
+                          </div>
+                          <CardTitle className="text-lg">{caseItem.title}</CardTitle>
+                          <CardDescription>
+                            <div className="flex items-center gap-2 text-sm">
+                              <Users className="h-4 w-4" />
+                              Client: {getClientNameForRole(caseItem.client_name, profile?.role)}
+                            </div>
+                            <div className="flex items-center gap-2 text-sm mt-1">
+                              <FileText className="h-4 w-4" />
+                              Category: {caseItem.category}
+                            </div>
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="pt-0 space-y-4">
+                          <div className="flex gap-2 flex-wrap">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleViewDetails(caseItem.id)}
+                              className="flex-shrink-0"
+                            >
+                              {t('dashboard.cases.viewDetails')}
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              className="bg-primary hover:bg-primary/90 flex-shrink-0"
+                              onClick={() => setSelectedCaseForProposal(caseItem)}
+                            >
+                              <FileText className={`h-4 w-4 ${isRTL() ? 'ml-2' : 'mr-2'}`} />
+                              {t('dashboard.cases.createProposal')}
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Collapsible>
+                  );
+                })}
               </div>
             )}
           </CardContent>
