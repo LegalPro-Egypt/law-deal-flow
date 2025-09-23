@@ -115,8 +115,11 @@ export const useVisitorTracking = (profile?: { role?: string } | null) => {
   };
 
   useEffect(() => {
-    // Track initial page load
-    trackVisitor();
+    // Only track after profile is determined (either loaded or confirmed null for anonymous users)
+    if (profile !== undefined) {
+      // Track initial page load
+      trackVisitor();
+    }
 
     // Track when user leaves the page
     const handleBeforeUnload = () => {
@@ -132,7 +135,7 @@ export const useVisitorTracking = (profile?: { role?: string } | null) => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       clearInterval(sessionInterval);
     };
-  }, []);
+  }, [profile]); // Re-run when profile changes
 
   return {
     trackPageView,
