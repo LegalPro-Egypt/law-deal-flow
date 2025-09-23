@@ -35,6 +35,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { VerificationStatusBadge } from "@/components/VerificationStatusBadge";
 import { IncomingCallNotification } from "@/components/IncomingCallNotification";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 interface LawyerStats {
   activeCases: number;
@@ -80,6 +81,29 @@ const LawyerDashboard = () => {
   const [showDirectChat, setShowDirectChat] = useState(false);
   const [selectedChatCase, setSelectedChatCase] = useState<Case | null>(null);
   const { sessions, createAccessToken } = useTwilioSession();
+
+  // Persist direct chat modal open state to survive parent remounts (e.g., after file uploads)
+  useEffect(() => {
+    if (selectedChatCase) {
+      const storageKey = `lawyerDirectChatOpen:${selectedChatCase.id}`;
+      const wasOpen = sessionStorage.getItem(storageKey) === '1';
+      if (wasOpen) {
+        console.log('LawyerDashboard: Restoring direct chat open state from sessionStorage');
+        setShowDirectChat(true);
+      }
+    }
+  }, [selectedChatCase]);
+
+  useEffect(() => {
+    if (selectedChatCase) {
+      const storageKey = `lawyerDirectChatOpen:${selectedChatCase.id}`;
+      if (showDirectChat) {
+        sessionStorage.setItem(storageKey, '1');
+      } else {
+        sessionStorage.removeItem(storageKey);
+      }
+    }
+  }, [showDirectChat, selectedChatCase]);
   const { unreadCounts, getTotalUnreadCount } = useLawyerChatNotifications();
 
   useEffect(() => {
@@ -703,21 +727,32 @@ const LawyerDashboard = () => {
       />
 
       {/* Direct Chat Interface */}
-      {showDirectChat && selectedChatCase && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="w-full max-w-2xl">
+      <Dialog open={showDirectChat && !!selectedChatCase} onOpenChange={(open) => {
+        console.log('LawyerDashboard: Direct chat dialog state change:', open);
+        if (!open) {
+          setShowDirectChat(false);
+          setSelectedChatCase(null);
+        }
+      }}>
+        <DialogContent 
+          className="w-full max-w-2xl p-0 gap-0"
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
+          {selectedChatCase && (
             <LawyerDirectChatInterface
               caseId={selectedChatCase.id}
               caseTitle={selectedChatCase.title}
               clientName={getClientNameForRole(selectedChatCase.client_name, profile?.role)}
               onClose={() => {
+                console.log('LawyerDashboard: Direct chat closed via onClose');
                 setShowDirectChat(false);
                 setSelectedChatCase(null);
               }}
             />
-          </div>
-        </div>
-      )}
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

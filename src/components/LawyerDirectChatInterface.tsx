@@ -236,7 +236,7 @@ export const LawyerDirectChatInterface: React.FC<LawyerDirectChatInterfaceProps>
               alt={f.name} 
               className="w-full max-w-[220px] h-auto max-h-[160px] object-contain rounded-lg" 
             />
-            <div className="text-[11px] opacity-70 mt-1 break-all">
+            <div className="text-[11px] opacity-70 mt-1 break-words">
               {f.name} ({(f.size/1024).toFixed(1)} KB)
             </div>
           </div>
@@ -244,7 +244,7 @@ export const LawyerDirectChatInterface: React.FC<LawyerDirectChatInterfaceProps>
       }
       return (
         <a href={f.url} target="_blank" rel="noopener noreferrer"
-           className="flex items-center gap-2 underline text-sm break-all">
+           className="flex items-center gap-2 underline text-sm break-words">
           <FileText className="w-4 h-4" />
           {f.name} ({(f.size/1024).toFixed(1)} KB)
         </a>
@@ -298,7 +298,7 @@ export const LawyerDirectChatInterface: React.FC<LawyerDirectChatInterfaceProps>
                   >
                     <div
                       className={`
-                        relative inline-block max-w-[75%] px-3 py-1.5 shadow-sm
+                        relative inline-block max-w-[75%] px-3 py-1.5 shadow-sm overflow-hidden
                         ${message.role === 'lawyer'
                           ? 'bg-gray-100 text-gray-900'
                           : 'bg-blue-500 text-white'
