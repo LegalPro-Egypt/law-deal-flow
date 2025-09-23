@@ -342,9 +342,12 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
       waitingMode,
       pendingSessionId
     });
-    if (pendingSession) {
+
+    const idToCancel = pendingSession?.id || pendingSessionId;
+
+    if (idToCancel) {
       try {
-        console.log('Cancelling call for session:', pendingSession.id);
+        console.log('Cancelling call for session:', idToCancel);
         // Update session status to cancelled
         const { error } = await supabase
           .from('communication_sessions')
@@ -353,7 +356,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
             ended_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           })
-          .eq('id', pendingSession.id);
+          .eq('id', idToCancel);
 
         if (error) {
           console.error('Error updating session:', error);
@@ -373,6 +376,8 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
           variant: 'destructive',
         });
       }
+    } else {
+      console.log('No session id available yet; cancelling local waiting state only.');
     }
     setWaitingForResponse(false);
     setWaitingMode(null);
@@ -517,27 +522,30 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
             </div>
           )}
 
-          {waitingForResponse && pendingSession && (
+          {waitingForResponse && (
             <div className="p-3 bg-warning/10 rounded-lg border border-warning/20">
-              <div className={`flex items-center justify-between ${isRTL() ? 'flex-row-reverse' : ''}`}>
-                <div className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}>
+              <div className={`${isRTL() ? 'flex-row-reverse' : ''} flex items-center justify-between`}>
+                <div className={`${isRTL() ? 'flex-row-reverse' : ''} flex items-center gap-2`}>
                   <Badge variant="outline" className="animate-pulse">
                     📞 Calling...
                   </Badge>
                   <span className="text-sm">
                     {(() => {
-                      // Use waitingMode as primary source of truth for what user clicked
-                      const type = waitingMode || 'voice'; // fallback to voice if no waitingMode
+                      const type = waitingMode || 'voice';
                       const label = type === 'video' ? 'video' : 'voice';
-                      return pendingSession.initiated_by === pendingSession.client_id
-                        ? `Waiting for lawyer to accept a ${label} call...`
-                        : `Calling client for a ${label} call...`;
+                      if (isCurrentUserClient === true) {
+                        return `Waiting for lawyer to accept a ${label} call...`;
+                      }
+                      if (isCurrentUserClient === false) {
+                        return `Calling client for a ${label} call...`;
+                      }
+                      return `Starting a ${label} call...`;
                     })()}
                   </span>
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={handleCancelCall}
                 >
                   Cancel
