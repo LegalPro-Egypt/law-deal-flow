@@ -1417,6 +1417,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_admin_analytics_data: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       cleanup_old_anonymous_sessions: {
         Args: Record<PropertyKey, never>
         Returns: undefined
