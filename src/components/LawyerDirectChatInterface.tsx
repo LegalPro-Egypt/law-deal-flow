@@ -23,6 +23,7 @@ interface ChatMessage {
   content: string;
   created_at: string;
   is_read: boolean;
+  metadata?: { channel?: string; [key: string]: any };
 }
 
 export const LawyerDirectChatInterface: React.FC<LawyerDirectChatInterfaceProps> = ({
@@ -52,6 +53,7 @@ export const LawyerDirectChatInterface: React.FC<LawyerDirectChatInterfaceProps>
         .from('case_messages')
         .select('id, role, content, created_at, is_read')
         .eq('case_id', caseId)
+        .eq('metadata->>channel', 'direct')
         .order('created_at', { ascending: true });
 
       if (error) throw error;
@@ -116,11 +118,14 @@ export const LawyerDirectChatInterface: React.FC<LawyerDirectChatInterfaceProps>
         },
         (payload) => {
           const newMsg = payload.new as ChatMessage;
-          setMessages(prev => [...prev, newMsg]);
-          
-          // Auto-mark as read if it's not from the current lawyer
-          if (newMsg.role !== 'lawyer' && user) {
-            setTimeout(() => markMessagesAsRead(caseId), 1000);
+          // Only process messages from the direct channel
+          if (newMsg.metadata?.channel === 'direct') {
+            setMessages(prev => [...prev, newMsg]);
+            
+            // Auto-mark as read if it's not from the current lawyer
+            if (newMsg.role !== 'lawyer' && user) {
+              setTimeout(() => markMessagesAsRead(caseId), 1000);
+            }
           }
         }
       )

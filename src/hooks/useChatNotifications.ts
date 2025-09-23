@@ -64,6 +64,7 @@ export const useChatNotifications = () => {
         .select('case_id')
         .in('case_id', caseIds)
         .eq('is_read', false)
+        .eq('metadata->>channel', 'direct')
         .neq('role', excludeRole);
 
       // Group by case_id and count

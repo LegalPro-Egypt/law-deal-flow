@@ -16,6 +16,7 @@ interface Message {
   content: string;
   created_at: string;
   is_read: boolean;
+  metadata?: { channel?: string; [key: string]: any };
 }
 
 interface DirectChatInterfaceProps {
@@ -65,6 +66,7 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
         .from('case_messages')
         .select('id, role, content, created_at, is_read')
         .eq('case_id', caseId)
+        .eq('metadata->>channel', 'direct')
         .order('created_at', { ascending: true });
 
       if (error) throw error;
@@ -103,7 +105,7 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
           role: messageRole,
           content: newMessage.trim(),
           message_type: 'text',
-          metadata: {}
+          metadata: { channel: 'direct' }
         });
 
       if (error) throw error;
@@ -149,16 +151,19 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
         (payload) => {
           if (payload.eventType === 'INSERT') {
             const newMsg = payload.new as Message;
-            setMessages(prev => [...prev, newMsg]);
-            
-            // Auto-mark as read if it's not our own message
-            const messageRole = newMsg.role;
-            const shouldMarkAsRead = 
-              (userRole === 'client' && messageRole === 'lawyer') ||
-              (userRole === 'lawyer' && messageRole === 'user');
-            
-            if (shouldMarkAsRead) {
-              markMessagesAsRead(caseId);
+            // Only process messages from the direct channel
+            if (newMsg.metadata?.channel === 'direct') {
+              setMessages(prev => [...prev, newMsg]);
+              
+              // Auto-mark as read if it's not our own message
+              const messageRole = newMsg.role;
+              const shouldMarkAsRead = 
+                (userRole === 'client' && messageRole === 'lawyer') ||
+                (userRole === 'lawyer' && messageRole === 'user');
+              
+              if (shouldMarkAsRead) {
+                markMessagesAsRead(caseId);
+              }
             }
           } else if (payload.eventType === 'UPDATE') {
             setMessages(prev => 

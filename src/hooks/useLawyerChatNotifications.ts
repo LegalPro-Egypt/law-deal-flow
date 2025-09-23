@@ -36,6 +36,7 @@ export const useLawyerChatNotifications = () => {
           .select('*', { count: 'exact', head: true })
           .eq('case_id', caseItem.id)
           .eq('is_read', false)
+          .eq('metadata->>channel', 'direct')
           .neq('role', 'lawyer'); // Don't count lawyer's own messages as unread
 
         if (!error && count !== null) {
@@ -89,7 +90,7 @@ export const useLawyerChatNotifications = () => {
           role: 'lawyer',
           content: content,
           message_type: 'text',
-          metadata: {}
+          metadata: { channel: 'direct' }
         });
 
       if (error) throw error;
@@ -120,8 +121,8 @@ export const useLawyerChatNotifications = () => {
         (payload) => {
           const newMessage = payload.new;
           
-          // Only count messages not from the current lawyer
-          if (newMessage.role !== 'lawyer') {
+          // Only count messages not from the current lawyer and from direct channel
+          if (newMessage.role !== 'lawyer' && newMessage.metadata?.channel === 'direct') {
             setUnreadCounts(prev => ({
               ...prev,
               [newMessage.case_id]: (prev[newMessage.case_id] || 0) + 1

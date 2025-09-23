@@ -70,6 +70,7 @@ serve(async (req) => {
         content,
         message_type: messageType,
         metadata: {
+          channel: 'direct',
           session_id: sessionId,
           timestamp: new Date().toISOString(),
           user_id: user.id,
