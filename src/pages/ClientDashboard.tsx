@@ -441,6 +441,7 @@ const ClientDashboard = () => {
             consultationPaid={activeCase.consultation_paid || false}
             paymentStatus={activeCase.payment_status || 'pending'}
             lawyerAssigned={!!activeCase.assigned_lawyer_id}
+            chatNotificationCount={totalUnreadCount}
           />
         </div>
 

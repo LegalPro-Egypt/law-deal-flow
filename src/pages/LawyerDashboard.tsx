@@ -784,6 +784,7 @@ const LawyerDashboard = () => {
             cases={cases}
             userRole="lawyer"
             lawyerAssigned={true}
+            chatNotificationCount={getTotalUnreadCount()}
           />
         </div>
       </div>

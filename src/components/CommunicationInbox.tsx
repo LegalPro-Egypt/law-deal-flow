@@ -8,7 +8,6 @@ import { MessageSquare, Lock, CreditCard, Clock } from 'lucide-react';
 import { CommunicationLauncher } from '@/components/CommunicationLauncher';
 import { RecentSessions } from '@/components/RecentSessions';
 import { useLanguage } from '@/hooks/useLanguage';
-import { useNotifications } from '@/hooks/useNotifications';
 import { NotificationBadge } from '@/components/ui/notification-badge';
 
 interface Case {
@@ -29,6 +28,7 @@ interface CommunicationInboxProps {
   consultationPaid?: boolean;
   paymentStatus?: string;
   lawyerAssigned?: boolean;
+  chatNotificationCount?: number;
 }
 
 export const CommunicationInbox: React.FC<CommunicationInboxProps> = ({
@@ -39,10 +39,10 @@ export const CommunicationInbox: React.FC<CommunicationInboxProps> = ({
   caseStatus: initialCaseStatus,
   consultationPaid: initialConsultationPaid,
   paymentStatus: initialPaymentStatus,
-  lawyerAssigned = false
+  lawyerAssigned = false,
+  chatNotificationCount = 0
 }) => {
   const { t, isRTL } = useLanguage();
-  const { unreadCount } = useNotifications();
   
   // Use first available case if no initial case provided
   const firstCase = cases.length > 0 ? cases[0] : null;
@@ -146,7 +146,7 @@ export const CommunicationInbox: React.FC<CommunicationInboxProps> = ({
         <CardTitle className={`flex items-center gap-2 relative ${isRTL() ? 'flex-row-reverse justify-end' : ''}`}>
           <MessageSquare className="h-5 w-5" />
           {t('communication.inbox.title')}
-          <NotificationBadge count={unreadCount} />
+          <NotificationBadge count={chatNotificationCount} />
         </CardTitle>
         <CardDescription className={`flex items-center justify-between ${isRTL() ? 'text-right flex-row-reverse' : ''}`}>
           <span>{t(`communication.inbox.description.${userRole}`)}</span>
