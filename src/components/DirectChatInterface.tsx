@@ -139,50 +139,30 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
   };
 
   // Handle file upload
-  const handleFileUpload = async (files: FileList | null) => {
-    if (!files || files.length === 0 || !user || isUploading) return;
-
-    const file = files[0]; // Take first file only
-    const uploadResult = await uploadFile(file, caseId);
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
     
-    if (uploadResult) {
-      // Send file message
+    const uploaded = await uploadFile(file, caseId);
+    if (uploaded) {
       const messageRole = userRole === 'lawyer' ? 'lawyer' : 'user';
-      
-      try {
-        const { error } = await supabase
-          .from('case_messages')
-          .insert({
-            case_id: caseId,
-            role: messageRole,
-            content: `Shared a file: ${uploadResult.name}`,
-            message_type: 'file',
-            metadata: { 
-              channel: 'direct',
-              file: {
-                name: uploadResult.name,
-                url: uploadResult.url,
-                type: uploadResult.type,
-                size: uploadResult.size
-              }
-            }
-          });
-
-        if (error) throw error;
-      } catch (error) {
-        console.error('Error sending file message:', error);
-        toast({
-          title: 'Error',
-          description: 'File uploaded but failed to send message',
-          variant: 'destructive',
-        });
-      }
+      await supabase.from('case_messages').insert({
+        case_id: caseId,
+        role: messageRole,
+        content: '',
+        message_type: 'file',
+        metadata: { 
+          channel: 'direct', 
+          file: {
+            name: uploaded.name,
+            url: uploaded.url,
+            type: uploaded.type,
+            size: uploaded.size
+          }
+        } as any
+      });
     }
-
-    // Reset file input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+    e.target.value = ''; // reset input
   };
 
   // Handle Enter key press
@@ -274,48 +254,29 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
     return <File className="w-4 h-4" />;
   };
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
-  const renderFileMessage = (message: Message) => {
-    const file = message.metadata?.file;
-    if (!file) return null;
-
-    const isImage = file.type.startsWith('image/');
-
-    return (
-      <div className="space-y-2">
-        {isImage ? (
-          <>
-            <div className="max-w-xs">
-              <img
-                src={file.url}
-                alt={file.name}
-                className="rounded-lg max-w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
-                onClick={() => window.open(file.url, '_blank')}
-              />
+  const renderMessageContent = (message: Message) => {
+    if (message.message_type === 'file' && message.metadata?.file) {
+      const f = message.metadata.file;
+      if (f.type?.startsWith('image/')) {
+        return (
+          <div>
+            <img src={f.url} alt={f.name} className="max-w-[220px] rounded-lg" />
+            <div className="text-[11px] opacity-70 mt-1 break-all">
+              {f.name} ({(f.size/1024).toFixed(1)} KB)
             </div>
-            <div className="flex items-center gap-2 text-sm opacity-90">
-              <ImageIcon className="w-4 h-4" />
-              <span>{file.name}</span>
-              <span className="text-xs opacity-70">({formatFileSize(file.size)})</span>
-            </div>
-          </>
-        ) : (
-          <div 
-            className="flex items-center gap-2 text-sm opacity-90 cursor-pointer hover:opacity-100 transition-opacity"
-            onClick={() => window.open(file.url, '_blank')}
-          >
-            <FileText className="w-4 h-4" />
-            <span className="underline">{file.name}</span>
-            <span className="text-xs opacity-70">({formatFileSize(file.size)})</span>
           </div>
-        )}
+        );
+      }
+      return (
+        <a href={f.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 underline text-sm break-all">
+          <FileText className="w-4 h-4" />
+          {f.name} ({(f.size/1024).toFixed(1)} KB)
+        </a>
+      );
+    }
+    return (
+      <div className="text-[14px] leading-[1.4] break-words whitespace-pre-wrap">
+        {message.content}
       </div>
     );
   };
@@ -359,17 +320,12 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
                   (userRole === 'lawyer' && message.role === 'lawyer');
                 
                 const prevMessage = messages[index - 1];
-                const nextMessage = messages[index + 1];
                 const isFirstInGroup = !prevMessage || prevMessage.role !== message.role;
-                const isLastInGroup = !nextMessage || nextMessage.role !== message.role;
-                const isMiddleInGroup = !isFirstInGroup && !isLastInGroup;
                 
                 return (
                   <div
                     key={message.id}
-                    className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} ${
-                      isLastInGroup ? 'mb-5' : 'mb-2'
-                    }`}
+                    className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} ${isFirstInGroup && index !== 0 ? 'mt-4' : ''}`}
                   >
                     <div
                       className={`
@@ -378,28 +334,11 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
                           ? 'bg-blue-500 text-white'
                           : 'bg-gray-100 text-gray-900'
                         }
-                        ${isFirstInGroup && isLastInGroup
-                          ? isOwnMessage 
-                            ? 'rounded-[18px] rounded-br-[4px]'
-                            : 'rounded-[18px] rounded-bl-[4px]'
-                          : isFirstInGroup
-                          ? isOwnMessage
-                            ? 'rounded-[18px] rounded-br-[18px]'
-                            : 'rounded-[18px] rounded-bl-[18px]'
-                          : isLastInGroup
-                          ? isOwnMessage
-                            ? 'rounded-[18px] rounded-br-[4px]'
-                            : 'rounded-[18px] rounded-bl-[4px]'
-                          : 'rounded-[18px]'
-                        }
+                        rounded-[18px]
                       `}
                     >
-                      <div className="text-[14px] leading-[1.3] break-words whitespace-pre-wrap pr-12">
-                        {message.message_type === 'file' ? (
-                          renderFileMessage(message)
-                        ) : (
-                          message.content
-                        )}
+                      <div className="pr-12">
+                        {renderMessageContent(message)}
                       </div>
                       <div className={`absolute bottom-1 right-2 text-[11px] opacity-70 ${
                         isOwnMessage ? 'text-white' : 'text-gray-600'
@@ -431,14 +370,12 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
             <input
               ref={fileInputRef}
               type="file"
+              accept="image/*,application/pdf,.doc,.docx,.xlsx,.ppt,.pptx"
               className="hidden"
-              onChange={(e) => {
-                e.stopPropagation();
-                handleFileUpload(e.target.files);
-              }}
-              accept="image/*,.pdf,.doc,.docx,.txt,.zip"
+              onChange={handleFileSelect}
             />
             <Button
+              type="button"
               variant="outline"
               size="sm"
               onClick={(e) => {
