@@ -43,11 +43,38 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
     strategy: ""
   });
   const [generatedProposal, setGeneratedProposal] = useState<string>("");
+  const [feeStructure, setFeeStructure] = useState<any>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [activeTab, setActiveTab] = useState("form");
   const { toast } = useToast();
   const { t, isRTL } = useLanguage();
+
+  // Calculate additional fees in real-time
+  const platformFeePercentage = 5.0;
+  const paymentProcessingFeePercentage = 3.0;
+  const clientProtectionFeePercentage = 3.0;
+  
+  const calculateFees = () => {
+    const remainingFee = formData.remaining_fee || 0;
+    const platformFeeAmount = remainingFee * (platformFeePercentage / 100);
+    const paymentProcessingFeeAmount = remainingFee * (paymentProcessingFeePercentage / 100);
+    const clientProtectionFeeAmount = remainingFee * (clientProtectionFeePercentage / 100);
+    const totalAdditionalFees = platformFeeAmount + paymentProcessingFeeAmount + clientProtectionFeeAmount;
+    const baseTotalFee = formData.consultation_fee + remainingFee;
+    const finalTotalFee = baseTotalFee + totalAdditionalFees;
+    
+    return {
+      platformFeeAmount,
+      paymentProcessingFeeAmount,
+      clientProtectionFeeAmount,
+      totalAdditionalFees,
+      baseTotalFee,
+      finalTotalFee
+    };
+  };
+
+  const calculatedFees = calculateFees();
 
   const handleInputChange = (field: keyof ProposalForm, value: string | number) => {
     setFormData(prev => ({
@@ -103,6 +130,7 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
 
       console.log('Generated proposal length:', data.generatedProposal.length);
       setGeneratedProposal(data.generatedProposal);
+      setFeeStructure(data.feeStructure);
       setActiveTab("preview");
       
       toast({
@@ -151,6 +179,15 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
           consultation_fee: formData.consultation_fee,
           remaining_fee: formData.remaining_fee,
           total_fee: formData.consultation_fee + formData.remaining_fee,
+          platform_fee_percentage: platformFeePercentage,
+          payment_processing_fee_percentage: paymentProcessingFeePercentage,
+          client_protection_fee_percentage: clientProtectionFeePercentage,
+          platform_fee_amount: calculatedFees.platformFeeAmount,
+          payment_processing_fee_amount: calculatedFees.paymentProcessingFeeAmount,
+          client_protection_fee_amount: calculatedFees.clientProtectionFeeAmount,
+          base_total_fee: calculatedFees.baseTotalFee,
+          total_additional_fees: calculatedFees.totalAdditionalFees,
+          final_total_fee: calculatedFees.finalTotalFee,
           timeline: formData.timeline,
           strategy: formData.strategy,
           generated_content: generatedProposal,
@@ -256,9 +293,32 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
                     />
                   </div>
                   <Separator />
+                  
+                  {/* Additional Fees Section */}
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>Platform Fee (5%):</span>
+                      <span>${calculatedFees.platformFeeAmount.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>Payment Processing Fee (3%):</span>
+                      <span>${calculatedFees.paymentProcessingFeeAmount.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>Client Protection Fee (3%):</span>
+                      <span>${calculatedFees.clientProtectionFeeAmount.toFixed(2)}</span>
+                    </div>
+                  </div>
+                  
+                  <Separator />
                   <div className="flex justify-between items-center font-semibold">
                     <span>{t('proposal.feeStructure.total')}:</span>
-                    <span>${(formData.consultation_fee + formData.remaining_fee).toLocaleString()}</span>
+                    <span>${calculatedFees.finalTotalFee.toLocaleString()}</span>
+                  </div>
+                  
+                  <div className="text-xs text-muted-foreground mt-2">
+                    <p>* Additional fees apply to remaining payment only</p>
+                    <p>* Consultation fee ({formData.consultation_fee.toLocaleString()}) paid upfront</p>
                   </div>
                 </CardContent>
               </Card>

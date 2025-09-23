@@ -43,7 +43,7 @@ serve(async (req) => {
     // Verify lawyer is assigned to this case
     const { data: caseData, error: caseError } = await supabase
       .from('cases')
-      .select('id, assigned_lawyer_id, user_id, status, consultation_paid, remaining_fee')
+      .select('id, assigned_lawyer_id, user_id, status, consultation_paid, remaining_fee, case_number, title')
       .eq('id', caseId)
       .eq('assigned_lawyer_id', user.id)
       .single();
@@ -55,6 +55,14 @@ serve(async (req) => {
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    // Calculate additional fees for remaining payment
+    const remainingFee = caseData.remaining_fee || 0;
+    const platformFeeAmount = remainingFee * 0.05;
+    const paymentProcessingFeeAmount = remainingFee * 0.03;
+    const clientProtectionFeeAmount = remainingFee * 0.03;
+    const totalAdditionalFees = platformFeeAmount + paymentProcessingFeeAmount + clientProtectionFeeAmount;
+    const totalRemainingPayment = remainingFee + totalAdditionalFees;
 
     // Check if consultation has been paid and case is in correct status
     if (!caseData.consultation_paid || !['proposal_accepted', 'consultation_paid'].includes(caseData.status)) {
@@ -99,11 +107,20 @@ serve(async (req) => {
         case_id: caseId,
         type: 'consultation_completed',
         title: 'Consultation Completed - Payment Required',
-        message: `Your consultation has been completed. You have 24 hours to complete the remaining payment of $${caseData.remaining_fee || 0}. After this period, communication will be limited.`,
+        message: `Your consultation has been completed. You have 24 hours to complete the remaining payment of $${totalRemainingPayment.toFixed(2)} (includes additional fees) to avoid service interruption.`,
         action_required: true,
         action_url: `/payment?caseId=${caseId}&type=remaining`,
         metadata: {
-          remaining_fee: caseData.remaining_fee,
+          payment_type: 'remaining_fee',
+          remaining_fee: remainingFee,
+          additional_fees: totalAdditionalFees,
+          total_amount: totalRemainingPayment,
+          grace_period_hours: 24,
+          fee_breakdown: {
+            platform_fee: platformFeeAmount,
+            payment_processing_fee: paymentProcessingFeeAmount,
+            client_protection_fee: clientProtectionFeeAmount
+          },
           grace_period_expires_at: gracePeriodExpires.toISOString()
         }
       });

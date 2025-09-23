@@ -23,6 +23,15 @@ interface Proposal {
   consultation_fee: number;
   remaining_fee: number;
   total_fee: number;
+  platform_fee_percentage?: number;
+  payment_processing_fee_percentage?: number;
+  client_protection_fee_percentage?: number;
+  platform_fee_amount?: number;
+  payment_processing_fee_amount?: number;
+  client_protection_fee_amount?: number;
+  base_total_fee?: number;
+  total_additional_fees?: number;
+  final_total_fee?: number;
   timeline: string;
   strategy: string;
   generated_content: string;
@@ -115,14 +124,16 @@ export const ProposalReviewDialog = ({
       // Redirect to payment page
       navigate('/payment', {
         state: {
-          paymentData: {
-            caseId: proposal.case_id,
-            proposalId: proposal.id,
-            consultationFee: proposal.consultation_fee || 0,
-            totalFee: proposal.total_fee || 0,
-            lawyerName: 'المحامي المختص', // This could be fetched from proposal data
-            caseTitle: 'استشارة قانونية' // This could be fetched from case data
-          }
+            paymentData: {
+              caseId: proposal.case_id,
+              proposalId: proposal.id,
+              consultationFee: proposal.consultation_fee || 0,
+              totalFee: proposal.final_total_fee || proposal.total_fee || 0,
+              remainingFee: proposal.remaining_fee || 0,
+              additionalFees: proposal.total_additional_fees || 0,
+              lawyerName: 'المحامي المختص', // This could be fetched from proposal data
+              caseTitle: 'استشارة قانونية' // This could be fetched from case data
+            }
         }
       });
 
@@ -241,13 +252,16 @@ export const ProposalReviewDialog = ({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div className="text-center p-3 sm:p-4 bg-primary/5 rounded-lg min-w-0">
                   <div className="font-semibold text-base sm:text-lg break-words">
                     ${proposal.consultation_fee?.toLocaleString() || '0'}
                   </div>
                   <div className="text-xs sm:text-sm text-muted-foreground break-words">
                     {currentLanguage === 'ar' ? 'رسوم الاستشارة' : 'Consultation Fee'}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {currentLanguage === 'ar' ? 'تُدفع مقدماً' : 'Paid upfront'}
                   </div>
                 </div>
                 <div className="text-center p-3 sm:p-4 bg-secondary/5 rounded-lg min-w-0">
@@ -258,13 +272,37 @@ export const ProposalReviewDialog = ({
                     {currentLanguage === 'ar' ? 'الرسوم المتبقية' : 'Remaining Fee'}
                   </div>
                 </div>
-                <div className="text-center p-3 sm:p-4 bg-accent/5 rounded-lg min-w-0 sm:col-span-2 lg:col-span-1">
-                  <div className="font-semibold text-base sm:text-lg text-primary break-words">
-                    ${proposal.total_fee?.toLocaleString() || '0'}
+              </div>
+              
+              {/* Additional Fees Breakdown */}
+              {proposal.total_additional_fees && proposal.total_additional_fees > 0 && (
+                <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+                  <h5 className="font-medium text-sm mb-2">
+                    {currentLanguage === 'ar' ? 'الرسوم الإضافية (تطبق على المبلغ المتبقي فقط)' : 'Additional Fees (Applied to remaining payment only)'}
+                  </h5>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span>{currentLanguage === 'ar' ? 'رسوم المنصة (5%)' : 'Platform Fee (5%)'}</span>
+                      <span>${proposal.platform_fee_amount?.toFixed(2) || '0'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>{currentLanguage === 'ar' ? 'رسوم المعالجة (3%)' : 'Payment Processing Fee (3%)'}</span>
+                      <span>${proposal.payment_processing_fee_amount?.toFixed(2) || '0'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>{currentLanguage === 'ar' ? 'رسوم الحماية (3%)' : 'Client Protection Fee (3%)'}</span>
+                      <span>${proposal.client_protection_fee_amount?.toFixed(2) || '0'}</span>
+                    </div>
                   </div>
-                  <div className="text-xs sm:text-sm text-muted-foreground break-words">
-                    {currentLanguage === 'ar' ? 'إجمالي الرسوم' : 'Total Fee'}
-                  </div>
+                </div>
+              )}
+              
+              <div className="text-center p-3 sm:p-4 bg-accent/5 rounded-lg border-2 border-primary/20 min-w-0">
+                <div className="font-semibold text-lg sm:text-xl text-primary break-words">
+                  ${(proposal.final_total_fee || proposal.total_fee)?.toLocaleString() || '0'}
+                </div>
+                <div className="text-xs sm:text-sm text-muted-foreground break-words">
+                  {currentLanguage === 'ar' ? 'المجموع النهائي' : 'Final Total'}
                 </div>
               </div>
             </CardContent>

@@ -17,8 +17,11 @@ interface PaymentState {
   proposalId: string;
   consultationFee: number;
   totalFee?: number;
+  remainingFee?: number;
+  additionalFees?: number;
   lawyerName?: string;
   caseTitle?: string;
+  isRemainingPayment?: boolean;
 }
 
 const Payment: React.FC = () => {
@@ -312,21 +315,51 @@ const Payment: React.FC = () => {
 
                 {/* Fee Breakdown */}
                 <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span>{language === 'ar' ? 'رسوم الاستشارة' : 'Consultation Fee'}</span>
-                    <span>{formatCurrency(paymentData.consultationFee)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm text-muted-foreground">
-                    <span>{language === 'ar' ? 'رسوم المعالجة' : 'Processing Fee'}</span>
-                    <span>{language === 'ar' ? 'مجاناً' : 'Free'}</span>
-                  </div>
+                  {paymentData.isRemainingPayment ? (
+                    // Remaining payment breakdown
+                    <>
+                      <div className="flex justify-between">
+                        <span>{language === 'ar' ? 'الرسوم المتبقية' : 'Remaining Fee'}</span>
+                        <span>{formatCurrency(paymentData.remainingFee || 0)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm text-muted-foreground">
+                        <span>{language === 'ar' ? 'رسوم المنصة (5%)' : 'Platform Fee (5%)'}</span>
+                        <span>{formatCurrency((paymentData.remainingFee || 0) * 0.05)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm text-muted-foreground">
+                        <span>{language === 'ar' ? 'رسوم المعالجة (3%)' : 'Payment Processing Fee (3%)'}</span>
+                        <span>{formatCurrency((paymentData.remainingFee || 0) * 0.03)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm text-muted-foreground">
+                        <span>{language === 'ar' ? 'رسوم الحماية (3%)' : 'Client Protection Fee (3%)'}</span>
+                        <span>{formatCurrency((paymentData.remainingFee || 0) * 0.03)}</span>
+                      </div>
+                    </>
+                  ) : (
+                    // Consultation fee breakdown
+                    <>
+                      <div className="flex justify-between">
+                        <span>{language === 'ar' ? 'رسوم الاستشارة' : 'Consultation Fee'}</span>
+                        <span>{formatCurrency(paymentData.consultationFee)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm text-muted-foreground">
+                        <span>{language === 'ar' ? 'رسوم المعالجة' : 'Processing Fee'}</span>
+                        <span>{language === 'ar' ? 'مجاناً' : 'Free'}</span>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 <Separator />
 
                 <div className="flex justify-between font-semibold text-lg">
                   <span>{language === 'ar' ? 'المجموع' : 'Total'}</span>
-                  <span>{formatCurrency(paymentData.consultationFee)}</span>
+                  <span>
+                    {paymentData.isRemainingPayment 
+                      ? formatCurrency((paymentData.remainingFee || 0) + (paymentData.additionalFees || 0))
+                      : formatCurrency(paymentData.consultationFee)
+                    }
+                  </span>
                 </div>
 
                 {/* Payment Button */}
@@ -342,10 +375,14 @@ const Payment: React.FC = () => {
                       {language === 'ar' ? 'جاري المعالجة...' : 'Processing...'}
                     </div>
                   ) : (
-                    <div className="flex items-center gap-2">
-                      <Lock className="w-4 h-4" />
-                      {language === 'ar' ? 'دفع آمن' : 'Pay Securely'} {formatCurrency(paymentData.consultationFee)}
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <Lock className="w-4 h-4" />
+                    {language === 'ar' ? 'دفع آمن' : 'Pay Securely'} {
+                      paymentData.isRemainingPayment 
+                        ? formatCurrency((paymentData.remainingFee || 0) + (paymentData.additionalFees || 0))
+                        : formatCurrency(paymentData.consultationFee)
+                    }
+                  </div>
                   )}
                 </Button>
 

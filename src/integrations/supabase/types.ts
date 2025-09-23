@@ -1003,55 +1003,82 @@ export type Database = {
       }
       proposals: {
         Row: {
+          base_total_fee: number | null
           case_id: string
           client_id: string
+          client_protection_fee_amount: number | null
+          client_protection_fee_percentage: number | null
           consultation_fee: number | null
           created_at: string
+          final_total_fee: number | null
           generated_content: string
           id: string
           lawyer_id: string
           metadata: Json | null
+          payment_processing_fee_amount: number | null
+          payment_processing_fee_percentage: number | null
+          platform_fee_amount: number | null
+          platform_fee_percentage: number | null
           remaining_fee: number | null
           response_at: string | null
           status: string
           strategy: string | null
           timeline: string | null
+          total_additional_fees: number | null
           total_fee: number | null
           updated_at: string
           viewed_at: string | null
         }
         Insert: {
+          base_total_fee?: number | null
           case_id: string
           client_id: string
+          client_protection_fee_amount?: number | null
+          client_protection_fee_percentage?: number | null
           consultation_fee?: number | null
           created_at?: string
+          final_total_fee?: number | null
           generated_content: string
           id?: string
           lawyer_id: string
           metadata?: Json | null
+          payment_processing_fee_amount?: number | null
+          payment_processing_fee_percentage?: number | null
+          platform_fee_amount?: number | null
+          platform_fee_percentage?: number | null
           remaining_fee?: number | null
           response_at?: string | null
           status?: string
           strategy?: string | null
           timeline?: string | null
+          total_additional_fees?: number | null
           total_fee?: number | null
           updated_at?: string
           viewed_at?: string | null
         }
         Update: {
+          base_total_fee?: number | null
           case_id?: string
           client_id?: string
+          client_protection_fee_amount?: number | null
+          client_protection_fee_percentage?: number | null
           consultation_fee?: number | null
           created_at?: string
+          final_total_fee?: number | null
           generated_content?: string
           id?: string
           lawyer_id?: string
           metadata?: Json | null
+          payment_processing_fee_amount?: number | null
+          payment_processing_fee_percentage?: number | null
+          platform_fee_amount?: number | null
+          platform_fee_percentage?: number | null
           remaining_fee?: number | null
           response_at?: string | null
           status?: string
           strategy?: string | null
           timeline?: string | null
+          total_additional_fees?: number | null
           total_fee?: number | null
           updated_at?: string
           viewed_at?: string | null

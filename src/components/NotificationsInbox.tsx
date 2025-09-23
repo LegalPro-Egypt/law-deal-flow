@@ -36,21 +36,27 @@ export const NotificationsInbox = () => {
     if (proposalWithCase && proposalWithCase.case) {
       // Determine payment type and amount based on case status
       const isGracePeriodPayment = proposalWithCase.case.status === 'consultation_completed';
+      
+      // Calculate remaining payment with additional fees
+      const remainingFee = proposalWithCase.remaining_fee || 0;
+      const additionalFees = proposalWithCase.total_additional_fees || (remainingFee * 0.11); // 5% + 3% + 3%
+      
       const paymentType = isGracePeriodPayment ? 'remaining' : 'consultation';
-      const amount = isGracePeriodPayment ? proposalWithCase.case.remaining_fee : proposalWithCase.consultation_fee;
+      const amount = isGracePeriodPayment ? remainingFee + additionalFees : proposalWithCase.consultation_fee;
       
       navigate('/payment', {
         state: {
-          caseId: proposalWithCase.case.id,
-          proposalId: proposalWithCase.id,
-          consultationFee: proposalWithCase.consultation_fee,
-          remainingFee: proposalWithCase.case.remaining_fee,
-          totalFee: proposalWithCase.total_fee,
-          lawyerName: proposalWithCase.case.assigned_lawyer_name || 'Your Lawyer',
-          caseTitle: proposalWithCase.case.title,
-          paymentType,
-          amount,
-          gracePeriodExpires: proposalWithCase.case.grace_period_expires_at
+          paymentData: {
+            caseId: proposalWithCase.case.id,
+            proposalId: proposalWithCase.id,
+            consultationFee: proposalWithCase.consultation_fee,
+            remainingFee: remainingFee,
+            totalFee: proposalWithCase.final_total_fee || proposalWithCase.total_fee,
+            additionalFees: additionalFees,
+            lawyerName: proposalWithCase.case.assigned_lawyer_name || 'Your Lawyer',
+            caseTitle: proposalWithCase.case.title,
+            isRemainingPayment: isGracePeriodPayment
+          }
         }
       });
     }
@@ -162,8 +168,10 @@ export const NotificationsInbox = () => {
                             if (!proposalWithCase || !needsPayment(proposalWithCase)) return null;
                             
                             const isGracePeriodPayment = proposalWithCase.case?.status === 'consultation_completed';
+                            const remainingFee = proposalWithCase.remaining_fee || 0;
+                            const additionalFees = proposalWithCase.total_additional_fees || (remainingFee * 0.11);
                             const amount = isGracePeriodPayment ? 
-                              proposalWithCase.case?.remaining_fee : 
+                              remainingFee + additionalFees : 
                               proposalWithCase.consultation_fee;
                             const paymentLabel = isGracePeriodPayment ? 'Complete Final Payment' : 'Complete Payment';
                             const gracePeriodExpires = proposalWithCase.case?.grace_period_expires_at ? 

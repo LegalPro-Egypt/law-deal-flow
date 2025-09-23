@@ -34,6 +34,20 @@ serve(async (req) => {
       });
     }
 
+    // Calculate additional fees (platform, payment processing, client protection)
+    const platformFeePercentage = 5.0;
+    const paymentProcessingFeePercentage = 3.0;
+    const clientProtectionFeePercentage = 3.0;
+    
+    const remainingFee = proposalInput.remaining_fee || 0;
+    const platformFeeAmount = remainingFee * (platformFeePercentage / 100);
+    const paymentProcessingFeeAmount = remainingFee * (paymentProcessingFeePercentage / 100);
+    const clientProtectionFeeAmount = remainingFee * (clientProtectionFeePercentage / 100);
+    const totalAdditionalFees = platformFeeAmount + paymentProcessingFeeAmount + clientProtectionFeeAmount;
+    
+    const baseTotalFee = (proposalInput.consultation_fee || 0) + remainingFee;
+    const finalTotalFee = baseTotalFee + totalAdditionalFees;
+
     if (!openAIApiKey) {
       console.error('OpenAI API key not configured');
       return new Response(JSON.stringify({ 
@@ -149,7 +163,15 @@ Documents: ${caseContext.documents?.length || 0} files
 Analysis: ${JSON.stringify(caseContext.analysis)}
 Messages: ${caseContext.messages?.length || 0} exchanges
 
-Fees: Consultation $${proposalInput.consultation_fee}, Remaining $${proposalInput.remaining_fee}
+Fees: 
+- Consultation Fee: $${proposalInput.consultation_fee} (payable upfront)
+- Remaining Fee: $${proposalInput.remaining_fee}
+- Platform Fee (5%): $${platformFeeAmount.toFixed(2)}
+- Payment Processing Fee (3%): $${paymentProcessingFeeAmount.toFixed(2)}
+- Client Protection Fee (3%): $${clientProtectionFeeAmount.toFixed(2)}
+- Total Additional Fees: $${totalAdditionalFees.toFixed(2)}
+- Final Total: $${finalTotalFee.toFixed(2)}
+
 Timeline: ${proposalInput.timeline}
 Strategy: ${proposalInput.strategy}`;
 
@@ -225,6 +247,19 @@ Strategy: ${proposalInput.strategy}`;
 
     return new Response(JSON.stringify({ 
       generatedProposal,
+      feeStructure: {
+        consultation_fee: proposalInput.consultation_fee || 0,
+        remaining_fee: remainingFee,
+        platform_fee_percentage: platformFeePercentage,
+        payment_processing_fee_percentage: paymentProcessingFeePercentage,
+        client_protection_fee_percentage: clientProtectionFeePercentage,
+        platform_fee_amount: platformFeeAmount,
+        payment_processing_fee_amount: paymentProcessingFeeAmount,
+        client_protection_fee_amount: clientProtectionFeeAmount,
+        base_total_fee: baseTotalFee,
+        total_additional_fees: totalAdditionalFees,
+        final_total_fee: finalTotalFee
+      },
       caseContext: {
         case_number: caseData.case_number,
         title: caseData.title,

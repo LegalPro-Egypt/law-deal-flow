@@ -20,6 +20,15 @@ export interface Proposal {
   consultation_fee: number;
   remaining_fee: number;
   total_fee: number;
+  platform_fee_percentage?: number;
+  payment_processing_fee_percentage?: number;
+  client_protection_fee_percentage?: number;
+  platform_fee_amount?: number;
+  payment_processing_fee_amount?: number;
+  client_protection_fee_amount?: number;
+  base_total_fee?: number;
+  total_additional_fees?: number;
+  final_total_fee?: number;
   timeline: string;
   strategy: string;
   generated_content: string;
@@ -195,6 +204,12 @@ export const useNotifications = () => {
     return false;
   };
 
+  const calculateRemainingPayment = (proposal: Proposal): number => {
+    const remainingFee = proposal.remaining_fee || 0;
+    const additionalFees = proposal.total_additional_fees || 0;
+    return remainingFee + additionalFees;
+  };
+
   return {
     notifications,
     proposals,
@@ -205,6 +220,7 @@ export const useNotifications = () => {
     handleViewProposal,
     fetchNotifications,
     fetchProposals,
-    needsPayment
+    needsPayment,
+    calculateRemainingPayment
   };
 };
