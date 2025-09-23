@@ -101,7 +101,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
     session.status === 'active' && session.started_at
   );
   const pendingSession = pendingSessionId
-    ? sessions.find(session => session.id === pendingSessionId) ||
+    ? sessions.find(session => session.id === pendingSessionId && session.status === 'scheduled') ||
       caseSessions.find(session => session.status === 'scheduled' && session.id === pendingSessionId)
     : caseSessions.find(session => session.status === 'scheduled' && (
         (!waitingMode || session.session_type === waitingMode) &&
