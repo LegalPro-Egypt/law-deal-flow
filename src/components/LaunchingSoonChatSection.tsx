@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,8 +14,6 @@ interface LaunchingSoonChatSectionProps {
 
 export function LaunchingSoonChatSection({ className = "" }: LaunchingSoonChatSectionProps) {
   const [userInput, setUserInput] = useState('');
-  const [hasInteracted, setHasInteracted] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const { t, isRTL, getCurrentLanguage } = useLanguage();
   
@@ -28,14 +26,6 @@ export function LaunchingSoonChatSection({ className = "" }: LaunchingSoonChatSe
     language
   } = useLegalChatbot('qa', 'coming_soon');
 
-  // Stable scroll function to prevent infinite loops
-  const scrollToBottom = useCallback(() => {
-    if (hasInteracted && messagesEndRef.current) {
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
-    }
-  }, [hasInteracted]);
 
   useEffect(() => {
     const initChat = async () => {
@@ -48,27 +38,23 @@ export function LaunchingSoonChatSection({ className = "" }: LaunchingSoonChatSe
     initChat();
   }, []);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages.length, scrollToBottom]);
 
   // Stable language update - only run once on mount and when explicitly needed
-  const initialLanguageSet = useRef(false);
+  const [initialLanguageSet, setInitialLanguageSet] = useState(false);
   
   useEffect(() => {
-    if (!initialLanguageSet.current) {
+    if (!initialLanguageSet) {
       const currentLang = getCurrentLanguage();
       if (currentLang && currentLang !== language) {
         setLanguage(currentLang as 'en' | 'ar' | 'de');
       }
-      initialLanguageSet.current = true;
+      setInitialLanguageSet(true);
     }
   }, []);
 
   const handleSendMessage = async () => {
     if (!userInput.trim()) return;
     
-    setHasInteracted(true);
     const message = userInput.trim();
     setUserInput('');
     
@@ -181,8 +167,6 @@ export function LaunchingSoonChatSection({ className = "" }: LaunchingSoonChatSe
                   </div>
                 </div>
               )}
-              
-              <div ref={messagesEndRef} />
             </div>
           </ScrollArea>
 
