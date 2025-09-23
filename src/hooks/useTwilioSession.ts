@@ -180,8 +180,8 @@ export const useTwilioSession = () => {
     }
   }, []);
 
-  // End a session
-  const endSession = useCallback(async (sessionId: string, startTime?: Date) => {
+  // End a session with retry logic
+  const endSession = useCallback(async (sessionId: string, startTime?: Date, retryCount = 0) => {
     try {
       const endTime = new Date();
       const duration = startTime ? Math.floor((endTime.getTime() - startTime.getTime()) / 1000) : null;
@@ -206,6 +206,7 @@ export const useTwilioSession = () => {
 
       if (activeSession?.id === sessionId) {
         setActiveSession(null);
+        setAccessToken(null);
       }
 
       toast({
@@ -216,9 +217,19 @@ export const useTwilioSession = () => {
       return true;
     } catch (error) {
       console.error('Error ending session:', error);
+      
+      // Retry logic with exponential backoff
+      if (retryCount < 3) {
+        const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
+        setTimeout(() => {
+          endSession(sessionId, startTime, retryCount + 1);
+        }, delay);
+        return false;
+      }
+
       toast({
         title: 'Error',
-        description: 'Failed to end session properly',
+        description: 'Failed to end session properly after retries',
         variant: 'destructive',
       });
       return false;
@@ -249,7 +260,76 @@ export const useTwilioSession = () => {
     }
   }, []);
 
-  // Real-time session updates
+  // Cleanup stale sessions function
+  const cleanupStaleSessions = useCallback(async () => {
+    try {
+      const { error } = await supabase.rpc('cleanup_stale_communication_sessions');
+      if (error) throw error;
+      
+      // Refresh sessions after cleanup
+      await fetchSessions();
+    } catch (error) {
+      console.error('Error cleaning up stale sessions:', error);
+    }
+  }, [fetchSessions]);
+
+  // Session validation and heartbeat
+  const validateAndSyncSessions = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      // Fetch fresh session data from server
+      const { data: serverSessions, error } = await supabase
+        .from('communication_sessions')
+        .select('*')
+        .or(`client_id.eq.${user.id},lawyer_id.eq.${user.id}`)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Compare local state with server state
+      const serverSessionMap = new Map(serverSessions?.map(s => [s.id, s]) || []);
+      const localSessionMap = new Map(sessions.map(s => [s.id, s]));
+
+      let hasChanges = false;
+
+      // Check for sessions that need to be updated locally
+      for (const [id, serverSession] of serverSessionMap) {
+        const localSession = localSessionMap.get(id);
+        if (!localSession || localSession.status !== serverSession.status) {
+          hasChanges = true;
+          break;
+        }
+      }
+
+      // Check for sessions that exist locally but not on server
+      for (const [id] of localSessionMap) {
+        if (!serverSessionMap.has(id)) {
+          hasChanges = true;
+          break;
+        }
+      }
+
+      if (hasChanges) {
+        setSessions((serverSessions || []) as TwilioSession[]);
+        
+        // Update active session if it changed
+        if (activeSession) {
+          const updatedActiveSession = serverSessionMap.get(activeSession.id);
+          if (updatedActiveSession && updatedActiveSession.status === 'ended') {
+            setActiveSession(null);
+            setAccessToken(null);
+          } else if (updatedActiveSession) {
+            setActiveSession(updatedActiveSession as TwilioSession);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error validating sessions:', error);
+    }
+  }, [user, sessions, activeSession]);
+
+  // Real-time session updates with enhanced cleanup
   useEffect(() => {
     if (!user) return;
 
@@ -269,19 +349,30 @@ export const useTwilioSession = () => {
           if (payload.eventType === 'INSERT') {
             setSessions(prev => [payload.new as TwilioSession, ...prev]);
           } else if (payload.eventType === 'UPDATE') {
+            const updatedSession = payload.new as TwilioSession;
             setSessions(prev => prev.map(session => 
-              session.id === payload.new.id ? payload.new as TwilioSession : session
+              session.id === updatedSession.id ? updatedSession : session
             ));
             
-            // Update active session if it's the one being updated
-            if (activeSession?.id === payload.new.id) {
-              setActiveSession(payload.new as TwilioSession);
+            // Update active session if it changed to ended
+            if (activeSession?.id === updatedSession.id) {
+              if (updatedSession.status === 'ended') {
+                setActiveSession(null);
+                setAccessToken(null);
+                toast({
+                  title: 'Session Ended',
+                  description: 'The communication session has ended',
+                });
+              } else {
+                setActiveSession(updatedSession);
+              }
             }
           } else if (payload.eventType === 'DELETE') {
             setSessions(prev => prev.filter(session => session.id !== payload.old.id));
             
             if (activeSession?.id === payload.old.id) {
               setActiveSession(null);
+              setAccessToken(null);
             }
           }
         }
@@ -292,6 +383,53 @@ export const useTwilioSession = () => {
       supabase.removeChannel(channel);
     };
   }, [user, activeSession]);
+
+  // Browser close/refresh cleanup
+  useEffect(() => {
+    const handleBeforeUnload = async () => {
+      if (activeSession && activeSession.status === 'active') {
+        // Use sendBeacon for reliable cleanup on page unload
+        const endSessionData = JSON.stringify({
+          sessionId: activeSession.id,
+          endTime: new Date().toISOString(),
+          status: 'ended'
+        });
+        
+        navigator.sendBeacon('/api/end-session', endSessionData);
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden' && activeSession) {
+        // Page is being hidden, validate session state
+        validateAndSyncSessions();
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [activeSession, validateAndSyncSessions]);
+
+  // Periodic session validation (every 30 seconds)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      validateAndSyncSessions();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [validateAndSyncSessions]);
+
+  // Initial cleanup on mount
+  useEffect(() => {
+    if (user) {
+      cleanupStaleSessions();
+    }
+  }, [user, cleanupStaleSessions]);
 
   // Load sessions on mount
   useEffect(() => {
@@ -311,6 +449,8 @@ export const useTwilioSession = () => {
     stopRecording,
     endSession,
     getRecordings,
-    fetchSessions
+    fetchSessions,
+    cleanupStaleSessions,
+    validateAndSyncSessions
   };
 };

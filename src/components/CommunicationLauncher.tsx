@@ -8,6 +8,7 @@ import { toast } from '@/hooks/use-toast';
 import { useTwilioSession, TwilioSession } from '@/hooks/useTwilioSession';
 import { useLanguage } from '@/hooks/useLanguage';
 import { supabase } from '@/integrations/supabase/client';
+import { setupBrowserSessionCleanup, createSessionValidator } from '@/utils/sessionCleanup';
 import { TwilioVideoInterface } from './TwilioVideoInterface';
 import { TwilioVoiceInterface } from './TwilioVoiceInterface';
 import { TwilioChatInterface } from './TwilioChatInterface';
@@ -43,10 +44,40 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
   const [waitingForLawyer, setWaitingForLawyer] = useState(false);
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
   const sessionStartTimeRef = useRef<Date | null>(null);
+  const browserCleanupRef = useRef<(() => void) | null>(null);
+  const sessionValidatorRef = useRef<(() => void) | null>(null);
 
   const caseSessions = sessions.filter(session => session.case_id === caseId);
   const activeCaseSession = caseSessions.find(session => session.status === 'active');
   const pendingSession = caseSessions.find(session => session.status === 'scheduled');
+
+  // Setup browser cleanup and session validation when session becomes active
+  useEffect(() => {
+    if (activeSession && activeSession.status === 'active') {
+      console.log('Setting up session monitoring for:', activeSession.id);
+      
+      // Setup browser cleanup for when user closes tab/browser
+      browserCleanupRef.current = setupBrowserSessionCleanup(activeSession.id);
+      
+      // Setup session validator
+      sessionValidatorRef.current = createSessionValidator(activeSession.id, () => {
+        console.log('Session validator detected session ended, cleaning up UI...');
+        handleEndCommunication();
+      });
+    }
+    
+    return () => {
+      // Cleanup when session changes or component unmounts
+      if (browserCleanupRef.current) {
+        browserCleanupRef.current();
+        browserCleanupRef.current = null;
+      }
+      if (sessionValidatorRef.current) {
+        sessionValidatorRef.current();
+        sessionValidatorRef.current = null;
+      }
+    };
+  }, [activeSession]);
 
   // Listen for session updates to know when lawyer accepts the call
   useEffect(() => {
@@ -133,15 +164,69 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
   };
 
   const handleEndCommunication = async () => {
-    if (activeSession) {
-      await endSession(activeSession.id, sessionStartTimeRef.current || undefined);
+    try {
+      if (activeSession) {
+        console.log('Ending communication session:', activeSession.id);
+        const success = await endSession(activeSession.id, sessionStartTimeRef.current || undefined);
+        
+        if (!success) {
+          // If normal end session fails, try emergency cleanup
+          console.log('Normal session end failed, attempting emergency cleanup...');
+          await supabase.functions.invoke('session-cleanup', {
+            body: { sessionId: activeSession.id }
+          });
+        }
+      }
+      
+      // Clean up local state regardless of server response
+      setCommunicationMode(null);
+      setAccessToken(null);
+      setActiveSession(null);
+      setWaitingForLawyer(false);
+      setSessionStartTime(null);
+      sessionStartTimeRef.current = null;
+      
+      // Clean up session monitoring
+      if (browserCleanupRef.current) {
+        browserCleanupRef.current();
+        browserCleanupRef.current = null;
+      }
+      if (sessionValidatorRef.current) {
+        sessionValidatorRef.current();
+        sessionValidatorRef.current = null;
+      }
+      
+      toast({
+        title: 'Session Ended',
+        description: 'Communication session has been ended successfully',
+      });
+    } catch (error) {
+      console.error('Error ending communication:', error);
+      
+      // Still clean up local state and monitoring even if there's an error
+      setCommunicationMode(null);
+      setAccessToken(null);
+      setActiveSession(null);
+      setWaitingForLawyer(false);
+      setSessionStartTime(null);
+      sessionStartTimeRef.current = null;
+      
+      // Clean up session monitoring
+      if (browserCleanupRef.current) {
+        browserCleanupRef.current();
+        browserCleanupRef.current = null;
+      }
+      if (sessionValidatorRef.current) {
+        sessionValidatorRef.current();
+        sessionValidatorRef.current = null;
+      }
+      
+      toast({
+        title: 'Session Ended',
+        description: 'Session ended with cleanup warnings',
+        variant: 'destructive',
+      });
     }
-    setCommunicationMode(null);
-    setAccessToken(null);
-    setActiveSession(null);
-    setWaitingForLawyer(false);
-    setSessionStartTime(null);
-    sessionStartTimeRef.current = null;
   };
 
   const handleCancelCall = async () => {

@@ -196,12 +196,53 @@ export const TwilioVideoInterface: React.FC<TwilioVideoInterfaceProps> = ({
     }
   };
 
-  const handleDisconnect = () => {
-    if (room) {
-      room.disconnect();
+  const handleDisconnect = async () => {
+    try {
+      console.log('Disconnecting from video session...');
+      
+      if (room) {
+        room.disconnect();
+      }
+      
+      setConnected(false);
+      setParticipants([]);
+      setRoom(null);
+      
+      // Call the parent disconnect handler with await to ensure proper cleanup
+      await onDisconnect();
+      
+      toast({
+        title: 'Call Ended',
+        description: 'You have left the video call',
+      });
+    } catch (error) {
+      console.error('Error during disconnect:', error);
+      // Still call onDisconnect even if there's an error
+      onDisconnect();
+      
+      toast({
+        title: 'Call Ended',
+        description: 'Call ended with cleanup warnings',
+        variant: 'destructive',
+      });
     }
-    onDisconnect();
   };
+
+  // Enhanced cleanup on component unmount
+  useEffect(() => {
+    return () => {
+      console.log('TwilioVideoInterface unmounting, cleaning up...');
+      if (room && connected) {
+        try {
+          room.disconnect();
+          // Force disconnect callback to ensure session cleanup
+          onDisconnect();
+        } catch (error) {
+          console.error('Error during component unmount cleanup:', error);
+        }
+      }
+    };
+  }, [room, connected, onDisconnect]);
 
   const handleRecordingToggle = () => {
     onRecordingToggle(!recordingEnabled);
