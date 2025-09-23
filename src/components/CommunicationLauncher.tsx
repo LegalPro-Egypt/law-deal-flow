@@ -151,7 +151,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
         const { error } = await supabase
           .from('communication_sessions')
           .update({ 
-            status: 'cancelled',
+            status: 'failed',
             ended_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           })
