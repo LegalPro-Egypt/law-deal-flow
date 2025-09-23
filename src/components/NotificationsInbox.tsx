@@ -124,43 +124,45 @@ export const NotificationsInbox = () => {
                         {notification.message}
                       </p>
                       
-                      <div className="flex items-center gap-4 mt-3">
+                      <div className="space-y-3 mt-3">
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
                           <Clock className="h-3 w-3" />
                           {new Date(notification.created_at).toLocaleDateString()}
                         </div>
                         
-                        {notification.action_required && notification.type === 'proposal_received' && (
-                          <Button
-                            size="sm"
-                            onClick={() => {
-                              const proposalId = (notification as any).metadata?.proposal_id;
-                              if (proposalId) {
-                                handleViewProposal(proposalId);
-                                markAsRead(notification.id);
-                              }
-                            }}
-                          >
-                            {currentLanguage === 'ar' ? 'مراجعة العرض' : 'View Proposal'}
-                          </Button>
-                        )}
-                        
-                        {(() => {
-                          const proposalId = (notification as any).metadata?.proposal_id;
-                          const proposalWithCase = proposalsWithCases.find(p => p.id === proposalId);
-                          return proposalWithCase && needsPayment(proposalWithCase) && (
+                        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                          {notification.action_required && notification.type === 'proposal_received' && (
                             <Button
                               size="sm"
-                              variant="default"
-                              className="bg-primary hover:bg-primary/90"
-                              onClick={() => handleCompletePayment(proposalId)}
+                              className="w-full sm:w-auto"
+                              onClick={() => {
+                                const proposalId = (notification as any).metadata?.proposal_id;
+                                if (proposalId) {
+                                  handleViewProposal(proposalId);
+                                  markAsRead(notification.id);
+                                }
+                              }}
                             >
-                              <CreditCard className="h-4 w-4 mr-2" />
-                              {currentLanguage === 'ar' ? 'إكمال الدفع' : 'Complete Payment'}
+                              {currentLanguage === 'ar' ? 'مراجعة العرض' : 'View Proposal'}
                             </Button>
-                          );
-                        })()}
-                        
+                          )}
+                          
+                          {(() => {
+                            const proposalId = (notification as any).metadata?.proposal_id;
+                            const proposalWithCase = proposalsWithCases.find(p => p.id === proposalId);
+                            return proposalWithCase && needsPayment(proposalWithCase) && (
+                              <Button
+                                size="sm"
+                                variant="default"
+                                className="w-full sm:w-auto bg-primary hover:bg-primary/90"
+                                onClick={() => handleCompletePayment(proposalId)}
+                              >
+                                <CreditCard className="h-4 w-4 mr-2" />
+                                {currentLanguage === 'ar' ? 'إكمال الدفع' : 'Complete Payment'}
+                              </Button>
+                            );
+                          })()}
+                        </div>
                       </div>
                     </div>
                   </div>
