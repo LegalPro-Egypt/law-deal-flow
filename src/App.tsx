@@ -27,7 +27,10 @@ import { useState } from "react";
 
 const queryClient = new QueryClient();
 
+import { useAuth } from "@/hooks/useAuth";
+
 function AppContent() {
+  const { profile } = useAuth();
   const { 
     isProtectionEnabled, 
     showLaunchingPage, 
@@ -37,7 +40,7 @@ function AppContent() {
   } = useSiteProtection();
   const [showPasswordScreen, setShowPasswordScreen] = useState(false);
   
-  useVisitorTracking();
+  useVisitorTracking(profile);
 
   // If protection is enabled and user doesn't have valid session or admin bypass
   if (isProtectionEnabled && !hasValidSession && !isAdminBypassed) {

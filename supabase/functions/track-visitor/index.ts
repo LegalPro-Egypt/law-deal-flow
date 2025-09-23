@@ -13,6 +13,7 @@ interface VisitorData {
   user_agent: string;
   session_id: string;
   session_duration?: number;
+  user_role?: string;
 }
 
 interface IpInfoResponse {
@@ -104,7 +105,7 @@ serve(async (req) => {
     console.log('Tracking visitor from IP:', clientIP);
 
     // Check if IP should be excluded
-    const isExcluded = EXCLUDED_IPS.has(clientIP) || clientIP === 'unknown';
+    const isExcluded = EXCLUDED_IPS.has(clientIP) || clientIP === 'unknown' || visitorData.user_role === 'admin';
     
     // Hash the IP for privacy
     const visitorHash = await hashIP(clientIP);

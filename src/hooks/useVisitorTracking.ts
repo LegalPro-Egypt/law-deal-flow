@@ -7,9 +7,10 @@ interface VisitorData {
   user_agent: string;
   session_id: string;
   session_duration?: number;
+  user_role?: string;
 }
 
-export const useVisitorTracking = () => {
+export const useVisitorTracking = (profile?: { role?: string } | null) => {
   const sessionStartTime = useRef<number>(Date.now());
   const sessionId = useRef<string>('');
   const hasTracked = useRef<boolean>(false);
@@ -40,6 +41,11 @@ export const useVisitorTracking = () => {
       return false;
     }
 
+    // Don't track admin users
+    if (profile?.role === 'admin') {
+      return false;
+    }
+
     return true;
   };
 
@@ -58,6 +64,7 @@ export const useVisitorTracking = () => {
         user_agent: navigator.userAgent,
         session_id: getSessionId(),
         session_duration: sessionDuration,
+        user_role: profile?.role,
         ...additionalData
       };
 
@@ -98,7 +105,8 @@ export const useVisitorTracking = () => {
           page_path: window.location.pathname,
           user_agent: navigator.userAgent,
           session_id: sessionId.current,
-          session_duration: sessionDuration
+          session_duration: sessionDuration,
+          user_role: profile?.role
         }
       });
     } catch (error) {
