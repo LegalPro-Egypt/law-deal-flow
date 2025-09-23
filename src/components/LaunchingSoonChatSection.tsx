@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,8 @@ interface LaunchingSoonChatSectionProps {
 
 export function LaunchingSoonChatSection({ className = "" }: LaunchingSoonChatSectionProps) {
   const [userInput, setUserInput] = useState('');
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [userSentMessage, setUserSentMessage] = useState(false);
   
   const { t, isRTL, getCurrentLanguage } = useLanguage();
   
@@ -25,6 +27,44 @@ export function LaunchingSoonChatSection({ className = "" }: LaunchingSoonChatSe
     setLanguage,
     language
   } = useLegalChatbot('qa', 'coming_soon');
+
+  // Smart scroll to bottom
+  const scrollToBottom = () => {
+    const viewport = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]');
+    if (viewport) {
+      viewport.scrollTop = viewport.scrollHeight;
+    }
+  };
+
+  // Check if user is at bottom (within 50px threshold)
+  const isUserAtBottom = () => {
+    const viewport = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]');
+    if (!viewport) return false;
+    
+    const { scrollTop, scrollHeight, clientHeight } = viewport;
+    return scrollHeight - scrollTop - clientHeight < 50;
+  };
+
+  // Auto-scroll on new messages (smart behavior)
+  useEffect(() => {
+    if (messages.length > 0) {
+      // Always scroll for first message (welcome message)
+      if (messages.length === 1) {
+        setTimeout(scrollToBottom, 100);
+        return;
+      }
+      
+      // Auto-scroll if user sent a message or if they were at bottom
+      if (userSentMessage || isUserAtBottom()) {
+        setTimeout(scrollToBottom, 100);
+      }
+      
+      // Reset the user sent message flag
+      if (userSentMessage) {
+        setUserSentMessage(false);
+      }
+    }
+  }, [messages, userSentMessage]);
 
 
   useEffect(() => {
@@ -57,6 +97,7 @@ export function LaunchingSoonChatSection({ className = "" }: LaunchingSoonChatSe
     
     const message = userInput.trim();
     setUserInput('');
+    setUserSentMessage(true); // Mark that user sent a message for auto-scroll
     
     try {
       await sendMessage(message);
@@ -127,7 +168,7 @@ export function LaunchingSoonChatSection({ className = "" }: LaunchingSoonChatSe
           </div>
 
           {/* Chat Messages */}
-          <ScrollArea className="h-80 p-6">
+          <ScrollArea ref={scrollAreaRef} className="h-80 p-6">
             <div className="space-y-4">
               {messages.map((message, index) => (
                 <div
