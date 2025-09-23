@@ -118,9 +118,16 @@ const LawyerDashboard = () => {
           filter: `lawyer_id=eq.${user.id}`
         },
         (payload) => {
+          console.log('Communication session updated:', payload);
           const updatedSession = payload.new as TwilioSession;
+          console.log('Updated session status:', updatedSession.status, 'Session ID:', updatedSession.id);
           if (updatedSession.status !== 'scheduled') {
-            setIncomingCalls(prev => prev.filter(call => call.id !== updatedSession.id));
+            console.log('Removing session from incoming calls:', updatedSession.id);
+            setIncomingCalls(prev => {
+              const filtered = prev.filter(call => call.id !== updatedSession.id);
+              console.log('Remaining incoming calls:', filtered.length);
+              return filtered;
+            });
           }
         }
       )

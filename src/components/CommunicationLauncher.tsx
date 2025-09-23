@@ -147,6 +147,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
   const handleCancelCall = async () => {
     if (pendingSession) {
       try {
+        console.log('Cancelling call for session:', pendingSession.id);
         // Update session status to cancelled
         const { error } = await supabase
           .from('communication_sessions')
@@ -157,8 +158,12 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
           })
           .eq('id', pendingSession.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error updating session:', error);
+          throw error;
+        }
 
+        console.log('Call cancelled successfully');
         toast({
           title: 'Call Cancelled',
           description: 'Your call request has been cancelled',
