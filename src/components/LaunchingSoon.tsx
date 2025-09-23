@@ -39,7 +39,8 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
     aiLegalAssistant: "AI Legal Assistant",
     aiLegalAssistantDescription: "Get instant legal guidance powered by advanced AI trained on Egyptian law.",
     clientProtectionGuarantee: "Client Protection Guarantee",
-    clientProtectionGuaranteeDescription: "LegalPro safeguards clients by paying back part or all of the case in case of misconduct or malpractice* *Evidence based and reviewed on per case basis",
+    clientProtectionGuaranteeDescription: "LegalPro protects clients by covering part or all of their case fees in the rare event of proven misconduct or malpractice.",
+    clientProtectionGuaranteeDisclaimer: "*Eligibility requires evidence and a case-by-case review.*",
     givingBackToCommunity: "Giving Back to the Community",
     proBonoMissionDescription: "We reinvest to make legal services accessible for everyone.",
     accessPlatform: "Access Platform",
@@ -244,9 +245,12 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
                   <h3 className="text-xl font-semibold font-futura text-gray-900 mb-4">
                     {getText('clientProtectionGuarantee')}
                   </h3>
-                  <p className="text-gray-600 font-modern leading-relaxed text-sm">
+                  <p className="text-gray-600 font-modern leading-relaxed mb-3">
                     {getText('clientProtectionGuaranteeDescription')}
                   </p>
+                  <small className="text-xs text-gray-500 font-modern leading-relaxed">
+                    {getText('clientProtectionGuaranteeDisclaimer')}
+                  </small>
                 </CardContent>
               </Card>
             </div>
