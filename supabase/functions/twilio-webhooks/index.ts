@@ -227,8 +227,7 @@ async function handleParticipantDisconnected(supabaseClient: any, participantSid
       console.log('Session ended - all participants left:', participant.communication_session_id);
     }
   }
-}
-}
+  }
 
 async function handleRecordingStarted(supabaseClient: any, formData: FormData) {
   const recordingSid = formData.get('RecordingSid') as string;
