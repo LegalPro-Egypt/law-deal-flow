@@ -277,11 +277,11 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
       const f = m.metadata.file;
       if (f.type?.startsWith('image/')) {
         return (
-          <div>
+          <div className="overflow-hidden">
             <img 
               src={f.url} 
               alt={f.name} 
-              className="max-w-[220px] max-h-[160px] object-contain rounded-lg" 
+              className="w-full max-w-[220px] h-auto max-h-[160px] object-contain rounded-lg" 
             />
             <div className="text-[11px] opacity-70 mt-1 break-all">
               {f.name} ({(f.size/1024).toFixed(1)} KB)

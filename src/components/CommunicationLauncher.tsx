@@ -294,19 +294,20 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
   };
 
   // Show direct chat interface if open
-  if (showDirectChat) {
-    console.log('CommunicationLauncher: Rendering DirectChatInterface');
-    return (
-      <DirectChatInterface
-        caseId={caseId}
-        caseTitle={caseTitle}
-        onClose={() => {
-          console.log('CommunicationLauncher: DirectChat onClose called');
-          setShowDirectChat(false);
-        }}
-      />
-    );
-  }
+  const directChatModal = showDirectChat && (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="w-full max-w-2xl">
+        <DirectChatInterface
+          caseId={caseId}
+          caseTitle={caseTitle}
+          onClose={() => {
+            console.log('CommunicationLauncher: DirectChat onClose called');
+            setShowDirectChat(false);
+          }}
+        />
+      </div>
+    </div>
+  );
 
   // If currently in a communication session, show the interface
   if (communicationMode && accessToken) {
@@ -445,6 +446,9 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
           )}
         </CardContent>
       </Card>
+      
+      {/* Direct Chat Modal */}
+      {directChatModal}
     </div>
   );
 };
