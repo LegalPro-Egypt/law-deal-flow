@@ -2,6 +2,13 @@
   "dashboard": {
     "welcome": "Welcome, {{name}}",
     "signOut": "Sign Out",
+    "error": "Failed to load dashboard data",
+    "tabs": {
+      "overview": "Overview",
+      "cases": "Cases",
+      "communication": "Communication",
+      "incomingCalls": "Incoming Calls"
+    },
     "stats": {
       "activeCases": "Active Cases",
       "pendingCases": "Pending Cases", 

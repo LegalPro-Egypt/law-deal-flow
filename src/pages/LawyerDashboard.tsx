@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Scale, 
   LogOut,
@@ -20,7 +21,12 @@ import {
   ShieldCheck,
   AlertTriangle,
   Settings,
-  PhoneCall
+  PhoneCall,
+  BarChart3,
+  Phone,
+  Video,
+  MessageCircle,
+  History
 } from "lucide-react";
 import { LawyerQAChatbot } from "@/components/LawyerQAChatbot";
 import { CompleteVerificationForm } from "@/components/CompleteVerificationForm";
@@ -437,251 +443,384 @@ const LawyerDashboard = () => {
         </div>
       </header>
 
-      <div className="rtl-mobile-container mx-auto py-8 rtl-container">
-        {/* Verification Status Banner */}
-        {profile?.verification_status !== 'verified' && (
-          <Card className="mb-6 border-warning bg-warning/5">
-            <CardContent className="p-6">
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0">
-                  {profile?.verification_status === 'pending_basic' ? (
-                    <AlertTriangle className="h-6 w-6 text-warning" />
-                  ) : profile?.verification_status === 'pending_complete' ? (
-                    <Clock className="h-6 w-6 text-primary" />
-                  ) : (
-                    <ShieldCheck className="h-6 w-6 text-success" />
-                  )}
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold mb-2 text-primary">
-                    {getVerificationTitle(profile?.verification_status)}
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    {getVerificationDescription(profile?.verification_status)}
-                  </p>
-                  {profile?.verification_status === 'pending_basic' && (
-                    <div className="flex gap-2">
-                        <Button 
-                          onClick={() => setShowVerificationForm(true)}
-                          size="sm"
-                          className="bg-primary hover:bg-primary/90"
-                        >
-                          <Settings className={`h-4 w-4 ${isRTL() ? 'ml-2' : 'mr-2'}`} />
-                          Complete Verification
-                        </Button>
+      <div className="rtl-mobile-container mx-auto py-8 rtl-container max-w-7xl">
+        <Tabs defaultValue="overview" className="w-full">
+          <TabsList className="grid w-full grid-cols-4 mb-8">
+            <TabsTrigger value="overview" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="cases" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Cases
+              {cases.length > 0 && (
+                <Badge variant="secondary" className="ml-1">
+                  {cases.length}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="communication" className="flex items-center gap-2">
+              <MessageCircle className="h-4 w-4" />
+              Communication
+            </TabsTrigger>
+            <TabsTrigger value="calls" className="flex items-center gap-2">
+              <PhoneCall className="h-4 w-4" />
+              Incoming Calls
+              {incomingCalls.length > 0 && (
+                <Badge variant="destructive" className="ml-1">
+                  {incomingCalls.length}
+                </Badge>
+              )}
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-6">
+            {/* Verification Status Banner */}
+            {profile?.verification_status !== 'verified' && (
+              <Card className="border-warning bg-warning/5">
+                <CardContent className="p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0">
+                      {profile?.verification_status === 'pending_basic' ? (
+                        <AlertTriangle className="h-6 w-6 text-warning" />
+                      ) : profile?.verification_status === 'pending_complete' ? (
+                        <Clock className="h-6 w-6 text-primary" />
+                      ) : (
+                        <ShieldCheck className="h-6 w-6 text-success" />
+                      )}
                     </div>
-                  )}
-                  {profile?.verification_status === 'pending_complete' && (
-                    <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mt-3">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Clock className="h-4 w-4 text-primary" />
-                        <span className="font-medium text-primary">Approval Pending</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        Your verification documents have been submitted and are currently under review by our admin team. 
-                        You will be notified via email once the review is complete.
+                    <div className="flex-1">
+                      <h3 className="font-semibold mb-2 text-primary">
+                        {getVerificationTitle(profile?.verification_status)}
+                      </h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        {getVerificationDescription(profile?.verification_status)}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Expected review time: 1-3 business days
-                      </p>
+                      {profile?.verification_status === 'pending_basic' && (
+                        <div className="flex gap-2">
+                            <Button 
+                              onClick={() => setShowVerificationForm(true)}
+                              size="sm"
+                              className="bg-primary hover:bg-primary/90"
+                            >
+                              <Settings className={`h-4 w-4 ${isRTL() ? 'ml-2' : 'mr-2'}`} />
+                              Complete Verification
+                            </Button>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <Card className="bg-gradient-card shadow-card">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">{t('dashboard.stats.activeCases')}</p>
-                  <p className="text-3xl font-bold">{stats.activeCases}</p>
-                </div>
-                <FileText className="h-8 w-8 text-success" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gradient-card shadow-card">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">{t('dashboard.stats.pendingCases')}</p>
-                  <p className="text-3xl font-bold">{stats.pendingCases}</p>
-                </div>
-                <Clock className="h-8 w-8 text-warning" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-card shadow-card">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">{t('dashboard.stats.completedCases')}</p>
-                  <p className="text-3xl font-bold">{stats.completedCases}</p>
-                </div>
-                <CheckCircle className="h-8 w-8 text-primary" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-card shadow-card">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">{t('dashboard.stats.totalEarnings')}</p>
-                  <p className="text-3xl font-bold">Coming Soon</p>
-                </div>
-                <Users className="h-8 w-8 text-accent" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Incoming Call Notifications */}
-        {incomingCalls.length > 0 && (
-          <div className="space-y-4 mb-8">
-            <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-              <PhoneCall className="h-5 w-5 text-primary" />
-              Incoming Calls ({incomingCalls.length})
-            </h2>
-            {incomingCalls.map((call) => (
-              <IncomingCallNotification
-                key={call.id}
-                session={call}
-                onAccept={handleAcceptCall}
-                onDecline={handleDeclineCall}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Cases Section */}
-        <Card className="bg-gradient-card shadow-card">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              {t('dashboard.cases.title')}
-            </CardTitle>
-            <CardDescription>
-              Cases assigned to you for legal assistance
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {cases.length === 0 ? (
-              <div className="text-center py-8">
-                <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">{t('dashboard.cases.noCases')}</h3>
-                <p className="text-muted-foreground">
-                  New cases will appear here when they're assigned to you by the admin.
-                </p>
-              </div>
-            ) : (
-              <div className="grid gap-4">
-                {cases.map((caseItem) => (
-                  <Card key={caseItem.id} className="hover:shadow-md transition-shadow">
-                    <CardHeader className="pb-3">
-                       <div className="flex items-center justify-between">
-                         <div className="flex items-center gap-2 flex-wrap">
-                           <Badge variant="outline" className="font-mono text-xs">
-                             {caseItem.case_number}
-                           </Badge>
-                            <Badge variant={getStatusVariant(caseItem.status)}>
-                              {caseItem.status === 'proposal_accepted' && caseItem.consultation_paid === false 
-                                ? (isRTL() ? 'في انتظار الدفع' : 'Awaiting Payment')
-                                : t(`dashboard.cases.status.${caseItem.status}`)
-                              }
-                            </Badge>
-                           <Badge variant={getUrgencyVariant(caseItem.urgency)}>
-                             {t(`dashboard.cases.urgency.${caseItem.urgency}`)} {isRTL() ? 'أولوية' : 'Priority'}
-                           </Badge>
-                         </div>
-                         <div className={`text-xs text-muted-foreground flex-shrink-0 ${isRTL() ? 'text-left' : 'text-right'}`}>
-                           <div>Created: {formatDate(caseItem.created_at)}</div>
-                           <div>Updated: {formatDate(caseItem.updated_at)}</div>
-                         </div>
-                       </div>
-                      <CardTitle className="text-lg">{caseItem.title}</CardTitle>
-                      <CardDescription>
-                        <div className="flex items-center gap-2 text-sm">
-                          <Users className="h-4 w-4" />
-                          Client: {getClientNameForRole(caseItem.client_name, profile?.role)}
-                        </div>
-                        <div className="flex items-center gap-2 text-sm mt-1">
-                          <FileText className="h-4 w-4" />
-                          Category: {caseItem.category}
-                        </div>
-                      </CardDescription>
-                    </CardHeader>
-                     <CardContent className="pt-0 space-y-4">
-                       <div className="flex gap-2 flex-wrap">
-                         <Button 
-                           size="sm" 
-                           variant="outline"
-                           onClick={() => handleViewDetails(caseItem.id)}
-                           className="flex-shrink-0"
-                         >
-                           {t('dashboard.cases.viewDetails')}
-                         </Button>
-                         <Button 
-                           size="sm" 
-                           className="bg-primary hover:bg-primary/90 flex-shrink-0"
-                           onClick={() => setSelectedCaseForProposal(caseItem)}
-                         >
-                           <FileText className={`h-4 w-4 ${isRTL() ? 'ml-2' : 'mr-2'}`} />
-                           {t('dashboard.cases.createProposal')}
-                         </Button>
-                       </div>
-                       
-                       {/* Communication Inbox Section */}
-                       <CommunicationInbox
-                         caseId={caseItem.id}
-                         caseTitle={caseItem.title}
-                         caseStatus={caseItem.status}
-                         consultationPaid={caseItem.consultation_paid || false}
-                         paymentStatus={caseItem.payment_status || 'pending'}
-                         userRole="lawyer"
-                         lawyerAssigned={true}
-                       />
-                     </CardContent>
-                  </Card>
-                ))}
-              </div>
+                  </div>
+                </CardContent>
+              </Card>
             )}
-          </CardContent>
-        </Card>
+
+            {/* Statistics Cards */}
+            <div className="grid md:grid-cols-4 gap-6">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-blue-100 rounded-lg dark:bg-blue-900/20">
+                      <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-muted-foreground">{t('dashboard.stats.activeCases')}</p>
+                      <p className="text-2xl font-bold">{stats.activeCases}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-orange-100 rounded-lg dark:bg-orange-900/20">
+                      <Clock className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-muted-foreground">{t('dashboard.stats.pendingCases')}</p>
+                      <p className="text-2xl font-bold">{stats.pendingCases}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-green-100 rounded-lg dark:bg-green-900/20">
+                      <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-muted-foreground">{t('dashboard.stats.completedCases')}</p>
+                      <p className="text-2xl font-bold">{stats.completedCases}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-purple-100 rounded-lg dark:bg-purple-900/20">
+                      <Users className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-muted-foreground">{t('dashboard.stats.totalEarnings')}</p>
+                      <p className="text-2xl font-bold">${stats.totalEarnings}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Quick Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Quick Actions</CardTitle>
+                <CardDescription>Common tasks and shortcuts</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-3 gap-4">
+                  <Button 
+                    variant="outline" 
+                    className="h-auto p-4 flex flex-col items-center gap-2"
+                    onClick={() => setChatbotOpen(true)}
+                  >
+                    <MessageSquare className="h-6 w-6" />
+                    <span>Open AI Assistant</span>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="h-auto p-4 flex flex-col items-center gap-2"
+                    onClick={() => setShowVerificationForm(true)}
+                    disabled={profile?.verification_status === 'verified'}
+                  >
+                    <ShieldCheck className="h-6 w-6" />
+                    <span>Update Profile</span>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="h-auto p-4 flex flex-col items-center gap-2"
+                  >
+                    <History className="h-6 w-6" />
+                    <span>View History</span>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Cases Tab */}
+          <TabsContent value="cases" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="h-5 w-5" />
+                      Assigned Cases
+                    </CardTitle>
+                    <CardDescription>
+                      Manage your assigned legal cases
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {cases.length === 0 ? (
+                  <div className="text-center py-12">
+                    <FileText className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">No cases assigned</h3>
+                    <p className="text-muted-foreground">You don't have any assigned cases yet. New cases will appear here when assigned by the admin.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {cases.map((case_) => (
+                      <Card key={case_.id} className="border border-muted">
+                        <CardContent className="p-6">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-3">
+                                <h3 className="font-semibold text-foreground truncate">
+                                  {case_.case_number}: {case_.title}
+                                </h3>
+                                <Badge variant={getStatusVariant(case_.status)}>
+                                  {case_.status}
+                                </Badge>
+                                <Badge variant={getUrgencyVariant(case_.urgency)}>
+                                  {case_.urgency}
+                                </Badge>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-muted-foreground">
+                                <div className="flex items-center gap-2">
+                                  <Users className="h-4 w-4" />
+                                  <span>Client: {getClientNameForRole(case_.client_name, 'lawyer')}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <FileText className="h-4 w-4" />
+                                  <span>Category: {case_.category}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Clock className="h-4 w-4" />
+                                  <span>Created: {formatDate(case_.created_at)}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <MessageSquare className="h-4 w-4" />
+                                  <span>Updated: {formatDate(case_.updated_at)}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex flex-col gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleViewDetails(case_.id)}
+                              >
+                                View Details
+                              </Button>
+                              {(case_.status === 'lawyer_assigned' || case_.status === 'accepted') && (
+                                <Button
+                                  variant="default"
+                                  size="sm"
+                                  onClick={() => setSelectedCaseForProposal(case_)}
+                                >
+                                  Create Proposal
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Communication Tab */}
+          <TabsContent value="communication" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageCircle className="h-5 w-5" />
+                  Communication Hub
+                </CardTitle>
+                <CardDescription>
+                  Manage client communications for all cases
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {cases.map((case_) => (
+                    <Card key={case_.id} className="border border-muted">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="font-semibold">{case_.case_number}: {case_.title}</h4>
+                            <p className="text-sm text-muted-foreground">
+                              Client: {getClientNameForRole(case_.client_name, 'lawyer')}
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Badge variant={getStatusVariant(case_.status)}>
+                              {case_.status}
+                            </Badge>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <CommunicationInbox 
+                          caseId={case_.id}
+                          caseTitle={case_.title}
+                          caseStatus={case_.status}
+                          consultationPaid={case_.consultation_paid}
+                          paymentStatus={case_.payment_status}
+                          userRole="lawyer"
+                        />
+                      </CardContent>
+                    </Card>
+                  ))}
+                  
+                  {cases.length === 0 && (
+                    <div className="text-center py-12">
+                      <MessageCircle className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">No communication available</h3>
+                      <p className="text-muted-foreground">Communication options will appear here when you have assigned cases.</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Incoming Calls Tab */}
+          <TabsContent value="calls" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <PhoneCall className="h-5 w-5" />
+                  Incoming Calls
+                </CardTitle>
+                <CardDescription>
+                  Manage incoming communication requests from clients
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {incomingCalls.length > 0 ? (
+                  <div className="space-y-4">
+                    {incomingCalls.map((call) => (
+                      <IncomingCallNotification
+                        key={call.id}
+                        session={call}
+                        onAccept={handleAcceptCall}
+                        onDecline={handleDeclineCall}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <PhoneCall className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">No incoming calls</h3>
+                    <p className="text-muted-foreground">Incoming calls from clients will appear here.</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        {/* Dialogs */}
+        {chatbotOpen && (
+          <LawyerQAChatbot 
+            isOpen={chatbotOpen}
+            onToggle={() => setChatbotOpen(false)}
+          />
+        )}
+
+        {caseDetailsOpen && (
+          <CaseDetailsDialog
+            caseId={selectedCaseId}
+            isOpen={caseDetailsOpen}
+            onClose={() => setCaseDetailsOpen(false)}
+          />
+        )}
+
+        {selectedCaseForProposal && (
+          <CreateProposalDialog
+            open={!!selectedCaseForProposal}
+            onOpenChange={(open) => !open && setSelectedCaseForProposal(null)}
+            caseId={selectedCaseForProposal.id}
+            caseTitle={selectedCaseForProposal.title}
+            clientName={selectedCaseForProposal.client_name}
+            onProposalSent={() => {
+              setSelectedCaseForProposal(null);
+              fetchDashboardData(); // Refresh data after proposal is sent
+            }}
+          />
+        )}
       </div>
-
-      {/* Lawyer QA Chatbot */}
-      <LawyerQAChatbot 
-        isOpen={chatbotOpen} 
-        onToggle={() => setChatbotOpen(!chatbotOpen)} 
-      />
-
-      {/* Case Details Dialog */}
-      <CaseDetailsDialog
-        caseId={selectedCaseId}
-        isOpen={caseDetailsOpen}
-        onClose={() => setCaseDetailsOpen(false)}
-      />
-
-      {/* Create Proposal Dialog */}
-      <CreateProposalDialog
-        open={!!selectedCaseForProposal}
-        onOpenChange={(open) => !open && setSelectedCaseForProposal(null)}
-        caseId={selectedCaseForProposal?.id || ''}
-        caseTitle={selectedCaseForProposal?.title || ''}
-        clientName={selectedCaseForProposal?.client_name || ''}
-        onProposalSent={() => {
-          fetchDashboardData();
-          setSelectedCaseForProposal(null);
-        }}
-      />
     </div>
   );
 };
