@@ -20,7 +20,11 @@
       "inactive": "Your account is currently inactive. Please contact support.",
       "notApproved": "You are not approved as a lawyer on this platform."
     },
-    "cases": {
+    "communication": {
+      "title": "Communication Center",
+      "subtitle": "Manage client communications",
+      "selectCase": "Select Case"
+    },
       "title": "Your Assigned Cases",
       "noCases": "No cases assigned yet",
       "caseNumber": "Case #{{number}}",
@@ -45,6 +49,11 @@
         "high": "High",
         "urgent": "Urgent"
       }
+    },
+    "communication": {
+      "title": "Communication Center",
+      "subtitle": "Manage client communications",
+      "selectCase": "Select Case"
     },
     "loading": "Loading dashboard...",
     "error": "Error loading dashboard data"

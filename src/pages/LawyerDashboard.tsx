@@ -74,6 +74,7 @@ const LawyerDashboard = () => {
   const [caseDetailsOpen, setCaseDetailsOpen] = useState(false);
   const [selectedCaseForProposal, setSelectedCaseForProposal] = useState<Case | null>(null);
   const [incomingCalls, setIncomingCalls] = useState<TwilioSession[]>([]);
+  const [selectedCommunicationCase, setSelectedCommunicationCase] = useState<Case | null>(null);
   const { sessions, createAccessToken } = useTwilioSession();
 
   useEffect(() => {
@@ -152,6 +153,14 @@ const LawyerDashboard = () => {
       if (casesError) throw casesError;
 
       setCases(casesData || []);
+
+      // Select the first communication-ready case
+      if (casesData && casesData.length > 0) {
+        const communicationReadyCase = casesData.find(c => 
+          c.status === 'proposal_accepted' || c.status === 'active' || c.status === 'in_progress'
+        ) || casesData[0];
+        setSelectedCommunicationCase(communicationReadyCase);
+      }
 
       // Fetch existing scheduled communication sessions
       const { data: scheduledSessions, error: sessionsError } = await supabase
@@ -636,25 +645,58 @@ const LawyerDashboard = () => {
                            <FileText className={`h-4 w-4 ${isRTL() ? 'ml-2' : 'mr-2'}`} />
                            {t('dashboard.cases.createProposal')}
                          </Button>
-                       </div>
-                       
-                       {/* Communication Inbox Section */}
-                       <CommunicationInbox
-                         caseId={caseItem.id}
-                         caseTitle={caseItem.title}
-                         caseStatus={caseItem.status}
-                         consultationPaid={caseItem.consultation_paid || false}
-                         paymentStatus={caseItem.payment_status || 'pending'}
-                         userRole="lawyer"
-                         lawyerAssigned={true}
-                       />
-                     </CardContent>
+                        </div>
+                      </CardContent>
                   </Card>
                 ))}
               </div>
             )}
           </CardContent>
         </Card>
+
+        {/* Standalone Communication Section */}
+        {selectedCommunicationCase && (
+          <Card className="bg-gradient-card shadow-card mt-8">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5" />
+                {t('dashboard.communication.title')}
+              </CardTitle>
+              <CardDescription>
+                {t('dashboard.communication.subtitle')} - {selectedCommunicationCase.title} ({selectedCommunicationCase.case_number})
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-4 mb-4">
+                <label className="text-sm font-medium">{t('dashboard.communication.selectCase')}:</label>
+                <select 
+                  value={selectedCommunicationCase.id}
+                  onChange={(e) => {
+                    const selectedCase = cases.find(c => c.id === e.target.value);
+                    setSelectedCommunicationCase(selectedCase || null);
+                  }}
+                  className="bg-background border border-border rounded-md px-3 py-1 text-sm"
+                >
+                  {cases.map((caseItem) => (
+                    <option key={caseItem.id} value={caseItem.id}>
+                      {caseItem.case_number} - {caseItem.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <CommunicationInbox
+                caseId={selectedCommunicationCase.id}
+                caseTitle={selectedCommunicationCase.title}
+                caseStatus={selectedCommunicationCase.status}
+                consultationPaid={selectedCommunicationCase.consultation_paid || false}
+                paymentStatus={selectedCommunicationCase.payment_status || 'pending'}
+                userRole="lawyer"
+                lawyerAssigned={true}
+              />
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Lawyer QA Chatbot */}
