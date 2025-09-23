@@ -140,29 +140,20 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
 
   // Handle file upload
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const f = e.target.files?.[0];
+    if (!f) return;
     
-    const uploaded = await uploadFile(file, caseId);
+    const uploaded = await uploadFile(f, caseId);
     if (uploaded) {
-      const messageRole = userRole === 'lawyer' ? 'lawyer' : 'user';
       await supabase.from('case_messages').insert({
         case_id: caseId,
-        role: messageRole,
+        role: (userRole === 'lawyer' ? 'lawyer' : 'user'),
         content: '',
         message_type: 'file',
-        metadata: { 
-          channel: 'direct', 
-          file: {
-            name: uploaded.name,
-            url: uploaded.url,
-            type: uploaded.type,
-            size: uploaded.size
-          }
-        } as any
+        metadata: { channel: 'direct', file: uploaded } as any
       });
     }
-    e.target.value = ''; // reset input
+    e.target.value = '';
   };
 
   // Handle Enter key press
@@ -254,9 +245,9 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
     return <File className="w-4 h-4" />;
   };
 
-  const renderMessageContent = (message: Message) => {
-    if (message.message_type === 'file' && message.metadata?.file) {
-      const f = message.metadata.file;
+  const renderMessageContent = (m: Message) => {
+    if (m.message_type === 'file' && m.metadata?.file) {
+      const f = m.metadata.file;
       if (f.type?.startsWith('image/')) {
         return (
           <div>
@@ -268,21 +259,19 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
         );
       }
       return (
-        <a href={f.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 underline text-sm break-all">
+        <a href={f.url} target="_blank" rel="noopener noreferrer"
+           className="flex items-center gap-2 underline text-sm break-all">
           <FileText className="w-4 h-4" />
           {f.name} ({(f.size/1024).toFixed(1)} KB)
         </a>
       );
     }
-    return (
-      <div className="text-[14px] leading-[1.4] break-words whitespace-pre-wrap">
-        {message.content}
-      </div>
-    );
+    return <div className="text-[14px] leading-[1.4] break-words whitespace-pre-wrap">{m.content}</div>;
   };
 
   return (
     <Card className="w-full max-w-4xl mx-auto">
+      {/* DEBUG: DirectChatInterface live */}
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="flex items-center gap-2">
           <MessageCircle className="w-5 h-5" />
@@ -378,10 +367,7 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
               type="button"
               variant="outline"
               size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                fileInputRef.current?.click();
-              }}
+              onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
               disabled={isUploading || sending}
               className="px-3"
             >
