@@ -96,6 +96,8 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
           
           if (updatedSession.status === 'active' && waitingForLawyer) {
             // Lawyer accepted the call, join the session
+            console.log('Session became active:', updatedSession);
+            console.log('Setting communication mode to:', updatedSession.session_type);
             setCommunicationMode(updatedSession.session_type);
             setWaitingForLawyer(false);
             const startTime = new Date();
@@ -282,6 +284,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
 
   // If currently in a communication session, show the interface
   if (communicationMode && accessToken) {
+    console.log('Rendering interface for mode:', communicationMode);
     return (
       <div className="space-y-4">
         {communicationMode === 'video' ? (
@@ -294,11 +297,13 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
             accessToken={accessToken}
             onDisconnect={handleEndCommunication}
           />
-        ) : (
+        ) : communicationMode === 'chat' ? (
           <TwilioChatInterface
             accessToken={accessToken}
             onDisconnect={handleEndCommunication}
           />
+        ) : (
+          <div>Unknown communication mode: {communicationMode}</div>
         )}
       </div>
     );
