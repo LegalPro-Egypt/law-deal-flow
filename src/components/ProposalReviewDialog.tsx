@@ -128,11 +128,14 @@ export const ProposalReviewDialog = ({
               caseId: proposal.case_id,
               proposalId: proposal.id,
               consultationFee: proposal.consultation_fee || 0,
-              totalFee: proposal.final_total_fee || proposal.total_fee || 0,
               remainingFee: proposal.remaining_fee || 0,
-              additionalFees: proposal.total_additional_fees || 0,
               lawyerName: 'المحامي المختص', // This could be fetched from proposal data
-              caseTitle: 'استشارة قانونية' // This could be fetched from case data
+              type: 'consultation',
+              platformFeeAmount: proposal.platform_fee_amount || 0,
+              paymentProcessingFeeAmount: proposal.payment_processing_fee_amount || 0,
+              clientProtectionFeeAmount: proposal.client_protection_fee_amount || 0,
+              totalAdditionalFees: proposal.total_additional_fees || 0,
+              finalTotalFee: proposal.final_total_fee || 0
             }
         }
       });
@@ -275,27 +278,25 @@ export const ProposalReviewDialog = ({
               </div>
               
               {/* Additional Fees Breakdown */}
-              {proposal.total_additional_fees && proposal.total_additional_fees > 0 && (
-                <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-                  <h5 className="font-medium text-sm mb-2">
-                    {currentLanguage === 'ar' ? 'الرسوم الإضافية (تطبق على المبلغ المتبقي فقط)' : 'Additional Fees (Applied to remaining payment only)'}
-                  </h5>
-                  <div className="space-y-1 text-sm">
-                    <div className="flex justify-between">
-                      <span>{currentLanguage === 'ar' ? 'رسوم المنصة (5%)' : 'Platform Fee (5%)'}</span>
-                      <span>${proposal.platform_fee_amount?.toFixed(2) || '0'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>{currentLanguage === 'ar' ? 'رسوم المعالجة (3%)' : 'Payment Processing Fee (3%)'}</span>
-                      <span>${proposal.payment_processing_fee_amount?.toFixed(2) || '0'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>{currentLanguage === 'ar' ? 'رسوم الحماية (3%)' : 'Client Protection Fee (3%)'}</span>
-                      <span>${proposal.client_protection_fee_amount?.toFixed(2) || '0'}</span>
-                    </div>
+              <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+                <h5 className="font-medium text-sm mb-2">
+                  {currentLanguage === 'ar' ? 'الرسوم الإضافية (تطبق على المبلغ المتبقي فقط)' : 'Additional Fees (Applied to remaining payment only)'}
+                </h5>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span>{currentLanguage === 'ar' ? 'رسوم المنصة (5%)' : 'Platform Fee (5%)'}</span>
+                    <span>${(proposal.platform_fee_amount || 0).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>{currentLanguage === 'ar' ? 'رسوم المعالجة (3%)' : 'Payment Processing Fee (3%)'}</span>
+                    <span>${(proposal.payment_processing_fee_amount || 0).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>{currentLanguage === 'ar' ? 'رسوم الحماية (3%)' : 'Client Protection Fee (3%)'}</span>
+                    <span>${(proposal.client_protection_fee_amount || 0).toFixed(2)}</span>
                   </div>
                 </div>
-              )}
+              </div>
               
               <div className="text-center p-3 sm:p-4 bg-accent/5 rounded-lg border-2 border-primary/20 min-w-0">
                 <div className="font-semibold text-lg sm:text-xl text-primary break-words">
