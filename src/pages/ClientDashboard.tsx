@@ -453,9 +453,8 @@ const ClientDashboard = () => {
               <NotificationBadge count={unreadCount} />
             </TabsTrigger>
             <TabsTrigger value="details" className="flex-shrink-0 min-w-fit px-4">Personal Details</TabsTrigger>
-            <TabsTrigger value="messages" className="flex-shrink-0 min-w-fit px-4 relative">
-              Messages
-              <NotificationBadge count={totalUnreadCount} />
+            <TabsTrigger value="messages" className="flex-shrink-0 min-w-fit px-4">
+              AI Intake
             </TabsTrigger>
             <TabsTrigger value="documents" id="documents-tab" className="flex-shrink-0 min-w-fit px-4">Documents</TabsTrigger>
           </TabsList>
@@ -676,9 +675,9 @@ const ClientDashboard = () => {
           <TabsContent value="messages" className="space-y-6">
             <Card className="bg-gradient-card shadow-card">
               <CardHeader>
-                <CardTitle>Secure Communication</CardTitle>
+                <CardTitle>AI Intake Conversation</CardTitle>
                 <CardDescription>
-                  All messages are encrypted and monitored for compliance
+                  Your conversation history with our AI legal assistant during case intake
                 </CardDescription>
               </CardHeader>
               <CardContent>
