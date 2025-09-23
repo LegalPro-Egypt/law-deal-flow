@@ -76,7 +76,7 @@ serve(async (req) => {
         session_type: sessionType,
         room_name: roomName,
         twilio_conversation_sid: conversationSid,
-        status: participantRole === 'client' ? 'scheduled' : 'active', // Client creates scheduled, lawyer creates active
+        status: 'scheduled', // Always start as scheduled, becomes active when participants join
         scheduled_at: new Date().toISOString(),
         recording_enabled: true, // Always enable recording automatically
         recording_consent_client: true, // Auto-consent for admin review
@@ -166,8 +166,7 @@ serve(async (req) => {
     await supabaseClient
       .from('communication_sessions')
       .update({
-        twilio_room_sid: roomName, // This will be updated by webhook when room is created
-        status: participantRole === 'client' ? 'scheduled' : 'active' // Keep scheduled for client, active for lawyer
+        twilio_room_sid: roomName // Status will be updated by webhook when participants join
       })
       .eq('id', sessionData.id);
 

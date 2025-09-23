@@ -69,7 +69,10 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
   }, [showDirectChat, storageKey]);
 
   const caseSessions = sessions.filter(session => session.case_id === caseId);
-  const activeCaseSession = caseSessions.find(session => session.status === 'active');
+  // Only consider a session truly active if it has started_at (participants joined)
+  const activeCaseSession = caseSessions.find(session => 
+    session.status === 'active' && session.started_at
+  );
   const pendingSession = caseSessions.find(session => session.status === 'scheduled');
 
   // Setup browser cleanup and session validation when session becomes active
