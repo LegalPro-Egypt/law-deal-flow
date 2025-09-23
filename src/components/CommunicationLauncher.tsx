@@ -29,6 +29,8 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
   caseTitle,
   lawyerAssigned = false
 }) => {
+  // Force cache refresh - component updated at 2025-01-20
+  console.log('🚀 CommunicationLauncher rendering with caseId:', caseId);
   const { isRTL } = useLanguage();
   const { unreadCounts } = useChatNotifications();
   const {
@@ -48,6 +50,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
   const [showRecordings, setShowRecordings] = useState(false);
   const [showDirectChat, setShowDirectChat] = useState(false);
   const [waitingForResponse, setWaitingForResponse] = useState(false);
+  console.log('✅ waitingForResponse state initialized:', waitingForResponse);
   const [waitingMode, setWaitingMode] = useState<'video' | 'voice' | null>(null);
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
   const sessionStartTimeRef = useRef<Date | null>(null);
