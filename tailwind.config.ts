@@ -167,9 +167,9 @@ export default {
           "75%": { transform: "translate(-15px, -10px) scale(1.05)" }
         },
         "dot-blink": {
-          "0%, 20%": { opacity: "0" },
-          "50%": { opacity: "1" },
-          "80%, 100%": { opacity: "0" },
+          "0%, 40%": { opacity: "1" },
+          "50%, 90%": { opacity: "0" },
+          "100%": { opacity: "1" },
         },
       },
       animation: {
