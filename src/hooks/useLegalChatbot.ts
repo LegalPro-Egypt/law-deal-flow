@@ -70,6 +70,7 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake', source?
 
   // Refs to avoid stale closures for IDs
   const conversationIdRef = useRef<string | null>(null);
+  const setupSubscriptionRef = useRef(false);
 
   // Load messages from database for active conversation
   const loadMessages = useCallback(async (conversationId: string) => {
@@ -103,24 +104,25 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake', source?
     }
   }, []);
 
-  // Set up real-time message subscription
+  // Set up real-time message subscription - only once per conversation
   useEffect(() => {
     const activeConversationId = conversationIdRef.current ?? state.conversationId ?? globalConversationId;
     
-    if (!activeConversationId) {
+    if (!activeConversationId || setupSubscriptionRef.current) {
       return;
     }
 
     console.log('Setting up real-time subscription for conversation:', activeConversationId);
+    setupSubscriptionRef.current = true;
     
     const channel = supabase
-      .channel('message-updates')
+      .channel(`message-updates-${activeConversationId}`)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'messages',
+          table: 'messages', 
           filter: `conversation_id=eq.${activeConversationId}`
         },
         (payload) => {
@@ -133,26 +135,38 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake', source?
             metadata: payload.new.metadata
           };
           
-          setState(prev => ({
-            ...prev,
-            messages: [...prev.messages, newMessage],
-            isLoading: false
-          }));
+          // Only add if message doesn't already exist
+          setState(prev => {
+            const exists = prev.messages.some(msg => msg.id === newMessage.id);
+            if (exists) {
+              return { ...prev, isLoading: false };
+            }
+            return {
+              ...prev,
+              messages: [...prev.messages, newMessage],
+              isLoading: false
+            };
+          });
         }
       )
       .subscribe();
 
     return () => {
       console.log('Cleaning up real-time subscription');
+      setupSubscriptionRef.current = false;
       supabase.removeChannel(channel);
     };
-  }, [state.conversationId, globalConversationId]);
+  }, []);
 
-  // Load messages when conversation changes
+  // Load messages when conversation changes - only once per conversation
+  const messagesLoadedRef = useRef<Set<string>>(new Set());
+  
   useEffect(() => {
     const activeConversationId = conversationIdRef.current ?? state.conversationId ?? globalConversationId;
     
-    if (activeConversationId && state.messages.length === 0) {
+    if (activeConversationId && !messagesLoadedRef.current.has(activeConversationId)) {
+      messagesLoadedRef.current.add(activeConversationId);
+      
       loadMessages(activeConversationId).then(messages => {
         // Add welcome message if no messages exist
         const welcomeMessage: ChatMessage = {
@@ -170,7 +184,7 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake', source?
         }));
       });
     }
-  }, [state.conversationId, globalConversationId, loadMessages, state.mode, state.language, state.messages.length]);
+  }, [state.conversationId, globalConversationId]);
 
   // Create case first and return durable case_id/case_number with idempotency
   const createCase = useCallback(async (userId: string): Promise<{ caseId: string; caseNumber: string } | null> => {

@@ -52,12 +52,18 @@ export function LaunchingSoonChatSection({ className = "" }: LaunchingSoonChatSe
     scrollToBottom();
   }, [messages.length, scrollToBottom]);
 
+  // Stable language update - only run once on mount and when explicitly needed
+  const initialLanguageSet = useRef(false);
+  
   useEffect(() => {
-    const currentLang = getCurrentLanguage();
-    if (currentLang && currentLang !== language) {
-      setLanguage(currentLang as 'en' | 'ar' | 'de');
+    if (!initialLanguageSet.current) {
+      const currentLang = getCurrentLanguage();
+      if (currentLang && currentLang !== language) {
+        setLanguage(currentLang as 'en' | 'ar' | 'de');
+      }
+      initialLanguageSet.current = true;
     }
-  }, [getCurrentLanguage, language, setLanguage]);
+  }, []);
 
   const handleSendMessage = async () => {
     if (!userInput.trim()) return;
