@@ -613,37 +613,42 @@ const LawyerDashboard = () => {
                       open={isExpanded}
                       onOpenChange={() => toggleCaseExpansion(caseItem.id)}
                     >
-                      <CollapsibleTrigger asChild>
-                        <Card className="hover:shadow-md transition-shadow cursor-pointer md:hidden">
-                          <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <Badge variant="outline" className="font-mono text-xs flex-shrink-0">
-                                    {caseItem.case_number}
-                                  </Badge>
-                                  <Badge variant={getStatusVariant(caseItem.status)} className="flex-shrink-0">
-                                    {caseItem.status === 'proposal_accepted' && caseItem.consultation_paid === false 
-                                      ? (isRTL() ? 'في انتظار الدفع' : 'Awaiting Payment')
-                                      : t(`dashboard.cases.status.${caseItem.status}`)
-                                    }
-                                  </Badge>
-                                </div>
-                                <div className="text-sm font-medium truncate">
-                                  {getClientNameForRole(caseItem.client_name, profile?.role)} • {caseItem.category}
-                                </div>
-                              </div>
-                              <div className="flex-shrink-0 ml-2">
-                                {isExpanded ? (
-                                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                                ) : (
-                                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                                )}
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </CollapsibleTrigger>
+                       <CollapsibleTrigger asChild>
+                         <Card className="hover:shadow-md transition-shadow cursor-pointer md:hidden">
+                           <CardContent className="p-4">
+                             <div className="flex items-center gap-3 w-full">
+                               {/* Case ID Pill */}
+                               <div className="flex-shrink-0 h-8 px-3 bg-muted rounded-full flex items-center justify-center">
+                                 <span className="text-sm font-medium text-muted-foreground leading-none">
+                                   {caseItem.case_number}
+                                 </span>
+                               </div>
+
+                               {/* Main Label - Client Name • Area of Law */}
+                               <div className="flex-1 min-w-0">
+                                 <span className="text-sm font-semibold text-foreground truncate block">
+                                   {getClientNameForRole(caseItem.client_name, profile?.role)} • {caseItem.category}
+                                 </span>
+                               </div>
+
+                               {/* Status Pill with Chevron */}
+                               <div className="flex-shrink-0 h-8 inline-flex items-center gap-2 px-3 pr-4 bg-primary/10 text-primary rounded-full min-w-24">
+                                 <span className="text-sm font-medium leading-none">
+                                   {caseItem.status === 'proposal_accepted' && caseItem.consultation_paid === false 
+                                     ? (isRTL() ? 'في انتظار الدفع' : 'Awaiting Payment')
+                                     : t(`dashboard.cases.status.${caseItem.status}`)
+                                   }
+                                 </span>
+                                 {isExpanded ? (
+                                   <ChevronDown className="h-4 w-4 flex-shrink-0" />
+                                 ) : (
+                                   <ChevronRight className="h-4 w-4 flex-shrink-0" />
+                                 )}
+                               </div>
+                             </div>
+                           </CardContent>
+                         </Card>
+                       </CollapsibleTrigger>
                       
                       <CollapsibleContent className="md:hidden">
                         <Card className="mt-2 border-l-4 border-l-primary">
