@@ -1409,6 +1409,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      cleanup_stale_communication_sessions: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       has_admin_role: {
         Args: Record<PropertyKey, never>
         Returns: boolean
