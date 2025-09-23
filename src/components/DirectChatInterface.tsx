@@ -222,7 +222,7 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
         {/* Messages Area */}
         <ScrollArea 
           ref={scrollAreaRef}
-          className="h-96 w-full rounded-md border p-4"
+          className="h-96 w-full rounded-md border p-3"
         >
           {loading ? (
             <div className="flex items-center justify-center h-full">
@@ -236,56 +236,56 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
               </div>
             </div>
           ) : (
-            <div className="space-y-1">
+            <div className="space-y-0">
               {messages.map((message, index) => {
                 const isOwnMessage = 
                   (userRole === 'client' && message.role === 'user') ||
                   (userRole === 'lawyer' && message.role === 'lawyer');
                 
+                const prevMessage = messages[index - 1];
                 const nextMessage = messages[index + 1];
-                const isLastInGroup = !nextMessage || 
-                  ((userRole === 'client' && nextMessage.role !== message.role) ||
-                   (userRole === 'lawyer' && nextMessage.role !== message.role));
+                const isFirstInGroup = !prevMessage || prevMessage.role !== message.role;
+                const isLastInGroup = !nextMessage || nextMessage.role !== message.role;
+                const isMiddleInGroup = !isFirstInGroup && !isLastInGroup;
                 
                 return (
                   <div
                     key={message.id}
-                    className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} mb-1`}
+                    className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} ${
+                      isLastInGroup ? 'mb-3' : 'mb-0.5'
+                    }`}
                   >
                     <div
                       className={`
-                        max-w-xs lg:max-w-md px-3 py-2 shadow-sm relative
+                        relative inline-block max-w-[75%] px-3 py-1.5 shadow-sm
                         ${isOwnMessage
-                          ? 'bg-blue-500 text-white rounded-2xl rounded-br-md'
-                          : 'bg-gray-100 text-gray-900 rounded-2xl rounded-bl-md'
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-gray-100 text-gray-900'
                         }
-                        ${!isLastInGroup ? 'mb-1' : 'mb-3'}
+                        ${isFirstInGroup && isLastInGroup
+                          ? isOwnMessage 
+                            ? 'rounded-[18px] rounded-br-[4px]'
+                            : 'rounded-[18px] rounded-bl-[4px]'
+                          : isFirstInGroup
+                          ? isOwnMessage
+                            ? 'rounded-[18px] rounded-br-[18px]'
+                            : 'rounded-[18px] rounded-bl-[18px]'
+                          : isLastInGroup
+                          ? isOwnMessage
+                            ? 'rounded-[18px] rounded-br-[4px]'
+                            : 'rounded-[18px] rounded-bl-[4px]'
+                          : 'rounded-[18px]'
+                        }
                       `}
                     >
-                      <p className="text-sm leading-relaxed break-words">
+                      <div className="text-[14px] leading-[1.3] break-words whitespace-pre-wrap pr-12">
                         {message.content}
-                      </p>
-                      {isLastInGroup && (
-                        <div className={`text-xs mt-1 opacity-60 ${isOwnMessage ? 'text-right' : 'text-left'}`}>
-                          {formatTime(message.created_at)}
-                        </div>
-                      )}
-                      
-                      {/* Chat bubble tail */}
-                      <div
-                        className={`
-                          absolute bottom-0 w-3 h-3
-                          ${isOwnMessage
-                            ? '-right-1 bg-blue-500 transform rotate-45 rounded-br'
-                            : '-left-1 bg-gray-100 transform rotate-45 rounded-bl'
-                          }
-                        `}
-                        style={{
-                          clipPath: isOwnMessage 
-                            ? 'polygon(0 0, 100% 0, 100% 100%)' 
-                            : 'polygon(0 0, 0 100%, 100% 100%)'
-                        }}
-                      />
+                      </div>
+                      <div className={`absolute bottom-1 right-2 text-[11px] opacity-70 ${
+                        isOwnMessage ? 'text-white' : 'text-gray-600'
+                      }`}>
+                        {formatTime(message.created_at)}
+                      </div>
                     </div>
                   </div>
                 );

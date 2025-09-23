@@ -205,7 +205,7 @@ export const LawyerDirectChatInterface: React.FC<LawyerDirectChatInterfaceProps>
       
       <CardContent className="flex-1 flex flex-col p-3 pt-0">
         <ScrollArea className="flex-1 mb-3">
-          <div className="space-y-3">
+          <div className="space-y-0 px-2">
             {loading ? (
               <div className="text-center text-muted-foreground py-4">
                 Loading messages...
@@ -216,7 +216,9 @@ export const LawyerDirectChatInterface: React.FC<LawyerDirectChatInterfaceProps>
               </div>
             ) : (
               messages.map((message, index) => {
+                const prevMessage = messages[index - 1];
                 const nextMessage = messages[index + 1];
+                const isFirstInGroup = !prevMessage || prevMessage.role !== message.role;
                 const isLastInGroup = !nextMessage || nextMessage.role !== message.role;
                 
                 return (
@@ -224,44 +226,39 @@ export const LawyerDirectChatInterface: React.FC<LawyerDirectChatInterfaceProps>
                     key={message.id}
                     className={`flex ${
                       message.role === 'lawyer' ? 'justify-end' : 'justify-start'
-                    } mb-1`}
+                    } ${isLastInGroup ? 'mb-3' : 'mb-0.5'}`}
                   >
                     <div
                       className={`
-                        max-w-[80%] px-3 py-2 shadow-sm relative
+                        relative inline-block max-w-[75%] px-3 py-1.5 shadow-sm
                         ${message.role === 'lawyer'
-                          ? 'bg-gray-100 text-gray-900 rounded-2xl rounded-br-md'
-                          : 'bg-blue-500 text-white rounded-2xl rounded-bl-md'
+                          ? 'bg-gray-100 text-gray-900'
+                          : 'bg-blue-500 text-white'
                         }
-                        ${!isLastInGroup ? 'mb-1' : 'mb-3'}
+                        ${isFirstInGroup && isLastInGroup
+                          ? message.role === 'lawyer'
+                            ? 'rounded-[18px] rounded-br-[4px]'
+                            : 'rounded-[18px] rounded-bl-[4px]'
+                          : isFirstInGroup
+                          ? message.role === 'lawyer'
+                            ? 'rounded-[18px] rounded-br-[18px]'
+                            : 'rounded-[18px] rounded-bl-[18px]'
+                          : isLastInGroup
+                          ? message.role === 'lawyer'
+                            ? 'rounded-[18px] rounded-br-[4px]'
+                            : 'rounded-[18px] rounded-bl-[4px]'
+                          : 'rounded-[18px]'
+                        }
                       `}
                     >
-                      <div className="text-sm whitespace-pre-wrap break-words">
+                      <div className="text-[14px] leading-[1.3] break-words whitespace-pre-wrap pr-12">
                         {message.content}
                       </div>
-                      {isLastInGroup && (
-                        <div className={`text-xs mt-1 opacity-60 ${
-                          message.role === 'lawyer' ? 'text-right' : 'text-left'
-                        }`}>
-                          {formatMessageTime(message.created_at)}
-                        </div>
-                      )}
-                      
-                      {/* Chat bubble tail */}
-                      <div
-                        className={`
-                          absolute bottom-0 w-3 h-3
-                          ${message.role === 'lawyer'
-                            ? '-right-1 bg-gray-100 transform rotate-45 rounded-br'
-                            : '-left-1 bg-blue-500 transform rotate-45 rounded-bl'
-                          }
-                        `}
-                        style={{
-                          clipPath: message.role === 'lawyer'
-                            ? 'polygon(0 0, 100% 0, 100% 100%)' 
-                            : 'polygon(0 0, 0 100%, 100% 100%)'
-                        }}
-                      />
+                      <div className={`absolute bottom-1 right-2 text-[11px] opacity-70 ${
+                        message.role === 'lawyer' ? 'text-gray-600' : 'text-white'
+                      }`}>
+                        {formatMessageTime(message.created_at)}
+                      </div>
                     </div>
                   </div>
                 );
