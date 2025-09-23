@@ -47,7 +47,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
   const [communicationMode, setCommunicationMode] = useState<'video' | 'voice' | 'chat' | null>(null);
   const [showRecordings, setShowRecordings] = useState(false);
   const [showDirectChat, setShowDirectChat] = useState(false);
-  const [waitingForLawyer, setWaitingForLawyer] = useState(false);
+  const [waitingForResponse, setWaitingForResponse] = useState(false);
   const [waitingMode, setWaitingMode] = useState<'video' | 'voice' | null>(null);
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
   const sessionStartTimeRef = useRef<Date | null>(null);
@@ -143,12 +143,12 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
         (payload) => {
           const updatedSession = payload.new as TwilioSession;
           
-          if (updatedSession.status === 'active' && waitingForLawyer) {
+          if (updatedSession.status === 'active' && waitingForResponse) {
             // Lawyer accepted the call, join the session
             console.log('🚀 Session became active:', updatedSession);
             console.log('🔧 Setting communication mode to:', updatedSession.session_type);
             setCommunicationMode(updatedSession.session_type);
-            setWaitingForLawyer(false);
+            setWaitingForResponse(false);
             setWaitingMode(null);
             const startTime = new Date();
             setSessionStartTime(startTime);
@@ -157,9 +157,9 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
               title: 'Call Accepted',
               description: 'Lawyer has joined the call',
             });
-          } else if (updatedSession.status === 'failed' && waitingForLawyer) {
+          } else if (updatedSession.status === 'failed' && waitingForResponse) {
             // Lawyer declined the call
-            setWaitingForLawyer(false);
+            setWaitingForResponse(false);
             setWaitingMode(null);
             toast({
               title: 'Call Declined',
@@ -171,7 +171,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
             setCommunicationMode(null);
             setAccessToken(null);
             setActiveSession(null);
-            setWaitingForLawyer(false);
+            setWaitingForResponse(false);
             setWaitingMode(null);
             setSessionStartTime(null);
             sessionStartTimeRef.current = null;
@@ -183,7 +183,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [caseId, waitingForLawyer, toast]);
+  }, [caseId, waitingForResponse, toast]);
 
   const handleStartCommunication = async (mode: 'video' | 'voice' | 'chat') => {
     console.log('📞 Starting communication with mode:', mode);
@@ -205,7 +205,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
 
     // For video and voice, use the session-based approach
     try {
-      setWaitingForLawyer(true);
+      setWaitingForResponse(true);
       setWaitingMode(mode);
       const token = await createAccessToken(caseId, mode);
       if (token) {
@@ -221,7 +221,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
       }
     } catch (error) {
       console.error('Error starting communication:', error);
-      setWaitingForLawyer(false);
+      setWaitingForResponse(false);
       setWaitingMode(null);
       toast({
         title: 'Connection Error',
@@ -250,7 +250,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
       setCommunicationMode(null);
       setAccessToken(null);
       setActiveSession(null);
-      setWaitingForLawyer(false);
+      setWaitingForResponse(false);
       setWaitingMode(null);
       setSessionStartTime(null);
       sessionStartTimeRef.current = null;
@@ -276,7 +276,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
       setCommunicationMode(null);
       setAccessToken(null);
       setActiveSession(null);
-      setWaitingForLawyer(false);
+      setWaitingForResponse(false);
       setWaitingMode(null);
       setSessionStartTime(null);
       sessionStartTimeRef.current = null;
@@ -332,7 +332,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
         });
       }
     }
-    setWaitingForLawyer(false);
+    setWaitingForResponse(false);
     setWaitingMode(null);
   };
 
@@ -427,7 +427,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <Button
                 onClick={() => handleStartCommunication('video')}
-                disabled={connecting || !!activeCaseSession || waitingForLawyer}
+                disabled={connecting || !!activeCaseSession || waitingForResponse}
                 className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}
               >
                 <Video className="w-4 h-4" />
@@ -437,7 +437,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
               <Button
                 variant="outline"
                 onClick={() => handleStartCommunication('voice')}
-                disabled={connecting || !!activeCaseSession || waitingForLawyer}
+                disabled={connecting || !!activeCaseSession || waitingForResponse}
                 className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}
               >
                 <Phone className="w-4 h-4" />
@@ -474,7 +474,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
             </div>
           )}
 
-          {waitingForLawyer && pendingSession && (
+          {waitingForResponse && pendingSession && (
             <div className="p-3 bg-warning/10 rounded-lg border border-warning/20">
               <div className={`flex items-center justify-between ${isRTL() ? 'flex-row-reverse' : ''}`}>
                 <div className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}>
