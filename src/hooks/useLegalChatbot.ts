@@ -720,9 +720,9 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake', source?
 function getWelcomeMessage(mode: 'qa' | 'intake', language: 'en' | 'ar' | 'de'): string {
   const messages = {
     qa: {
-      en: "Hi! I'm Lexa, your AI assistant for Egyptian law questions. I provide brief legal info, not advice. How can I help?",
-      ar: 'مرحباً! أنا ليكسا، مساعدك الذكي لأسئلة القانون المصري. أقدم معلومات قانونية مختصرة وليس استشارة. كيف يمكنني المساعدة؟',
-      de: 'Hallo! Ich bin Lexa, Ihr KI-Assistent für ägyptische Rechtsfragen. Ich biete kurze Rechtsinformationen, keine Beratung. Wie kann ich helfen?',
+      en: "Hi! I'm Lexa, your AI assistant for Egyptian law questions. How can I help you today?",
+      ar: 'مرحباً! أنا ليكسا، مساعدك الذكي لأسئلة القانون المصري. كيف يمكنني مساعدتك اليوم؟',
+      de: 'Hallo! Ich bin Lexa, Ihr KI-Assistent für ägyptische Rechtsfragen. Wie kann ich Ihnen heute helfen?',
     },
     intake: {
       en: "Hi! I'm Lexa. I'll help gather your case information for our Egyptian lawyers. Please describe your legal issue.",
