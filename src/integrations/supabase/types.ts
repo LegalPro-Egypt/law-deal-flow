@@ -167,8 +167,11 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          is_read: boolean
           message_type: string
           metadata: Json | null
+          read_at: string | null
+          read_by: string | null
           role: string
           updated_at: string
         }
@@ -177,8 +180,11 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          is_read?: boolean
           message_type?: string
           metadata?: Json | null
+          read_at?: string | null
+          read_by?: string | null
           role: string
           updated_at?: string
         }
@@ -187,8 +193,11 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          is_read?: boolean
           message_type?: string
           metadata?: Json | null
+          read_at?: string | null
+          read_by?: string | null
           role?: string
           updated_at?: string
         }
@@ -1420,6 +1429,10 @@ export type Database = {
       is_original_admin: {
         Args: { user_email: string }
         Returns: boolean
+      }
+      mark_case_messages_as_read: {
+        Args: { p_case_id: string; p_exclude_role?: string; p_user_id: string }
+        Returns: number
       }
       migrate_anonymous_conversation: {
         Args: { conversation_session_id: string; new_user_id: string }

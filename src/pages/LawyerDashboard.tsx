@@ -3,11 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useTwilioSession, TwilioSession } from "@/hooks/useTwilioSession";
+import { useLawyerChatNotifications } from "@/hooks/useLawyerChatNotifications";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { NotificationBadge } from "@/components/ui/notification-badge";
 import { 
   Scale, 
   LogOut,
@@ -27,6 +29,7 @@ import { CompleteVerificationForm } from "@/components/CompleteVerificationForm"
 import { CaseDetailsDialog } from "@/components/CaseDetailsDialog";
 import { CreateProposalDialog } from "@/components/CreateProposalDialog";
 import { CommunicationInbox } from "@/components/CommunicationInbox";
+import { LawyerDirectChatInterface } from "@/components/LawyerDirectChatInterface";
 import { getClientNameForRole } from "@/utils/clientPrivacy";
 import { useLanguage } from "@/hooks/useLanguage";
 import { LanguageToggle } from "@/components/LanguageToggle";
@@ -74,7 +77,10 @@ const LawyerDashboard = () => {
   const [caseDetailsOpen, setCaseDetailsOpen] = useState(false);
   const [selectedCaseForProposal, setSelectedCaseForProposal] = useState<Case | null>(null);
   const [incomingCalls, setIncomingCalls] = useState<TwilioSession[]>([]);
+  const [showDirectChat, setShowDirectChat] = useState(false);
+  const [selectedChatCase, setSelectedChatCase] = useState<Case | null>(null);
   const { sessions, createAccessToken } = useTwilioSession();
+  const { unreadCounts, getTotalUnreadCount } = useLawyerChatNotifications();
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -619,24 +625,39 @@ const LawyerDashboard = () => {
                       </CardDescription>
                     </CardHeader>
                      <CardContent className="pt-0 space-y-4">
-                       <div className="flex gap-2 flex-wrap">
-                         <Button 
-                           size="sm" 
-                           variant="outline"
-                           onClick={() => handleViewDetails(caseItem.id)}
-                           className="flex-shrink-0"
-                         >
-                           {t('dashboard.cases.viewDetails')}
-                         </Button>
-                         <Button 
-                           size="sm" 
-                           className="bg-primary hover:bg-primary/90 flex-shrink-0"
-                           onClick={() => setSelectedCaseForProposal(caseItem)}
-                         >
-                           <FileText className={`h-4 w-4 ${isRTL() ? 'ml-2' : 'mr-2'}`} />
-                           {t('dashboard.cases.createProposal')}
-                         </Button>
-                        </div>
+                        <div className="flex gap-2 flex-wrap">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleViewDetails(caseItem.id)}
+                            className="flex-shrink-0"
+                          >
+                            {t('dashboard.cases.viewDetails')}
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            className="bg-primary hover:bg-primary/90 flex-shrink-0"
+                            onClick={() => setSelectedCaseForProposal(caseItem)}
+                          >
+                            <FileText className={`h-4 w-4 ${isRTL() ? 'ml-2' : 'mr-2'}`} />
+                            {t('dashboard.cases.createProposal')}
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedChatCase(caseItem);
+                              setShowDirectChat(true);
+                            }}
+                            className="flex-shrink-0 relative"
+                          >
+                            <MessageSquare className={`h-4 w-4 ${isRTL() ? 'ml-2' : 'mr-2'}`} />
+                            {isRTL() ? 'محادثة' : 'Chat'}
+                            {unreadCounts[caseItem.id] > 0 && (
+                              <NotificationBadge count={unreadCounts[caseItem.id]} />
+                            )}
+                          </Button>
+                         </div>
                       </CardContent>
                   </Card>
                 ))}
@@ -680,6 +701,23 @@ const LawyerDashboard = () => {
           setSelectedCaseForProposal(null);
         }}
       />
+
+      {/* Direct Chat Interface */}
+      {showDirectChat && selectedChatCase && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="w-full max-w-2xl">
+            <LawyerDirectChatInterface
+              caseId={selectedChatCase.id}
+              caseTitle={selectedChatCase.title}
+              clientName={getClientNameForRole(selectedChatCase.client_name, profile?.role)}
+              onClose={() => {
+                setShowDirectChat(false);
+                setSelectedChatCase(null);
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

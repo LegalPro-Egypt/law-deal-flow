@@ -12,7 +12,10 @@ import { setupBrowserSessionCleanup, createSessionValidator } from '@/utils/sess
 import { TwilioVideoInterface } from './TwilioVideoInterface';
 import { TwilioVoiceInterface } from './TwilioVoiceInterface';
 import { TwilioChatInterface } from './TwilioChatInterface';
+import { DirectChatInterface } from './DirectChatInterface';
 import { SessionRecordingsPlayer } from './SessionRecordingsPlayer';
+import { NotificationBadge } from './ui/notification-badge';
+import { useChatNotifications } from '@/hooks/useChatNotifications';
 
 interface CommunicationLauncherProps {
   caseId: string;
@@ -39,11 +42,13 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
 
   const [communicationMode, setCommunicationMode] = useState<'video' | 'voice' | 'chat' | null>(null);
   const [showRecordings, setShowRecordings] = useState(false);
+  const [showDirectChat, setShowDirectChat] = useState(false);
   const [waitingForLawyer, setWaitingForLawyer] = useState(false);
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
   const sessionStartTimeRef = useRef<Date | null>(null);
   const browserCleanupRef = useRef<(() => void) | null>(null);
   const sessionValidatorRef = useRef<(() => void) | null>(null);
+  const { unreadCounts } = useChatNotifications();
 
   const caseSessions = sessions.filter(session => session.case_id === caseId);
   const activeCaseSession = caseSessions.find(session => session.status === 'active');
@@ -140,6 +145,12 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
         description: 'Please wait for a lawyer to be assigned to your case before starting communication.',
         variant: 'destructive',
       });
+      return;
+    }
+
+    // Handle chat differently - open directly without waiting
+    if (mode === 'chat') {
+      setShowDirectChat(true);
       return;
     }
 
@@ -309,6 +320,17 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
     );
   }
 
+  // If showing direct chat, render it
+  if (showDirectChat) {
+    return (
+      <DirectChatInterface
+        caseId={caseId}
+        caseTitle={caseTitle}
+        onClose={() => setShowDirectChat(false)}
+      />
+    );
+  }
+
   return (
     <div className={`space-y-4 ${isRTL() ? 'rtl-dir' : ''}`}>
       {/* Communication Controls */}
@@ -351,11 +373,14 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
               <Button
                 variant="outline"
                 onClick={() => handleStartCommunication('chat')}
-                disabled={connecting || !!activeCaseSession || waitingForLawyer}
-                className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}
+                disabled={connecting || !!activeCaseSession}
+                className={`flex items-center gap-2 relative ${isRTL() ? 'flex-row-reverse' : ''}`}
               >
                 <MessageCircle className="w-4 h-4" />
                 Start Chat
+                {unreadCounts[caseId] > 0 && (
+                  <NotificationBadge count={unreadCounts[caseId]} />
+                )}
               </Button>
               
               <Dialog open={showRecordings} onOpenChange={setShowRecordings}>
