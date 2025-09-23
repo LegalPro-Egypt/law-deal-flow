@@ -212,11 +212,12 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
       setWaitingMode(mode);
       const token = await createAccessToken(caseId, mode);
       if (token) {
+        const modeLabel = mode === 'video' ? 'video' : 'voice';
         const desc = isCurrentUserClient === false
-          ? `Calling client for ${mode} session...`
+          ? `Calling client for a ${modeLabel} call...`
           : (isCurrentUserClient === true
-              ? `Waiting for lawyer to accept your ${mode} call...`
-              : `Starting ${mode} session...`);
+              ? `Waiting for lawyer to accept your ${modeLabel} call...`
+              : `Starting a ${modeLabel} call...`);
         toast({
           title: 'Call Request Sent',
           description: desc,
@@ -486,8 +487,8 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
                   </Badge>
                   <span className="text-sm">
                     {pendingSession.initiated_by === pendingSession.client_id 
-                      ? `Waiting for lawyer to accept ${pendingSession.session_type} call`
-                      : `Calling client for ${pendingSession.session_type} session...`
+                      ? `Waiting for lawyer to accept ${pendingSession.session_type} call...`
+                      : `Calling client for a ${pendingSession.session_type} call...`
                     }
                   </span>
                 </div>
