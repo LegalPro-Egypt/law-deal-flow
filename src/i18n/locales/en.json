@@ -396,6 +396,10 @@
         }
       }
     },
+    "tryLegalAssistant": "Try Our Legal Assistant",
+    "askLegalQuestions": "Ask legal questions and get instant guidance",
+    "typeMessage": "Type your legal question...",
+    "legalDisclaimer": "This AI assistant provides general legal information and is not a substitute for professional legal advice.",
     "chatbot": {
       "title": "Get Free Legal Answers with",
       "titleAccent": "Lexa AI",
@@ -417,12 +421,12 @@
     "features": {
       "title": "Why Choose LegalPro?",
       "subtitle": "Streamlined legal services with built-in protection and transparency",
-      "lexaIntake": {
-        "title": "Lexa AI Intake",
+      "aiIntake": {
+        "title": "AI-Powered Intake",
         "description": "Lexa, our AI assistant, collects your case details and matches you with the right specialist"
       },
       "paymentProtection": {
-        "title": "Payment Protection",
+        "title": "Payment Protection", 
         "description": "Secure escrow system with 50% holdback until case delivery and satisfaction"
       },
       "vettedLawyers": {

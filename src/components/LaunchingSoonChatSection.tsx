@@ -107,7 +107,7 @@ export function LaunchingSoonChatSection({ className = "" }: LaunchingSoonChatSe
 
   return (
     <div 
-      className={`w-full max-w-7xl mx-auto px-8 mb-20 ${className} animate-fade-in`}
+      className={`w-full max-w-7xl mx-auto px-8 mb-20 mt-24 ${className} animate-fade-in`}
       style={{ animationDelay: '0.6s' }}
     >
       <Card className="neomorphism-card overflow-hidden">
@@ -122,10 +122,10 @@ export function LaunchingSoonChatSection({ className = "" }: LaunchingSoonChatSe
                 </div>
                 <div>
                   <h2 className="text-xl font-semibold font-futura text-gray-900">
-                    {getText('tryLegalAssistant', 'Try Our Legal Assistant')}
+                    {t('landing.tryLegalAssistant', 'Try Our Legal Assistant')}
                   </h2>
                   <p className="text-sm text-muted-foreground">
-                    {getText('askLegalQuestions', 'Ask legal questions and get instant guidance')}
+                    {t('landing.askLegalQuestions', 'Ask legal questions and get instant guidance')}
                   </p>
                 </div>
               </div>
@@ -186,7 +186,7 @@ export function LaunchingSoonChatSection({ className = "" }: LaunchingSoonChatSe
                 value={userInput}
                 onChange={(e) => setUserInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder={getText('typeMessage', 'Type your legal question...')}
+                placeholder={t('landing.typeMessage', 'Type your legal question...')}
                 disabled={isLoading}
                 className="neomorphism-input flex-1 border-0 focus:ring-2 focus:ring-primary/20"
                 dir={isRTL ? 'rtl' : 'ltr'}
@@ -201,7 +201,7 @@ export function LaunchingSoonChatSection({ className = "" }: LaunchingSoonChatSe
             </div>
             
             <div className="mt-4 text-xs text-muted-foreground text-center">
-              {getText('legalDisclaimer', 'This AI assistant provides general legal information and is not a substitute for professional legal advice.')}
+              {t('landing.legalDisclaimer', 'This AI assistant provides general legal information and is not a substitute for professional legal advice.')}
             </div>
           </div>
         </CardContent>
