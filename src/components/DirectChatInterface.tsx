@@ -236,36 +236,56 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
               </div>
             </div>
           ) : (
-            <div className="space-y-4">
-              {messages.map((message) => {
+            <div className="space-y-1">
+              {messages.map((message, index) => {
                 const isOwnMessage = 
                   (userRole === 'client' && message.role === 'user') ||
                   (userRole === 'lawyer' && message.role === 'lawyer');
                 
+                const nextMessage = messages[index + 1];
+                const isLastInGroup = !nextMessage || 
+                  ((userRole === 'client' && nextMessage.role !== message.role) ||
+                   (userRole === 'lawyer' && nextMessage.role !== message.role));
+                
                 return (
                   <div
                     key={message.id}
-                    className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
+                    className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} mb-1`}
                   >
                     <div
-                      className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                        isOwnMessage
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted'
-                      }`}
+                      className={`
+                        max-w-xs lg:max-w-md px-3 py-2 shadow-sm relative
+                        ${isOwnMessage
+                          ? 'bg-blue-500 text-white rounded-2xl rounded-br-md'
+                          : 'bg-gray-100 text-gray-900 rounded-2xl rounded-bl-md'
+                        }
+                        ${!isLastInGroup ? 'mb-1' : 'mb-3'}
+                      `}
                     >
-                      <div className={`flex items-center gap-2 mb-1 ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
-                        {getMessageIcon(message.role)}
-                        <Badge variant="outline" className="text-xs">
-                          {message.role === 'lawyer' ? 'Lawyer' : 'Client'}
-                        </Badge>
-                        <span className="text-xs opacity-70">
-                          {formatTime(message.created_at)}
-                        </span>
-                      </div>
-                      <p className="text-sm leading-relaxed">
+                      <p className="text-sm leading-relaxed break-words">
                         {message.content}
                       </p>
+                      {isLastInGroup && (
+                        <div className={`text-xs mt-1 opacity-60 ${isOwnMessage ? 'text-right' : 'text-left'}`}>
+                          {formatTime(message.created_at)}
+                        </div>
+                      )}
+                      
+                      {/* Chat bubble tail */}
+                      <div
+                        className={`
+                          absolute bottom-0 w-3 h-3
+                          ${isOwnMessage
+                            ? '-right-1 bg-blue-500 transform rotate-45 rounded-br'
+                            : '-left-1 bg-gray-100 transform rotate-45 rounded-bl'
+                          }
+                        `}
+                        style={{
+                          clipPath: isOwnMessage 
+                            ? 'polygon(0 0, 100% 0, 100% 100%)' 
+                            : 'polygon(0 0, 0 100%, 100% 100%)'
+                        }}
+                      />
                     </div>
                   </div>
                 );

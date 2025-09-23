@@ -215,40 +215,57 @@ export const LawyerDirectChatInterface: React.FC<LawyerDirectChatInterfaceProps>
                 No messages yet. Start the conversation with your client!
               </div>
             ) : (
-              messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex gap-2 ${
-                    message.role === 'lawyer' ? 'justify-end' : 'justify-start'
-                  }`}
-                >
+              messages.map((message, index) => {
+                const nextMessage = messages[index + 1];
+                const isLastInGroup = !nextMessage || nextMessage.role !== message.role;
+                
+                return (
                   <div
-                    className={`max-w-[80%] rounded-lg p-3 ${
-                      message.role === 'lawyer'
-                        ? 'bg-primary text-primary-foreground'
-                        : message.role === 'user'
-                        ? 'bg-secondary text-secondary-foreground'
-                        : 'bg-muted'
-                    }`}
+                    key={message.id}
+                    className={`flex ${
+                      message.role === 'lawyer' ? 'justify-end' : 'justify-start'
+                    } mb-1`}
                   >
-                    <div className="flex items-center gap-2 mb-1">
-                      {message.role !== 'lawyer' && getMessageIcon(message.role)}
-                      <Badge
-                        variant={message.role === 'lawyer' ? 'secondary' : 'outline'}
-                        className="text-xs"
-                      >
-                        {getRoleLabel(message.role)}
-                      </Badge>
-                      <span className="text-xs opacity-70">
-                        {formatMessageTime(message.created_at)}
-                      </span>
-                    </div>
-                    <div className="text-sm whitespace-pre-wrap">
-                      {message.content}
+                    <div
+                      className={`
+                        max-w-[80%] px-3 py-2 shadow-sm relative
+                        ${message.role === 'lawyer'
+                          ? 'bg-gray-100 text-gray-900 rounded-2xl rounded-br-md'
+                          : 'bg-blue-500 text-white rounded-2xl rounded-bl-md'
+                        }
+                        ${!isLastInGroup ? 'mb-1' : 'mb-3'}
+                      `}
+                    >
+                      <div className="text-sm whitespace-pre-wrap break-words">
+                        {message.content}
+                      </div>
+                      {isLastInGroup && (
+                        <div className={`text-xs mt-1 opacity-60 ${
+                          message.role === 'lawyer' ? 'text-right' : 'text-left'
+                        }`}>
+                          {formatMessageTime(message.created_at)}
+                        </div>
+                      )}
+                      
+                      {/* Chat bubble tail */}
+                      <div
+                        className={`
+                          absolute bottom-0 w-3 h-3
+                          ${message.role === 'lawyer'
+                            ? '-right-1 bg-gray-100 transform rotate-45 rounded-br'
+                            : '-left-1 bg-blue-500 transform rotate-45 rounded-bl'
+                          }
+                        `}
+                        style={{
+                          clipPath: message.role === 'lawyer'
+                            ? 'polygon(0 0, 100% 0, 100% 100%)' 
+                            : 'polygon(0 0, 0 100%, 100% 100%)'
+                        }}
+                      />
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
             <div ref={messagesEndRef} />
           </div>
