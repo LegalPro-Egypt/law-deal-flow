@@ -154,7 +154,7 @@ export function LaunchingSoonChatSection({ className = "" }: LaunchingSoonChatSe
                   key={index}
                   className={`flex items-start space-x-3 ${
                     message.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''
-                  } ${isRTL && message.role !== 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}
+                  }`}
                 >
                   <div className="flex-shrink-0 w-8 h-8 rounded-full neomorphism-input flex items-center justify-center">
                     {getMessageIcon(message.role)}
@@ -165,8 +165,13 @@ export function LaunchingSoonChatSection({ className = "" }: LaunchingSoonChatSe
                         ? 'bg-primary/10 text-primary-foreground border border-primary/20'
                         : 'neomorphism-input text-foreground'
                     }`}
+                    dir={isRTL ? 'rtl' : 'ltr'}
                   >
-                    <div className={`text-sm leading-relaxed ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <div className={`text-sm leading-relaxed ${
+                      message.role === 'user' 
+                        ? 'text-right'
+                        : (isRTL ? 'text-right' : 'text-left')
+                    }`}>
                       {formatMessageContent(message.content)}
                     </div>
                   </div>
