@@ -226,7 +226,7 @@ export const LawyerDirectChatInterface: React.FC<LawyerDirectChatInterfaceProps>
                     key={message.id}
                     className={`flex ${
                       message.role === 'lawyer' ? 'justify-end' : 'justify-start'
-                    } ${isLastInGroup ? 'mb-3' : 'mb-0.5'}`}
+                    } ${isLastInGroup ? 'mb-5' : 'mb-0.5'}`}
                   >
                     <div
                       className={`
