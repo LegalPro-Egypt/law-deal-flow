@@ -353,9 +353,9 @@ serve(async (req) => {
 
 function buildQASystemPrompt(language: string): string {
   const prompts = {
-    en: "You are a helpful AI assistant providing brief legal information about Egyptian law. Keep responses to 2-3 sentences maximum. Be concise and direct. Always mention this is not legal advice - consult a qualified Egyptian lawyer for specific cases.",
-    ar: "أنت مساعد ذكي يقدم معلومات قانونية مختصرة عن القانون المصري. احتفظ بالإجابات في 2-3 جمل كحد أقصى. كن مختصراً ومباشراً. اذكر دائماً أن هذه ليست استشارة قانونية - استشر محامياً مصرياً مؤهلاً للحالات المحددة.",
-    de: "Sie sind ein hilfreicher KI-Assistent, der kurze Rechtsinformationen zum ägyptischen Recht bereitstellt. Halten Sie Antworten auf maximal 2-3 Sätze. Seien Sie prägnant und direkt. Erwähnen Sie immer, dass dies keine Rechtsberatung ist - konsultieren Sie einen qualifizierten ägyptischen Anwalt für spezielle Fälle."
+    en: "You are a helpful AI assistant providing brief legal information about Egyptian law. Keep responses to 2-3 sentences maximum. Be concise and direct.",
+    ar: "أنت مساعد ذكي يقدم معلومات قانونية مختصرة عن القانون المصري. احتفظ بالإجابات في 2-3 جمل كحد أقصى. كن مختصراً ومباشراً.",
+    de: "Sie sind ein hilfreicher KI-Assistent, der kurze Rechtsinformationen zum ägyptischen Recht bereitstellt. Halten Sie Antworten auf maximal 2-3 Sätze. Seien Sie prägnant und direkt."
   };
 
   return prompts[language as keyof typeof prompts] || prompts.en;
