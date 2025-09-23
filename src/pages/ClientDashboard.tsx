@@ -449,7 +449,7 @@ const ClientDashboard = () => {
           <TabsList className="flex w-full overflow-x-auto scrollbar-hide md:grid md:grid-cols-5 gap-1 pl-2 pr-2 h-12 justify-start">
             <TabsTrigger value="overview" className="flex-shrink-0 min-w-fit px-4">Overview</TabsTrigger>
             <TabsTrigger value="inbox" className="flex-shrink-0 min-w-fit px-4 relative">
-              Inbox
+              Proposals
               <NotificationBadge count={unreadCount} />
             </TabsTrigger>
             <TabsTrigger value="details" className="flex-shrink-0 min-w-fit px-4">Personal Details</TabsTrigger>

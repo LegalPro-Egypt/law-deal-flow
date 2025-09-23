@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Bell, MessageSquare, FileText, CheckCircle, Clock, CreditCard } from "lucide-react";
+import { FileText, MessageSquare, CheckCircle, Clock, CreditCard } from "lucide-react";
 import { ProposalReviewDialog } from "@/components/ProposalReviewDialog";
 import { useNotifications, type Notification, type Proposal } from "@/hooks/useNotifications";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -55,7 +55,7 @@ export const NotificationsInbox = () => {
       case 'proposal_rejected':
         return <CheckCircle className="h-4 w-4" />;
       default:
-        return <Bell className="h-4 w-4" />;
+        return <FileText className="h-4 w-4" />;
     }
   };
 
@@ -65,8 +65,8 @@ export const NotificationsInbox = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Bell className="h-5 w-5" />
-            {currentLanguage === 'ar' ? 'صندوق الإشعارات' : 'Notifications Inbox'}
+            <FileText className="h-5 w-5" />
+            {currentLanguage === 'ar' ? 'العروض القانونية' : 'Legal Proposals'}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -83,8 +83,8 @@ export const NotificationsInbox = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Bell className="h-5 w-5" />
-            {currentLanguage === 'ar' ? 'صندوق الإشعارات' : 'Notifications Inbox'}
+            <FileText className="h-5 w-5" />
+            {currentLanguage === 'ar' ? 'العروض القانونية' : 'Legal Proposals'}
             {unreadCount > 0 && (
               <Badge variant="destructive" className="ml-auto">
                 {unreadCount}
@@ -95,7 +95,7 @@ export const NotificationsInbox = () => {
         <CardContent>
           {notifications.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              {currentLanguage === 'ar' ? 'لا توجد إشعارات' : 'No notifications yet'}
+              {currentLanguage === 'ar' ? 'لا توجد عروض قانونية بعد' : 'No legal proposals yet'}
             </div>
           ) : (
             <div className="space-y-4">
