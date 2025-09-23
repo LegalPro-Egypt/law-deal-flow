@@ -252,7 +252,7 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
                   <div
                     key={message.id}
                     className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} ${
-                      isLastInGroup ? 'mb-5' : 'mb-0.5'
+                      isLastInGroup ? 'mb-5' : 'mb-2'
                     }`}
                   >
                     <div
