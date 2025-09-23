@@ -48,6 +48,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
   const [showRecordings, setShowRecordings] = useState(false);
   const [showDirectChat, setShowDirectChat] = useState(false);
   const [waitingForLawyer, setWaitingForLawyer] = useState(false);
+  const [waitingMode, setWaitingMode] = useState<'video' | 'voice' | null>(null);
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
   const sessionStartTimeRef = useRef<Date | null>(null);
   const browserCleanupRef = useRef<(() => void) | null>(null);
@@ -148,6 +149,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
             console.log('🔧 Setting communication mode to:', updatedSession.session_type);
             setCommunicationMode(updatedSession.session_type);
             setWaitingForLawyer(false);
+            setWaitingMode(null);
             const startTime = new Date();
             setSessionStartTime(startTime);
             sessionStartTimeRef.current = startTime;
@@ -158,6 +160,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
           } else if (updatedSession.status === 'failed' && waitingForLawyer) {
             // Lawyer declined the call
             setWaitingForLawyer(false);
+            setWaitingMode(null);
             toast({
               title: 'Call Declined',
               description: 'The lawyer declined your call request',
@@ -169,6 +172,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
             setAccessToken(null);
             setActiveSession(null);
             setWaitingForLawyer(false);
+            setWaitingMode(null);
             setSessionStartTime(null);
             sessionStartTimeRef.current = null;
           }
@@ -202,6 +206,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
     // For video and voice, use the session-based approach
     try {
       setWaitingForLawyer(true);
+      setWaitingMode(mode);
       const token = await createAccessToken(caseId, mode);
       if (token) {
         const desc = isCurrentUserClient === false
@@ -217,6 +222,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
     } catch (error) {
       console.error('Error starting communication:', error);
       setWaitingForLawyer(false);
+      setWaitingMode(null);
       toast({
         title: 'Connection Error',
         description: 'Failed to start communication session',
@@ -245,6 +251,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
       setAccessToken(null);
       setActiveSession(null);
       setWaitingForLawyer(false);
+      setWaitingMode(null);
       setSessionStartTime(null);
       sessionStartTimeRef.current = null;
       
@@ -270,6 +277,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
       setAccessToken(null);
       setActiveSession(null);
       setWaitingForLawyer(false);
+      setWaitingMode(null);
       setSessionStartTime(null);
       sessionStartTimeRef.current = null;
       
@@ -325,6 +333,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
       }
     }
     setWaitingForLawyer(false);
+    setWaitingMode(null);
   };
 
   const formatDuration = (seconds?: number): string => {
@@ -422,7 +431,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
                 className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}
               >
                 <Video className="w-4 h-4" />
-                {connecting || waitingForLawyer ? 'Waiting...' : 'Video Call'}
+                {waitingMode === 'video' ? 'Waiting...' : 'Video Call'}
               </Button>
               
               <Button
@@ -432,7 +441,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
                 className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}
               >
                 <Phone className="w-4 h-4" />
-                Voice Call
+                {waitingMode === 'voice' ? 'Waiting...' : 'Voice Call'}
               </Button>
 
               <Button
