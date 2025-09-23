@@ -231,7 +231,11 @@ export const LawyerDirectChatInterface: React.FC<LawyerDirectChatInterfaceProps>
       if (f.type?.startsWith('image/')) {
         return (
           <div>
-            <img src={f.url} alt={f.name} className="max-w-[220px] rounded-lg" />
+            <img 
+              src={f.url} 
+              alt={f.name} 
+              className="max-w-[220px] max-h-[160px] object-contain rounded-lg" 
+            />
             <div className="text-[11px] opacity-70 mt-1 break-all">
               {f.name} ({(f.size/1024).toFixed(1)} KB)
             </div>

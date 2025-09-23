@@ -140,20 +140,47 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
 
   // Handle file upload
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('DirectChatInterface: handleFileSelect called');
     const f = e.target.files?.[0];
-    if (!f) return;
-    
-    const uploaded = await uploadFile(f, caseId);
-    if (uploaded) {
-      await supabase.from('case_messages').insert({
+    if (!f) {
+      console.log('DirectChatInterface: No file selected');
+      return;
+    }
+
+    console.log('DirectChatInterface: Starting file upload for:', f.name);
+    try {
+      const uploaded = await uploadFile(f, caseId);
+      if (!uploaded) {
+        console.log('DirectChatInterface: Upload failed');
+        return;
+      }
+
+      console.log('DirectChatInterface: Upload successful, inserting message');
+      const { error } = await supabase.from('case_messages').insert({
         case_id: caseId,
         role: (userRole === 'lawyer' ? 'lawyer' : 'user'),
         content: '',
         message_type: 'file',
         metadata: { channel: 'direct', file: uploaded } as any
       });
+
+      if (error) {
+        console.error('DirectChatInterface: Database insert error:', error);
+        toast({
+          title: "Error",
+          description: "Failed to save file message",
+          variant: "destructive",
+        });
+      } else {
+        console.log('DirectChatInterface: Message inserted successfully');
+      }
+    } catch (error) {
+      console.error('DirectChatInterface: Upload error:', error);
+    } finally {
+      // Reset file input
+      e.target.value = '';
+      console.log('DirectChatInterface: File input reset');
     }
-    e.target.value = '';
   };
 
   // Handle Enter key press
@@ -251,7 +278,11 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
       if (f.type?.startsWith('image/')) {
         return (
           <div>
-            <img src={f.url} alt={f.name} className="max-w-[220px] rounded-lg" />
+            <img 
+              src={f.url} 
+              alt={f.name} 
+              className="max-w-[220px] max-h-[160px] object-contain rounded-lg" 
+            />
             <div className="text-[11px] opacity-70 mt-1 break-all">
               {f.name} ({(f.size/1024).toFixed(1)} KB)
             </div>

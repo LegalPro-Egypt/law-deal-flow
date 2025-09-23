@@ -295,11 +295,15 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
 
   // Show direct chat interface if open
   if (showDirectChat) {
+    console.log('CommunicationLauncher: Rendering DirectChatInterface');
     return (
       <DirectChatInterface
         caseId={caseId}
         caseTitle={caseTitle}
-        onClose={() => setShowDirectChat(false)}
+        onClose={() => {
+          console.log('CommunicationLauncher: DirectChat onClose called');
+          setShowDirectChat(false);
+        }}
       />
     );
   }
