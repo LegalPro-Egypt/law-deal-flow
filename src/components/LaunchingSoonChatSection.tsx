@@ -14,7 +14,7 @@ interface LaunchingSoonChatSectionProps {
 
 export function LaunchingSoonChatSection({ className = "" }: LaunchingSoonChatSectionProps) {
   const [userInput, setUserInput] = useState('');
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
   const [userSentMessage, setUserSentMessage] = useState(false);
   
   const { t, isRTL, getCurrentLanguage } = useLanguage();
@@ -28,41 +28,20 @@ export function LaunchingSoonChatSection({ className = "" }: LaunchingSoonChatSe
     language
   } = useLegalChatbot('qa', 'coming_soon');
 
-  // Smart scroll to bottom
+  // Scroll to bottom using sentinel element
   const scrollToBottom = () => {
-    const viewport = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]');
-    if (viewport) {
-      viewport.scrollTop = viewport.scrollHeight;
-    }
+    bottomRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' });
   };
 
-  // Check if user is at bottom (within 50px threshold)
-  const isUserAtBottom = () => {
-    const viewport = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]');
-    if (!viewport) return false;
-    
-    const { scrollTop, scrollHeight, clientHeight } = viewport;
-    return scrollHeight - scrollTop - clientHeight < 50;
-  };
-
-  // Auto-scroll on new messages (smart behavior)
+  // Auto-scroll: first message and when user sends a message
   useEffect(() => {
-    if (messages.length > 0) {
-      // Always scroll for first message (welcome message)
-      if (messages.length === 1) {
-        setTimeout(scrollToBottom, 100);
-        return;
-      }
-      
-      // Auto-scroll if user sent a message or if they were at bottom
-      if (userSentMessage || isUserAtBottom()) {
-        setTimeout(scrollToBottom, 100);
-      }
-      
-      // Reset the user sent message flag
-      if (userSentMessage) {
-        setUserSentMessage(false);
-      }
+    if (messages.length === 1) {
+      setTimeout(scrollToBottom, 60);
+      return;
+    }
+    if (userSentMessage) {
+      setTimeout(scrollToBottom, 60);
+      setUserSentMessage(false);
     }
   }, [messages, userSentMessage]);
 
@@ -168,7 +147,7 @@ export function LaunchingSoonChatSection({ className = "" }: LaunchingSoonChatSe
           </div>
 
           {/* Chat Messages */}
-          <ScrollArea ref={scrollAreaRef} className="h-80 p-6">
+          <ScrollArea className="h-80 p-6">
             <div className="space-y-4">
               {messages.map((message, index) => (
                 <div
@@ -208,6 +187,7 @@ export function LaunchingSoonChatSection({ className = "" }: LaunchingSoonChatSe
                   </div>
                 </div>
               )}
+            <div ref={bottomRef} />
             </div>
           </ScrollArea>
 
