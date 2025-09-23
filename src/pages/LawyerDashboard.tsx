@@ -646,11 +646,13 @@ const LawyerDashboard = () => {
         </Card>
 
         {/* Communication Section */}
-        <CommunicationInbox
-          cases={cases}
-          userRole="lawyer"
-          lawyerAssigned={true}
-        />
+        <div className="mt-8">
+          <CommunicationInbox
+            cases={cases}
+            userRole="lawyer"
+            lawyerAssigned={true}
+          />
+        </div>
       </div>
 
       {/* Lawyer QA Chatbot */}
