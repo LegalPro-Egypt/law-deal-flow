@@ -92,10 +92,19 @@ export const useChatFileUpload = () => {
 
       setUploadProgress(90);
 
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
+      // Get signed URL (7 day expiry for private bucket)
+      const { data: signedUrlData, error: urlError } = await supabase.storage
         .from('case-documents')
-        .getPublicUrl(filePath);
+        .createSignedUrl(filePath, 7 * 24 * 60 * 60); // 7 days
+
+      if (urlError) {
+        toast({
+          title: "Upload Failed",
+          description: `URL generation error: ${urlError.message}`,
+          variant: "destructive",
+        });
+        return null;
+      }
 
       setUploadProgress(100);
 
@@ -105,7 +114,7 @@ export const useChatFileUpload = () => {
         .insert({
           case_id: caseId,
           file_name: file.name,
-          file_url: publicUrl,
+          file_url: signedUrlData.signedUrl,
           file_type: file.type,
           file_size: file.size,
           document_category: 'chat',
@@ -123,7 +132,7 @@ export const useChatFileUpload = () => {
       });
 
       return {
-        url: publicUrl,
+        url: signedUrlData.signedUrl,
         name: file.name,
         size: file.size,
         type: file.type

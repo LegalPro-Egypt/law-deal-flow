@@ -356,13 +356,13 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
           )}
           
           <div className="flex gap-2">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*,application/pdf,.doc,.docx,.xlsx,.ppt,.pptx"
-              className="hidden"
-              onChange={handleFileSelect}
-            />
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*,application/pdf,.doc,.docx,.xlsx,.ppt,.pptx"
+          className="hidden"
+          onChange={(e) => { e.stopPropagation(); handleFileSelect(e); }}
+        />
             <Button
               type="button"
               variant="outline"
