@@ -268,31 +268,31 @@ export const LawyerDirectChatInterface: React.FC<LawyerDirectChatInterfaceProps>
 
     return (
       <div className="space-y-2">
-        <div className="flex items-center gap-2 text-sm opacity-90">
-          {getFileIcon(file.type)}
-          <span>{file.name}</span>
-          <span className="text-xs opacity-70">({formatFileSize(file.size)})</span>
-        </div>
-        
         {isImage ? (
-          <div className="max-w-xs">
-            <img
-              src={file.url}
-              alt={file.name}
-              className="rounded-lg max-w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
-              onClick={() => window.open(file.url, '_blank')}
-            />
-          </div>
+          <>
+            <div className="max-w-xs">
+              <img
+                src={file.url}
+                alt={file.name}
+                className="rounded-lg max-w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
+                onClick={() => window.open(file.url, '_blank')}
+              />
+            </div>
+            <div className="flex items-center gap-2 text-sm opacity-90">
+              <ImageIcon className="w-4 h-4" />
+              <span>{file.name}</span>
+              <span className="text-xs opacity-70">({formatFileSize(file.size)})</span>
+            </div>
+          </>
         ) : (
-          <Button
-            variant="outline"
-            size="sm"
+          <div 
+            className="flex items-center gap-2 text-sm opacity-90 cursor-pointer hover:opacity-100 transition-opacity"
             onClick={() => window.open(file.url, '_blank')}
-            className="flex items-center gap-2"
           >
-            <Download className="w-3 h-3" />
-            Download
-          </Button>
+            <FileText className="w-4 h-4" />
+            <span className="underline">{file.name}</span>
+            <span className="text-xs opacity-70">({formatFileSize(file.size)})</span>
+          </div>
         )}
       </div>
     );
@@ -402,13 +402,19 @@ export const LawyerDirectChatInterface: React.FC<LawyerDirectChatInterfaceProps>
               ref={fileInputRef}
               type="file"
               className="hidden"
-              onChange={(e) => handleFileUpload(e.target.files)}
+              onChange={(e) => {
+                e.stopPropagation();
+                handleFileUpload(e.target.files);
+              }}
               accept="image/*,.pdf,.doc,.docx,.txt,.zip"
             />
             <Button
               variant="outline"
               size="sm"
-              onClick={() => fileInputRef.current?.click()}
+              onClick={(e) => {
+                e.stopPropagation();
+                fileInputRef.current?.click();
+              }}
               disabled={isUploading || sending}
               className="px-3"
             >
