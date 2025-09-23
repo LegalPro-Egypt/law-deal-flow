@@ -174,7 +174,6 @@ async function handleParticipantConnected(
     console.log('Session activated - both participants joined:', session.id);
   }
 }
-}
 
 async function handleParticipantDisconnected(supabaseClient: any, participantSid: string) {
   console.log('Handling participant disconnected:', { participantSid });
