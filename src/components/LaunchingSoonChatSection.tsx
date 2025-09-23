@@ -165,12 +165,12 @@ export function LaunchingSoonChatSection({ className = "" }: LaunchingSoonChatSe
                         ? 'bg-primary/10 text-primary-foreground border border-primary/20'
                         : 'neomorphism-input text-foreground'
                     }`}
-                    dir={isRTL ? 'rtl' : 'ltr'}
+                    dir={isRTL() ? 'rtl' : 'ltr'}
                   >
                     <div className={`text-sm leading-relaxed ${
                       message.role === 'user' 
                         ? 'text-right'
-                        : (isRTL ? 'text-right' : 'text-left')
+                        : (isRTL() ? 'text-right' : 'text-left')
                     }`}>
                       {formatMessageContent(message.content)}
                     </div>
@@ -206,7 +206,7 @@ export function LaunchingSoonChatSection({ className = "" }: LaunchingSoonChatSe
                 placeholder={t('landing.typeMessage', 'Type your legal question...')}
                 disabled={isLoading}
                 className="neomorphism-input flex-1 border-0 focus:ring-2 focus:ring-primary/20"
-                dir={isRTL ? 'rtl' : 'ltr'}
+                dir={isRTL() ? 'rtl' : 'ltr'}
               />
               <Button
                 onClick={handleSendMessage}
