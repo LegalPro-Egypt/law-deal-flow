@@ -23,6 +23,7 @@ import TermsOfService from "./pages/TermsOfService";
 import ProBono from "./pages/ProBono";
 import Payment from "./pages/Payment";
 import NotFound from "./pages/NotFound";
+import CaseCardDemo from "./pages/CaseCardDemo";
 import { useState } from "react";
 
 const queryClient = new QueryClient();
@@ -107,6 +108,7 @@ function AppContent() {
           <Payment />
         </ProtectedRoute>
       } />
+      <Route path="/case-card-demo" element={<CaseCardDemo />} />
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
     </Routes>
