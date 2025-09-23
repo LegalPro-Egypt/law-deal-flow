@@ -1,5 +1,8 @@
 project_id = "igrpbeordzwcsxihlwny"
 
+[functions.complete-consultation]
+verify_jwt = true
+
 [functions.twilio-webhooks]
 verify_jwt = false
 

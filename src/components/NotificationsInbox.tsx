@@ -34,14 +34,23 @@ export const NotificationsInbox = () => {
   const handleCompletePayment = (proposalId: string) => {
     const proposalWithCase = proposalsWithCases.find(p => p.id === proposalId);
     if (proposalWithCase && proposalWithCase.case) {
+      // Determine payment type and amount based on case status
+      const isGracePeriodPayment = proposalWithCase.case.status === 'consultation_completed';
+      const paymentType = isGracePeriodPayment ? 'remaining' : 'consultation';
+      const amount = isGracePeriodPayment ? proposalWithCase.case.remaining_fee : proposalWithCase.consultation_fee;
+      
       navigate('/payment', {
         state: {
           caseId: proposalWithCase.case.id,
           proposalId: proposalWithCase.id,
           consultationFee: proposalWithCase.consultation_fee,
+          remainingFee: proposalWithCase.case.remaining_fee,
           totalFee: proposalWithCase.total_fee,
           lawyerName: proposalWithCase.case.assigned_lawyer_name || 'Your Lawyer',
-          caseTitle: proposalWithCase.case.title
+          caseTitle: proposalWithCase.case.title,
+          paymentType,
+          amount,
+          gracePeriodExpires: proposalWithCase.case.grace_period_expires_at
         }
       });
     }
@@ -150,16 +159,36 @@ export const NotificationsInbox = () => {
                           {(() => {
                             const proposalId = (notification as any).metadata?.proposal_id;
                             const proposalWithCase = proposalsWithCases.find(p => p.id === proposalId);
-                            return proposalWithCase && needsPayment(proposalWithCase) && (
-                              <Button
-                                size="sm"
-                                variant="default"
-                                className="w-full sm:w-auto bg-primary hover:bg-primary/90"
-                                onClick={() => handleCompletePayment(proposalId)}
-                              >
-                                <CreditCard className="h-4 w-4 mr-2" />
-                                {currentLanguage === 'ar' ? 'إكمال الدفع' : 'Complete Payment'}
-                              </Button>
+                            if (!proposalWithCase || !needsPayment(proposalWithCase)) return null;
+                            
+                            const isGracePeriodPayment = proposalWithCase.case?.status === 'consultation_completed';
+                            const amount = isGracePeriodPayment ? 
+                              proposalWithCase.case?.remaining_fee : 
+                              proposalWithCase.consultation_fee;
+                            const paymentLabel = isGracePeriodPayment ? 'Complete Final Payment' : 'Complete Payment';
+                            const gracePeriodExpires = proposalWithCase.case?.grace_period_expires_at ? 
+                              new Date(proposalWithCase.case.grace_period_expires_at) : null;
+                            const timeRemaining = gracePeriodExpires ? 
+                              Math.max(0, Math.ceil((gracePeriodExpires.getTime() - new Date().getTime()) / (1000 * 60 * 60))) : null;
+                            
+                            return (
+                              <div className="w-full sm:w-auto space-y-2">
+                                <Button
+                                  size="sm"
+                                  variant="default"
+                                  className={`w-full ${isGracePeriodPayment ? 'bg-warning hover:bg-warning/90 text-warning-foreground' : 'bg-primary hover:bg-primary/90'}`}
+                                  onClick={() => handleCompletePayment(proposalId)}
+                                >
+                                  <CreditCard className="h-4 w-4 mr-2" />
+                                  {currentLanguage === 'ar' ? 'إكمال الدفع' : paymentLabel}
+                                  {amount && ` ($${amount})`}
+                                </Button>
+                                {isGracePeriodPayment && timeRemaining !== null && (
+                                  <div className="text-xs text-center text-warning">
+                                    {timeRemaining > 0 ? `${timeRemaining}h remaining` : 'Grace period expired'}
+                                  </div>
+                                )}
+                              </div>
                             );
                           })()}
                         </div>

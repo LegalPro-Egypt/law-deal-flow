@@ -179,9 +179,20 @@ export const useNotifications = () => {
   }, [user]);
 
   const needsPayment = (proposal: Proposal & { case: any }) => {
-    return proposal.status === 'accepted' && 
-           proposal.case && 
-           !proposal.case.consultation_paid;
+    // Check if consultation payment is needed
+    if (proposal.status === 'accepted' && proposal.case && !proposal.case.consultation_paid) {
+      return true;
+    }
+    
+    // Check if remaining payment is needed after consultation completion
+    if (proposal.case?.status === 'consultation_completed' && 
+        proposal.case?.grace_period_expires_at &&
+        new Date(proposal.case.grace_period_expires_at) > new Date() &&
+        proposal.case?.remaining_fee > 0) {
+      return true;
+    }
+    
+    return false;
   };
 
   return {

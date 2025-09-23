@@ -226,12 +226,15 @@ export type Database = {
           client_name: string | null
           client_phone: string | null
           client_responses_summary: Json | null
+          communication_modes: Json | null
+          consultation_completed_at: string | null
           consultation_fee: number | null
           consultation_paid: boolean | null
           created_at: string
           description: string | null
           draft_data: Json | null
           extracted_entities: Json | null
+          grace_period_expires_at: string | null
           id: string
           idempotency_key: string | null
           jurisdiction: string
@@ -264,12 +267,15 @@ export type Database = {
           client_name?: string | null
           client_phone?: string | null
           client_responses_summary?: Json | null
+          communication_modes?: Json | null
+          consultation_completed_at?: string | null
           consultation_fee?: number | null
           consultation_paid?: boolean | null
           created_at?: string
           description?: string | null
           draft_data?: Json | null
           extracted_entities?: Json | null
+          grace_period_expires_at?: string | null
           id?: string
           idempotency_key?: string | null
           jurisdiction?: string
@@ -302,12 +308,15 @@ export type Database = {
           client_name?: string | null
           client_phone?: string | null
           client_responses_summary?: Json | null
+          communication_modes?: Json | null
+          consultation_completed_at?: string | null
           consultation_fee?: number | null
           consultation_paid?: boolean | null
           created_at?: string
           description?: string | null
           draft_data?: Json | null
           extracted_entities?: Json | null
+          grace_period_expires_at?: string | null
           id?: string
           idempotency_key?: string | null
           jurisdiction?: string

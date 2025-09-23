@@ -22,12 +22,18 @@ interface CommunicationLauncherProps {
   caseId: string;
   caseTitle: string;
   lawyerAssigned?: boolean;
+  communicationModes?: {
+    text: boolean;
+    voice: boolean;
+    video: boolean;
+  };
 }
 
 export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
   caseId,
   caseTitle,
-  lawyerAssigned = false
+  lawyerAssigned = false,
+  communicationModes = { text: true, voice: true, video: true }
 }) => {
   // Force cache refresh - component updated at 2025-01-20
   console.log('🚀 CommunicationLauncher rendering with caseId:', caseId);
@@ -475,8 +481,9 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <Button
                 onClick={() => handleStartCommunication('video')}
-                disabled={connecting || !!activeCaseSession || waitingForResponse}
-                className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}
+                disabled={!communicationModes.video || connecting || !!activeCaseSession || waitingForResponse}
+                className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''} ${!communicationModes.video ? 'opacity-50' : ''}`}
+                title={!communicationModes.video ? 'Video calls are currently disabled' : ''}
               >
                 <Video className="w-4 h-4" />
                 {waitingMode === 'video' ? 'Waiting...' : 'Video Call'}
@@ -485,8 +492,9 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
               <Button
                 variant="outline"
                 onClick={() => handleStartCommunication('voice')}
-                disabled={connecting || !!activeCaseSession || waitingForResponse}
-                className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}
+                disabled={!communicationModes.voice || connecting || !!activeCaseSession || waitingForResponse}
+                className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''} ${!communicationModes.voice ? 'opacity-50' : ''}`}
+                title={!communicationModes.voice ? 'Voice calls are currently disabled' : ''}
               >
                 <Phone className="w-4 h-4" />
                 {waitingMode === 'voice' ? 'Waiting...' : 'Voice Call'}
@@ -495,8 +503,9 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
               <Button
                 variant="outline"
                 onClick={() => handleStartCommunication('chat')}
-                disabled={false}
-                className={`flex items-center gap-2 relative ${isRTL() ? 'flex-row-reverse' : ''}`}
+                disabled={!communicationModes.text}
+                className={`flex items-center gap-2 relative ${isRTL() ? 'flex-row-reverse' : ''} ${!communicationModes.text ? 'opacity-50' : ''}`}
+                title={!communicationModes.text ? 'Text chat is currently disabled' : ''}
               >
                 <MessageCircle className="w-4 h-4" />
                 Start Chat
