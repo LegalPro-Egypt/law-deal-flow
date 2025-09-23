@@ -146,6 +146,19 @@ const LawyerDashboard = () => {
 
       setCases(casesData || []);
 
+      // Fetch existing scheduled communication sessions
+      const { data: scheduledSessions, error: sessionsError } = await supabase
+        .from('communication_sessions')
+        .select('*')
+        .eq('lawyer_id', user.id)
+        .eq('status', 'scheduled');
+
+      if (sessionsError) {
+        console.error('Error fetching scheduled sessions:', sessionsError);
+      } else {
+        setIncomingCalls((scheduledSessions as TwilioSession[]) || []);
+      }
+
       // Calculate stats with proper status mapping
       const pendingCases = casesData?.filter(c => 
         c.status === 'lawyer_assigned' || c.status === 'proposal_sent'

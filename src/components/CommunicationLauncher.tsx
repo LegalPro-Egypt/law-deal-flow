@@ -144,6 +144,37 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
     sessionStartTimeRef.current = null;
   };
 
+  const handleCancelCall = async () => {
+    if (pendingSession) {
+      try {
+        // Update session status to cancelled
+        const { error } = await supabase
+          .from('communication_sessions')
+          .update({ 
+            status: 'cancelled',
+            ended_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', pendingSession.id);
+
+        if (error) throw error;
+
+        toast({
+          title: 'Call Cancelled',
+          description: 'Your call request has been cancelled',
+        });
+      } catch (error) {
+        console.error('Error cancelling call:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to cancel the call',
+          variant: 'destructive',
+        });
+      }
+    }
+    setWaitingForLawyer(false);
+  };
+
   const handleRecordingToggle = async (recording: boolean) => {
     if (!activeSession) return;
 
@@ -284,7 +315,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={() => setWaitingForLawyer(false)}
+                  onClick={handleCancelCall}
                 >
                   Cancel
                 </Button>
