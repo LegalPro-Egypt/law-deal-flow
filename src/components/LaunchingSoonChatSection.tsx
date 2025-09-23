@@ -37,12 +37,8 @@ export function LaunchingSoonChatSection({ className = "" }: LaunchingSoonChatSe
     });
   };
 
-  // Auto-scroll: first message and when user sends a message
+  // Auto-scroll: only when user sends a message, not on first message load
   useEffect(() => {
-    if (messages.length === 1) {
-      requestAnimationFrame(scrollToBottom);
-      return;
-    }
     if (userSentMessage) {
       requestAnimationFrame(scrollToBottom);
       setUserSentMessage(false);
