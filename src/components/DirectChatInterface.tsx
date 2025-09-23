@@ -236,7 +236,7 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
               </div>
             </div>
           ) : (
-            <div className="space-y-0">
+            <div className="space-y-1">
               {messages.map((message, index) => {
                 const isOwnMessage = 
                   (userRole === 'client' && message.role === 'user') ||

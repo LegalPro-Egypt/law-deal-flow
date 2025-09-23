@@ -205,7 +205,7 @@ export const LawyerDirectChatInterface: React.FC<LawyerDirectChatInterfaceProps>
       
       <CardContent className="flex-1 flex flex-col p-3 pt-0">
         <ScrollArea className="flex-1 mb-3">
-          <div className="space-y-0 px-2">
+          <div className="space-y-1 px-2">
             {loading ? (
               <div className="text-center text-muted-foreground py-4">
                 Loading messages...
