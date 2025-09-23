@@ -615,30 +615,41 @@ const LawyerDashboard = () => {
                     >
                       <CollapsibleTrigger asChild>
                         <Card className="hover:shadow-md transition-shadow cursor-pointer md:hidden">
-                          <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
+                          <CardContent className="p-3">
+                            <div className="flex items-center gap-3">
+                              {/* Case ID Badge - Fixed Height */}
+                              <Badge 
+                                variant="outline" 
+                                className="font-mono text-sm font-medium h-8 px-3 flex items-center flex-shrink-0"
+                              >
+                                {caseItem.case_number}
+                              </Badge>
+                              
+                              {/* Client Info - Expandable with Truncation */}
                               <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <Badge variant="outline" className="font-mono text-xs flex-shrink-0">
-                                    {caseItem.case_number}
-                                  </Badge>
-                                  <Badge variant={getStatusVariant(caseItem.status)} className="flex-shrink-0">
-                                    {caseItem.status === 'proposal_accepted' && caseItem.consultation_paid === false 
-                                      ? (isRTL() ? 'في انتظار الدفع' : 'Awaiting Payment')
-                                      : t(`dashboard.cases.status.${caseItem.status}`)
-                                    }
-                                  </Badge>
-                                </div>
-                                <div className="text-sm font-medium truncate">
+                                <div className="text-sm font-semibold truncate">
                                   {getClientNameForRole(caseItem.client_name, profile?.role)} • {caseItem.category}
                                 </div>
                               </div>
-                              <div className="flex-shrink-0 ml-2">
-                                {isExpanded ? (
-                                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                                ) : (
-                                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                                )}
+                              
+                              {/* Status Badge + Chevron - Fixed Height with Proper Spacing */}
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <Badge 
+                                  variant={getStatusVariant(caseItem.status)}
+                                  className="text-sm font-medium h-8 px-3 flex items-center min-w-fit"
+                                >
+                                  {caseItem.status === 'proposal_accepted' && caseItem.consultation_paid === false 
+                                    ? (isRTL() ? 'في انتظار الدفع' : 'Awaiting Payment')
+                                    : t(`dashboard.cases.status.${caseItem.status}`)
+                                  }
+                                </Badge>
+                                <div className="flex items-center justify-center w-6 h-6">
+                                  {isExpanded ? (
+                                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                  ) : (
+                                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </CardContent>
