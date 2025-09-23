@@ -111,12 +111,37 @@ export const TwilioVideoInterface: React.FC<TwilioVideoInterfaceProps> = ({
 
     connectToRoom();
 
+    // Browser cleanup event listeners
+    const handleBeforeUnload = () => {
+      if (room && connected) {
+        room.disconnect();
+        onDisconnect();
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden' && room && connected) {
+        // Give user 30 seconds before auto-disconnect
+        setTimeout(() => {
+          if (document.visibilityState === 'hidden' && connected) {
+            room.disconnect();
+            onDisconnect();
+          }
+        }, 30000);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       if (room) {
         room.disconnect();
       }
     };
-  }, [accessToken, videoEnabled, audioEnabled]);
+  }, [accessToken, videoEnabled, audioEnabled, onDisconnect, room, connected]);
 
   const toggleVideo = () => {
     setVideoEnabled(!videoEnabled);

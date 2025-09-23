@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -34,12 +34,15 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
     connecting,
     createAccessToken,
     startRecording,
-    stopRecording
+    stopRecording,
+    endSession
   } = useTwilioSession();
 
   const [communicationMode, setCommunicationMode] = useState<'video' | 'voice' | 'chat' | null>(null);
   const [showRecordings, setShowRecordings] = useState(false);
   const [waitingForLawyer, setWaitingForLawyer] = useState(false);
+  const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
+  const sessionStartTimeRef = useRef<Date | null>(null);
 
   const caseSessions = sessions.filter(session => session.case_id === caseId);
   const activeCaseSession = caseSessions.find(session => session.status === 'active');
@@ -66,6 +69,9 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
             // Lawyer accepted the call, join the session
             setCommunicationMode(updatedSession.session_type);
             setWaitingForLawyer(false);
+            const startTime = new Date();
+            setSessionStartTime(startTime);
+            sessionStartTimeRef.current = startTime;
             toast({
               title: 'Call Accepted',
               description: 'Lawyer has joined the call',
@@ -78,6 +84,14 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
               description: 'The lawyer declined your call request',
               variant: 'destructive',
             });
+          } else if (updatedSession.status === 'ended') {
+            // Session ended, cleanup local state
+            setCommunicationMode(null);
+            setAccessToken(null);
+            setActiveSession(null);
+            setWaitingForLawyer(false);
+            setSessionStartTime(null);
+            sessionStartTimeRef.current = null;
           }
         }
       )
@@ -118,15 +132,16 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
     }
   };
 
-  const handleEndCommunication = () => {
+  const handleEndCommunication = async () => {
+    if (activeSession) {
+      await endSession(activeSession.id, sessionStartTimeRef.current || undefined);
+    }
     setCommunicationMode(null);
     setAccessToken(null);
     setActiveSession(null);
     setWaitingForLawyer(false);
-    toast({
-      title: 'Session Ended',
-      description: 'Communication session has been terminated',
-    });
+    setSessionStartTime(null);
+    sessionStartTimeRef.current = null;
   };
 
   const handleRecordingToggle = async (recording: boolean) => {

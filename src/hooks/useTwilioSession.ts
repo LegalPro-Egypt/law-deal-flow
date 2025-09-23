@@ -180,6 +180,51 @@ export const useTwilioSession = () => {
     }
   }, []);
 
+  // End a session
+  const endSession = useCallback(async (sessionId: string, startTime?: Date) => {
+    try {
+      const endTime = new Date();
+      const duration = startTime ? Math.floor((endTime.getTime() - startTime.getTime()) / 1000) : null;
+
+      const { error } = await supabase
+        .from('communication_sessions')
+        .update({
+          status: 'ended',
+          ended_at: endTime.toISOString(),
+          duration_seconds: duration
+        })
+        .eq('id', sessionId);
+
+      if (error) throw error;
+
+      // Update local state
+      setSessions(prev => prev.map(session => 
+        session.id === sessionId 
+          ? { ...session, status: 'ended', ended_at: endTime.toISOString(), duration_seconds: duration }
+          : session
+      ));
+
+      if (activeSession?.id === sessionId) {
+        setActiveSession(null);
+      }
+
+      toast({
+        title: 'Session Ended',
+        description: 'Communication session has been ended successfully',
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error ending session:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to end session properly',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  }, [activeSession]);
+
   // Get recordings for a session or case
   const getRecordings = useCallback(async (caseId?: string, sessionId?: string) => {
     try {
@@ -264,6 +309,7 @@ export const useTwilioSession = () => {
     createAccessToken,
     startRecording,
     stopRecording,
+    endSession,
     getRecordings,
     fetchSessions
   };

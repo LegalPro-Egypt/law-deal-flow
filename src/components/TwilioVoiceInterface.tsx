@@ -76,12 +76,35 @@ export const TwilioVoiceInterface: React.FC<TwilioVoiceInterfaceProps> = ({
 
     connectToVoiceCall();
 
+    // Browser cleanup event listeners
+    const handleBeforeUnload = () => {
+      if (connected) {
+        onDisconnect();
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden' && connected) {
+        // Give user 30 seconds before auto-disconnect
+        setTimeout(() => {
+          if (document.visibilityState === 'hidden' && connected) {
+            onDisconnect();
+          }
+        }, 30000);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       if (callTimerRef.current) {
         clearInterval(callTimerRef.current);
       }
     };
-  }, [accessToken]);
+  }, [accessToken, onDisconnect, connected]);
 
   const toggleAudio = () => {
     setAudioEnabled(!audioEnabled);
