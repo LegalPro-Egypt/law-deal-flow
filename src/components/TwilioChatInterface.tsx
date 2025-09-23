@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { TwilioAccessToken } from '@/hooks/useTwilioSession';
+import { supabase } from '@/integrations/supabase/client';
 
 // Mock Twilio Chat SDK types
 interface MockChatClient {
@@ -52,15 +53,11 @@ interface MockParticipant {
 interface TwilioChatInterfaceProps {
   accessToken: TwilioAccessToken;
   onDisconnect: () => void;
-  onRecordingToggle: (recording: boolean) => void;
-  recordingEnabled: boolean;
 }
 
 export const TwilioChatInterface: React.FC<TwilioChatInterfaceProps> = ({
   accessToken,
-  onDisconnect,
-  onRecordingToggle,
-  recordingEnabled
+  onDisconnect
 }) => {
   const [client, setClient] = useState<MockChatClient | null>(null);
   const [conversation, setConversation] = useState<MockConversation | null>(null);
@@ -213,10 +210,32 @@ export const TwilioChatInterface: React.FC<TwilioChatInterfaceProps> = ({
   const sendMessage = useCallback(async () => {
     if (!conversation || !newMessage.trim()) return;
 
+    const messageText = newMessage.trim();
+
     try {
-      const message = await conversation.sendMessage(newMessage.trim());
+      const message = await conversation.sendMessage(messageText);
       setMessages(prev => [...prev, message]);
       setNewMessage('');
+      
+      // Auto-log message for admin review
+      try {
+        const { data, error } = await supabase.functions.invoke('log-chat-message', {
+          body: {
+            sessionId: accessToken.sessionId,
+            caseId: extractCaseIdFromRoomName(accessToken.roomName),
+            role: 'client', // TODO: Determine actual role based on user
+            content: messageText,
+            messageType: 'text'
+          }
+        });
+        
+        if (error) {
+          console.error('Failed to log message for admin review:', error);
+        }
+      } catch (logError) {
+        console.error('Error logging message for admin review:', logError);
+        // Continue even if logging fails
+      }
       
       toast({
         title: 'Message Sent',
@@ -230,7 +249,13 @@ export const TwilioChatInterface: React.FC<TwilioChatInterfaceProps> = ({
         variant: 'destructive',
       });
     }
-  }, [conversation, newMessage]);
+  }, [conversation, newMessage, accessToken]);
+
+  // Helper function to extract case ID from room name
+  const extractCaseIdFromRoomName = (roomName: string): string => {
+    const match = roomName.match(/case-([^-]+)/);
+    return match ? match[1] : '';
+  };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -295,22 +320,8 @@ export const TwilioChatInterface: React.FC<TwilioChatInterfaceProps> = ({
         
         {/* Chat controls */}
         <div className="flex items-center justify-between pt-2 border-t">
-          <div className="flex items-center gap-2">
-            <Button
-              variant={recordingEnabled ? "destructive" : "outline"}
-              size="sm"
-              onClick={() => onRecordingToggle(!recordingEnabled)}
-            >
-              <FileText className="w-4 h-4 mr-1" />
-              {recordingEnabled ? 'Stop Recording' : 'Start Recording'}
-            </Button>
-            
-            {recordingEnabled && (
-              <Badge variant="destructive" className="animate-pulse">
-                <div className="w-2 h-2 bg-white rounded-full mr-1" />
-                Recording
-              </Badge>
-            )}
+          <div className="text-sm text-muted-foreground">
+            Session automatically recorded for admin review
           </div>
           
           <Button

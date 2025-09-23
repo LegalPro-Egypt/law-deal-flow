@@ -9,8 +9,6 @@ import { TwilioAccessToken } from '@/hooks/useTwilioSession';
 interface TwilioVideoInterfaceProps {
   accessToken: TwilioAccessToken;
   onDisconnect: () => void;
-  onRecordingToggle: (recording: boolean) => void;
-  recordingEnabled: boolean;
 }
 
 // Mock Twilio Video SDK types (in production, install @twilio/video)
@@ -26,9 +24,7 @@ interface MockRoom {
 
 export const TwilioVideoInterface: React.FC<TwilioVideoInterfaceProps> = ({
   accessToken,
-  onDisconnect,
-  onRecordingToggle,
-  recordingEnabled
+  onDisconnect
 }) => {
   const [room, setRoom] = useState<MockRoom | null>(null);
   const [connected, setConnected] = useState(false);
@@ -244,9 +240,6 @@ export const TwilioVideoInterface: React.FC<TwilioVideoInterfaceProps> = ({
     };
   }, [room, connected, onDisconnect]);
 
-  const handleRecordingToggle = () => {
-    onRecordingToggle(!recordingEnabled);
-  };
 
   return (
     <Card className="w-full max-w-4xl mx-auto">
@@ -264,11 +257,9 @@ export const TwilioVideoInterface: React.FC<TwilioVideoInterfaceProps> = ({
               <Users className="w-3 h-3" />
               {participants.length + 1}
             </Badge>
-            {recordingEnabled && (
-              <Badge variant="destructive">
-                🔴 Recording
-              </Badge>
-            )}
+            <Badge variant="destructive">
+              🔴 Recording
+            </Badge>
           </div>
         </div>
       </CardHeader>
@@ -351,14 +342,6 @@ export const TwilioVideoInterface: React.FC<TwilioVideoInterfaceProps> = ({
             {screenSharing ? 'Stop Sharing' : 'Share Screen'}
           </Button>
 
-          <Button
-            variant={recordingEnabled ? "destructive" : "outline"}
-            size="sm"
-            onClick={handleRecordingToggle}
-            className="flex items-center gap-2"
-          >
-            🔴 {recordingEnabled ? 'Stop Recording' : 'Start Recording'}
-          </Button>
 
           <Button
             variant="destructive"

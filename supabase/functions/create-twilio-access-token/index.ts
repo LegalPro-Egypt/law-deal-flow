@@ -77,7 +77,10 @@ serve(async (req) => {
         room_name: roomName,
         twilio_conversation_sid: conversationSid,
         status: participantRole === 'client' ? 'scheduled' : 'active', // Client creates scheduled, lawyer creates active
-        scheduled_at: new Date().toISOString()
+        scheduled_at: new Date().toISOString(),
+        recording_enabled: true, // Always enable recording automatically
+        recording_consent_client: true, // Auto-consent for admin review
+        recording_consent_lawyer: true  // Auto-consent for admin review
       })
       .select()
       .single();
@@ -167,6 +170,20 @@ serve(async (req) => {
         status: participantRole === 'client' ? 'scheduled' : 'active' // Keep scheduled for client, active for lawyer
       })
       .eq('id', sessionData.id);
+
+    // Start recording automatically when session is created
+    try {
+      await supabaseClient.functions.invoke('manage-twilio-recording', {
+        body: {
+          sessionId: sessionData.id,
+          action: 'start'
+        }
+      });
+      console.log('Auto-started recording for session:', sessionData.id);
+    } catch (recordingError) {
+      console.error('Failed to auto-start recording:', recordingError);
+      // Continue even if recording fails to start
+    }
 
     return new Response(JSON.stringify({
       accessToken,

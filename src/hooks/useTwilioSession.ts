@@ -79,14 +79,15 @@ export const useTwilioSession = () => {
 
       const participantRole = caseData?.user_id === user.id ? 'client' : 'lawyer';
 
-        const { data, error } = await supabase.functions.invoke('create-twilio-access-token', {
-          body: {
-            caseId,
-            sessionType,
-            participantRole,
-            status: 'scheduled'  // Ensure new sessions start as 'scheduled'
-          }
-        });
+      const { data, error } = await supabase.functions.invoke('create-twilio-access-token', {
+        body: {
+          caseId,
+          sessionType,
+          participantRole,
+          status: 'scheduled',
+          recording_enabled: true  // Always enable recording automatically
+        }
+      });
 
       if (error) throw error;
       
@@ -110,75 +111,6 @@ export const useTwilioSession = () => {
     }
   }, [user]);
 
-  // Start recording for a session
-  const startRecording = useCallback(async (sessionId: string) => {
-    try {
-      const { data, error } = await supabase.functions.invoke('manage-twilio-recording', {
-        body: {
-          sessionId,
-          action: 'start'
-        }
-      });
-
-      if (error) throw error;
-      
-      toast({
-        title: 'Recording Started',
-        description: 'Session recording has begun',
-      });
-      
-      // Update local session state
-      setSessions(prev => prev.map(session => 
-        session.id === sessionId 
-          ? { ...session, recording_enabled: true }
-          : session
-      ));
-      
-      return data;
-    } catch (error) {
-      console.error('Error starting recording:', error);
-      toast({
-        title: 'Recording Error',
-        description: 'Failed to start recording',
-        variant: 'destructive',
-      });
-    }
-  }, []);
-
-  // Stop recording for a session
-  const stopRecording = useCallback(async (sessionId: string) => {
-    try {
-      const { data, error } = await supabase.functions.invoke('manage-twilio-recording', {
-        body: {
-          sessionId,
-          action: 'stop'
-        }
-      });
-
-      if (error) throw error;
-      
-      toast({
-        title: 'Recording Stopped',
-        description: 'Session recording has ended',
-      });
-      
-      // Update local session state
-      setSessions(prev => prev.map(session => 
-        session.id === sessionId 
-          ? { ...session, recording_enabled: false }
-          : session
-      ));
-      
-      return data;
-    } catch (error) {
-      console.error('Error stopping recording:', error);
-      toast({
-        title: 'Recording Error',
-        description: 'Failed to stop recording',
-        variant: 'destructive',
-      });
-    }
-  }, []);
 
   // End a session with retry logic
   const endSession = useCallback(async (sessionId: string, startTime?: Date, retryCount = 0) => {
@@ -445,8 +377,6 @@ export const useTwilioSession = () => {
     loading,
     connecting,
     createAccessToken,
-    startRecording,
-    stopRecording,
     endSession,
     getRecordings,
     fetchSessions,

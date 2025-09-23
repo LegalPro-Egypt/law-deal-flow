@@ -34,8 +34,6 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
     setAccessToken,
     connecting,
     createAccessToken,
-    startRecording,
-    stopRecording,
     endSession
   } = useTwilioSession();
 
@@ -265,19 +263,6 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
     setWaitingForLawyer(false);
   };
 
-  const handleRecordingToggle = async (recording: boolean) => {
-    if (!activeSession) return;
-
-    try {
-      if (recording) {
-        await startRecording(activeSession.id);
-      } else {
-        await stopRecording(activeSession.id);
-      }
-    } catch (error) {
-      console.error('Error toggling recording:', error);
-    }
-  };
 
   const formatDuration = (seconds?: number): string => {
     if (!seconds) return '--:--';
@@ -303,22 +288,16 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
           <TwilioVideoInterface
             accessToken={accessToken}
             onDisconnect={handleEndCommunication}
-            onRecordingToggle={handleRecordingToggle}
-            recordingEnabled={activeSession?.recording_enabled || false}
           />
         ) : communicationMode === 'voice' ? (
           <TwilioVoiceInterface
             accessToken={accessToken}
             onDisconnect={handleEndCommunication}
-            onRecordingToggle={handleRecordingToggle}
-            recordingEnabled={activeSession?.recording_enabled || false}
           />
         ) : (
           <TwilioChatInterface
             accessToken={accessToken}
             onDisconnect={handleEndCommunication}
-            onRecordingToggle={handleRecordingToggle}
-            recordingEnabled={activeSession?.recording_enabled || false}
           />
         )}
       </div>

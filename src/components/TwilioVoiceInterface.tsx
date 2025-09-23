@@ -9,15 +9,11 @@ import { TwilioAccessToken } from '@/hooks/useTwilioSession';
 interface TwilioVoiceInterfaceProps {
   accessToken: TwilioAccessToken;
   onDisconnect: () => void;
-  onRecordingToggle: (recording: boolean) => void;
-  recordingEnabled: boolean;
 }
 
 export const TwilioVoiceInterface: React.FC<TwilioVoiceInterfaceProps> = ({
   accessToken,
-  onDisconnect,
-  onRecordingToggle,
-  recordingEnabled
+  onDisconnect
 }) => {
   const [connected, setConnected] = useState(false);
   const [participants, setParticipants] = useState<string[]>([]);
@@ -134,9 +130,6 @@ export const TwilioVoiceInterface: React.FC<TwilioVoiceInterfaceProps> = ({
     });
   };
 
-  const handleRecordingToggle = () => {
-    onRecordingToggle(!recordingEnabled);
-  };
 
   const formatDuration = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
@@ -165,11 +158,9 @@ export const TwilioVoiceInterface: React.FC<TwilioVoiceInterfaceProps> = ({
             <Badge variant={connected ? "default" : "secondary"}>
               {connected ? 'Connected' : 'Connecting...'}
             </Badge>
-            {recordingEnabled && (
-              <Badge variant="destructive">
-                🔴 Recording
-              </Badge>
-            )}
+            <Badge variant="destructive">
+              🔴 Recording
+            </Badge>
           </div>
         </div>
       </CardHeader>
@@ -225,14 +216,6 @@ export const TwilioVoiceInterface: React.FC<TwilioVoiceInterfaceProps> = ({
             {speakerEnabled ? <Volume2 className="w-6 h-6" /> : <VolumeX className="w-6 h-6" />}
           </Button>
 
-          <Button
-            variant={recordingEnabled ? "destructive" : "outline"}
-            size="lg"
-            onClick={handleRecordingToggle}
-            className="w-14 h-14 rounded-full"
-          >
-            🔴
-          </Button>
         </div>
 
         {/* End Call Button */}
