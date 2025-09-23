@@ -4,10 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { MessageCircle, Send, X, User, UserCheck, Gavel } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { MessageCircle, Send, X, User, UserCheck, Gavel, Paperclip, Download, FileText, Image as ImageIcon, File } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useLawyerChatNotifications } from '@/hooks/useLawyerChatNotifications';
+import { useChatFileUpload } from '@/hooks/useChatFileUpload';
 import { toast } from '@/hooks/use-toast';
 
 interface LawyerDirectChatInterfaceProps {
@@ -23,7 +25,17 @@ interface ChatMessage {
   content: string;
   created_at: string;
   is_read: boolean;
-  metadata?: { channel?: string; [key: string]: any };
+  message_type?: 'text' | 'file';
+  metadata?: { 
+    channel?: string; 
+    file?: {
+      name: string;
+      url: string;
+      type: string;
+      size: number;
+    };
+    [key: string]: any;
+  };
 }
 
 export const LawyerDirectChatInterface: React.FC<LawyerDirectChatInterfaceProps> = ({
@@ -34,12 +46,14 @@ export const LawyerDirectChatInterface: React.FC<LawyerDirectChatInterfaceProps>
 }) => {
   const { user } = useAuth();
   const { markMessagesAsRead, sendMessage } = useLawyerChatNotifications();
+  const { uploadFile, isUploading, uploadProgress } = useChatFileUpload();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-scroll to bottom when new messages arrive
   const scrollToBottom = () => {
@@ -51,14 +65,14 @@ export const LawyerDirectChatInterface: React.FC<LawyerDirectChatInterfaceProps>
     try {
       const { data, error } = await supabase
         .from('case_messages')
-        .select('id, role, content, created_at, is_read')
+        .select('id, role, content, created_at, is_read, message_type, metadata')
         .eq('case_id', caseId)
         .eq('metadata->>channel', 'direct')
         .order('created_at', { ascending: true });
 
       if (error) throw error;
 
-      setMessages(data || []);
+      setMessages((data || []) as ChatMessage[]);
       
       // Mark messages as read when opening chat
       if (user) {
@@ -93,6 +107,51 @@ export const LawyerDirectChatInterface: React.FC<LawyerDirectChatInterfaceProps>
       });
     } finally {
       setSending(false);
+    }
+  };
+
+  // Handle file upload
+  const handleFileUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0 || !user || isUploading) return;
+
+    const file = files[0]; // Take first file only
+    const uploadResult = await uploadFile(file, caseId);
+    
+    if (uploadResult) {
+      // Send file message
+      try {
+        const { error } = await supabase
+          .from('case_messages')
+          .insert({
+            case_id: caseId,
+            role: 'lawyer',
+            content: `Shared a file: ${uploadResult.name}`,
+            message_type: 'file',
+            metadata: { 
+              channel: 'direct',
+              file: {
+                name: uploadResult.name,
+                url: uploadResult.url,
+                type: uploadResult.type,
+                size: uploadResult.size
+              }
+            }
+          });
+
+        if (error) throw error;
+      } catch (error) {
+        console.error('Error sending file message:', error);
+        toast({
+          title: 'Error',
+          description: 'File uploaded but failed to send message',
+          variant: 'destructive',
+        });
+      }
+    }
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -184,6 +243,61 @@ export const LawyerDirectChatInterface: React.FC<LawyerDirectChatInterfaceProps>
     }
   };
 
+  const getFileIcon = (fileType: string) => {
+    if (fileType.startsWith('image/')) {
+      return <ImageIcon className="w-4 h-4" />;
+    } else if (fileType === 'application/pdf') {
+      return <FileText className="w-4 h-4" />;
+    }
+    return <File className="w-4 h-4" />;
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const renderFileMessage = (message: ChatMessage) => {
+    const file = message.metadata?.file;
+    if (!file) return null;
+
+    const isImage = file.type.startsWith('image/');
+
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center gap-2 text-sm opacity-90">
+          {getFileIcon(file.type)}
+          <span>{file.name}</span>
+          <span className="text-xs opacity-70">({formatFileSize(file.size)})</span>
+        </div>
+        
+        {isImage ? (
+          <div className="max-w-xs">
+            <img
+              src={file.url}
+              alt={file.name}
+              className="rounded-lg max-w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
+              onClick={() => window.open(file.url, '_blank')}
+            />
+          </div>
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.open(file.url, '_blank')}
+            className="flex items-center gap-2"
+          >
+            <Download className="w-3 h-3" />
+            Download
+          </Button>
+        )}
+      </div>
+    );
+  };
+
   return (
     <Card className="h-96 flex flex-col">
       <CardHeader className="pb-2">
@@ -252,7 +366,11 @@ export const LawyerDirectChatInterface: React.FC<LawyerDirectChatInterfaceProps>
                       `}
                     >
                       <div className="text-[14px] leading-[1.3] break-words whitespace-pre-wrap pr-12">
-                        {message.content}
+                        {message.message_type === 'file' ? (
+                          renderFileMessage(message)
+                        ) : (
+                          message.content
+                        )}
                       </div>
                       <div className={`absolute bottom-1 right-2 text-[11px] opacity-70 ${
                         message.role === 'lawyer' ? 'text-gray-600' : 'text-white'
@@ -268,23 +386,51 @@ export const LawyerDirectChatInterface: React.FC<LawyerDirectChatInterfaceProps>
           </div>
         </ScrollArea>
 
-        <div className="flex gap-2">
-          <Input
-            ref={inputRef}
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Type your message to the client..."
-            disabled={sending}
-            className="flex-1"
-          />
-          <Button
-            onClick={handleSendMessage}
-            disabled={!newMessage.trim() || sending}
-            size="sm"
-          >
-            <Send className="w-4 h-4" />
-          </Button>
+        <div className="space-y-2">
+          {isUploading && (
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Uploading file...</span>
+                <span>{uploadProgress}%</span>
+              </div>
+              <Progress value={uploadProgress} className="w-full" />
+            </div>
+          )}
+          
+          <div className="flex gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              onChange={(e) => handleFileUpload(e.target.files)}
+              accept="image/*,.pdf,.doc,.docx,.txt,.zip"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading || sending}
+              className="px-3"
+            >
+              <Paperclip className="w-4 h-4" />
+            </Button>
+            <Input
+              ref={inputRef}
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Type your message to the client..."
+              disabled={sending || isUploading}
+              className="flex-1"
+            />
+            <Button
+              onClick={handleSendMessage}
+              disabled={!newMessage.trim() || sending || isUploading}
+              size="sm"
+            >
+              <Send className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>

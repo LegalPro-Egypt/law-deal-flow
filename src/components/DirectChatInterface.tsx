@@ -4,11 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { MessageCircle, Send, X, User, Users } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { MessageCircle, Send, X, User, Users, Paperclip, Download, FileText, Image as ImageIcon, File } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { useChatNotifications } from '@/hooks/useChatNotifications';
+import { useChatFileUpload } from '@/hooks/useChatFileUpload';
 
 interface Message {
   id: string;
@@ -16,7 +18,17 @@ interface Message {
   content: string;
   created_at: string;
   is_read: boolean;
-  metadata?: { channel?: string; [key: string]: any };
+  message_type?: 'text' | 'file';
+  metadata?: { 
+    channel?: string; 
+    file?: {
+      name: string;
+      url: string;
+      type: string;
+      size: number;
+    };
+    [key: string]: any;
+  };
 }
 
 interface DirectChatInterfaceProps {
@@ -32,6 +44,7 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
 }) => {
   const { user } = useAuth();
   const { markMessagesAsRead } = useChatNotifications();
+  const { uploadFile, isUploading, uploadProgress } = useChatFileUpload();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -39,6 +52,7 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
   const [userRole, setUserRole] = useState<'client' | 'lawyer'>('client');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Get user's role
   useEffect(() => {
@@ -64,7 +78,7 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
     try {
       const { data, error } = await supabase
         .from('case_messages')
-        .select('id, role, content, created_at, is_read')
+        .select('id, role, content, created_at, is_read, message_type, metadata')
         .eq('case_id', caseId)
         .eq('metadata->>channel', 'direct')
         .order('created_at', { ascending: true });
@@ -121,6 +135,53 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
       });
     } finally {
       setSending(false);
+    }
+  };
+
+  // Handle file upload
+  const handleFileUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0 || !user || isUploading) return;
+
+    const file = files[0]; // Take first file only
+    const uploadResult = await uploadFile(file, caseId);
+    
+    if (uploadResult) {
+      // Send file message
+      const messageRole = userRole === 'lawyer' ? 'lawyer' : 'user';
+      
+      try {
+        const { error } = await supabase
+          .from('case_messages')
+          .insert({
+            case_id: caseId,
+            role: messageRole,
+            content: `Shared a file: ${uploadResult.name}`,
+            message_type: 'file',
+            metadata: { 
+              channel: 'direct',
+              file: {
+                name: uploadResult.name,
+                url: uploadResult.url,
+                type: uploadResult.type,
+                size: uploadResult.size
+              }
+            }
+          });
+
+        if (error) throw error;
+      } catch (error) {
+        console.error('Error sending file message:', error);
+        toast({
+          title: 'Error',
+          description: 'File uploaded but failed to send message',
+          variant: 'destructive',
+        });
+      }
+    }
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -204,6 +265,61 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
     return role === 'lawyer' ? <Users className="w-4 h-4" /> : <User className="w-4 h-4" />;
   };
 
+  const getFileIcon = (fileType: string) => {
+    if (fileType.startsWith('image/')) {
+      return <ImageIcon className="w-4 h-4" />;
+    } else if (fileType === 'application/pdf') {
+      return <FileText className="w-4 h-4" />;
+    }
+    return <File className="w-4 h-4" />;
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const renderFileMessage = (message: Message) => {
+    const file = message.metadata?.file;
+    if (!file) return null;
+
+    const isImage = file.type.startsWith('image/');
+
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center gap-2 text-sm opacity-90">
+          {getFileIcon(file.type)}
+          <span>{file.name}</span>
+          <span className="text-xs opacity-70">({formatFileSize(file.size)})</span>
+        </div>
+        
+        {isImage ? (
+          <div className="max-w-xs">
+            <img
+              src={file.url}
+              alt={file.name}
+              className="rounded-lg max-w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
+              onClick={() => window.open(file.url, '_blank')}
+            />
+          </div>
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.open(file.url, '_blank')}
+            className="flex items-center gap-2"
+          >
+            <Download className="w-3 h-3" />
+            Download
+          </Button>
+        )}
+      </div>
+    );
+  };
+
   return (
     <Card className="w-full max-w-4xl mx-auto">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -279,7 +395,11 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
                       `}
                     >
                       <div className="text-[14px] leading-[1.3] break-words whitespace-pre-wrap pr-12">
-                        {message.content}
+                        {message.message_type === 'file' ? (
+                          renderFileMessage(message)
+                        ) : (
+                          message.content
+                        )}
                       </div>
                       <div className={`absolute bottom-1 right-2 text-[11px] opacity-70 ${
                         isOwnMessage ? 'text-white' : 'text-gray-600'
@@ -296,28 +416,56 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
         </ScrollArea>
 
         {/* Message Input */}
-        <div className="flex gap-2">
-          <Input
-            placeholder="Type your message..."
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyDown={handleKeyPress}
-            disabled={sending}
-            className="flex-1"
-          />
-          <Button
-            onClick={sendMessage}
-            disabled={!newMessage.trim() || sending}
-            size="sm"
-            className="px-3"
-          >
-            <Send className="w-4 h-4" />
-          </Button>
+        <div className="space-y-2">
+          {isUploading && (
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Uploading file...</span>
+                <span>{uploadProgress}%</span>
+              </div>
+              <Progress value={uploadProgress} className="w-full" />
+            </div>
+          )}
+          
+          <div className="flex gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              onChange={(e) => handleFileUpload(e.target.files)}
+              accept="image/*,.pdf,.doc,.docx,.txt,.zip"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading || sending}
+              className="px-3"
+            >
+              <Paperclip className="w-4 h-4" />
+            </Button>
+            <Input
+              placeholder="Type your message..."
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyDown={handleKeyPress}
+              disabled={sending || isUploading}
+              className="flex-1"
+            />
+            <Button
+              onClick={sendMessage}
+              disabled={!newMessage.trim() || sending || isUploading}
+              size="sm"
+              className="px-3"
+            >
+              <Send className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
 
         {/* Status */}
         <div className="text-xs text-muted-foreground text-center">
-          {sending ? 'Sending...' : 'Press Enter to send, Shift+Enter for new line'}
+          {sending ? 'Sending...' : isUploading ? 'Uploading file...' : 'Press Enter to send, Shift+Enter for new line'}
         </div>
       </CardContent>
     </Card>
