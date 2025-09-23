@@ -143,6 +143,8 @@ export const useVisitorAnalytics = (dateRange: { from: Date; to: Date }) => {
         dailyVisitors: dailyStats
       };
     },
-    refetchInterval: 30000, // Refresh every 30 seconds
+    staleTime: 0, // Always consider data stale for manual refresh
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
   });
 };
