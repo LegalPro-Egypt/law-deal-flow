@@ -25,6 +25,7 @@
       "subtitle": "Manage client communications",
       "selectCase": "Select Case"
     },
+    "cases": {
       "title": "Your Assigned Cases",
       "noCases": "No cases assigned yet",
       "caseNumber": "Case #{{number}}",
@@ -49,11 +50,6 @@
         "high": "High",
         "urgent": "Urgent"
       }
-    },
-    "communication": {
-      "title": "Communication Center",
-      "subtitle": "Manage client communications",
-      "selectCase": "Select Case"
     },
     "loading": "Loading dashboard...",
     "error": "Error loading dashboard data"
