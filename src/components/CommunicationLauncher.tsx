@@ -144,8 +144,8 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
           
           if (updatedSession.status === 'active' && waitingForLawyer) {
             // Lawyer accepted the call, join the session
-            console.log('Session became active:', updatedSession);
-            console.log('Setting communication mode to:', updatedSession.session_type);
+            console.log('🚀 Session became active:', updatedSession);
+            console.log('🔧 Setting communication mode to:', updatedSession.session_type);
             setCommunicationMode(updatedSession.session_type);
             setWaitingForLawyer(false);
             const startTime = new Date();
@@ -182,6 +182,8 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
   }, [caseId, waitingForLawyer, toast]);
 
   const handleStartCommunication = async (mode: 'video' | 'voice' | 'chat') => {
+    console.log('📞 Starting communication with mode:', mode);
+    
     if (!lawyerAssigned) {
       toast({
         title: 'No Lawyer Assigned',
@@ -359,24 +361,34 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
 
   // If currently in a communication session, show the interface
   if (communicationMode && accessToken) {
-    console.log('Rendering interface for mode:', communicationMode);
+    console.log('🔍 CommunicationLauncher - Rendering interface for mode:', communicationMode);
+    console.log('🔍 CommunicationLauncher - Access token:', accessToken);
     return (
       <div className="space-y-4">
         {communicationMode === 'video' ? (
-          <TwilioVideoInterface
-            accessToken={accessToken}
-            onDisconnect={handleEndCommunication}
-          />
+          <>
+            {console.log('🎥 Rendering TwilioVideoInterface')}
+            <TwilioVideoInterface
+              accessToken={accessToken}
+              onDisconnect={handleEndCommunication}
+            />
+          </>
         ) : communicationMode === 'voice' ? (
-          <TwilioVoiceInterface
-            accessToken={accessToken}
-            onDisconnect={handleEndCommunication}
-          />
+          <>
+            {console.log('🎤 Rendering TwilioVoiceInterface')}
+            <TwilioVoiceInterface
+              accessToken={accessToken}
+              onDisconnect={handleEndCommunication}
+            />
+          </>
         ) : communicationMode === 'chat' ? (
-          <TwilioChatInterface
-            accessToken={accessToken}
-            onDisconnect={handleEndCommunication}
-          />
+          <>
+            {console.log('💬 Rendering TwilioChatInterface')}
+            <TwilioChatInterface
+              accessToken={accessToken}
+              onDisconnect={handleEndCommunication}
+            />
+          </>
         ) : (
           <div>Unknown communication mode: {communicationMode}</div>
         )}
