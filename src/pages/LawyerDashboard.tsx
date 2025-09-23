@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useTwilioSession, TwilioSession } from "@/hooks/useTwilioSession";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,7 +19,8 @@ import {
   MessageSquare,
   ShieldCheck,
   AlertTriangle,
-  Settings
+  Settings,
+  PhoneCall
 } from "lucide-react";
 import { LawyerQAChatbot } from "@/components/LawyerQAChatbot";
 import { CompleteVerificationForm } from "@/components/CompleteVerificationForm";
@@ -29,6 +31,7 @@ import { getClientNameForRole } from "@/utils/clientPrivacy";
 import { useLanguage } from "@/hooks/useLanguage";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { VerificationStatusBadge } from "@/components/VerificationStatusBadge";
+import { IncomingCallNotification } from "@/components/IncomingCallNotification";
 
 interface LawyerStats {
   activeCases: number;
@@ -70,12 +73,63 @@ const LawyerDashboard = () => {
   const [selectedCaseId, setSelectedCaseId] = useState<string>("");
   const [caseDetailsOpen, setCaseDetailsOpen] = useState(false);
   const [selectedCaseForProposal, setSelectedCaseForProposal] = useState<Case | null>(null);
+  const [incomingCalls, setIncomingCalls] = useState<TwilioSession[]>([]);
+  const { sessions, createAccessToken } = useTwilioSession();
 
   useEffect(() => {
     if (!authLoading && user) {
       fetchDashboardData();
     }
   }, [user, authLoading]);
+
+  // Listen for incoming communication sessions
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('incoming-calls')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'communication_sessions',
+          filter: `lawyer_id=eq.${user.id}`
+        },
+        (payload) => {
+          const newSession = payload.new as TwilioSession;
+          if (newSession.status === 'scheduled') {
+            setIncomingCalls(prev => [...prev, newSession]);
+            
+            // Play notification sound or show system notification
+            toast({
+              title: 'Incoming Call',
+              description: `${newSession.session_type} call from client`,
+            });
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'communication_sessions',
+          filter: `lawyer_id=eq.${user.id}`
+        },
+        (payload) => {
+          const updatedSession = payload.new as TwilioSession;
+          if (updatedSession.status !== 'scheduled') {
+            setIncomingCalls(prev => prev.filter(call => call.id !== updatedSession.id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, toast]);
 
   const fetchDashboardData = async () => {
     if (!user) return;
@@ -177,6 +231,39 @@ const LawyerDashboard = () => {
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
+  };
+
+  const handleAcceptCall = async (session: TwilioSession) => {
+    try {
+      // Create access token and redirect to communication interface
+      const token = await createAccessToken(session.case_id, session.session_type);
+      if (token) {
+        // Remove from incoming calls
+        setIncomingCalls(prev => prev.filter(call => call.id !== session.id));
+        
+        // Navigate to communication interface or open it in a dialog
+        // For now, we'll show a success message
+        toast({
+          title: 'Call Accepted',
+          description: 'Joining the communication session...',
+        });
+      }
+    } catch (error) {
+      console.error('Error accepting call:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to join the communication session',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDeclineCall = (session: TwilioSession) => {
+    setIncomingCalls(prev => prev.filter(call => call.id !== session.id));
+    toast({
+      title: 'Call Declined',
+      description: 'Communication request has been declined',
+    });
   };
 
   if (authLoading || loading) {
@@ -435,6 +522,24 @@ const LawyerDashboard = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Incoming Call Notifications */}
+        {incomingCalls.length > 0 && (
+          <div className="space-y-4 mb-8">
+            <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+              <PhoneCall className="h-5 w-5 text-primary" />
+              Incoming Calls ({incomingCalls.length})
+            </h2>
+            {incomingCalls.map((call) => (
+              <IncomingCallNotification
+                key={call.id}
+                session={call}
+                onAccept={handleAcceptCall}
+                onDecline={handleDeclineCall}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Cases Section */}
         <Card className="bg-gradient-card shadow-card">

@@ -79,13 +79,14 @@ export const useTwilioSession = () => {
 
       const participantRole = caseData?.user_id === user.id ? 'client' : 'lawyer';
 
-      const { data, error } = await supabase.functions.invoke('create-twilio-access-token', {
-        body: {
-          caseId,
-          sessionType,
-          participantRole
-        }
-      });
+        const { data, error } = await supabase.functions.invoke('create-twilio-access-token', {
+          body: {
+            caseId,
+            sessionType,
+            participantRole,
+            status: 'scheduled'  // Ensure new sessions start as 'scheduled'
+          }
+        });
 
       if (error) throw error;
       

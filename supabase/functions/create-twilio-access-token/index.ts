@@ -76,7 +76,7 @@ serve(async (req) => {
         session_type: sessionType,
         room_name: roomName,
         twilio_conversation_sid: conversationSid,
-        status: 'scheduled',
+        status: participantRole === 'client' ? 'scheduled' : 'active', // Client creates scheduled, lawyer creates active
         scheduled_at: new Date().toISOString()
       })
       .select()
@@ -164,7 +164,7 @@ serve(async (req) => {
       .from('communication_sessions')
       .update({
         twilio_room_sid: roomName, // This will be updated by webhook when room is created
-        status: 'active'
+        status: participantRole === 'client' ? 'scheduled' : 'active' // Keep scheduled for client, active for lawyer
       })
       .eq('id', sessionData.id);
 

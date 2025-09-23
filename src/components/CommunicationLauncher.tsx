@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Video, Phone, MessageCircle, Calendar, Clock, Users } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { useTwilioSession } from '@/hooks/useTwilioSession';
+import { useTwilioSession, TwilioSession } from '@/hooks/useTwilioSession';
 import { useLanguage } from '@/hooks/useLanguage';
+import { supabase } from '@/integrations/supabase/client';
 import { TwilioVideoInterface } from './TwilioVideoInterface';
 import { TwilioVoiceInterface } from './TwilioVoiceInterface';
 import { TwilioChatInterface } from './TwilioChatInterface';
@@ -38,9 +39,54 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
 
   const [communicationMode, setCommunicationMode] = useState<'video' | 'voice' | 'chat' | null>(null);
   const [showRecordings, setShowRecordings] = useState(false);
+  const [waitingForLawyer, setWaitingForLawyer] = useState(false);
 
   const caseSessions = sessions.filter(session => session.case_id === caseId);
   const activeCaseSession = caseSessions.find(session => session.status === 'active');
+  const pendingSession = caseSessions.find(session => session.status === 'scheduled');
+
+  // Listen for session updates to know when lawyer accepts the call
+  useEffect(() => {
+    if (!caseId) return;
+
+    const channel = supabase
+      .channel(`case-${caseId}-sessions`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'communication_sessions',
+          filter: `case_id=eq.${caseId}`
+        },
+        (payload) => {
+          const updatedSession = payload.new as TwilioSession;
+          
+          if (updatedSession.status === 'active' && waitingForLawyer) {
+            // Lawyer accepted the call, join the session
+            setCommunicationMode(updatedSession.session_type);
+            setWaitingForLawyer(false);
+            toast({
+              title: 'Call Accepted',
+              description: 'Lawyer has joined the call',
+            });
+          } else if (updatedSession.status === 'failed' && waitingForLawyer) {
+            // Lawyer declined the call
+            setWaitingForLawyer(false);
+            toast({
+              title: 'Call Declined',
+              description: 'The lawyer declined your call request',
+              variant: 'destructive',
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [caseId, waitingForLawyer, toast]);
 
   const handleStartCommunication = async (mode: 'video' | 'voice' | 'chat') => {
     if (!lawyerAssigned) {
@@ -53,16 +99,17 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
     }
 
     try {
+      setWaitingForLawyer(true);
       const token = await createAccessToken(caseId, mode);
       if (token) {
-        setCommunicationMode(mode);
         toast({
-          title: 'Starting Session',
-          description: `Connecting to ${mode} session...`,
+          title: 'Call Request Sent',
+          description: 'Waiting for lawyer to accept your call request...',
         });
       }
     } catch (error) {
       console.error('Error starting communication:', error);
+      setWaitingForLawyer(false);
       toast({
         title: 'Connection Error',
         description: 'Failed to start communication session',
@@ -75,6 +122,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
     setCommunicationMode(null);
     setAccessToken(null);
     setActiveSession(null);
+    setWaitingForLawyer(false);
     toast({
       title: 'Session Ended',
       description: 'Communication session has been terminated',
@@ -163,17 +211,17 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <Button
                 onClick={() => handleStartCommunication('video')}
-                disabled={connecting || !!activeCaseSession}
+                disabled={connecting || !!activeCaseSession || waitingForLawyer}
                 className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}
               >
                 <Video className="w-4 h-4" />
-                {connecting ? 'Connecting...' : 'Video Call'}
+                {connecting || waitingForLawyer ? 'Waiting...' : 'Video Call'}
               </Button>
               
               <Button
                 variant="outline"
                 onClick={() => handleStartCommunication('voice')}
-                disabled={connecting || !!activeCaseSession}
+                disabled={connecting || !!activeCaseSession || waitingForLawyer}
                 className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}
               >
                 <Phone className="w-4 h-4" />
@@ -183,7 +231,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
               <Button
                 variant="outline"
                 onClick={() => handleStartCommunication('chat')}
-                disabled={connecting || !!activeCaseSession}
+                disabled={connecting || !!activeCaseSession || waitingForLawyer}
                 className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}
               >
                 <MessageCircle className="w-4 h-4" />
@@ -204,6 +252,28 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
                   <SessionRecordingsPlayer caseId={caseId} />
                 </DialogContent>
               </Dialog>
+            </div>
+          )}
+
+          {waitingForLawyer && pendingSession && (
+            <div className="p-3 bg-warning/10 rounded-lg border border-warning/20">
+              <div className={`flex items-center justify-between ${isRTL() ? 'flex-row-reverse' : ''}`}>
+                <div className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}>
+                  <Badge variant="outline" className="animate-pulse">
+                    📞 Calling...
+                  </Badge>
+                  <span className="text-sm">
+                    Waiting for lawyer to accept {pendingSession.session_type} call
+                  </span>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setWaitingForLawyer(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
             </div>
           )}
 
