@@ -50,6 +50,24 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
   const browserCleanupRef = useRef<(() => void) | null>(null);
   const sessionValidatorRef = useRef<(() => void) | null>(null);
 
+  // Persist chat modal open state to survive parent remounts (e.g., after file uploads)
+  const storageKey = `directChatOpen:${caseId}`;
+  useEffect(() => {
+    const wasOpen = sessionStorage.getItem(storageKey) === '1';
+    if (wasOpen) {
+      console.log('CommunicationLauncher: Restoring direct chat open state from sessionStorage');
+      setShowDirectChat(true);
+    }
+  }, [storageKey]);
+
+  useEffect(() => {
+    if (showDirectChat) {
+      sessionStorage.setItem(storageKey, '1');
+    } else {
+      sessionStorage.removeItem(storageKey);
+    }
+  }, [showDirectChat, storageKey]);
+
   const caseSessions = sessions.filter(session => session.case_id === caseId);
   const activeCaseSession = caseSessions.find(session => session.status === 'active');
   const pendingSession = caseSessions.find(session => session.status === 'scheduled');
