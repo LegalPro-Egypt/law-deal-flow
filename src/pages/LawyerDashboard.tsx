@@ -616,38 +616,42 @@ const LawyerDashboard = () => {
                       <CollapsibleTrigger asChild>
                         <Card className="hover:shadow-md transition-shadow cursor-pointer md:hidden">
                           <CardContent className="p-3">
-                            <div className="flex items-center gap-3">
-                              {/* Case ID Badge - Fixed Height */}
+                            <div className="flex items-center gap-2">
+                              {/* Case ID Badge - Compact */}
                               <Badge 
                                 variant="outline" 
-                                className="font-mono text-sm font-medium h-8 px-3 flex items-center flex-shrink-0"
+                                className="font-mono text-xs h-6 px-2 flex items-center flex-shrink-0"
                               >
                                 {caseItem.case_number}
                               </Badge>
                               
-                              {/* Client Info - Expandable with Truncation */}
-                              <div className="flex-1 min-w-0">
+                              {/* Client Info - Takes available space */}
+                              <div className="flex-1 min-w-0 mr-1">
                                 <div className="text-sm font-semibold truncate">
                                   {getClientNameForRole(caseItem.client_name, profile?.role)} • {caseItem.category}
                                 </div>
                               </div>
                               
-                              {/* Status Badge + Chevron - Fixed Height with Proper Spacing */}
-                              <div className="flex items-center gap-2 flex-shrink-0">
+                              {/* Status Badge - Compact with Chevron */}
+                              <div className="flex items-center gap-1 flex-shrink-0">
                                 <Badge 
                                   variant={getStatusVariant(caseItem.status)}
-                                  className="text-sm font-medium h-8 px-3 flex items-center min-w-fit"
+                                  className="text-xs h-6 px-2 flex items-center max-w-20 text-center"
                                 >
-                                  {caseItem.status === 'proposal_accepted' && caseItem.consultation_paid === false 
-                                    ? (isRTL() ? 'في انتظار الدفع' : 'Awaiting Payment')
-                                    : t(`dashboard.cases.status.${caseItem.status}`)
-                                  }
+                                  <span className="truncate">
+                                    {caseItem.status === 'proposal_accepted' && caseItem.consultation_paid === false 
+                                      ? (isRTL() ? 'دفع' : 'Payment')
+                                      : caseItem.status === 'in_progress' ? (isRTL() ? 'جاري' : 'Active')
+                                      : caseItem.status === 'completed' ? (isRTL() ? 'مكتمل' : 'Done') 
+                                      : t(`dashboard.cases.status.${caseItem.status}`)
+                                    }
+                                  </span>
                                 </Badge>
-                                <div className="flex items-center justify-center w-6 h-6">
+                                <div className="flex items-center justify-center w-5 h-5 flex-shrink-0">
                                   {isExpanded ? (
-                                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                    <ChevronDown className="h-3 w-3 text-muted-foreground" />
                                   ) : (
-                                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                                    <ChevronRight className="h-3 w-3 text-muted-foreground" />
                                   )}
                                 </div>
                               </div>
@@ -655,7 +659,7 @@ const LawyerDashboard = () => {
                           </CardContent>
                         </Card>
                       </CollapsibleTrigger>
-                      
+                       
                       <CollapsibleContent className="md:hidden">
                         <Card className="mt-2 border-l-4 border-l-primary">
                           <CardHeader className="pb-3">
