@@ -499,10 +499,13 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
                     📞 Calling...
                   </Badge>
                   <span className="text-sm">
-                    {pendingSession.initiated_by === pendingSession.client_id 
-                      ? `Waiting for lawyer to accept ${pendingSession.session_type} call...`
-                      : `Calling client for a ${pendingSession.session_type} call...`
-                    }
+                    {(() => {
+                      const type = waitingMode || pendingSession.session_type;
+                      const label = type === 'video' ? 'video' : 'voice';
+                      return pendingSession.initiated_by === pendingSession.client_id
+                        ? `Waiting for lawyer to accept a ${label} call...`
+                        : `Calling client for a ${label} call...`;
+                    })()}
                   </span>
                 </div>
                 <Button 
