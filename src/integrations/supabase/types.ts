@@ -24,6 +24,7 @@ export type Database = {
           language: string
           last_activity: string | null
           session_id: string
+          source: string | null
           status: string
           total_messages: number | null
           updated_at: string
@@ -37,6 +38,7 @@ export type Database = {
           language?: string
           last_activity?: string | null
           session_id: string
+          source?: string | null
           status?: string
           total_messages?: number | null
           updated_at?: string
@@ -50,6 +52,7 @@ export type Database = {
           language?: string
           last_activity?: string | null
           session_id?: string
+          source?: string | null
           status?: string
           total_messages?: number | null
           updated_at?: string

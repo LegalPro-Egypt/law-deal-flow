@@ -39,6 +39,7 @@ interface AnonymousSession {
   first_message_preview: string | null;
   last_activity: string;
   status: string;
+  source: string;
 }
 
 interface Message {
@@ -55,6 +56,7 @@ const AnonymousQAManager = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [languageFilter, setLanguageFilter] = useState<string>('all');
+  const [sourceFilter, setSourceFilter] = useState<string>('all');
   const [selectedSession, setSelectedSession] = useState<AnonymousSession | null>(null);
   const [showConversation, setShowConversation] = useState(false);
   const [conversationMessages, setConversationMessages] = useState<Message[]>([]);
@@ -189,8 +191,9 @@ const AnonymousQAManager = () => {
     
     const matchesStatus = statusFilter === 'all' || session.status === statusFilter;
     const matchesLanguage = languageFilter === 'all' || session.language === languageFilter;
+    const matchesSource = sourceFilter === 'all' || session.source === sourceFilter;
     
-    return hasRealMessages && matchesSearch && matchesStatus && matchesLanguage;
+    return hasRealMessages && matchesSearch && matchesStatus && matchesLanguage && matchesSource;
   });
 
   const handleCleanupOldSessions = async () => {
@@ -380,6 +383,15 @@ const AnonymousQAManager = () => {
               <option value="ar">Arabic</option>
               <option value="de">German</option>
             </select>
+            <select
+              value={sourceFilter}
+              onChange={(e) => setSourceFilter(e.target.value)}
+              className="border rounded px-3 py-2 bg-background"
+            >
+              <option value="all">All Sources</option>
+              <option value="homepage">Homepage</option>
+              <option value="coming_soon">Coming Soon</option>
+            </select>
           </div>
         </CardContent>
       </Card>
@@ -417,6 +429,11 @@ const AnonymousQAManager = () => {
                           <Badge className={getStatusColor(session.status)}>
                             {session.status}
                           </Badge>
+                          {session.source === 'coming_soon' && (
+                            <Badge variant="secondary" className="bg-purple-100 text-purple-800 border-purple-200">
+                              Coming Soon
+                            </Badge>
+                          )}
                           <div className="flex items-center gap-1">
                             <Globe className="h-4 w-4" />
                             <span>{getLanguageFlag(session.language)} {session.language.toUpperCase()}</span>

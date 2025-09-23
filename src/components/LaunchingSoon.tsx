@@ -6,6 +6,7 @@ import { Brain, Shield, Sparkles, Heart, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useTranslation } from 'react-i18next';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
+import { LaunchingSoonChatSection } from '@/components/LaunchingSoonChatSection';
 import { useToast } from '@/hooks/use-toast';
 
 interface LaunchingSoonProps {
@@ -235,6 +236,9 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
               </Card>
             </div>
           </div>
+
+          {/* Chat Section */}
+          <LaunchingSoonChatSection />
 
           {/* Pro Bono Section */}
           <div className="mt-24 max-w-4xl mx-auto" ref={proBonoRef}>

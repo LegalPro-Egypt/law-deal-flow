@@ -53,7 +53,7 @@ export interface ChatbotState {
   anonymousSessionId?: string | null;
 }
 
-export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
+export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake', source?: string) => {
   const { toast } = useToast();
   const { caseId, caseNumber, conversationId: globalConversationId, idempotencyKey, setCaseData, setConversationId: setGlobalConversationId, setIdempotencyKey, clearCase } = useCaseState();
 
@@ -504,7 +504,8 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake') => {
               total_messages: 1,
               actual_message_count: 1,
               first_message_preview: trimmed.substring(0, 100),
-              last_activity: new Date().toISOString()
+              last_activity: new Date().toISOString(),
+              source: source || 'homepage'
             })
             .select('id')
             .single();
