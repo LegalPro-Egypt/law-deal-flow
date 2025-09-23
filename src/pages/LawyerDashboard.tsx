@@ -107,7 +107,8 @@ const LawyerDashboard = () => {
         },
         (payload) => {
           const newSession = payload.new as TwilioSession;
-          if (newSession.status === 'scheduled') {
+          // Only show as incoming call if lawyer didn't initiate it
+          if (newSession.status === 'scheduled' && newSession.initiated_by !== user.id) {
             setIncomingCalls(prev => [...prev, newSession]);
             
             // Play notification sound or show system notification
@@ -162,12 +163,13 @@ const LawyerDashboard = () => {
 
       setCases(casesData || []);
 
-      // Fetch existing scheduled communication sessions
+      // Fetch existing scheduled communication sessions (only those not initiated by current lawyer)
       const { data: scheduledSessions, error: sessionsError } = await supabase
         .from('communication_sessions')
         .select('*')
         .eq('lawyer_id', user.id)
-        .eq('status', 'scheduled');
+        .eq('status', 'scheduled')
+        .neq('initiated_by', user.id); // Only show calls not initiated by this lawyer
 
       if (sessionsError) {
         console.error('Error fetching scheduled sessions:', sessionsError);

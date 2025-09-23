@@ -336,6 +336,7 @@ export type Database = {
           duration_seconds: number | null
           ended_at: string | null
           id: string
+          initiated_by: string | null
           lawyer_id: string | null
           metadata: Json | null
           recording_consent_client: boolean | null
@@ -357,6 +358,7 @@ export type Database = {
           duration_seconds?: number | null
           ended_at?: string | null
           id?: string
+          initiated_by?: string | null
           lawyer_id?: string | null
           metadata?: Json | null
           recording_consent_client?: boolean | null
@@ -378,6 +380,7 @@ export type Database = {
           duration_seconds?: number | null
           ended_at?: string | null
           id?: string
+          initiated_by?: string | null
           lawyer_id?: string | null
           metadata?: Json | null
           recording_consent_client?: boolean | null

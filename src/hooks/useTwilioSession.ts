@@ -17,6 +17,7 @@ export interface TwilioSession {
   started_at?: string;
   ended_at?: string;
   duration_seconds?: number;
+  initiated_by?: string;
 }
 
 export interface TwilioAccessToken {

@@ -80,7 +80,8 @@ serve(async (req) => {
         scheduled_at: new Date().toISOString(),
         recording_enabled: true, // Always enable recording automatically
         recording_consent_client: true, // Auto-consent for admin review
-        recording_consent_lawyer: true  // Auto-consent for admin review
+        recording_consent_lawyer: true,  // Auto-consent for admin review
+        initiated_by: user.id // Track who initiated the session
       })
       .select()
       .single();
