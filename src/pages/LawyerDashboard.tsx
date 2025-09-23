@@ -498,7 +498,7 @@ const LawyerDashboard = () => {
         )}
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
           <Card className="bg-gradient-card shadow-card">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
