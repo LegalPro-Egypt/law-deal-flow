@@ -7,6 +7,7 @@ import { Video, Phone, MessageCircle, Calendar, Clock, Users } from 'lucide-reac
 import { toast } from '@/hooks/use-toast';
 import { useTwilioSession, TwilioSession } from '@/hooks/useTwilioSession';
 import { useLanguage } from '@/hooks/useLanguage';
+import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { setupBrowserSessionCleanup, createSessionValidator } from '@/utils/sessionCleanup';
 import { TwilioVideoInterface } from './TwilioVideoInterface';
@@ -41,6 +42,8 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
     endSession
   } = useTwilioSession();
 
+  const { user } = useAuth();
+
   const [communicationMode, setCommunicationMode] = useState<'video' | 'voice' | 'chat' | null>(null);
   const [showRecordings, setShowRecordings] = useState(false);
   const [showDirectChat, setShowDirectChat] = useState(false);
@@ -49,6 +52,25 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
   const sessionStartTimeRef = useRef<Date | null>(null);
   const browserCleanupRef = useRef<(() => void) | null>(null);
   const sessionValidatorRef = useRef<(() => void) | null>(null);
+
+  const [isCurrentUserClient, setIsCurrentUserClient] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!user?.id || !caseId) return;
+    const fetchRole = async () => {
+      try {
+        const { data } = await supabase
+          .from('cases')
+          .select('user_id, assigned_lawyer_id')
+          .eq('id', caseId)
+          .single();
+        if (data) {
+          setIsCurrentUserClient(data.user_id === user.id);
+        }
+      } catch {}
+    };
+    fetchRole();
+  }, [user?.id, caseId]);
 
   // Persist chat modal open state to survive parent remounts (e.g., after file uploads)
   const storageKey = `directChatOpen:${caseId}`;
@@ -180,9 +202,14 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
       setWaitingForLawyer(true);
       const token = await createAccessToken(caseId, mode);
       if (token) {
+        const desc = isCurrentUserClient === false
+          ? `Calling client for ${mode} session...`
+          : (isCurrentUserClient === true
+              ? `Waiting for lawyer to accept your ${mode} call...`
+              : `Starting ${mode} session...`);
         toast({
           title: 'Call Request Sent',
-          description: 'Waiting for lawyer to accept your call request...',
+          description: desc,
         });
       }
     } catch (error) {
