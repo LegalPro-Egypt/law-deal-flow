@@ -63,8 +63,9 @@ export const useTwilioSession = () => {
 
   // Create access token for joining a session
   const createAccessToken = useCallback(async (
-    caseId: string, 
-    sessionType: 'video' | 'voice' | 'chat' = 'video'
+    caseId: string,
+    sessionType: 'video' | 'voice' | 'chat' = 'video',
+    sessionId?: string
   ): Promise<TwilioAccessToken | null> => {
     if (!user) return null;
 
@@ -85,6 +86,7 @@ export const useTwilioSession = () => {
           caseId,
           sessionType,
           participantRole,
+          sessionId,
           status: 'scheduled',
           recording_enabled: true  // Always enable recording automatically
         }

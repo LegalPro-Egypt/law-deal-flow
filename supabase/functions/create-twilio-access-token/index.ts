@@ -11,6 +11,7 @@ interface AccessTokenRequest {
   caseId: string;
   sessionType: 'video' | 'voice' | 'chat';
   participantRole: 'client' | 'lawyer';
+  sessionId?: string; // Optional: join existing session
 }
 
 serve(async (req) => {
@@ -36,8 +37,8 @@ serve(async (req) => {
       return new Response('Unauthorized', { status: 401, headers: corsHeaders });
     }
 
-    const { caseId, sessionType, participantRole }: AccessTokenRequest = await req.json();
-    console.log('Creating access token for:', { caseId, sessionType, participantRole, userId: user.id });
+    const { caseId, sessionType, participantRole, sessionId }: AccessTokenRequest = await req.json();
+    console.log('Creating access token for:', { caseId, sessionType, participantRole, sessionId, userId: user.id });
 
     // Verify user has access to this case
     const { data: caseData, error: caseError } = await supabaseClient
@@ -57,38 +58,97 @@ serve(async (req) => {
       return new Response('Unauthorized for this case', { status: 403, headers: corsHeaders });
     }
 
-    // Create or get existing communication session
-    const roomName = `case-${caseId}-${sessionType}-${Date.now()}`;
-    
-    // For chat sessions, create or reuse conversation
-    let conversationSid = null;
+    // Reuse existing session if provided or available, otherwise create one
+    let sessionData: any = null;
+    let roomName: string | null = null;
+    let conversationSid: string | null = null;
+
+    // sessionId already parsed above
+
     if (sessionType === 'chat') {
-      // Create Twilio Conversation for chat
       conversationSid = `case-${caseId}-chat`;
     }
-    
-    const { data: sessionData, error: sessionError } = await supabaseClient
-      .from('communication_sessions')
-      .insert({
-        case_id: caseId,
-        client_id: caseData.user_id,
-        lawyer_id: caseData.assigned_lawyer_id,
-        session_type: sessionType,
-        room_name: roomName,
-        twilio_conversation_sid: conversationSid,
-        status: 'scheduled', // Always start as scheduled, becomes active when participants join
-        scheduled_at: new Date().toISOString(),
-        recording_enabled: true, // Always enable recording automatically
-        recording_consent_client: true, // Auto-consent for admin review
-        recording_consent_lawyer: true,  // Auto-consent for admin review
-        initiated_by: user.id // Track who initiated the session
-      })
-      .select()
-      .single();
 
-    if (sessionError) {
-      console.error('Session creation error:', sessionError);
-      return new Response('Failed to create session', { status: 500, headers: corsHeaders });
+    if (sessionId) {
+      // Join the existing session
+      const { data: existing, error: fetchErr } = await supabaseClient
+        .from('communication_sessions')
+        .select('*')
+        .eq('id', sessionId)
+        .maybeSingle();
+
+      if (fetchErr || !existing) {
+        console.error('Session not found or inaccessible:', fetchErr);
+        return new Response('Session not found', { status: 404, headers: corsHeaders });
+      }
+
+      // Verify membership
+      if (![existing.client_id, existing.lawyer_id].includes(user.id)) {
+        return new Response('Not a participant of this session', { status: 403, headers: corsHeaders });
+      }
+
+      sessionData = existing;
+      roomName = existing.room_name || `case-${caseId}-${sessionType}-${Date.now()}`;
+
+      if (!existing.room_name) {
+        const { error: updateErr } = await supabaseClient
+          .from('communication_sessions')
+          .update({
+            room_name: roomName,
+            twilio_conversation_sid: conversationSid,
+          })
+          .eq('id', existing.id);
+        if (updateErr) console.error('Failed to set room_name on existing session:', updateErr);
+      }
+    } else {
+      // Try to reuse the latest scheduled session for this case
+      const { data: existing, error: findErr } = await supabaseClient
+        .from('communication_sessions')
+        .select('*')
+        .eq('case_id', caseId)
+        .eq('status', 'scheduled')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (existing) {
+        sessionData = existing;
+        roomName = existing.room_name || `case-${caseId}-${sessionType}-${Date.now()}`;
+        if (!existing.room_name) {
+          const { error: updateErr } = await supabaseClient
+            .from('communication_sessions')
+            .update({ room_name: roomName, twilio_conversation_sid: conversationSid })
+            .eq('id', existing.id);
+          if (updateErr) console.error('Failed to set room_name on reused session:', updateErr);
+        }
+      } else {
+        // Create a fresh session
+        roomName = `case-${caseId}-${sessionType}-${Date.now()}`;
+        const { data: created, error: createErr } = await supabaseClient
+          .from('communication_sessions')
+          .insert({
+            case_id: caseId,
+            client_id: caseData.user_id,
+            lawyer_id: caseData.assigned_lawyer_id,
+            session_type: sessionType,
+            room_name: roomName,
+            twilio_conversation_sid: conversationSid,
+            status: 'scheduled',
+            scheduled_at: new Date().toISOString(),
+            recording_enabled: true,
+            recording_consent_client: true,
+            recording_consent_lawyer: true,
+            initiated_by: user.id,
+          })
+          .select()
+          .single();
+
+        if (createErr) {
+          console.error('Session creation error:', createErr);
+          return new Response('Failed to create session', { status: 500, headers: corsHeaders });
+        }
+        sessionData = created;
+      }
     }
 
     // Generate Twilio Access Token

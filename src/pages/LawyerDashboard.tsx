@@ -270,7 +270,7 @@ const LawyerDashboard = () => {
   const handleAcceptCall = async (session: TwilioSession) => {
     try {
       // Create access token and redirect to communication interface
-      const token = await createAccessToken(session.case_id, session.session_type);
+      const token = await createAccessToken(session.case_id, session.session_type, session.id);
       if (token) {
         // Remove from incoming calls
         setIncomingCalls(prev => prev.filter(call => call.id !== session.id));
