@@ -95,6 +95,7 @@ export function LaunchingSoonChatSection({ className = "" }: LaunchingSoonChatSe
   };
 
   const formatMessageContent = (content: string) => {
+    if (!content) return null;
     return content.split('\n').map((line, index) => (
       <React.Fragment key={index}>
         {line}
