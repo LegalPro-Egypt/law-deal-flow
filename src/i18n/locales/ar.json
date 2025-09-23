@@ -2,13 +2,6 @@
   "dashboard": {
     "welcome": "مرحباً، {{name}}",
     "signOut": "تسجيل الخروج",
-    "error": "فشل في تحميل بيانات لوحة التحكم",
-    "tabs": {
-      "overview": "نظرة عامة",
-      "cases": "القضايا",
-      "communication": "التواصل",
-      "incomingCalls": "المكالمات الواردة"
-    },
     "stats": {
       "activeCases": "القضايا النشطة",
       "pendingCases": "القضايا المعلقة",
