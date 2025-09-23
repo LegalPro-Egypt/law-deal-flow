@@ -431,12 +431,13 @@ const ClientDashboard = () => {
 
           {/* Communication Inbox Section */}
           <CommunicationInbox
+            cases={cases}
+            userRole="client"
             caseId={activeCase.id}
             caseTitle={activeCase.title}
             caseStatus={activeCase.status}
             consultationPaid={activeCase.consultation_paid || false}
             paymentStatus={activeCase.payment_status || 'pending'}
-            userRole="client"
             lawyerAssigned={!!activeCase.assigned_lawyer_id}
           />
         </div>
