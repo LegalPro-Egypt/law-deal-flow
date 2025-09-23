@@ -45,10 +45,21 @@ export const IncomingCallNotification: React.FC<IncomingCallNotificationProps> =
           const fallbackClientName = caseData.client_name || 'Client';
           setClientName(fallbackClientName);
 
-          // Determine initiator display name
-          if (session.initiated_by === session.client_id) {
+          // Determine initiator with robust fallback when initiated_by is null
+          const currentUserId = user?.id;
+          const inferredInitiatorId = session.initiated_by ?? (
+            currentUserId === session.lawyer_id
+              ? session.client_id
+              : currentUserId === session.client_id
+                ? session.lawyer_id || session.client_id
+                : session.client_id
+          );
+
+          if (inferredInitiatorId === session.client_id) {
+            // Initiator is the client
             setInitiatorName(fallbackClientName);
           } else if (session.lawyer_id) {
+            // Initiator is the lawyer; fetch lawyer's name
             const { data: lawyerProfile } = await supabase
               .from('profiles')
               .select('first_name, last_name')
@@ -68,7 +79,7 @@ export const IncomingCallNotification: React.FC<IncomingCallNotificationProps> =
     };
 
     fetchSessionDetails();
-  }, [session]);
+  }, [session, user]);
 
   const handleAccept = async () => {
     if (isResponding) return;

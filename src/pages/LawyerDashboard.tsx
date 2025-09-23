@@ -112,7 +112,9 @@ const LawyerDashboard = () => {
             setIncomingCalls(prev => [...prev, newSession]);
             
             // Play notification sound or show system notification
-            const fromText = newSession.initiated_by === newSession.client_id ? 'client' : 'lawyer';
+            const fromText = !newSession.initiated_by
+              ? 'client'
+              : (newSession.initiated_by === newSession.client_id ? 'client' : 'lawyer');
             toast({
               title: 'Incoming Call',
               description: `${newSession.session_type} call from ${fromText}`,
