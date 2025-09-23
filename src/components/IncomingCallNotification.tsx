@@ -23,6 +23,7 @@ export const IncomingCallNotification: React.FC<IncomingCallNotificationProps> =
   const { user } = useAuth();
   const [clientName, setClientName] = useState<string>('Unknown Client');
   const [caseTitle, setCaseTitle] = useState<string>('');
+  const [initiatorName, setInitiatorName] = useState<string>('');
   const [isResponding, setIsResponding] = useState(false);
 
   useEffect(() => {
@@ -41,7 +42,25 @@ export const IncomingCallNotification: React.FC<IncomingCallNotificationProps> =
 
         if (caseData) {
           setCaseTitle(caseData.title || caseData.case_number);
-          setClientName(caseData.client_name || 'Client');
+          const fallbackClientName = caseData.client_name || 'Client';
+          setClientName(fallbackClientName);
+
+          // Determine initiator display name
+          if (session.initiated_by === session.client_id) {
+            setInitiatorName(fallbackClientName);
+          } else if (session.lawyer_id) {
+            const { data: lawyerProfile } = await supabase
+              .from('profiles')
+              .select('first_name, last_name')
+              .eq('user_id', session.lawyer_id)
+              .single();
+            const lawyerName = lawyerProfile
+              ? `${lawyerProfile.first_name || ''} ${lawyerProfile.last_name || ''}`.trim() || 'Lawyer'
+              : 'Lawyer';
+            setInitiatorName(lawyerName);
+          } else {
+            setInitiatorName('Lawyer');
+          }
         }
       } catch (error) {
         console.error('Error fetching session details:', error);
@@ -144,7 +163,7 @@ export const IncomingCallNotification: React.FC<IncomingCallNotificationProps> =
           <div className="flex items-center gap-3">
             <Avatar className="ring-2 ring-primary">
               <AvatarFallback className="bg-primary/10">
-                {clientName.charAt(0).toUpperCase()}
+                {(initiatorName || clientName).charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             
@@ -157,7 +176,7 @@ export const IncomingCallNotification: React.FC<IncomingCallNotificationProps> =
                 </Badge>
               </div>
               <p className="text-sm text-muted-foreground">
-                From: {clientName}
+                From: {initiatorName || clientName}
               </p>
               <p className="text-xs text-muted-foreground">
                 Case: {caseTitle}
