@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useVisitorAnalytics } from '@/hooks/useVisitorAnalytics';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Users, 
   Eye, 
@@ -15,7 +16,8 @@ import {
   Chrome,
   Globe2,
   Search,
-  RefreshCw
+  RefreshCw,
+  Check
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 
@@ -41,7 +43,26 @@ export const AdminAnalytics = () => {
     to: new Date()
   });
 
-  const { data: analytics, isLoading, refetch } = useVisitorAnalytics(dateRange);
+  const { data: analytics, isLoading, refetch, isFetching } = useVisitorAnalytics(dateRange);
+  const { toast } = useToast();
+
+  const handleRefresh = async () => {
+    try {
+      await refetch();
+      toast({
+        title: "Analytics refreshed",
+        description: "Your visitor analytics have been updated with the latest data.",
+        duration: 3000,
+      });
+    } catch (error) {
+      toast({
+        title: "Refresh failed",
+        description: "Unable to refresh analytics data. Please try again.",
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -74,9 +95,23 @@ export const AdminAnalytics = () => {
             Track your website visitors and their behavior (last 30 days)
           </p>
         </div>
-        <Button onClick={() => refetch()} variant="outline" size="sm">
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
+        <Button 
+          onClick={handleRefresh} 
+          variant="outline" 
+          size="sm"
+          disabled={isFetching}
+        >
+          {isFetching ? (
+            <>
+              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+              Refreshing...
+            </>
+          ) : (
+            <>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </>
+          )}
         </Button>
       </div>
 
