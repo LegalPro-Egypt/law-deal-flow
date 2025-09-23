@@ -108,6 +108,15 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
         (!user?.id || session.initiated_by === user.id)
       )) || null;
 
+  console.log('🔍 Debug - State check:', {
+    waitingForResponse,
+    waitingMode,
+    pendingSessionId,
+    pendingSession: pendingSession?.id,
+    sessionsCount: sessions.length,
+    caseSessionsCount: caseSessions.length
+  });
+
   // Setup browser cleanup and session validation when session becomes active
   useEffect(() => {
     if (activeSession && activeSession.status === 'active') {
@@ -152,6 +161,14 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
         },
         (payload) => {
           const updatedSession = payload.new as TwilioSession;
+          console.log('🔥 Session update received:', {
+            sessionId: updatedSession.id,
+            status: updatedSession.status,
+            sessionType: updatedSession.session_type,
+            waitingForResponse,
+            waitingMode,
+            pendingSessionId
+          });
           
           if (updatedSession.status === 'active' && waitingForResponse) {
             // Lawyer accepted the call, join the session
@@ -218,9 +235,11 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
 
     // For video and voice, use the session-based approach
     try {
+      console.log('🚀 handleStartCommunication - Setting waiting state for:', mode);
       setWaitingForResponse(true);
       setWaitingMode(mode);
       const token = await createAccessToken(caseId, mode);
+      console.log('🚀 handleStartCommunication - Got token:', token?.sessionId);
       if (token) { setPendingSessionId(token.sessionId);
         const modeLabel = mode === 'video' ? 'video' : 'voice';
         const desc = isCurrentUserClient === false
@@ -317,6 +336,12 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
   };
 
   const handleCancelCall = async () => {
+    console.log('🔴 handleCancelCall - Current state:', {
+      pendingSession: pendingSession?.id,
+      waitingForResponse,
+      waitingMode,
+      pendingSessionId
+    });
     if (pendingSession) {
       try {
         console.log('Cancelling call for session:', pendingSession.id);
