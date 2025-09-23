@@ -146,7 +146,7 @@ export function LaunchingSoonChatSection({ className = "" }: LaunchingSoonChatSe
                         : 'neomorphism-input text-foreground'
                     }`}
                   >
-                    <div className="text-sm leading-relaxed">
+                    <div className={`text-sm leading-relaxed ${isRTL ? 'text-right' : 'text-left'}`}>
                       {formatMessageContent(message.content)}
                     </div>
                   </div>

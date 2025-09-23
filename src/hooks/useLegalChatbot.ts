@@ -720,14 +720,14 @@ export const useLegalChatbot = (initialMode: 'qa' | 'intake' = 'intake', source?
 function getWelcomeMessage(mode: 'qa' | 'intake', language: 'en' | 'ar' | 'de'): string {
   const messages = {
     qa: {
-      en: "Hello! I'm Lexa, your AI legal assistant specialized in Egyptian law. I can help answer your legal questions based on Egyptian jurisdiction. Please note that I provide legal information, not legal advice. For specific legal matters, please consult with a qualified Egyptian lawyer. How can I help you today?",
-      ar: 'مرحباً! أنا ليكسا، مساعدك القانوني الذكي المتخصص في القانون المصري. يمكنني مساعدتك في الإجابة على أسئلتك القانونية بناءً على القضاء المصري. يرجى ملاحظة أنني أقدم معلومات قانونية وليس استشارة قانونية. للأمور القانونية المحددة، يرجى استشارة محامٍ مصري مؤهل. كيف يمكنني مساعدتك اليوم؟',
-      de: 'Hallo! Ich bin Lexa, Ihr KI-Rechtsassistent, der sich auf ägyptisches Recht spezialisiert hat. Ich kann Ihnen bei der Beantwortung Ihrer Rechtsfragen basierend auf ägyptischer Rechtsprechung helfen. Bitte beachten Sie, dass ich Rechtsinformationen und keine Rechtsberatung anbiete. Für spezifische Rechtsangelegenheiten wenden Sie sich bitte an einen qualifizierten ägyptischen Anwalt. Wie kann ich Ihnen heute helfen?',
+      en: "Hi! I'm Lexa, your AI assistant for Egyptian law questions. I provide brief legal info, not advice. How can I help?",
+      ar: 'مرحباً! أنا ليكسا، مساعدك الذكي لأسئلة القانون المصري. أقدم معلومات قانونية مختصرة وليس استشارة. كيف يمكنني المساعدة؟',
+      de: 'Hallo! Ich bin Lexa, Ihr KI-Assistent für ägyptische Rechtsfragen. Ich biete kurze Rechtsinformationen, keine Beratung. Wie kann ich helfen?',
     },
     intake: {
-      en: "Hello! I'm Lexa, your AI legal assistant. I'm here to help you with your legal case intake. I'll ask you some questions to understand your situation and connect you with the right Egyptian lawyer. This conversation will help us categorize your case and gather the necessary information. Please note that I'm collecting information, not providing legal advice. Let's start - could you please describe your legal issue?",
-      ar: 'مرحباً! أنا ليكسا، مساعدك القانوني الذكي. أنا هنا لمساعدتك في استقبال قضيتك القانونية. سأطرح عليك بعض الأسئلة لفهم وضعك وربطك بالمحامي المصري المناسب. ستساعدنا هذه المحادثة في تصنيف قضيتك وجمع المعلومات اللازمة. يرجى ملاحظة أنني أجمع المعلومات وليس أقدم استشارة قانونية. لنبدأ - هل يمكنك وصف مشكلتك القانونية؟',
-      de: 'Hallo! Ich bin Lexa, Ihr KI-Rechtsassistent. Ich bin hier, um Ihnen bei der Aufnahme Ihres Rechtsfalls zu helfen. Ich werde Ihnen einige Fragen stellen, um Ihre Situation zu verstehen und Sie mit dem richtigen ägyptischen Anwalt zu verbinden. Dieses Gespräch hilft uns, Ihren Fall zu kategorisieren und die notwendigen Informationen zu sammeln. Bitte beachten Sie, dass ich Informationen sammle und keine Rechtsberatung anbiete. Lassen Sie uns beginnen - könnten Sie bitte Ihr Rechtsproblem beschreiben?',
+      en: "Hi! I'm Lexa. I'll help gather your case information for our Egyptian lawyers. Please describe your legal issue.",
+      ar: 'مرحباً! أنا ليكسا. سأساعد في جمع معلومات قضيتك لمحامينا المصريين. يرجى وصف مشكلتك القانونية.',
+      de: 'Hallo! Ich bin Lexa. Ich helfe bei der Sammlung Ihrer Fallinformationen für unsere ägyptischen Anwälte. Bitte beschreiben Sie Ihr Rechtsproblem.',
     },
   };
   return messages[mode][language];
