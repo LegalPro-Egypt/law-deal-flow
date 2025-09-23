@@ -283,9 +283,10 @@ serve(async (req) => {
             }
           }
 
-          // Also save to case_messages table if conversation has a linked case
+          // Save only user messages to case_messages table if conversation has a linked case
+          // AI assistant messages should stay in messages table for intake history
           if (conversationCheck.case_id) {
-            console.log('Also saving messages to case_messages for case:', conversationCheck.case_id);
+            console.log('Saving user message to case_messages for case:', conversationCheck.case_id);
             try {
               await supabase.from('case_messages').insert([
                 {
@@ -294,20 +295,9 @@ serve(async (req) => {
                   content: message,  
                   message_type: 'text',
                   metadata: { timestamp: new Date().toISOString() }
-                },
-                {
-                  case_id: conversationCheck.case_id,
-                  role: 'assistant',
-                  content: aiResponse,
-                  message_type: 'text',
-                  metadata: { 
-                    timestamp: new Date().toISOString(),
-                    mode,
-                    extractedData: mode === 'intake' ? extractedData : undefined
-                  }
                 }
               ]);
-              console.log('Messages also saved to case_messages successfully');
+              console.log('User message saved to case_messages successfully');
             } catch (caseMessageError) {
               console.error('Failed to save to case_messages, but continuing:', caseMessageError);
               // Don't fail the whole operation if case_messages save fails

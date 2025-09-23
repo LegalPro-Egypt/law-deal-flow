@@ -323,26 +323,32 @@ export const useAdminData = () => {
         });
       }
 
-      // Migrate conversation messages to case_messages table
+      // Migrate only user messages to case_messages table (exclude AI assistant messages)
       if (messages && messages.length > 0) {
-        console.log('Migrating conversation messages to case_messages');
-        const caseMessages = messages.map(msg => ({
-          case_id: finalCase.id,
-          role: msg.role,
-          content: msg.content,
-          message_type: msg.message_type || 'text',
-          metadata: msg.metadata || {},
-          created_at: msg.created_at
-        }));
+        console.log('Migrating user messages to case_messages');
+        const userMessages = messages.filter(msg => msg.role === 'user');
+        
+        if (userMessages.length > 0) {
+          const caseMessages = userMessages.map(msg => ({
+            case_id: finalCase.id,
+            role: msg.role,
+            content: msg.content,
+            message_type: msg.message_type || 'text',
+            metadata: msg.metadata || {},
+            created_at: msg.created_at
+          }));
 
-        const { error: messagesError } = await supabase
-          .from('case_messages')
-          .insert(caseMessages);
+          const { error: messagesError } = await supabase
+            .from('case_messages')
+            .insert(caseMessages);
 
-        if (messagesError) {
-          console.error('Failed to migrate messages to case_messages:', messagesError);
+          if (messagesError) {
+            console.error('Failed to migrate user messages to case_messages:', messagesError);
+          } else {
+            console.log('Successfully migrated', userMessages.length, 'user messages to case_messages');
+          }
         } else {
-          console.log('Successfully migrated', messages.length, 'messages to case_messages');
+          console.log('No user messages to migrate to case_messages');
         }
       }
 
