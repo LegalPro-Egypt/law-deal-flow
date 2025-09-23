@@ -11,7 +11,20 @@ export const useChatNotifications = () => {
   const [unreadCounts, setUnreadCounts] = useState<UnreadCounts>({});
   const [loading, setLoading] = useState(true);
 
-  // Fetch initial unread counts
+  // Get user's role (client or lawyer)
+  const getUserRole = async () => {
+    if (!user) return null;
+    
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('user_id', user.id)
+      .single();
+    
+    return profile?.role || 'client';
+  };
+
+  // Fetch unread message counts for all user's cases
   const fetchUnreadCounts = async () => {
     if (!user) {
       setUnreadCounts({});
@@ -20,28 +33,44 @@ export const useChatNotifications = () => {
     }
 
     try {
-      // Get user's cases and count unread messages for each
-      const { data: userCases, error: casesError } = await supabase
-        .from('cases')
-        .select('id')
-        .eq('user_id', user.id);
-
-      if (casesError) throw casesError;
-
-      const counts: UnreadCounts = {};
+      const userRole = await getUserRole();
       
-      for (const caseItem of userCases || []) {
-        const { count, error } = await supabase
-          .from('case_messages')
-          .select('*', { count: 'exact', head: true })
-          .eq('case_id', caseItem.id)
-          .eq('is_read', false)
-          .neq('role', 'user'); // Don't count user's own messages as unread
-
-        if (!error && count !== null) {
-          counts[caseItem.id] = count;
-        }
+      // Get user's cases based on their role
+      let casesQuery = supabase.from('cases').select('id');
+      
+      if (userRole === 'client') {
+        casesQuery = casesQuery.eq('user_id', user.id);
+      } else if (userRole === 'lawyer') {
+        casesQuery = casesQuery.eq('assigned_lawyer_id', user.id);
       }
+      
+      const { data: cases } = await casesQuery;
+      
+      if (!cases || cases.length === 0) {
+        setUnreadCounts({});
+        setLoading(false);
+        return;
+      }
+
+      const caseIds = cases.map(c => c.id);
+      
+      // Count unread messages for each case
+      // For clients: count messages from lawyers (role = 'lawyer')
+      // For lawyers: count messages from clients (role = 'user')
+      const excludeRole = userRole === 'client' ? 'user' : 'lawyer';
+      
+      const { data: messageCounts } = await supabase
+        .from('case_messages')
+        .select('case_id')
+        .in('case_id', caseIds)
+        .eq('is_read', false)
+        .neq('role', excludeRole);
+
+      // Group by case_id and count
+      const counts: UnreadCounts = {};
+      messageCounts?.forEach(msg => {
+        counts[msg.case_id] = (counts[msg.case_id] || 0) + 1;
+      });
 
       setUnreadCounts(counts);
     } catch (error) {
@@ -56,16 +85,14 @@ export const useChatNotifications = () => {
     if (!user) return;
 
     try {
-      const { error } = await supabase.rpc(
-        'mark_case_messages_as_read',
-        {
-          p_case_id: caseId,
-          p_user_id: user.id,
-          p_exclude_role: 'user'
-        }
-      );
-
-      if (error) throw error;
+      const userRole = await getUserRole();
+      const excludeRole = userRole === 'client' ? 'user' : 'lawyer';
+      
+      await supabase.rpc('mark_case_messages_as_read', {
+        p_case_id: caseId,
+        p_user_id: user.id,
+        p_exclude_role: excludeRole
+      });
 
       // Update local state
       setUnreadCounts(prev => ({
@@ -77,90 +104,41 @@ export const useChatNotifications = () => {
     }
   };
 
-  // Send a new chat message
-  const sendMessage = async (caseId: string, content: string) => {
-    if (!user) return;
-
-    try {
-      const { error } = await supabase
-        .from('case_messages')
-        .insert({
-          case_id: caseId,
-          role: 'user',
-          content: content,
-          message_type: 'text',
-          metadata: {}
-        });
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error sending message:', error);
-      throw error;
-    }
-  };
-
-  // Get total unread count across all cases
-  const getTotalUnreadCount = () => {
-    return Object.values(unreadCounts).reduce((total, count) => total + count, 0);
-  };
-
-  // Set up real-time subscription for new messages
+  // Set up real-time subscription for message updates
   useEffect(() => {
     if (!user) return;
+
+    fetchUnreadCounts();
 
     const channel = supabase
       .channel('chat-notifications')
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'case_messages'
         },
-        (payload) => {
-          const newMessage = payload.new;
-          
-          // Only count messages not from the current user
-          if (newMessage.role !== 'user') {
-            setUnreadCounts(prev => ({
-              ...prev,
-              [newMessage.case_id]: (prev[newMessage.case_id] || 0) + 1
-            }));
-          }
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'case_messages'
-        },
-        (payload) => {
-          const updatedMessage = payload.new;
-          
-          // If message was marked as read, update counts
-          if (updatedMessage.is_read && updatedMessage.read_by === user.id) {
-            fetchUnreadCounts(); // Refetch to get accurate count
-          }
+        () => {
+          // Refetch counts when messages change
+          fetchUnreadCounts();
         }
       )
       .subscribe();
-
-    // Initial fetch
-    fetchUnreadCounts();
 
     return () => {
       supabase.removeChannel(channel);
     };
   }, [user]);
 
+  // Get total unread count across all cases
+  const totalUnreadCount = Object.values(unreadCounts).reduce((sum, count) => sum + count, 0);
+
   return {
     unreadCounts,
+    totalUnreadCount,
     loading,
     markMessagesAsRead,
-    sendMessage,
-    getTotalUnreadCount,
     refetch: fetchUnreadCounts
   };
 };

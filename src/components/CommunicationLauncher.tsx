@@ -29,6 +29,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
   lawyerAssigned = false
 }) => {
   const { isRTL } = useLanguage();
+  const { unreadCounts } = useChatNotifications();
   const {
     sessions,
     activeSession,
@@ -48,7 +49,6 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
   const sessionStartTimeRef = useRef<Date | null>(null);
   const browserCleanupRef = useRef<(() => void) | null>(null);
   const sessionValidatorRef = useRef<(() => void) | null>(null);
-  const { unreadCounts } = useChatNotifications();
 
   const caseSessions = sessions.filter(session => session.case_id === caseId);
   const activeCaseSession = caseSessions.find(session => session.status === 'active');
@@ -148,12 +148,13 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
       return;
     }
 
-    // Handle chat differently - open directly without waiting
+    // Handle chat differently - open directly without session
     if (mode === 'chat') {
       setShowDirectChat(true);
       return;
     }
 
+    // For video and voice, use the session-based approach
     try {
       setWaitingForLawyer(true);
       const token = await createAccessToken(caseId, mode);
@@ -276,7 +277,6 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
     setWaitingForLawyer(false);
   };
 
-
   const formatDuration = (seconds?: number): string => {
     if (!seconds) return '--:--';
     const mins = Math.floor(seconds / 60);
@@ -292,6 +292,17 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
       minute: '2-digit'
     });
   };
+
+  // Show direct chat interface if open
+  if (showDirectChat) {
+    return (
+      <DirectChatInterface
+        caseId={caseId}
+        caseTitle={caseTitle}
+        onClose={() => setShowDirectChat(false)}
+      />
+    );
+  }
 
   // If currently in a communication session, show the interface
   if (communicationMode && accessToken) {
@@ -317,17 +328,6 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
           <div>Unknown communication mode: {communicationMode}</div>
         )}
       </div>
-    );
-  }
-
-  // If showing direct chat, render it
-  if (showDirectChat) {
-    return (
-      <DirectChatInterface
-        caseId={caseId}
-        caseTitle={caseTitle}
-        onClose={() => setShowDirectChat(false)}
-      />
     );
   }
 
@@ -373,12 +373,12 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
               <Button
                 variant="outline"
                 onClick={() => handleStartCommunication('chat')}
-                disabled={connecting || !!activeCaseSession}
+                disabled={false}
                 className={`flex items-center gap-2 relative ${isRTL() ? 'flex-row-reverse' : ''}`}
               >
                 <MessageCircle className="w-4 h-4" />
                 Start Chat
-                {unreadCounts[caseId] > 0 && (
+                {unreadCounts[caseId] && unreadCounts[caseId] > 0 && (
                   <NotificationBadge count={unreadCounts[caseId]} />
                 )}
               </Button>
@@ -441,7 +441,6 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
           )}
         </CardContent>
       </Card>
-
     </div>
   );
 };

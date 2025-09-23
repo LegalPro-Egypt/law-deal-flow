@@ -36,6 +36,7 @@ import CaseSelector from "@/components/CaseSelector";
 import { CommunicationInbox } from "@/components/CommunicationInbox";
 import { NotificationsInbox } from "@/components/NotificationsInbox";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useChatNotifications } from "@/hooks/useChatNotifications";
 import { NotificationBadge } from "@/components/ui/notification-badge";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -60,6 +61,7 @@ const ClientDashboard = () => {
   } = useClientData();
   
   const { unreadCount } = useNotifications();
+  const { totalUnreadCount } = useChatNotifications();
 
 
   const handleSendMessage = async () => {
@@ -451,7 +453,10 @@ const ClientDashboard = () => {
               <NotificationBadge count={unreadCount} />
             </TabsTrigger>
             <TabsTrigger value="details" className="flex-shrink-0 min-w-fit px-4">Personal Details</TabsTrigger>
-            <TabsTrigger value="messages" className="flex-shrink-0 min-w-fit px-4">Messages</TabsTrigger>
+            <TabsTrigger value="messages" className="flex-shrink-0 min-w-fit px-4 relative">
+              Messages
+              <NotificationBadge count={totalUnreadCount} />
+            </TabsTrigger>
             <TabsTrigger value="documents" id="documents-tab" className="flex-shrink-0 min-w-fit px-4">Documents</TabsTrigger>
           </TabsList>
 
