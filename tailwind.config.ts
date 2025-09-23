@@ -165,11 +165,17 @@ export default {
           "25%": { transform: "translate(10px, -15px) scale(1.1)" },
           "50%": { transform: "translate(-5px, -25px) scale(0.9)" },
           "75%": { transform: "translate(-15px, -10px) scale(1.05)" }
-        }
+        },
+        "dot-blink": {
+          "0%, 20%": { opacity: "0" },
+          "50%": { opacity: "1" },
+          "80%, 100%": { opacity: "0" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "dot-blink": "dot-blink 1.4s ease-in-out infinite",
         "slide-up-fade": "slide-up-fade 0.8s ease-out forwards",
         "drift-rotate": "drift-rotate 20s ease-in-out infinite",
         "gentle-pulse": "gentle-pulse 4s ease-in-out infinite",

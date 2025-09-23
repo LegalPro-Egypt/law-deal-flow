@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useTranslation } from 'react-i18next';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
 import { LaunchingSoonChatSection } from '@/components/LaunchingSoonChatSection';
+import { AnimatedDots } from '@/components/AnimatedDots';
 import { useToast } from '@/hooks/use-toast';
 
 interface LaunchingSoonProps {
@@ -141,7 +142,7 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
         <div className="max-w-4xl mx-auto text-center">
           <div className={`transition-all duration-1000 ${isLoaded ? 'animate-hero-fade-in' : 'opacity-0'}`}>
             <h1 className="text-5xl md:text-7xl font-bold font-futura text-gray-900 mb-6 leading-tight">
-              {getText('comingSoon')}
+              {getText('comingSoon')}<AnimatedDots />
             </h1>
             <p className="text-xl md:text-2xl font-modern text-gray-700 mb-8 max-w-3xl mx-auto leading-relaxed">
               {getText('revolutionizingLegalServices')}
