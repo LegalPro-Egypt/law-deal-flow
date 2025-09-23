@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,6 @@ import { MessageCircle, Sparkles, Send, User, Bot } from 'lucide-react';
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useLegalChatbot } from "@/hooks/useLegalChatbot";
 import { useLanguage } from "@/hooks/useLanguage";
-import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 
 interface LaunchingSoonChatSectionProps {
   className?: string;
@@ -19,10 +18,6 @@ export function LaunchingSoonChatSection({ className = "" }: LaunchingSoonChatSe
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const { t, isRTL, getCurrentLanguage } = useLanguage();
-  const { elementRef, isVisible } = useIntersectionObserver({
-    threshold: 0.3,
-    triggerOnce: true
-  });
   
   const {
     messages,
@@ -33,6 +28,15 @@ export function LaunchingSoonChatSection({ className = "" }: LaunchingSoonChatSe
     language
   } = useLegalChatbot('qa', 'coming_soon');
 
+  // Stable scroll function to prevent infinite loops
+  const scrollToBottom = useCallback(() => {
+    if (hasInteracted && messagesEndRef.current) {
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+  }, [hasInteracted]);
+
   useEffect(() => {
     const initChat = async () => {
       try {
@@ -42,18 +46,18 @@ export function LaunchingSoonChatSection({ className = "" }: LaunchingSoonChatSe
       }
     };
     initChat();
-  }, [initializeConversation]);
+  }, []);
 
   useEffect(() => {
-    if (hasInteracted && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    scrollToBottom();
+  }, [messages.length, scrollToBottom]);
+
+  useEffect(() => {
+    const currentLang = getCurrentLanguage();
+    if (currentLang && currentLang !== language) {
+      setLanguage(currentLang as 'en' | 'ar' | 'de');
     }
-  }, [messages, hasInteracted]);
-
-  useEffect(() => {
-    const currentLang = getCurrentLanguage() as 'en' | 'ar' | 'de';
-    setLanguage(currentLang);
-  }, [getCurrentLanguage, setLanguage]);
+  }, [getCurrentLanguage, language, setLanguage]);
 
   const handleSendMessage = async () => {
     if (!userInput.trim()) return;
@@ -103,10 +107,7 @@ export function LaunchingSoonChatSection({ className = "" }: LaunchingSoonChatSe
 
   return (
     <div 
-      ref={elementRef}
-      className={`w-full max-w-7xl mx-auto px-8 mb-20 ${className} ${
-        isVisible ? 'animate-fade-in' : 'opacity-0'
-      }`}
+      className={`w-full max-w-7xl mx-auto px-8 mb-20 ${className} animate-fade-in`}
       style={{ animationDelay: '0.6s' }}
     >
       <Card className="neomorphism-card overflow-hidden">
