@@ -52,6 +52,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
   const [waitingForResponse, setWaitingForResponse] = useState(false);
   console.log('✅ waitingForResponse state initialized:', waitingForResponse);
   const [waitingMode, setWaitingMode] = useState<'video' | 'voice' | null>(null);
+  const [pendingSessionId, setPendingSessionId] = useState<string | null>(null);
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
   const sessionStartTimeRef = useRef<Date | null>(null);
   const browserCleanupRef = useRef<(() => void) | null>(null);
@@ -99,7 +100,12 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
   const activeCaseSession = caseSessions.find(session => 
     session.status === 'active' && session.started_at
   );
-  const pendingSession = caseSessions.find(session => session.status === 'scheduled');
+  const pendingSession = pendingSessionId
+    ? sessions.find(session => session.id === pendingSessionId) || null
+    : caseSessions.find(session => session.status === 'scheduled' && (
+        (!waitingMode || session.session_type === waitingMode) &&
+        (!user?.id || session.initiated_by === user.id)
+      )) || null;
 
   // Setup browser cleanup and session validation when session becomes active
   useEffect(() => {
@@ -153,6 +159,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
             setCommunicationMode(updatedSession.session_type);
             setWaitingForResponse(false);
             setWaitingMode(null);
+            setPendingSessionId(null);
             const startTime = new Date();
             setSessionStartTime(startTime);
             sessionStartTimeRef.current = startTime;
@@ -164,6 +171,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
             // Lawyer declined the call
             setWaitingForResponse(false);
             setWaitingMode(null);
+            setPendingSessionId(null);
             toast({
               title: 'Call Declined',
               description: 'The lawyer declined your call request',
@@ -176,6 +184,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
             setActiveSession(null);
             setWaitingForResponse(false);
             setWaitingMode(null);
+            setPendingSessionId(null);
             setSessionStartTime(null);
             sessionStartTimeRef.current = null;
           }
@@ -211,7 +220,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
       setWaitingForResponse(true);
       setWaitingMode(mode);
       const token = await createAccessToken(caseId, mode);
-      if (token) {
+      if (token) { setPendingSessionId(token.sessionId);
         const modeLabel = mode === 'video' ? 'video' : 'voice';
         const desc = isCurrentUserClient === false
           ? `Calling client for a ${modeLabel} call...`
@@ -227,6 +236,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
       console.error('Error starting communication:', error);
       setWaitingForResponse(false);
       setWaitingMode(null);
+      setPendingSessionId(null);
       toast({
         title: 'Connection Error',
         description: 'Failed to start communication session',
@@ -256,6 +266,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
       setActiveSession(null);
       setWaitingForResponse(false);
       setWaitingMode(null);
+      setPendingSessionId(null);
       setSessionStartTime(null);
       sessionStartTimeRef.current = null;
       
@@ -282,6 +293,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
       setActiveSession(null);
       setWaitingForResponse(false);
       setWaitingMode(null);
+      setPendingSessionId(null);
       setSessionStartTime(null);
       sessionStartTimeRef.current = null;
       
@@ -338,6 +350,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
     }
     setWaitingForResponse(false);
     setWaitingMode(null);
+    setPendingSessionId(null);
   };
 
   const formatDuration = (seconds?: number): string => {
