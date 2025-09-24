@@ -42,19 +42,38 @@ type DateRangeOption = 'today' | '7days' | '30days' | 'alltime';
 
 const getDateRange = (option: DateRangeOption): { from: Date; to: Date } => {
   const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfToday = new Date(now);
+  startOfToday.setHours(0, 0, 0, 0);
+  
+  const endOfToday = new Date(now);
+  endOfToday.setHours(23, 59, 59, 999);
   
   switch (option) {
     case 'today':
-      return { from: today, to: now };
+      return {
+        from: startOfToday,
+        to: endOfToday
+      };
     case '7days':
-      return { from: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), to: now };
+      const sevenDaysAgo = new Date(startOfToday);
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      return {
+        from: sevenDaysAgo,
+        to: endOfToday
+      };
     case '30days':
-      return { from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), to: now };
+      const thirtyDaysAgo = new Date(startOfToday);
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      return {
+        from: thirtyDaysAgo,
+        to: endOfToday
+      };
     case 'alltime':
-      return { from: new Date('2024-01-01'), to: now }; // Adjust start date as needed
     default:
-      return { from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), to: now };
+      return {
+        from: new Date('2024-01-01T00:00:00.000Z'),
+        to: endOfToday
+      };
   }
 };
 

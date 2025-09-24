@@ -38,27 +38,52 @@ interface AnalyticsStats {
 
 export const useVisitorAnalytics = (dateRange: { from: Date; to: Date }, rangeType?: string) => {
   return useQuery({
-    queryKey: ['visitor-analytics', dateRange.from.toISOString(), dateRange.to.toISOString(), rangeType],
+    queryKey: ['visitor-analytics', dateRange.from.getTime(), dateRange.to.getTime(), rangeType],
     queryFn: async (): Promise<AnalyticsStats> => {
-      try {
-        const fromDate = dateRange.from.toISOString();
-        const toDate = dateRange.to.toISOString();
+      const fromISO = dateRange.from.toISOString();
+      const toISO = dateRange.to.toISOString();
+      
+      console.log('Fetching analytics with date range:', {
+        from: fromISO,
+        to: toISO,
+        rangeType,
+        fromDate: dateRange.from,
+        toDate: dateRange.to
+      });
 
-        // Get all visitor data within date range (excluding admin traffic)
-        const { data: visitors, error } = await supabase
-          .from('visitor_analytics')
-          .select('*')
-          .eq('is_excluded', false)
-          .gte('created_at', fromDate)
-          .lte('created_at', toDate)
-          .order('created_at', { ascending: false });
+      // Query visitor analytics with date filtering
+      const { data: visitors, error } = await supabase
+        .from('visitor_analytics')
+        .select('*')
+        .gte('created_at', fromISO)
+        .lte('created_at', toISO)
+        .eq('is_excluded', false)
+        .order('created_at', { ascending: false });
 
-        if (error) {
-          console.error('Error fetching visitor analytics:', error);
-          throw error;
-        }
+      if (error) {
+        console.error('Analytics query error:', error);
+        throw new Error(`Failed to fetch analytics: ${error.message}`);
+      }
 
-        const visitorData = visitors as VisitorAnalytics[];
+      console.log(`Found ${visitors?.length || 0} analytics records`);
+
+      if (!visitors || visitors.length === 0) {
+        console.log('No analytics data found for date range');
+        return {
+          totalVisitors: 0,
+          uniqueVisitors: 0,
+          totalPageViews: 0,
+          averageSessionDuration: 0,
+          topCountries: [],
+          topPages: [],
+          deviceBreakdown: [],
+          browserBreakdown: [],
+          recentVisitors: [],
+          dailyVisitors: []
+        };
+      }
+
+      const visitorData = visitors as VisitorAnalytics[];
 
         // Calculate stats
         const totalVisitors = visitorData.length;
@@ -114,48 +139,63 @@ export const useVisitorAnalytics = (dateRange: { from: Date; to: Date }, rangeTy
           .map(([browser, count]) => ({ browser, count }))
           .sort((a, b) => b.count - a.count);
 
-        // Generate time-based statistics based on range type
-        const generateTimeStats = () => {
-          if (rangeType === 'today') {
-            // Hourly stats for today
-            return Array.from({ length: 24 }, (_, i) => {
-              const hour = String(i).padStart(2, '0');
-              const hourStr = `${new Date().toISOString().split('T')[0]}T${hour}`;
-              
-              const hourVisitors = visitorData.filter(v => 
-                v.created_at.startsWith(hourStr)
-              );
-              
-              return {
-                date: `${hour}:00`,
-                visitors: new Set(hourVisitors.map(v => v.visitor_hash)).size,
-                pageViews: hourVisitors.reduce((sum, v) => sum + v.page_views_count, 0)
-              };
+        // Generate time-based visitor data based on range type
+        let dailyVisitors: { date: string; visitors: number; pageViews: number }[] = [];
+        
+        if (rangeType === 'today') {
+          // Generate hourly data for today
+          const hours = Array.from({ length: 24 }, (_, i) => {
+            const hour = new Date(dateRange.from);
+            hour.setHours(i, 0, 0, 0);
+            return hour;
+          });
+          
+          dailyVisitors = hours.map(hour => {
+            const hourEnd = new Date(hour);
+            hourEnd.setHours(hour.getHours() + 1);
+            
+            const hourlyVisitors = visitorData.filter(visitor => {
+              const visitTime = new Date(visitor.created_at);
+              return visitTime >= hour && visitTime < hourEnd;
             });
-          } else {
-            // Daily stats for other ranges
-            const days = rangeType === '7days' ? 7 : rangeType === '30days' ? 30 : 60; // Show more days for all time
-            return Array.from({ length: days }, (_, i) => {
-              const date = new Date();
-              date.setDate(date.getDate() - i);
-              const dateStr = date.toISOString().split('T')[0];
-              
-              const dayVisitors = visitorData.filter(v => 
-                v.created_at.startsWith(dateStr)
-              );
-              
-              return {
-                date: dateStr,
-                visitors: new Set(dayVisitors.map(v => v.visitor_hash)).size,
-                pageViews: dayVisitors.reduce((sum, v) => sum + v.page_views_count, 0)
-              };
-            }).reverse();
+            
+            return {
+              date: hour.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+              visitors: new Set(hourlyVisitors.map(v => v.visitor_hash)).size,
+              pageViews: hourlyVisitors.reduce((sum, v) => sum + v.page_views_count, 0)
+            };
+          });
+        } else {
+          // Generate daily data for other ranges
+          const days: Date[] = [];
+          const currentDate = new Date(dateRange.from);
+          
+          while (currentDate <= dateRange.to) {
+            days.push(new Date(currentDate));
+            currentDate.setDate(currentDate.getDate() + 1);
           }
-        };
+          
+          dailyVisitors = days.map(day => {
+            const dayEnd = new Date(day);
+            dayEnd.setHours(23, 59, 59, 999);
+            
+            const dayStart = new Date(day);
+            dayStart.setHours(0, 0, 0, 0);
+            
+            const dailyData = visitorData.filter(visitor => {
+              const visitTime = new Date(visitor.created_at);
+              return visitTime >= dayStart && visitTime <= dayEnd;
+            });
+            
+            return {
+              date: day.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+              visitors: new Set(dailyData.map(v => v.visitor_hash)).size,
+              pageViews: dailyData.reduce((sum, v) => sum + v.page_views_count, 0)
+            };
+          });
+        }
 
-        const dailyStats = generateTimeStats();
-
-        return {
+        const result = {
           totalVisitors,
           uniqueVisitors,
           totalPageViews,
@@ -165,35 +205,23 @@ export const useVisitorAnalytics = (dateRange: { from: Date; to: Date }, rangeTy
           deviceBreakdown,
           browserBreakdown,
           recentVisitors: visitorData.slice(0, 50),
-          dailyVisitors: dailyStats
+          dailyVisitors
         };
-      } catch (fetchError) {
-        console.error('Network error fetching visitor analytics:', fetchError);
-        // Return empty analytics data instead of throwing
-        return {
-          totalVisitors: 0,
-          uniqueVisitors: 0,
-          totalPageViews: 0,
-          averageSessionDuration: 0,
-          topCountries: [],
-          topPages: [],
-          deviceBreakdown: [],
-          browserBreakdown: [],
-          recentVisitors: [],
-          dailyVisitors: []
-        };
-      }
+
+        console.log('Final analytics result:', result);
+        return result;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     retry: (failureCount, error) => {
-      // Only retry on network errors, not on data errors
-      if (error.message?.includes('Failed to fetch')) {
-        return failureCount < 3;
+      console.log('Query retry attempt:', failureCount, error?.message);
+      // Only retry on network errors, not on data/query errors
+      if (failureCount < 3 && (error instanceof TypeError || error?.message?.includes('network'))) {
+        return true;
       }
       return false;
     },
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 };
