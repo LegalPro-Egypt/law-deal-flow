@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/hooks/useLanguage";
-import { Loader2, FileText, DollarSign, Clock, Target } from "lucide-react";
+import { Loader2, FileText, DollarSign, Clock, Target, CheckCircle } from "lucide-react";
 
 interface CreateProposalDialogProps {
   open: boolean;
@@ -49,6 +49,10 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
   const [feeStructure, setFeeStructure] = useState<any>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [proposalType, setProposalType] = useState<'generated' | 'uploaded'>('generated');
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [uploadedFileUrl, setUploadedFileUrl] = useState<string>(existingProposal?.uploaded_pdf_url || "");
   const [activeTab, setActiveTab] = useState("form");
   const { toast } = useToast();
   const { t, isRTL } = useLanguage();
@@ -56,6 +60,10 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
   // Set active tab when editing existing proposal
   useEffect(() => {
     if (isEditMode && existingProposal?.generated_content) {
+      setProposalType('generated');
+      setActiveTab("preview");
+    } else if (isEditMode && existingProposal?.uploaded_pdf_url) {
+      setProposalType('uploaded');
       setActiveTab("preview");
     } else {
       setActiveTab("form");
@@ -93,6 +101,61 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
       ...prev,
       [field]: value
     }));
+  };
+
+  const handleFileUpload = async (file: File) => {
+    if (!file || file.type !== 'application/pdf') {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload a PDF file only",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (file.size > 20 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please upload a PDF file smaller than 20MB",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const fileExt = 'pdf';
+      const fileName = `${caseId}/proposal-${Date.now()}.${fileExt}`;
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('case-documents')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('case-documents')
+        .getPublicUrl(fileName);
+
+      setUploadedFileUrl(publicUrl);
+      setUploadedFile(file);
+      setProposalType('uploaded');
+      setActiveTab("preview");
+      
+      toast({
+        title: "PDF uploaded successfully",
+        description: "Your proposal PDF has been uploaded"
+      });
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      toast({
+        title: "Upload failed",
+        description: "Failed to upload PDF file",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const generateProposal = async () => {
@@ -143,6 +206,7 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
       console.log('Generated proposal length:', data.generatedProposal.length);
       setGeneratedProposal(data.generatedProposal);
       setFeeStructure(data.feeStructure);
+      setProposalType('generated');
       setActiveTab("preview");
       
       toast({
@@ -170,10 +234,19 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
   };
 
   const sendProposal = async () => {
-    if (!generatedProposal) {
+    if (proposalType === 'generated' && !generatedProposal) {
       toast({
         title: t('proposal.messages.noProposal'),
         description: t('proposal.messages.noProposalDesc'),
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (proposalType === 'uploaded' && !uploadedFileUrl) {
+      toast({
+        title: "No PDF uploaded",
+        description: "Please upload a PDF proposal or generate one",
         variant: "destructive"
       });
       return;
@@ -197,7 +270,9 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
             final_total_fee: calculatedFees.finalTotalFee,
             timeline: formData.timeline,
             strategy: formData.strategy,
-            generated_content: generatedProposal,
+            generated_content: proposalType === 'generated' ? generatedProposal : null,
+            uploaded_pdf_url: proposalType === 'uploaded' ? uploadedFileUrl : null,
+            proposal_type: proposalType,
             updated_at: new Date().toISOString()
           })
           .eq('id', existingProposal.id);
@@ -225,7 +300,9 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
             final_total_fee: calculatedFees.finalTotalFee,
             timeline: formData.timeline,
             strategy: formData.strategy,
-            generated_content: generatedProposal,
+            generated_content: proposalType === 'generated' ? generatedProposal : null,
+            uploaded_pdf_url: proposalType === 'uploaded' ? uploadedFileUrl : null,
+            proposal_type: proposalType,
             status: 'pending_admin_review'
           })
           .select()
@@ -404,25 +481,99 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
               </CardContent>
             </Card>
 
-            <div className={`flex ${isRTL() ? 'justify-start' : 'justify-end'}`}>
-              <Button 
-                onClick={generateProposal} 
-                disabled={isGenerating || !formData.strategy.trim()}
-              >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className={`h-4 w-4 ${isRTL() ? 'ml-2' : 'mr-2'} animate-spin`} />
-                    {t('proposal.buttons.generating')}
-                  </>
-                ) : (
-                  t('proposal.buttons.generate')
+            {/* Proposal Type Selection */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className={`text-sm flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}>
+                  <FileText className="h-4 w-4" />
+                  Proposal Type
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex gap-4">
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="proposalType"
+                      value="generated"
+                      checked={proposalType === 'generated'}
+                      onChange={(e) => setProposalType(e.target.value as 'generated' | 'uploaded')}
+                      className="w-4 h-4"
+                    />
+                    <span>Generate AI Proposal</span>
+                  </label>
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="proposalType"
+                      value="uploaded"
+                      checked={proposalType === 'uploaded'}
+                      onChange={(e) => setProposalType(e.target.value as 'generated' | 'uploaded')}
+                      className="w-4 h-4"
+                    />
+                    <span>Upload PDF Proposal</span>
+                  </label>
+                </div>
+
+                {proposalType === 'uploaded' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="proposal-pdf">Upload PDF Proposal</Label>
+                    <input
+                      id="proposal-pdf"
+                      type="file"
+                      accept=".pdf"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleFileUpload(file);
+                      }}
+                      className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/80"
+                      disabled={isUploading}
+                    />
+                    {isUploading && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Uploading PDF...
+                      </div>
+                    )}
+                    {uploadedFileUrl && !isUploading && (
+                      <div className="flex items-center gap-2 text-sm text-success">
+                        <CheckCircle className="h-4 w-4" />
+                        PDF uploaded successfully
+                      </div>
+                    )}
+                  </div>
                 )}
-              </Button>
+              </CardContent>
+            </Card>
+
+            <div className={`flex ${isRTL() ? 'justify-start' : 'justify-end'}`}>
+              {proposalType === 'generated' ? (
+                <Button 
+                  onClick={generateProposal} 
+                  disabled={isGenerating || !formData.strategy.trim()}
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className={`h-4 w-4 ${isRTL() ? 'ml-2' : 'mr-2'} animate-spin`} />
+                      {t('proposal.buttons.generating')}
+                    </>
+                  ) : (
+                    t('proposal.buttons.generate')
+                  )}
+                </Button>
+              ) : (
+                <Button 
+                  onClick={() => setActiveTab("preview")}
+                  disabled={!uploadedFileUrl}
+                >
+                  Preview PDF Proposal
+                </Button>
+              )}
             </div>
           </TabsContent>
 
           <TabsContent value="preview" className="space-y-4 overflow-y-auto max-h-[60vh]">
-            {generatedProposal ? (
+            {proposalType === 'generated' && generatedProposal ? (
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">{t('proposal.generatedTitle')}</CardTitle>
@@ -433,12 +584,40 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
                   </div>
                 </CardContent>
               </Card>
+            ) : proposalType === 'uploaded' && uploadedFileUrl ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">PDF Proposal Preview</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8 space-y-4">
+                    <FileText className="h-16 w-16 mx-auto text-primary" />
+                    <div>
+                      <p className="font-medium">PDF Proposal Uploaded</p>
+                      <p className="text-sm text-muted-foreground">
+                        Your PDF proposal is ready to be sent to the client
+                      </p>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => window.open(uploadedFileUrl, '_blank')}
+                      className="mt-4"
+                    >
+                      <FileText className={`h-4 w-4 ${isRTL() ? 'ml-2' : 'mr-2'}`} />
+                      View PDF
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             ) : (
               <Card>
                 <CardContent className="text-center py-8">
                   <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                   <p className="text-muted-foreground">
-                    {t('proposal.messages.noGenerated')}
+                    {proposalType === 'generated' 
+                      ? t('proposal.messages.noGenerated')
+                      : 'No PDF proposal uploaded yet'
+                    }
                   </p>
                 </CardContent>
               </Card>
@@ -448,7 +627,10 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
               <Button variant="outline" onClick={() => setActiveTab("form")}>
                 {t('proposal.buttons.backToEdit')}
               </Button>
-              <Button onClick={sendProposal} disabled={isSending || !generatedProposal}>
+              <Button 
+                onClick={sendProposal} 
+                disabled={isSending || (!generatedProposal && !uploadedFileUrl)}
+              >
                 {isSending ? (
                   <>
                     <Loader2 className={`h-4 w-4 ${isRTL() ? 'ml-2' : 'mr-2'} animate-spin`} />
