@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { 
   Scale, 
+  User,
   MessageSquare, 
   FileText, 
   Clock, 
@@ -19,10 +20,12 @@ import {
   Mail,
   Receipt,
   Plus,
-  Settings,
+  Menu,
   LogOut,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  UserCircle,
+  Bot
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import jsPDF from 'jspdf';
@@ -403,11 +406,26 @@ const ClientDashboard = () => {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="h-9 w-9 sm:h-10 sm:w-auto sm:px-4">
-                    <Settings className="h-4 w-4" />
-                    <span className="hidden sm:inline sm:ml-2">Settings</span>
+                    <Menu className="h-4 w-4" />
+                    <span className="hidden sm:inline sm:ml-2">More</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="bg-background border border-border shadow-lg z-50 w-48">
+                  <DropdownMenuItem onClick={() => {
+                    const personalSection = document.getElementById('personal-section');
+                    personalSection?.scrollIntoView({ behavior: 'smooth' });
+                  }}>
+                    <UserCircle className="h-4 w-4 mr-2" />
+                    Personal Information
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => {
+                    const intakeSection = document.getElementById('intake-section');
+                    intakeSection?.scrollIntoView({ behavior: 'smooth' });
+                  }}>
+                    <Bot className="h-4 w-4 mr-2" />
+                    AI Intake Conversation
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleDownloadCaseSummary}>
                     <Download className="h-4 w-4 mr-2" />
                     Download Summary
@@ -582,72 +600,7 @@ const ClientDashboard = () => {
           </Collapsible>
         )}
 
-        {/* Personal Information Card */}
-        <Collapsible open={!collapsedCards.personal} onOpenChange={() => toggleCard('personal')}>
-          <Card className="bg-gradient-card shadow-card">
-            <CollapsibleTrigger asChild>
-              <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Personal Information</CardTitle>
-                    <CardDescription>
-                      View and manage your contact information
-                    </CardDescription>
-                  </div>
-                  {collapsedCards.personal ? (
-                    <ChevronRight className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
-                  )}
-                </div>
-              </CardHeader>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <CardContent className="space-y-4">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-sm font-medium">Full Name</Label>
-                    <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
-                      {activeCase?.client_name || 'Not provided'}
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium">Email</Label>
-                    <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
-                      {activeCase?.client_email || 'Not provided'}
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium">Phone</Label>
-                    <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
-                      {activeCase?.client_phone || 'Not provided'}
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium">Language</Label>
-                    <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
-                      {activeCase?.language === 'en' && 'English'}
-                      {activeCase?.language === 'ar' && 'Arabic'}  
-                      {activeCase?.language === 'de' && 'German'}
-                      {!activeCase?.language && 'Not specified'}
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="pt-4 border-t">
-                  <Button asChild variant="outline">
-                    <Link to={`/intake?case=${activeCase.id}&edit=personal`}>
-                      <FileText className="h-4 w-4 mr-2" />
-                      Edit Details
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </CollapsibleContent>
-          </Card>
-        </Collapsible>
-
-        {/* Proposals & Communications Card */}
+        {/* Proposals Card */}
         <Card className="bg-gradient-card shadow-card" id="inbox-section">
           <CardHeader>
             <CardTitle className="flex items-center">
@@ -668,19 +621,27 @@ const ClientDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* AI Intake Conversation Card */}
-        <Collapsible open={!collapsedCards.intake} onOpenChange={() => toggleCard('intake')}>
+        {/* Communication Center */}
+        <Collapsible open={!collapsedCards.communication} onOpenChange={() => toggleCard('communication')}>
           <Card className="bg-gradient-card shadow-card">
             <CollapsibleTrigger asChild>
               <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>AI Intake Conversation</CardTitle>
+                    <CardTitle className="flex items-center">
+                      <MessageSquare className="h-5 w-5 mr-2" />
+                      Communication Center
+                      {totalUnreadCount > 0 && (
+                        <Badge variant="destructive" className="ml-2">
+                          {totalUnreadCount}
+                        </Badge>
+                      )}
+                    </CardTitle>
                     <CardDescription>
-                      Your conversation history with our AI legal assistant during case intake
+                      Direct communication with your legal team
                     </CardDescription>
                   </div>
-                  {collapsedCards.intake ? (
+                  {collapsedCards.communication ? (
                     <ChevronRight className="h-4 w-4" />
                   ) : (
                     <ChevronDown className="h-4 w-4" />
@@ -690,53 +651,16 @@ const ClientDashboard = () => {
             </CollapsibleTrigger>
             <CollapsibleContent>
               <CardContent>
-                {/* Messages */}
-                <div className="h-96 border rounded-lg p-4 overflow-y-auto mb-4 bg-background space-y-4">
-                  {messages.length > 0 ? messages.map((msg, index) => (
-                    <div key={index} className={`flex ${msg.sender === 'client' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[70%] ${
-                        msg.sender === 'client' 
-                          ? 'bg-primary text-primary-foreground' 
-                          : 'bg-muted'
-                      } rounded-lg p-3`}>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm font-medium">{msg.name}</span>
-                          <span className="text-xs opacity-70">{msg.time}</span>
-                        </div>
-                        <p className="text-sm">{msg.content}</p>
-                      </div>
-                    </div>
-                  )) : (
-                    <div className="text-center text-muted-foreground py-8">
-                      <MessageSquare className="h-8 w-8 mx-auto mb-2" />
-                      <p>No messages yet. Start a conversation with your lawyer.</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Message Input */}
-                <div className="flex space-x-2">
-                  <Textarea
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder="Type your message..."
-                    className="flex-1 min-h-[80px]"
-                  />
-                  <div className="flex flex-col space-y-2">
-                    <Button 
-                      size="sm" 
-                      className="bg-gradient-primary"
-                      onClick={handleSendMessage}
-                      disabled={!newMessage.trim()}
-                    >
-                      <Send className="h-4 w-4" />
-                    </Button>
-                    <Button size="sm" variant="outline">
-                      <Upload className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
+                <CommunicationInbox
+                  cases={cases}
+                  userRole="client"
+                  caseId={activeCase.id}
+                  caseTitle={activeCase.title}
+                  caseStatus={activeCase.status}
+                  consultationPaid={activeCase.consultation_paid || false}
+                  paymentStatus={activeCase.payment_status || 'pending'}
+                  lawyerAssigned={!!activeCase.assigned_lawyer_id}
+                />
                 <div className="mt-2 p-2 bg-muted/50 rounded text-xs text-muted-foreground">
                   <AlertCircle className="h-3 w-3 inline mr-1" />
                   All communication must remain on platform. External contact details will be automatically redacted.
@@ -745,6 +669,151 @@ const ClientDashboard = () => {
             </CollapsibleContent>
           </Card>
         </Collapsible>
+
+        {/* Personal Information Card - Hidden but accessible via menu */}
+        <div id="personal-section">
+          <Collapsible open={!collapsedCards.personal} onOpenChange={() => toggleCard('personal')}>
+            <Card className="bg-gradient-card shadow-card">
+              <CollapsibleTrigger asChild>
+                <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Personal Information</CardTitle>
+                      <CardDescription>
+                        View and manage your contact information
+                      </CardDescription>
+                    </div>
+                    {collapsedCards.personal ? (
+                      <ChevronRight className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
+                  </div>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="space-y-4">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-sm font-medium">Full Name</Label>
+                      <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
+                        {activeCase?.client_name || 'Not provided'}
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium">Email</Label>
+                      <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
+                        {activeCase?.client_email || 'Not provided'}
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium">Phone</Label>
+                      <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
+                        {activeCase?.client_phone || 'Not provided'}
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium">Language</Label>
+                      <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
+                        {activeCase?.language === 'en' && 'English'}
+                        {activeCase?.language === 'ar' && 'Arabic'}  
+                        {activeCase?.language === 'de' && 'German'}
+                        {!activeCase?.language && 'Not specified'}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="pt-4 border-t">
+                    <Button asChild variant="outline">
+                      <Link to={`/intake?case=${activeCase.id}&edit=personal`}>
+                        <FileText className="h-4 w-4 mr-2" />
+                        Edit Details
+                      </Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+        </div>
+
+        {/* AI Intake Conversation Card - Hidden but accessible via menu */}
+        <div id="intake-section">
+          <Collapsible open={!collapsedCards.intake} onOpenChange={() => toggleCard('intake')}>
+            <Card className="bg-gradient-card shadow-card">
+              <CollapsibleTrigger asChild>
+                <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>AI Intake Conversation</CardTitle>
+                      <CardDescription>
+                        Your conversation history with our AI legal assistant during case intake
+                      </CardDescription>
+                    </div>
+                    {collapsedCards.intake ? (
+                      <ChevronRight className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
+                  </div>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent>
+                  {/* Messages */}
+                  <div className="h-96 border rounded-lg p-4 overflow-y-auto mb-4 bg-background space-y-4">
+                    {messages.length > 0 ? messages.map((msg, index) => (
+                      <div key={index} className={`flex ${msg.sender === 'client' ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-[70%] ${
+                          msg.sender === 'client' 
+                            ? 'bg-primary text-primary-foreground' 
+                            : 'bg-muted'
+                        } rounded-lg p-3`}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs opacity-75">
+                              {msg.sender === 'client' ? 'You' : 'AI Assistant'}
+                            </span>
+                            <span className="text-xs opacity-75">
+                              {new Date(msg.created_at).toLocaleTimeString()}
+                            </span>
+                          </div>
+                          <p className="text-sm">{msg.content}</p>
+                        </div>
+                      </div>
+                    )) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p>No conversation history available</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Message Input */}
+                  <div className="flex gap-2">
+                    <Input
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      placeholder="Type a message..."
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSendMessage();
+                        }
+                      }}
+                    />
+                    <Button 
+                      onClick={handleSendMessage}
+                      disabled={!newMessage.trim()}
+                      size="sm"
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+        </div>
 
         {/* Case Documents Card */}
         <Collapsible open={!collapsedCards.documents} onOpenChange={() => toggleCard('documents')}>
@@ -841,51 +910,6 @@ const ClientDashboard = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Communication Inbox Section */}
-        <Collapsible open={!collapsedCards.communication} onOpenChange={() => toggleCard('communication')}>
-          <Card className="bg-gradient-card shadow-card">
-            <CollapsibleTrigger asChild>
-              <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center">
-                      <MessageSquare className="h-5 w-5 mr-2" />
-                      Communication Center
-                      {totalUnreadCount > 0 && (
-                        <Badge variant="destructive" className="ml-2">
-                          {totalUnreadCount}
-                        </Badge>
-                      )}
-                    </CardTitle>
-                    <CardDescription>
-                      Direct communication with your legal team
-                    </CardDescription>
-                  </div>
-                  {collapsedCards.communication ? (
-                    <ChevronRight className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
-                  )}
-                </div>
-              </CardHeader>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <CardContent>
-                <CommunicationInbox
-                  cases={cases}
-                  userRole="client"
-                  caseId={activeCase.id}
-                  caseTitle={activeCase.title}
-                  caseStatus={activeCase.status}
-                  consultationPaid={activeCase.consultation_paid || false}
-                  paymentStatus={activeCase.payment_status || 'pending'}
-                  lawyerAssigned={!!activeCase.assigned_lawyer_id}
-                  chatNotificationCount={totalUnreadCount}
-                />
-              </CardContent>
-            </CollapsibleContent>
-          </Card>
-        </Collapsible>
       </div>
     </div>
   );
