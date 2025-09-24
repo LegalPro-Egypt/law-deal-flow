@@ -23,16 +23,13 @@ import {
   ShieldCheck,
   AlertTriangle,
   Settings,
-  PhoneCall,
-  ChevronDown,
-  ChevronRight
+  PhoneCall
 } from "lucide-react";
 import { LawyerQAChatbot } from "@/components/LawyerQAChatbot";
 import { CompleteVerificationForm } from "@/components/CompleteVerificationForm";
 import { CaseDetailsDialog } from "@/components/CaseDetailsDialog";
 import { CreateProposalDialog } from "@/components/CreateProposalDialog";
 import { CommunicationInbox } from "@/components/CommunicationInbox";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { getClientNameForRole } from "@/utils/clientPrivacy";
 import { useLanguage } from "@/hooks/useLanguage";
 import { LanguageToggle } from "@/components/LanguageToggle";
@@ -81,7 +78,6 @@ const LawyerDashboard = () => {
   const [caseDetailsOpen, setCaseDetailsOpen] = useState(false);
   const [selectedCaseForProposal, setSelectedCaseForProposal] = useState<Case | null>(null);
   const [incomingCalls, setIncomingCalls] = useState<TwilioSession[]>([]);
-  const [expandedCases, setExpandedCases] = useState<Set<string>>(new Set());
   const { sessions, createAccessToken } = useTwilioSession();
 
   // Get the currently selected case or default to the first case
@@ -301,18 +297,6 @@ const LawyerDashboard = () => {
     toast({
       title: 'Call Declined',
       description: 'Communication request has been declined',
-    });
-  };
-
-  const toggleCaseExpansion = (caseId: string) => {
-    setExpandedCases(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(caseId)) {
-        newSet.delete(caseId);
-      } else {
-        newSet.add(caseId);
-      }
-      return newSet;
     });
   };
 
@@ -621,166 +605,52 @@ const LawyerDashboard = () => {
             </CardContent>
           </Card>
         ) : currentCase ? (
-          <div className="space-y-3">
-            <Collapsible
-              key={currentCase.id}
-              open={expandedCases.has(currentCase.id)}
-              onOpenChange={() => toggleCaseExpansion(currentCase.id)}
-            >
-              <CollapsibleTrigger asChild>
-                <Card className="hover:shadow-md transition-shadow cursor-pointer md:hidden bg-gradient-card shadow-card">
-                  <CardContent className="p-3">
-                    <div className="flex items-center gap-2">
-                      {/* Case ID Badge - Compact */}
-                      <Badge 
-                        variant="outline" 
-                        className="font-mono text-xs h-6 px-2 flex items-center flex-shrink-0"
-                      >
-                        {currentCase.case_number}
-                      </Badge>
-                      
-                      {/* Client Info - Takes available space */}
-                      <div className="flex-1 min-w-0 mr-1">
-                        <div className="text-sm font-semibold truncate">
-                          {getClientNameForRole(currentCase.client_name, profile?.role)} • {currentCase.category}
-                        </div>
-                      </div>
-                      
-                      {/* Status Badge - Compact with Chevron */}
-                      <div className="flex items-center gap-1 flex-shrink-0">
-                        <Badge 
-                          variant={getStatusVariant(currentCase.status)}
-                          className="text-xs h-6 px-2 flex items-center max-w-20 text-center"
-                        >
-                          <span className="truncate">
-                            {currentCase.status === 'proposal_accepted' && currentCase.consultation_paid === false 
-                              ? (isRTL() ? 'دفع' : 'Payment')
-                              : currentCase.status === 'in_progress' ? (isRTL() ? 'جاري' : 'Active')
-                              : currentCase.status === 'completed' ? (isRTL() ? 'مكتمل' : 'Done') 
-                              : t(`dashboard.cases.status.${currentCase.status}`)
-                            }
-                          </span>
-                        </Badge>
-                        <div className="flex items-center justify-center w-5 h-5 flex-shrink-0">
-                          {expandedCases.has(currentCase.id) ? (
-                            <ChevronDown className="h-3 w-3 text-muted-foreground" />
-                          ) : (
-                            <ChevronRight className="h-3 w-3 text-muted-foreground" />
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </CollapsibleTrigger>
-               
-              <CollapsibleContent className="md:hidden">
-                <Card className="mt-2 border-l-4 border-l-primary bg-gradient-card shadow-card">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Badge variant={getUrgencyVariant(currentCase.urgency)}>
-                          {t(`dashboard.cases.urgency.${currentCase.urgency}`)} {isRTL() ? 'أولوية' : 'Priority'}
-                        </Badge>
-                      </div>
-                      <div className={`text-xs text-muted-foreground flex-shrink-0 ${isRTL() ? 'text-left' : 'text-right'}`}>
-                        <div>Created: {formatDate(currentCase.created_at)}</div>
-                        <div>Updated: {formatDate(currentCase.updated_at)}</div>
-                      </div>
-                    </div>
-                    <CardTitle className="text-lg">{currentCase.title}</CardTitle>
-                    <CardDescription>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Users className="h-4 w-4" />
-                        Client: {getClientNameForRole(currentCase.client_name, profile?.role)}
-                      </div>
-                      <div className="flex items-center gap-2 text-sm mt-1">
-                        <FileText className="h-4 w-4" />
-                        Category: {currentCase.category}
-                      </div>
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-0 space-y-4">
-                    <div className="flex gap-2 flex-wrap">
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => handleViewDetails(currentCase.id)}
-                        className="flex-shrink-0"
-                      >
-                        {t('dashboard.cases.viewDetails')}
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        className="bg-primary hover:bg-primary/90 flex-shrink-0"
-                        onClick={() => setSelectedCaseForProposal(currentCase)}
-                      >
-                        <FileText className={`h-4 w-4 ${isRTL() ? 'ml-2' : 'mr-2'}`} />
-                        {t('dashboard.cases.createProposal')}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </CollapsibleContent>
-              
-              {/* Desktop view - always show full card */}
-              <Card className="hover:shadow-md transition-shadow hidden md:block bg-gradient-card shadow-card">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <Badge variant="outline" className="font-mono text-xs">
-                        {currentCase.case_number}
-                      </Badge>
-                      <Badge variant={getStatusVariant(currentCase.status)}>
-                        {currentCase.status === 'proposal_accepted' && currentCase.consultation_paid === false 
-                          ? (isRTL() ? 'في انتظار الدفع' : 'Awaiting Payment')
-                          : t(`dashboard.cases.status.${currentCase.status}`)
-                        }
-                      </Badge>
-                      <Badge variant={getUrgencyVariant(currentCase.urgency)}>
-                        {t(`dashboard.cases.urgency.${currentCase.urgency}`)} {isRTL() ? 'أولوية' : 'Priority'}
-                      </Badge>
-                    </div>
-                    <div className={`text-xs text-muted-foreground flex-shrink-0 ${isRTL() ? 'text-left' : 'text-right'}`}>
-                      <div>Created: {formatDate(currentCase.created_at)}</div>
-                      <div>Updated: {formatDate(currentCase.updated_at)}</div>
-                    </div>
-                  </div>
-                  <CardTitle className="text-lg">{currentCase.title}</CardTitle>
-                  <CardDescription>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Users className="h-4 w-4" />
-                      Client: {getClientNameForRole(currentCase.client_name, profile?.role)}
-                    </div>
-                    <div className="flex items-center gap-2 text-sm mt-1">
-                      <FileText className="h-4 w-4" />
-                      Category: {currentCase.category}
-                    </div>
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-0 space-y-4">
-                  <div className="flex gap-2 flex-wrap">
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => handleViewDetails(currentCase.id)}
-                      className="flex-shrink-0"
-                    >
-                      {t('dashboard.cases.viewDetails')}
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      className="bg-primary hover:bg-primary/90 flex-shrink-0"
-                      onClick={() => setSelectedCaseForProposal(currentCase)}
-                    >
-                      <FileText className={`h-4 w-4 ${isRTL() ? 'ml-2' : 'mr-2'}`} />
-                      {t('dashboard.cases.createProposal')}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </Collapsible>
-          </div>
+          <Card className="border-l-4 border-l-primary bg-gradient-card shadow-card hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge variant={getUrgencyVariant(currentCase.urgency)}>
+                    {t(`dashboard.cases.urgency.${currentCase.urgency}`)} {isRTL() ? 'أولوية' : 'Priority'}
+                  </Badge>
+                </div>
+                <div className={`text-xs text-muted-foreground flex-shrink-0 ${isRTL() ? 'text-left' : 'text-right'}`}>
+                  <div>Created: {formatDate(currentCase.created_at)}</div>
+                  <div>Updated: {formatDate(currentCase.updated_at)}</div>
+                </div>
+              </div>
+              <CardTitle className="text-lg">{currentCase.title}</CardTitle>
+              <CardDescription>
+                <div className="flex items-center gap-2 text-sm">
+                  <Users className="h-4 w-4" />
+                  Client: {getClientNameForRole(currentCase.client_name, profile?.role)}
+                </div>
+                <div className="flex items-center gap-2 text-sm mt-1">
+                  <FileText className="h-4 w-4" />
+                  Category: {currentCase.category}
+                </div>
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-0 space-y-4">
+              <div className="flex gap-2 flex-wrap">
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => handleViewDetails(currentCase.id)}
+                  className="flex-shrink-0"
+                >
+                  {t('dashboard.cases.viewDetails')}
+                </Button>
+                <Button 
+                  size="sm" 
+                  className="bg-primary hover:bg-primary/90 flex-shrink-0"
+                  onClick={() => setSelectedCaseForProposal(currentCase)}
+                >
+                  <FileText className={`h-4 w-4 ${isRTL() ? 'ml-2' : 'mr-2'}`} />
+                  {t('dashboard.cases.createProposal')}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         ) : null}
 
         {/* Communication Section */}
