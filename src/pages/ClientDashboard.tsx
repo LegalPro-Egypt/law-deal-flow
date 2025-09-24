@@ -364,7 +364,7 @@ const ClientDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="backdrop-blur-md bg-background/80 border-b border-border/50 sticky top-0 z-50">
+      <header className="backdrop-blur-md bg-background/40 border-b border-border/30 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16">
             {/* Logo and Title */}
