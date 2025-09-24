@@ -225,7 +225,7 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
 
           {/* Features Preview */}
           <div className="mt-24 max-w-6xl mx-auto" ref={featuresRef}>
-            <div className={`grid md:grid-cols-2 lg:grid-cols-4 gap-8 transition-all duration-1000 ${featuresVisible ? 'animate-card-slide-up' : 'opacity-0 translate-y-10'}`}>
+            <div className={`grid md:grid-cols-2 lg:grid-cols-2 gap-8 transition-all duration-1000 ${featuresVisible ? 'animate-card-slide-up' : 'opacity-0 translate-y-10'}`}>
               <Card className="neomorphism-feature">
                 <CardContent className="p-8 text-center">
                   <Brain className="w-12 h-12 text-neomorphism-primary mx-auto mb-6 icon-glow" />
