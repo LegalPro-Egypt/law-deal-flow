@@ -122,17 +122,8 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
 
   // Always visible professional chat interface
   return (
-    <section className={`relative py-16 overflow-hidden ${className} ${isRTL() ? 'rtl' : 'ltr'}`}>
-      {/* Glassmorphism Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-accent/40 via-accent/20 to-accent/10" />
-      <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 via-transparent to-primary/10" />
-      <div className="absolute inset-0 backdrop-blur-3xl" />
-      
-      {/* Decorative Elements */}
-      <div className="absolute top-20 left-10 w-72 h-72 bg-accent/30 rounded-full blur-3xl" />
-      <div className="absolute bottom-20 right-10 w-96 h-96 bg-primary/20 rounded-full blur-3xl" />
-      
-      <div className="relative container mx-auto px-4 sm:px-6 lg:px-8">
+    <section className={`py-16 bg-muted/30 ${className} ${isRTL() ? 'rtl' : 'ltr'}`}>
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           {/* Professional Header */}
           <div className="text-center mb-8">
@@ -145,7 +136,7 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
             </p>
           </div>
 
-          {/* Chat Interface Card */}
+          {/* Chat Interface Card with Glassmorphism */}
           <Card className="shadow-2xl border border-white/20 overflow-hidden bg-background/80 backdrop-blur-xl">
             {/* Professional Header */}
             <CardHeader className="bg-gradient-primary text-white">
@@ -174,9 +165,9 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
               </div>
             </CardHeader>
 
-            <CardContent className="p-0">
+            <CardContent className="p-0 bg-background/60 backdrop-blur-sm">
               {/* Messages Area with professional styling */}
-              <ScrollArea ref={scrollAreaRef} className="h-96">
+              <ScrollArea ref={scrollAreaRef} className="h-96 bg-transparent">
                 <div className="space-y-4 p-6">
                   {messages.map((message, index) => (
                     <div
@@ -190,7 +181,7 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
                       <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
                         message.role === 'user' 
                           ? 'bg-primary' 
-                          : 'bg-muted border border-border'
+                          : 'bg-background/80 backdrop-blur-sm border border-white/20'
                       }`}>
                         {getMessageIcon(message.role)}
                       </div>
@@ -199,7 +190,7 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
                         className={`max-w-[80%] rounded-lg px-4 py-3 ${
                           message.role === 'user'
                             ? 'bg-primary text-primary-foreground' + (isRTL() ? ' mr-auto' : ' ml-auto')
-                            : 'bg-muted border border-border'
+                            : 'bg-background/80 backdrop-blur-sm border border-white/20'
                         }`}
                       >
                         <div className="text-sm leading-relaxed">
@@ -217,10 +208,10 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
                   {/* Loading indicator */}
                   {isLoading && (
                     <div className={`flex items-start gap-3 animate-fade-in ${isRTL() ? 'flex-row-reverse' : ''}`}>
-                      <div className="flex-shrink-0 w-8 h-8 bg-muted border border-border rounded-full flex items-center justify-center">
+                      <div className="flex-shrink-0 w-8 h-8 bg-background/80 backdrop-blur-sm border border-white/20 rounded-full flex items-center justify-center">
                         <Bot className="h-4 w-4 text-primary" />
                       </div>
-                      <div className="bg-muted border border-border rounded-lg px-4 py-3">
+                      <div className="bg-background/80 backdrop-blur-sm border border-white/20 rounded-lg px-4 py-3">
                         <div className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}>
                           <Loader2 className="h-4 w-4 animate-spin text-primary" />
                           <span className="text-sm text-muted-foreground">
@@ -234,7 +225,7 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
               </ScrollArea>
 
               {/* Professional Input Area */}
-              <div className="p-6 border-t bg-muted/50">
+              <div className="p-6 border-t border-white/20 bg-background/40 backdrop-blur-sm">
                 <div className={`flex gap-3 mb-4 ${isRTL() ? 'flex-row-reverse' : ''}`}>
                   <Input
                     ref={inputRef}
@@ -268,10 +259,10 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
 
                 {/* Connection Status or Legal Disclaimer */}
                 {connectionFailed ? (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="bg-red-500/20 backdrop-blur-sm border border-red-400/30 rounded-lg p-4">
                     <div className={`flex items-start gap-3 ${isRTL() ? 'flex-row-reverse' : ''}`}>
-                      <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-                      <div className="text-sm text-red-800">
+                      <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
+                      <div className="text-sm text-red-200">
                         <strong>{t('landing.chatbot.connectionRequired')}</strong> {t('landing.chatbot.connectionMessage')} {" "}
                         <Link 
                           to="/auth" 
@@ -284,10 +275,10 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <div className="bg-amber-500/20 backdrop-blur-sm border border-amber-400/30 rounded-lg p-4">
                     <div className={`flex items-start gap-3 ${isRTL() ? 'flex-row-reverse' : ''}`}>
-                      <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                      <div className="text-sm text-amber-800">
+                      <AlertCircle className="h-5 w-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                      <div className="text-sm text-amber-200">
                         <strong>{t('landing.chatbot.informationOnly')}</strong> {t('landing.chatbot.informationMessage')} {" "}
                         <Link 
                           to="/auth?redirect=intake" 
