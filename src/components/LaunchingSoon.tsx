@@ -162,7 +162,7 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
                 {!isSubscribed ? (
                   <form onSubmit={handleEmailSignup} className="space-y-5 md:space-y-6">
                     <h3 className="text-2xl md:text-3xl font-semibold font-futura text-gray-900 tracking-tight leading-tight">
-                      Get Up to <span className="text-gray-800">50,000 EGP</span> Off Your First Case
+                      Get Up to <span className="font-bold bg-gradient-to-r from-neomorphism-primary to-neomorphism-accent bg-clip-text text-transparent">50,000 EGP</span> Off Your First Case
                     </h3>
                     <p className="text-base md:text-lg font-modern text-gray-600 leading-relaxed max-w-[52ch] mx-auto">
                       Join the LegalPro waitlist for early access and a chance to win a legal fee reduction of up to 50,000 EGP.
@@ -178,19 +178,19 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
                     />
                     
                     {/* Benefits bullet points */}
-                    <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="bg-gray-50 rounded-lg p-4 text-left">
                       <ul className="space-y-2 text-base font-modern leading-relaxed">
-                        <li className="flex items-center text-gray-700">
-                          <CheckCircle className="w-4 h-4 text-neomorphism-primary mr-3 flex-shrink-0" />
+                        <li className="flex items-start text-gray-700">
+                          <CheckCircle className="w-4 h-4 text-neomorphism-primary mr-3 flex-shrink-0 mt-0.5" />
                           Early access to LegalPro
                         </li>
-                        <li className="flex items-center text-gray-700">
-                          <CheckCircle className="w-4 h-4 text-neomorphism-primary mr-3 flex-shrink-0" />
+                        <li className="flex items-start text-gray-700">
+                          <CheckCircle className="w-4 h-4 text-neomorphism-primary mr-3 flex-shrink-0 mt-0.5" />
                           Exclusive launch updates
                         </li>
-                        <li className="flex items-center text-gray-700">
-                          <CheckCircle className="w-4 h-4 text-neomorphism-primary mr-3 flex-shrink-0" />
-                          Chance to win up to 50,000 EGP off your first case
+                        <li className="flex items-start text-gray-700">
+                          <CheckCircle className="w-4 h-4 text-neomorphism-primary mr-3 flex-shrink-0 mt-0.5" />
+                          Chance to win up to <span className="font-bold bg-gradient-to-r from-neomorphism-primary to-neomorphism-accent bg-clip-text text-transparent">50,000 EGP</span> off your first case
                         </li>
                       </ul>
                     </div>
