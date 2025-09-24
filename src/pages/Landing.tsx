@@ -214,12 +214,8 @@ const Landing = () => {
       </section>
 
       {/* How It Works */}
-      <section className="relative py-20 overflow-hidden">
-        {/* Glassmorphism Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-accent/20 via-primary/10 to-accent/30 backdrop-blur-3xl"></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-background/40 via-transparent to-background/20"></div>
-        
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <section className="py-20">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">{t('landing.howItWorks.title')}</h2>
             <p className="text-xl text-muted-foreground">{t('landing.howItWorks.subtitle')}</p>
