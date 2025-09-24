@@ -226,9 +226,9 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
           {/* Features Preview */}
           <div className="mt-24 max-w-6xl mx-auto" ref={featuresRef}>
             <div className={`grid md:grid-cols-2 lg:grid-cols-2 gap-8 transition-all duration-1000 ${featuresVisible ? 'animate-card-slide-up' : 'opacity-0 translate-y-10'}`}>
-              <Card className="neomorphism-feature">
+              <Card className="neomorphism-feature bg-gradient-to-br from-blue-50/80 to-purple-50/80 border border-blue-100/50">
                 <CardContent className="p-8 text-center">
-                  <Brain className="w-12 h-12 text-neomorphism-primary mx-auto mb-6 icon-glow" />
+                  <Brain className="w-12 h-12 text-blue-600 mx-auto mb-6 icon-glow" />
                   <h3 className="text-xl font-semibold font-futura text-gray-900 mb-4">
                     {getText('expertLawyers')}
                   </h3>
@@ -238,9 +238,9 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
                 </CardContent>
               </Card>
 
-              <Card className="neomorphism-feature" style={{ animationDelay: '0.2s' }}>
+              <Card className="neomorphism-feature bg-gradient-to-br from-green-50/80 to-teal-50/80 border border-green-100/50" style={{ animationDelay: '0.2s' }}>
                 <CardContent className="p-8 text-center">
-                  <Shield className="w-12 h-12 text-neomorphism-primary mx-auto mb-6 icon-glow" />
+                  <Shield className="w-12 h-12 text-green-600 mx-auto mb-6 icon-glow" />
                   <h3 className="text-xl font-semibold font-futura text-gray-900 mb-4">
                     {getText('multilingualSupport')}
                   </h3>
@@ -250,9 +250,9 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
                 </CardContent>
               </Card>
 
-              <Card className="neomorphism-feature" style={{ animationDelay: '0.4s' }}>
+              <Card className="neomorphism-feature bg-gradient-to-br from-orange-50/80 to-pink-50/80 border border-orange-100/50" style={{ animationDelay: '0.4s' }}>
                 <CardContent className="p-8 text-center">
-                  <Sparkles className="w-12 h-12 text-neomorphism-accent mx-auto mb-6 icon-glow" />
+                  <Sparkles className="w-12 h-12 text-orange-500 mx-auto mb-6 icon-glow" />
                   <h3 className="text-xl font-semibold font-futura text-gray-900 mb-4">
                     {getText('aiLegalAssistant')}
                   </h3>
@@ -262,9 +262,9 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
                 </CardContent>
               </Card>
 
-              <Card className="neomorphism-feature" style={{ animationDelay: '0.6s' }}>
+              <Card className="neomorphism-feature bg-gradient-to-br from-red-50/80 to-purple-50/80 border border-red-100/50" style={{ animationDelay: '0.6s' }}>
                 <CardContent className="p-8 text-center">
-                  <ShieldCheck className="w-12 h-12 text-neomorphism-primary mx-auto mb-6 icon-glow" />
+                  <ShieldCheck className="w-12 h-12 text-red-600 mx-auto mb-6 icon-glow" />
                   <h3 className="text-xl font-semibold font-futura text-gray-900 mb-4">
                     {getText('clientProtectionGuarantee')}
                   </h3>
