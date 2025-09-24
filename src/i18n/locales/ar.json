@@ -67,7 +67,10 @@
       "label": "اختر هيكل الدفع",
       "fixedFee": "أتعاب ثابتة",
       "contingency": "أتعاب طوارئ",
+      "hybrid": "مختلط (ثابت + طوارئ)",
       "contingencyPercentage": "نسبة أتعاب الطوارئ (%)*",
+      "hybridFixedFee": "مكون الأتعاب الثابتة ($)*",
+      "hybridContingencyPercentage": "نسبة الطوارئ (%)*",
       "contingencyDisclaimer": "أتفهم وأوافق على أن مدفوعات الطوارئ يجب أن تتم من خلال المنصة وتنطبق عمولة المنصة على أتعاب الطوارئ",
       "contingencyNote": "* رسوم المنصة لا تنطبق على مبالغ الطوارئ"
     },

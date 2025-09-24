@@ -29,9 +29,11 @@ interface ProposalForm {
   remaining_fee: number;
   timeline: string;
   strategy: string;
-  payment_structure: 'fixed_fee' | 'contingency';
+  payment_structure: 'fixed_fee' | 'contingency' | 'hybrid';
   contingency_percentage?: number;
   contingency_disclaimer_accepted?: boolean;
+  hybrid_fixed_fee?: number;
+  hybrid_contingency_percentage?: number;
 }
 
 export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
@@ -49,9 +51,11 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
     remaining_fee: existingProposal?.remaining_fee || 2000,
     timeline: existingProposal?.timeline || "4-6 weeks",
     strategy: existingProposal?.strategy || "",
-    payment_structure: (existingProposal?.payment_structure as 'fixed_fee' | 'contingency') || 'fixed_fee',
+    payment_structure: (existingProposal?.payment_structure as 'fixed_fee' | 'contingency' | 'hybrid') || 'fixed_fee',
     contingency_percentage: existingProposal?.contingency_percentage || undefined,
-    contingency_disclaimer_accepted: existingProposal?.contingency_disclaimer_accepted || false
+    contingency_disclaimer_accepted: existingProposal?.contingency_disclaimer_accepted || false,
+    hybrid_fixed_fee: existingProposal?.hybrid_fixed_fee || undefined,
+    hybrid_contingency_percentage: existingProposal?.hybrid_contingency_percentage || undefined
   });
   const [generatedProposal, setGeneratedProposal] = useState<string>(existingProposal?.generated_content || "");
   const [feeStructure, setFeeStructure] = useState<any>(null);
@@ -85,13 +89,14 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
   
   const calculateFees = () => {
     if (formData.payment_structure === 'contingency') {
-      // For contingency, platform fees don't apply to the contingency portion
-      const platformFeeAmount = 0;
-      const paymentProcessingFeeAmount = 0;
-      const clientProtectionFeeAmount = 0;
-      const totalAdditionalFees = 0;
+      // For contingency, platform fees only apply to consultation fee
+      const baseFee = formData.consultation_fee;
+      const platformFeeAmount = baseFee * (platformFeePercentage / 100);
+      const paymentProcessingFeeAmount = baseFee * (paymentProcessingFeePercentage / 100);
+      const clientProtectionFeeAmount = baseFee * (clientProtectionFeePercentage / 100);
+      const totalAdditionalFees = platformFeeAmount + paymentProcessingFeeAmount + clientProtectionFeeAmount;
       const baseTotalFee = formData.consultation_fee;
-      const finalTotalFee = baseTotalFee;
+      const finalTotalFee = baseTotalFee + totalAdditionalFees;
       
       return {
         platformFeeAmount,
@@ -103,13 +108,33 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
       };
     }
     
-    // Fixed fee calculation (existing logic)
-    const remainingFee = formData.remaining_fee || 0;
-    const platformFeeAmount = remainingFee * (platformFeePercentage / 100);
-    const paymentProcessingFeeAmount = remainingFee * (paymentProcessingFeePercentage / 100);
-    const clientProtectionFeeAmount = remainingFee * (clientProtectionFeePercentage / 100);
+    if (formData.payment_structure === 'hybrid') {
+      // For hybrid, platform fees apply to consultation fee + hybrid_fixed_fee
+      const baseFee = formData.consultation_fee + (formData.hybrid_fixed_fee || 0);
+      const platformFeeAmount = baseFee * (platformFeePercentage / 100);
+      const paymentProcessingFeeAmount = baseFee * (paymentProcessingFeePercentage / 100);
+      const clientProtectionFeeAmount = baseFee * (clientProtectionFeePercentage / 100);
+      const totalAdditionalFees = platformFeeAmount + paymentProcessingFeeAmount + clientProtectionFeeAmount;
+      const baseTotalFee = baseFee;
+      const finalTotalFee = baseTotalFee + totalAdditionalFees;
+      
+      return {
+        platformFeeAmount,
+        paymentProcessingFeeAmount,
+        clientProtectionFeeAmount,
+        totalAdditionalFees,
+        baseTotalFee,
+        finalTotalFee
+      };
+    }
+    
+    // Fixed fee calculation - now includes consultation fee in platform fee calculation
+    const baseFee = formData.consultation_fee + (formData.remaining_fee || 0);
+    const platformFeeAmount = baseFee * (platformFeePercentage / 100);
+    const paymentProcessingFeeAmount = baseFee * (paymentProcessingFeePercentage / 100);
+    const clientProtectionFeeAmount = baseFee * (clientProtectionFeePercentage / 100);
     const totalAdditionalFees = platformFeeAmount + paymentProcessingFeeAmount + clientProtectionFeeAmount;
-    const baseTotalFee = formData.consultation_fee + remainingFee;
+    const baseTotalFee = baseFee;
     const finalTotalFee = baseTotalFee + totalAdditionalFees;
     
     return {
@@ -303,6 +328,17 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
       }
     }
 
+    if (formData.payment_structure === 'hybrid') {
+      if (!formData.hybrid_fixed_fee || !formData.hybrid_contingency_percentage || !formData.contingency_disclaimer_accepted) {
+        toast({
+          title: t('proposal.messages.hybridRequired'),
+          description: t('proposal.messages.hybridRequiredDesc'),
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+
     // Validate proposal content based on type
     if (proposalType === 'generated') {
       if (!generatedProposal) {
@@ -343,6 +379,8 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
             remaining_fee: formData.payment_structure === 'fixed_fee' ? formData.remaining_fee : null,
             total_fee: formData.payment_structure === 'fixed_fee' 
               ? formData.consultation_fee + formData.remaining_fee 
+              : formData.payment_structure === 'hybrid'
+              ? formData.consultation_fee + (formData.hybrid_fixed_fee || 0)
               : formData.consultation_fee,
             platform_fee_amount: calculatedFees.platformFeeAmount,
             payment_processing_fee_amount: calculatedFees.paymentProcessingFeeAmount,
@@ -355,6 +393,8 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
             payment_structure: formData.payment_structure,
             contingency_percentage: formData.contingency_percentage || null,
             contingency_disclaimer_accepted: formData.contingency_disclaimer_accepted || false,
+            hybrid_fixed_fee: formData.hybrid_fixed_fee || null,
+            hybrid_contingency_percentage: formData.hybrid_contingency_percentage || null,
             generated_content: proposalType === 'generated' ? generatedProposal : null,
             uploaded_pdf_url: proposalType === 'uploaded' ? uploadedFileUrl : null,
             proposal_type: proposalType,
@@ -375,6 +415,8 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
             remaining_fee: formData.payment_structure === 'fixed_fee' ? formData.remaining_fee : null,
             total_fee: formData.payment_structure === 'fixed_fee' 
               ? formData.consultation_fee + formData.remaining_fee 
+              : formData.payment_structure === 'hybrid'
+              ? formData.consultation_fee + (formData.hybrid_fixed_fee || 0)
               : formData.consultation_fee,
             platform_fee_percentage: platformFeePercentage,
             payment_processing_fee_percentage: paymentProcessingFeePercentage,
@@ -390,6 +432,8 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
             payment_structure: formData.payment_structure,
             contingency_percentage: formData.contingency_percentage || null,
             contingency_disclaimer_accepted: formData.contingency_disclaimer_accepted || false,
+            hybrid_fixed_fee: formData.hybrid_fixed_fee || null,
+            hybrid_contingency_percentage: formData.hybrid_contingency_percentage || null,
             generated_content: proposalType === 'generated' ? generatedProposal : null,
             uploaded_pdf_url: proposalType === 'uploaded' ? uploadedFileUrl : null,
             proposal_type: proposalType,
@@ -422,16 +466,18 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
       onProposalSent();
       onOpenChange(false);
       
-      // Reset form
-      setFormData({
-        consultation_fee: 500,
-        remaining_fee: 2000,
-        timeline: "4-6 weeks",
-        strategy: "",
-        payment_structure: 'fixed_fee',
-        contingency_percentage: undefined,
-        contingency_disclaimer_accepted: false
-      });
+        // Reset form
+        setFormData({
+          consultation_fee: 500,
+          remaining_fee: 2000,
+          timeline: "4-6 weeks",
+          strategy: "",
+          payment_structure: 'fixed_fee',
+          contingency_percentage: undefined,
+          contingency_disclaimer_accepted: false,
+          hybrid_fixed_fee: undefined,
+          hybrid_contingency_percentage: undefined
+        });
       setGeneratedProposal("");
       setActiveTab("form");
 
@@ -480,62 +526,92 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="payment_structure">{t('proposal.paymentStructure.label')}</Label>
-                  <Select 
-                    value={formData.payment_structure} 
-                    onValueChange={(value) => handleInputChange('payment_structure', value as 'fixed_fee' | 'contingency')}
-                  >
-                    <SelectTrigger className="bg-background border-input">
-                      <SelectValue placeholder={t('proposal.paymentStructure.label')} />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background border-input z-50">
-                      <SelectItem value="fixed_fee">{t('proposal.paymentStructure.fixedFee')}</SelectItem>
-                      <SelectItem value="contingency">{t('proposal.paymentStructure.contingency')}</SelectItem>
-                    </SelectContent>
-                  </Select>
+                   <Select 
+                     value={formData.payment_structure} 
+                     onValueChange={(value) => handleInputChange('payment_structure', value as 'fixed_fee' | 'contingency' | 'hybrid')}
+                   >
+                     <SelectTrigger className="bg-background border-input">
+                       <SelectValue placeholder={t('proposal.paymentStructure.label')} />
+                     </SelectTrigger>
+                     <SelectContent className="bg-background border-input z-50">
+                       <SelectItem value="fixed_fee">{t('proposal.paymentStructure.fixedFee')}</SelectItem>
+                       <SelectItem value="contingency">{t('proposal.paymentStructure.contingency')}</SelectItem>
+                       <SelectItem value="hybrid">{t('proposal.paymentStructure.hybrid')}</SelectItem>
+                     </SelectContent>
+                   </Select>
                 </div>
-                
-                {formData.payment_structure === 'contingency' && (
-                  <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
-                    <div className="space-y-2">
-                      <Label htmlFor="contingency_percentage">{t('proposal.paymentStructure.contingencyPercentage')}</Label>
-                      <Input
-                        id="contingency_percentage"
-                        type="number"
-                        value={formData.contingency_percentage || ''}
-                        onChange={(e) => handleInputChange('contingency_percentage', Number(e.target.value))}
-                        min="0"
-                        max="100"
-                        step="5"
-                        placeholder="e.g., 30"
-                      />
-                    </div>
-                    
-                    <div className="flex items-start space-x-2 p-3 bg-orange-50 border-l-4 border-orange-400 rounded">
-                      <AlertTriangle className="h-5 w-5 text-orange-500 flex-shrink-0 mt-0.5" />
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="contingency_disclaimer"
-                            checked={formData.contingency_disclaimer_accepted}
-                            onCheckedChange={(checked) => 
-                              handleInputChange('contingency_disclaimer_accepted', checked as boolean)
-                            }
-                          />
-                          <Label 
-                            htmlFor="contingency_disclaimer" 
-                            className="text-sm font-medium cursor-pointer"
-                          >
-                            {t('proposal.paymentStructure.contingencyDisclaimer')}
-                          </Label>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="text-xs text-muted-foreground">
-                      <p>{t('proposal.paymentStructure.contingencyNote')}</p>
-                    </div>
-                  </div>
-                )}
+                 
+                 {(formData.payment_structure === 'contingency' || formData.payment_structure === 'hybrid') && (
+                   <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                     <div className="space-y-2">
+                       <Label htmlFor="contingency_percentage">
+                         {formData.payment_structure === 'hybrid' 
+                           ? t('proposal.paymentStructure.hybridContingencyPercentage')
+                           : t('proposal.paymentStructure.contingencyPercentage')
+                         }
+                       </Label>
+                       <Input
+                         id="contingency_percentage"
+                         type="number"
+                         value={
+                           formData.payment_structure === 'hybrid' 
+                             ? formData.hybrid_contingency_percentage || ''
+                             : formData.contingency_percentage || ''
+                         }
+                         onChange={(e) => {
+                           const field = formData.payment_structure === 'hybrid' 
+                             ? 'hybrid_contingency_percentage' 
+                             : 'contingency_percentage';
+                           handleInputChange(field, Number(e.target.value));
+                         }}
+                         min="0"
+                         max="100"
+                         step="5"
+                         placeholder="e.g., 30"
+                       />
+                     </div>
+                     
+                     <div className="flex items-start space-x-2 p-3 bg-orange-50 border-l-4 border-orange-400 rounded">
+                       <AlertTriangle className="h-5 w-5 text-orange-500 flex-shrink-0 mt-0.5" />
+                       <div className="flex-1">
+                         <div className="flex items-center space-x-2">
+                           <Checkbox
+                             id="contingency_disclaimer"
+                             checked={formData.contingency_disclaimer_accepted}
+                             onCheckedChange={(checked) => 
+                               handleInputChange('contingency_disclaimer_accepted', checked as boolean)
+                             }
+                           />
+                           <Label 
+                             htmlFor="contingency_disclaimer" 
+                             className="text-sm font-medium cursor-pointer"
+                           >
+                             {t('proposal.paymentStructure.contingencyDisclaimer')}
+                           </Label>
+                         </div>
+                       </div>
+                     </div>
+                     
+                     <div className="text-xs text-muted-foreground">
+                       <p>{t('proposal.paymentStructure.contingencyNote')}</p>
+                     </div>
+                   </div>
+                 )}
+                 
+                 {formData.payment_structure === 'hybrid' && (
+                   <div className="space-y-2 p-4 border rounded-lg bg-blue-50">
+                     <Label htmlFor="hybrid_fixed_fee">{t('proposal.paymentStructure.hybridFixedFee')}</Label>
+                     <Input
+                       id="hybrid_fixed_fee"
+                       type="number"
+                       value={formData.hybrid_fixed_fee || ''}
+                       onChange={(e) => handleInputChange('hybrid_fixed_fee', Number(e.target.value))}
+                       min="0"
+                       step="100"
+                       placeholder="e.g., 1500"
+                     />
+                   </div>
+                 )}
               </CardContent>
             </Card>
 
@@ -561,77 +637,122 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
                     />
                   </div>
                   
-                  {formData.payment_structure === 'fixed_fee' && (
-                    <div className={`space-y-2 ${isRTL() ? 'text-right' : ''}`}>
-                      <Label htmlFor="remaining_fee">{t('proposal.feeStructure.remaining')}</Label>
-                      <Input
-                        id="remaining_fee"
-                        type="number"
-                        value={formData.remaining_fee}
-                        onChange={(e) => handleInputChange('remaining_fee', Number(e.target.value))}
-                        min="0"
-                        step="100"
-                        required
-                      />
-                    </div>
-                  )}
-                  
-                  {formData.payment_structure === 'contingency' && (
-                    <div className="space-y-2 p-3 bg-blue-50 border border-blue-200 rounded">
-                      <p className="text-sm text-blue-800 font-medium">Contingency Fee Structure</p>
-                      <p className="text-sm text-blue-700">
-                        Client pays consultation fee upfront + {formData.contingency_percentage || 0}% of case outcome
-                      </p>
-                    </div>
-                  )}
+                   {(formData.payment_structure === 'fixed_fee' || formData.payment_structure === 'hybrid') && (
+                     <div className={`space-y-2 ${isRTL() ? 'text-right' : ''}`}>
+                       <Label htmlFor="remaining_fee">
+                         {formData.payment_structure === 'hybrid' 
+                           ? "Service Fee (Fixed Component) ($)*" 
+                           : t('proposal.feeStructure.remaining')
+                         }
+                       </Label>
+                       <Input
+                         id="remaining_fee"
+                         type="number"
+                         value={formData.payment_structure === 'hybrid' ? formData.hybrid_fixed_fee || '' : formData.remaining_fee}
+                         onChange={(e) => {
+                           const field = formData.payment_structure === 'hybrid' ? 'hybrid_fixed_fee' : 'remaining_fee';
+                           handleInputChange(field, Number(e.target.value));
+                         }}
+                         min="0"
+                         step="100"
+                         required
+                       />
+                     </div>
+                   )}
+                   
+                   {formData.payment_structure === 'contingency' && (
+                     <div className="space-y-2 p-3 bg-blue-50 border border-blue-200 rounded">
+                       <p className="text-sm text-blue-800 font-medium">Contingency Fee Structure</p>
+                       <p className="text-sm text-blue-700">
+                         Client pays consultation fee upfront + {formData.contingency_percentage || 0}% of case outcome
+                       </p>
+                     </div>
+                   )}
+                   
+                   {formData.payment_structure === 'hybrid' && (
+                     <div className="space-y-2 p-3 bg-purple-50 border border-purple-200 rounded">
+                       <p className="text-sm text-purple-800 font-medium">Hybrid Fee Structure</p>
+                       <p className="text-sm text-purple-700">
+                         Client pays consultation fee + fixed service fee upfront + {formData.hybrid_contingency_percentage || 0}% of case outcome
+                       </p>
+                     </div>
+                   )}
                   
                   <Separator />
                   
-                  {/* Additional Fees Section - Only for fixed fee */}
-                  {formData.payment_structure === 'fixed_fee' && (
-                    <>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between text-muted-foreground">
-                          <span>Platform Fee (5%):</span>
-                          <span>${calculatedFees.platformFeeAmount.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between text-muted-foreground">
-                          <span>Payment Processing Fee (3%):</span>
-                          <span>${calculatedFees.paymentProcessingFeeAmount.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between text-muted-foreground">
-                          <span>Client Protection Fee (3%):</span>
-                          <span>${calculatedFees.clientProtectionFeeAmount.toFixed(2)}</span>
-                        </div>
-                      </div>
-                      <Separator />
-                    </>
-                  )}
+                   {/* Additional Fees Section - Only for fixed fee and hybrid */}
+                   {(formData.payment_structure === 'fixed_fee' || formData.payment_structure === 'hybrid') && (
+                     <>
+                       <div className="space-y-2 text-sm">
+                         <div className="flex justify-between text-muted-foreground">
+                           <span>Platform Fee (5%):</span>
+                           <span>${calculatedFees.platformFeeAmount.toFixed(2)}</span>
+                         </div>
+                         <div className="flex justify-between text-muted-foreground">
+                           <span>Payment Processing Fee (3%):</span>
+                           <span>${calculatedFees.paymentProcessingFeeAmount.toFixed(2)}</span>
+                         </div>
+                         <div className="flex justify-between text-muted-foreground">
+                           <span>Client Protection Fee (3%):</span>
+                           <span>${calculatedFees.clientProtectionFeeAmount.toFixed(2)}</span>
+                         </div>
+                       </div>
+                       <Separator />
+                     </>
+                   )}
+                   
+                   {formData.payment_structure === 'contingency' && (
+                     <>
+                       <div className="space-y-2 text-sm">
+                         <div className="flex justify-between text-muted-foreground">
+                           <span>Platform Fee (5%):</span>
+                           <span>${calculatedFees.platformFeeAmount.toFixed(2)}</span>
+                         </div>
+                         <div className="flex justify-between text-muted-foreground">
+                           <span>Payment Processing Fee (3%):</span>
+                           <span>${calculatedFees.paymentProcessingFeeAmount.toFixed(2)}</span>
+                         </div>
+                         <div className="flex justify-between text-muted-foreground">
+                           <span>Client Protection Fee (3%):</span>
+                           <span>${calculatedFees.clientProtectionFeeAmount.toFixed(2)}</span>
+                         </div>
+                       </div>
+                       <Separator />
+                     </>
+                   )}
                   
-                  <div className="flex justify-between items-center font-semibold">
-                    <span>{t('proposal.feeStructure.total')}:</span>
-                    <span>
-                      {formData.payment_structure === 'contingency' 
-                        ? `$${formData.consultation_fee.toLocaleString()} + ${formData.contingency_percentage || 0}% of outcome`
-                        : `$${calculatedFees.finalTotalFee.toLocaleString()}`
-                      }
-                    </span>
-                  </div>
-                  
-                  <div className="text-xs text-muted-foreground mt-2">
-                    {formData.payment_structure === 'fixed_fee' ? (
-                      <>
-                        <p>* Additional fees apply to remaining payment only</p>
-                        <p>* Consultation fee ($${formData.consultation_fee.toLocaleString()}) paid upfront</p>
-                      </>
-                    ) : (
-                      <>
-                        <p>* Contingency percentage applies to settlement/award amount</p>
-                        <p>* Platform commission applies to contingency fees</p>
-                        <p>* Consultation fee ($${formData.consultation_fee.toLocaleString()}) paid upfront</p>
-                      </>
-                    )}
-                  </div>
+                   <div className="flex justify-between items-center font-semibold">
+                     <span>{t('proposal.feeStructure.total')}:</span>
+                     <span>
+                       {formData.payment_structure === 'contingency' 
+                         ? `$${calculatedFees.finalTotalFee.toLocaleString()} + ${formData.contingency_percentage || 0}% of outcome`
+                         : formData.payment_structure === 'hybrid'
+                         ? `$${calculatedFees.finalTotalFee.toLocaleString()} + ${formData.hybrid_contingency_percentage || 0}% of outcome`
+                         : `$${calculatedFees.finalTotalFee.toLocaleString()}`
+                       }
+                     </span>
+                   </div>
+                   
+                   <div className="text-xs text-muted-foreground mt-2">
+                     {formData.payment_structure === 'fixed_fee' ? (
+                       <>
+                         <p>* Platform fees now apply to all amounts processed</p>
+                         <p>* Consultation fee ($${formData.consultation_fee.toLocaleString()}) + remaining fee ($${formData.remaining_fee.toLocaleString()}) paid upfront</p>
+                       </>
+                     ) : formData.payment_structure === 'contingency' ? (
+                       <>
+                         <p>* Contingency percentage applies to settlement/award amount</p>
+                         <p>* Platform fees apply to consultation fee only</p>
+                         <p>* Consultation fee ($${formData.consultation_fee.toLocaleString()}) paid upfront</p>
+                       </>
+                     ) : (
+                       <>
+                         <p>* Hybrid structure: Fixed portion + contingency percentage</p>
+                         <p>* Platform fees apply to consultation + fixed service fee</p>
+                         <p>* Consultation ($${formData.consultation_fee.toLocaleString()}) + service fee ($${formData.hybrid_fixed_fee || 0}) paid upfront</p>
+                       </>
+                     )}
+                   </div>
                 </CardContent>
               </Card>
 

@@ -1014,6 +1014,8 @@ export type Database = {
           created_at: string
           final_total_fee: number | null
           generated_content: string
+          hybrid_contingency_percentage: number | null
+          hybrid_fixed_fee: number | null
           id: string
           lawyer_id: string
           metadata: Json | null
@@ -1046,6 +1048,8 @@ export type Database = {
           created_at?: string
           final_total_fee?: number | null
           generated_content: string
+          hybrid_contingency_percentage?: number | null
+          hybrid_fixed_fee?: number | null
           id?: string
           lawyer_id: string
           metadata?: Json | null
@@ -1078,6 +1082,8 @@ export type Database = {
           created_at?: string
           final_total_fee?: number | null
           generated_content?: string
+          hybrid_contingency_percentage?: number | null
+          hybrid_fixed_fee?: number | null
           id?: string
           lawyer_id?: string
           metadata?: Json | null
