@@ -75,8 +75,10 @@ export const useVisitorTracking = (profile?: { role?: string } | null) => {
       const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
       if (!gl) return 'no-webgl';
       
-      const renderer = gl.getParameter(gl.RENDERER);
-      const vendor = gl.getParameter(gl.VENDOR);
+      // Cast to WebGLRenderingContext to access WebGL-specific properties
+      const webgl = gl as WebGLRenderingContext;
+      const renderer = webgl.getParameter(webgl.RENDERER);
+      const vendor = webgl.getParameter(webgl.VENDOR);
       return btoa((renderer + vendor).slice(0, 30));
     } catch {
       return 'webgl-error';
@@ -189,17 +191,20 @@ export const useVisitorTracking = (profile?: { role?: string } | null) => {
     if (!shouldTrack()) return;
     
     hasTracked.current = false; // Allow tracking for new page
+    lastPageTime.current = Date.now(); // Reset page timer
     trackVisitor({ 
       page_path: path || window.location.pathname 
     });
   };
 
-  // Update session duration
+  // Update session duration with enhanced verification
   const updateSessionDuration = async () => {
     if (!shouldTrack() || !sessionId.current) return;
 
     try {
-      const sessionDuration = Math.floor((Date.now() - sessionStartTime.current) / 1000);
+      const currentTime = Date.now();
+      const sessionDuration = Math.floor((currentTime - sessionStartTime.current) / 1000);
+      const capabilities = detectCapabilities();
       
       await supabase.functions.invoke('track-visitor', {
         body: {
@@ -210,7 +215,17 @@ export const useVisitorTracking = (profile?: { role?: string } | null) => {
           user_role: profile?.role,
           screen_resolution: `${screen.width}x${screen.height}`,
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          language_preferences: navigator.languages ? Array.from(navigator.languages) : [navigator.language]
+          language_preferences: navigator.languages ? Array.from(navigator.languages) : [navigator.language],
+          
+          // Enhanced human verification data
+          mouse_activity: mouseActivity.current,
+          scroll_behavior: scrollActivity.current,
+          touch_events: touchActivity.current,
+          page_views_in_session: pageViews.current,
+          time_on_page: Math.floor((currentTime - lastPageTime.current) / 1000),
+          navigation_flow: [...navigationFlow.current],
+          
+          ...capabilities
         }
       });
     } catch (error) {
