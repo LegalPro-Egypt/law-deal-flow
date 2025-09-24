@@ -16,6 +16,7 @@ export default {
         fontFamily: {
           'futura': ['Space Grotesk', 'sans-serif'],
           'modern': ['Inter', 'sans-serif'],
+          'roboto': ['Roboto', 'sans-serif'],
         },
         colors: {
           border: "hsl(var(--border))",

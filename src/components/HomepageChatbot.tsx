@@ -196,7 +196,7 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
                             : 'bg-muted border border-border'
                         }`}
                       >
-                        <div className="text-sm leading-relaxed">
+                        <div className="text-sm leading-relaxed font-roboto">
                           {formatMessageContent(message.content)}
                         </div>
                         <div className={`text-xs mt-2 ${
