@@ -161,7 +161,31 @@ const TermsOfService = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>9. Communication Recording & Monitoring</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                9. Lawyer Replacement Policy
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="prose prose-gray max-w-none">
+              <ul className="list-disc pl-6 space-y-2">
+                <li>Clients may request a replacement lawyer within the first <strong>15 calendar days</strong> of assignment.</li>
+                <li>A replacement will only be granted where a <strong>valid reason</strong> is provided, such as:
+                  <ul className="list-disc pl-6 mt-2 space-y-1">
+                    <li>Non-responsiveness,</li>
+                    <li>Proven unprofessional conduct,</li>
+                    <li>Conflict of interest.</li>
+                  </ul>
+                </li>
+                <li>If no valid reason is provided, or if the request is made after 15 days, EgyptLegalPro may charge the client a <strong>cancellation fee</strong>.</li>
+                <li>The amount of the cancellation fee will be displayed to the client at the time of request and deducted from amounts already paid.</li>
+                <li>EgyptLegalPro reserves the right to determine whether a reason qualifies as valid.</li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>10. Communication Recording & Monitoring</CardTitle>
             </CardHeader>
             <CardContent className="prose prose-gray max-w-none">
               <p className="font-semibold">
@@ -185,7 +209,7 @@ const TermsOfService = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>10. Data Use & Third-Party Sharing</CardTitle>
+              <CardTitle>11. Data Use & Third-Party Sharing</CardTitle>
             </CardHeader>
             <CardContent className="prose prose-gray max-w-none">
               <ul className="list-disc pl-6 space-y-2">
@@ -199,7 +223,7 @@ const TermsOfService = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>11. Confidentiality</CardTitle>
+              <CardTitle>12. Confidentiality</CardTitle>
             </CardHeader>
             <CardContent className="prose prose-gray max-w-none">
               <ul className="list-disc pl-6 space-y-2">
@@ -211,7 +235,7 @@ const TermsOfService = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>12. Prohibited Activities</CardTitle>
+              <CardTitle>13. Prohibited Activities</CardTitle>
             </CardHeader>
             <CardContent className="prose prose-gray max-w-none">
               <p>Users may not:</p>
@@ -226,7 +250,7 @@ const TermsOfService = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>13. Termination of Accounts</CardTitle>
+              <CardTitle>14. Termination of Accounts</CardTitle>
             </CardHeader>
             <CardContent className="prose prose-gray max-w-none">
               <ul className="list-disc pl-6 space-y-2">
@@ -241,7 +265,7 @@ const TermsOfService = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5" />
-                14. Limitation of Liability
+                15. Limitation of Liability
               </CardTitle>
             </CardHeader>
             <CardContent className="prose prose-gray max-w-none">
@@ -255,7 +279,7 @@ const TermsOfService = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>15. Dispute Resolution & Governing Law</CardTitle>
+              <CardTitle>16. Dispute Resolution & Governing Law</CardTitle>
             </CardHeader>
             <CardContent className="prose prose-gray max-w-none">
               <ul className="list-disc pl-6 space-y-2">
@@ -268,7 +292,7 @@ const TermsOfService = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>16. Intellectual Property</CardTitle>
+              <CardTitle>17. Intellectual Property</CardTitle>
             </CardHeader>
             <CardContent className="prose prose-gray max-w-none">
               <ul className="list-disc pl-6 space-y-2">
@@ -280,7 +304,7 @@ const TermsOfService = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>17. Modifications</CardTitle>
+              <CardTitle>18. Modifications</CardTitle>
             </CardHeader>
             <CardContent className="prose prose-gray max-w-none">
               <ul className="list-disc pl-6 space-y-2">
@@ -292,7 +316,7 @@ const TermsOfService = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>18. Contact Information</CardTitle>
+              <CardTitle>19. Contact Information</CardTitle>
             </CardHeader>
             <CardContent className="prose prose-gray max-w-none">
               <p>For questions regarding these Terms, contact us at:</p>
