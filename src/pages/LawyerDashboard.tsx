@@ -607,7 +607,7 @@ const LawyerDashboard = () => {
             </CardContent>
           </Card>
         ) : currentCase ? (
-          <Card className="border-l-4 border-l-primary bg-gradient-card shadow-card hover:shadow-md transition-shadow">
+          <Card className="bg-gradient-card shadow-card hover:shadow-md transition-shadow">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 flex-wrap">
