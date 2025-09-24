@@ -40,6 +40,7 @@ import DocumentUpload from "@/components/DocumentUpload";
 import CaseSelector from "@/components/CaseSelector";
 import { CommunicationInbox } from "@/components/CommunicationInbox";
 import { NotificationsInbox } from "@/components/NotificationsInbox";
+import { CaseWorkProgress } from "@/components/CaseWorkProgress";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useChatNotifications } from "@/hooks/useChatNotifications";
 import { NotificationBadge } from "@/components/ui/notification-badge";
@@ -513,6 +514,18 @@ const ClientDashboard = () => {
                     </div>
                     <Clock className="h-4 w-4 text-accent" />
                   </div>
+                  
+                  {/* Case Work Progress */}
+                  {(activeCase.status === 'work_in_progress' || activeCase.status === 'pending_client_confirmation' || activeCase.status === 'completed') && (
+                    <div className="mt-4">
+                      <CaseWorkProgress caseData={{
+                        id: activeCase.id,
+                        case_number: activeCase.case_number,
+                        status: activeCase.status,
+                        assigned_lawyer_id: activeCase.assigned_lawyer_id
+                      }} />
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </CollapsibleContent>

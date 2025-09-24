@@ -31,6 +31,7 @@ import { CompleteVerificationForm } from "@/components/CompleteVerificationForm"
 import { CaseDetailsDialog } from "@/components/CaseDetailsDialog";
 import { CreateProposalDialog } from "@/components/CreateProposalDialog";
 import { CommunicationInbox } from "@/components/CommunicationInbox";
+import { CaseWorkProgress } from "@/components/CaseWorkProgress";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -65,6 +66,10 @@ interface Case {
   updated_at: string;
   consultation_paid: boolean;
   payment_status: string;
+  user_id: string;
+  assigned_lawyer_id: string | null;
+  consultation_completed_at?: string;
+  grace_period_expires_at?: string;
   proposal?: any;
 }
 
@@ -697,6 +702,11 @@ const LawyerDashboard = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-0 space-y-4">
+              {/* Case Work Progress */}
+              {(currentCase.status === 'work_in_progress' || currentCase.status === 'pending_client_confirmation' || currentCase.status === 'completed') && (
+                <CaseWorkProgress caseData={currentCase} />
+              )}
+              
               <div className="flex gap-2 flex-wrap">
                 <Button 
                   size="sm" 

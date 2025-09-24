@@ -65,6 +65,9 @@ export function getCaseCompletionStatus(caseItem: any): CaseCompletionStatus {
     'proposal_sent', 
     'proposal_accepted', 
     'proposal_reviewed',
+    'work_in_progress',
+    'pending_client_confirmation',
+    'consultation_completed',
     'completed', 
     'closed'
   ];
@@ -98,6 +101,20 @@ export function getCaseCompletionStatus(caseItem: any): CaseCompletionStatus {
     } else if (status === 'in_progress') {
       label = '✓ Complete - Active Case';
       stepProgress = 'Work in Progress';
+    } else if (status === 'consultation_completed') {
+      label = '✓ Complete - Consultation Done';
+      stepProgress = 'Payment Processing';
+      variant = 'secondary';
+      className = 'bg-blue-100 text-blue-800 hover:bg-blue-100 border-blue-300';
+    } else if (status === 'work_in_progress') {
+      label = '✓ Complete - Case Work Active';
+      stepProgress = 'Legal Work in Progress';
+      className = 'bg-blue-100 text-blue-800 hover:bg-blue-100 border-blue-300';
+    } else if (status === 'pending_client_confirmation') {
+      label = '✓ Complete - Awaiting Confirmation';
+      stepProgress = 'Client Confirmation Required';
+      variant = 'secondary';
+      className = 'bg-orange-100 text-orange-800 hover:bg-orange-100 border-orange-300';
     } else if (status === 'completed') {
       label = '✓ Complete - Case Closed';
       stepProgress = 'Successfully Completed';
@@ -140,6 +157,12 @@ export function formatCaseStatus(status: string, consultationPaid?: boolean, pay
       return 'Proposal Sent';
     case 'proposal_accepted':
       return 'Proposal Accepted';
+    case 'consultation_completed':
+      return 'Consultation Completed';
+    case 'work_in_progress':
+      return 'Work in Progress';
+    case 'pending_client_confirmation':
+      return 'Awaiting Confirmation';
     case 'intake':
       return 'In Progress';
     case 'in_progress':

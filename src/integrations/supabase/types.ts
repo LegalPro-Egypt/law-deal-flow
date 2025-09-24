@@ -211,6 +211,57 @@ export type Database = {
           },
         ]
       }
+      case_work_sessions: {
+        Row: {
+          actual_completion_date: string | null
+          case_id: string
+          client_confirmed_at: string | null
+          client_id: string
+          created_at: string
+          estimated_completion_date: string | null
+          estimated_timeline_days: number | null
+          id: string
+          lawyer_completed_at: string | null
+          lawyer_id: string
+          status: string
+          timeline_accuracy_score: number | null
+          updated_at: string
+          work_started_at: string
+        }
+        Insert: {
+          actual_completion_date?: string | null
+          case_id: string
+          client_confirmed_at?: string | null
+          client_id: string
+          created_at?: string
+          estimated_completion_date?: string | null
+          estimated_timeline_days?: number | null
+          id?: string
+          lawyer_completed_at?: string | null
+          lawyer_id: string
+          status?: string
+          timeline_accuracy_score?: number | null
+          updated_at?: string
+          work_started_at: string
+        }
+        Update: {
+          actual_completion_date?: string | null
+          case_id?: string
+          client_confirmed_at?: string | null
+          client_id?: string
+          created_at?: string
+          estimated_completion_date?: string | null
+          estimated_timeline_days?: number | null
+          id?: string
+          lawyer_completed_at?: string | null
+          lawyer_id?: string
+          status?: string
+          timeline_accuracy_score?: number | null
+          updated_at?: string
+          work_started_at?: string
+        }
+        Relationships: []
+      }
       cases: {
         Row: {
           ai_summary: string | null
