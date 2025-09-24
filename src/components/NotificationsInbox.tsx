@@ -77,138 +77,113 @@ export const NotificationsInbox = () => {
 
   if (loading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            {currentLanguage === 'ar' ? 'العروض القانونية' : 'Legal Proposals'}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
     );
   }
 
   return (
     <>
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            {currentLanguage === 'ar' ? 'العروض القانونية' : 'Legal Proposals'}
-            {unreadCount > 0 && (
-              <Badge variant="destructive" className="ml-auto">
-                {unreadCount}
-              </Badge>
-            )}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {notifications.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              {currentLanguage === 'ar' ? 'لا توجد عروض قانونية بعد' : 'No legal proposals yet'}
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {notifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className={`p-4 rounded-lg border ${
-                    !notification.is_read 
-                      ? 'bg-primary/5 border-primary/20' 
-                      : 'bg-background'
-                  }`}
-                >
-                  <div className="flex items-start gap-3 overflow-hidden">
-                    <div className={`p-2 rounded-full flex-shrink-0 ${
-                      !notification.is_read ? 'bg-primary/20' : 'bg-muted'
-                    }`}>
-                      {getNotificationIcon(notification.type)}
+      {notifications.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground">
+          {currentLanguage === 'ar' ? 'لا توجد عروض قانونية بعد' : 'No legal proposals yet'}
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {notifications.map((notification) => (
+            <div
+              key={notification.id}
+              className={`p-4 rounded-lg border ${
+                !notification.is_read 
+                  ? 'bg-primary/5 border-primary/20' 
+                  : 'bg-background'
+              }`}
+            >
+              <div className="flex items-start gap-3 overflow-hidden">
+                <div className={`p-2 rounded-full flex-shrink-0 ${
+                  !notification.is_read ? 'bg-primary/20' : 'bg-muted'
+                }`}>
+                  {getNotificationIcon(notification.type)}
+                </div>
+                
+                <div className="flex-1 min-w-0 overflow-hidden">
+                  <div className="mb-1">
+                    <h4 className="font-medium truncate">{notification.title}</h4>
+                  </div>
+                  
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {notification.message}
+                  </p>
+                  
+                  <div className="space-y-3 mt-3">
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Clock className="h-3 w-3" />
+                      {new Date(notification.created_at).toLocaleDateString()}
                     </div>
                     
-                    <div className="flex-1 min-w-0 overflow-hidden">
-                      <div className="mb-1">
-                        <h4 className="font-medium truncate">{notification.title}</h4>
-                      </div>
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                      {notification.action_required && notification.type === 'proposal_received' && (
+                        <Button
+                          size="sm"
+                          className="w-full sm:w-auto"
+                          onClick={() => {
+                            const proposalId = (notification as any).metadata?.proposal_id;
+                            if (proposalId) {
+                              handleViewProposal(proposalId);
+                              markAsRead(notification.id);
+                            }
+                          }}
+                        >
+                          {currentLanguage === 'ar' ? 'مراجعة العرض' : 'View Proposal'}
+                        </Button>
+                      )}
                       
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {notification.message}
-                      </p>
-                      
-                      <div className="space-y-3 mt-3">
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Clock className="h-3 w-3" />
-                          {new Date(notification.created_at).toLocaleDateString()}
-                        </div>
+                      {(() => {
+                        const proposalId = (notification as any).metadata?.proposal_id;
+                        const proposalWithCase = proposalsWithCases.find(p => p.id === proposalId);
+                        if (!proposalWithCase || !needsPayment(proposalWithCase)) return null;
                         
-                        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                          {notification.action_required && notification.type === 'proposal_received' && (
+                        const isGracePeriodPayment = proposalWithCase.case?.status === 'consultation_completed';
+                        const remainingFee = proposalWithCase.remaining_fee || 0;
+                        const additionalFees = proposalWithCase.total_additional_fees || (remainingFee * 0.11);
+                        const amount = isGracePeriodPayment ? 
+                          remainingFee + additionalFees : 
+                          proposalWithCase.consultation_fee;
+                        const paymentLabel = isGracePeriodPayment ? 'Complete Final Payment' : 'Complete Payment';
+                        const gracePeriodExpires = proposalWithCase.case?.grace_period_expires_at ? 
+                          new Date(proposalWithCase.case.grace_period_expires_at) : null;
+                        const timeRemaining = gracePeriodExpires ? 
+                          Math.max(0, Math.ceil((gracePeriodExpires.getTime() - new Date().getTime()) / (1000 * 60 * 60))) : null;
+                        
+                        return (
+                          <div className="w-full sm:w-auto space-y-2">
                             <Button
                               size="sm"
-                              className="w-full sm:w-auto"
-                              onClick={() => {
-                                const proposalId = (notification as any).metadata?.proposal_id;
-                                if (proposalId) {
-                                  handleViewProposal(proposalId);
-                                  markAsRead(notification.id);
-                                }
-                              }}
+                              variant="default"
+                              className={`w-full ${isGracePeriodPayment ? 'bg-warning hover:bg-warning/90 text-warning-foreground' : 'bg-primary hover:bg-primary/90'}`}
+                              onClick={() => handleCompletePayment(proposalId)}
                             >
-                              {currentLanguage === 'ar' ? 'مراجعة العرض' : 'View Proposal'}
+                              <CreditCard className="h-4 w-4 mr-2" />
+                              {currentLanguage === 'ar' ? 'إكمال الدفع' : paymentLabel}
+                              {amount && ` ($${amount})`}
                             </Button>
-                          )}
-                          
-                          {(() => {
-                            const proposalId = (notification as any).metadata?.proposal_id;
-                            const proposalWithCase = proposalsWithCases.find(p => p.id === proposalId);
-                            if (!proposalWithCase || !needsPayment(proposalWithCase)) return null;
-                            
-                            const isGracePeriodPayment = proposalWithCase.case?.status === 'consultation_completed';
-                            const remainingFee = proposalWithCase.remaining_fee || 0;
-                            const additionalFees = proposalWithCase.total_additional_fees || (remainingFee * 0.11);
-                            const amount = isGracePeriodPayment ? 
-                              remainingFee + additionalFees : 
-                              proposalWithCase.consultation_fee;
-                            const paymentLabel = isGracePeriodPayment ? 'Complete Final Payment' : 'Complete Payment';
-                            const gracePeriodExpires = proposalWithCase.case?.grace_period_expires_at ? 
-                              new Date(proposalWithCase.case.grace_period_expires_at) : null;
-                            const timeRemaining = gracePeriodExpires ? 
-                              Math.max(0, Math.ceil((gracePeriodExpires.getTime() - new Date().getTime()) / (1000 * 60 * 60))) : null;
-                            
-                            return (
-                              <div className="w-full sm:w-auto space-y-2">
-                                <Button
-                                  size="sm"
-                                  variant="default"
-                                  className={`w-full ${isGracePeriodPayment ? 'bg-warning hover:bg-warning/90 text-warning-foreground' : 'bg-primary hover:bg-primary/90'}`}
-                                  onClick={() => handleCompletePayment(proposalId)}
-                                >
-                                  <CreditCard className="h-4 w-4 mr-2" />
-                                  {currentLanguage === 'ar' ? 'إكمال الدفع' : paymentLabel}
-                                  {amount && ` ($${amount})`}
-                                </Button>
-                                {isGracePeriodPayment && timeRemaining !== null && (
-                                  <div className="text-xs text-center text-warning">
-                                    {timeRemaining > 0 ? `${timeRemaining}h remaining` : 'Grace period expired'}
-                                  </div>
-                                )}
+                            {isGracePeriodPayment && timeRemaining !== null && (
+                              <div className="text-xs text-center text-warning">
+                                {timeRemaining > 0 ? `${timeRemaining}h remaining` : 'Grace period expired'}
                               </div>
-                            );
-                          })()}
-                        </div>
-                      </div>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>
-              ))}
+              </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          ))}
+        </div>
+      )}
 
       {selectedProposal && (
         <ProposalReviewDialog

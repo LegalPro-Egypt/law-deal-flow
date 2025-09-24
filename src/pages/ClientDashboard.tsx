@@ -667,7 +667,7 @@ const ClientDashboard = () => {
           <CardHeader>
             <CardTitle className="flex items-center">
               <Mail className="h-5 w-5 mr-2" />
-              Proposals & Communications
+              Proposals
               {unreadCount > 0 && (
                 <Badge variant="destructive" className="ml-2">
                   {unreadCount}
