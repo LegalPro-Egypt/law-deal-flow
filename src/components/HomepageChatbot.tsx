@@ -122,8 +122,17 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
 
   // Always visible professional chat interface
   return (
-    <section className={`py-16 bg-muted/30 ${className} ${isRTL() ? 'rtl' : 'ltr'}`}>
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <section className={`relative py-16 overflow-hidden ${className} ${isRTL() ? 'rtl' : 'ltr'}`}>
+      {/* Glassmorphism Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-accent/40 via-accent/20 to-accent/10" />
+      <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 via-transparent to-primary/10" />
+      <div className="absolute inset-0 backdrop-blur-3xl" />
+      
+      {/* Decorative Elements */}
+      <div className="absolute top-20 left-10 w-72 h-72 bg-accent/30 rounded-full blur-3xl" />
+      <div className="absolute bottom-20 right-10 w-96 h-96 bg-primary/20 rounded-full blur-3xl" />
+      
+      <div className="relative container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           {/* Professional Header */}
           <div className="text-center mb-8">
@@ -137,7 +146,7 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
           </div>
 
           {/* Chat Interface Card */}
-          <Card className="shadow-lg border-0 overflow-hidden bg-background">
+          <Card className="shadow-2xl border border-white/20 overflow-hidden bg-background/80 backdrop-blur-xl">
             {/* Professional Header */}
             <CardHeader className="bg-gradient-primary text-white">
               <div className={`flex items-center justify-between ${isRTL() ? 'flex-row-reverse' : ''}`}>
