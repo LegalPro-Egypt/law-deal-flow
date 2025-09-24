@@ -10,7 +10,7 @@ import { ProBonoSection } from "@/components/ProBonoSection";
 import { PromotionalPopup } from "@/components/PromotionalPopup";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useLanguage } from "@/hooks/useLanguage";
-import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
+
 
 const Landing = () => {
   const { isAuthenticated, role, loading } = useAuth();
@@ -19,14 +19,6 @@ const Landing = () => {
   const [searchParams] = useSearchParams();
   const [showPromoPopup, setShowPromoPopup] = useState(false);
   
-  // Intersection observer for hero animations
-  const heroObserver = useIntersectionObserver({
-    threshold: 0.1,
-    triggerOnce: true,
-    rootMargin: '50px'
-  });
-  const heroRef = heroObserver.elementRef;
-  const heroVisible = heroObserver.isVisible;
 
   useEffect(() => {
     // Check if user explicitly wants to view homepage (bypass auto-redirect)
@@ -122,8 +114,8 @@ const Landing = () => {
             </div>
             
             {/* Premium Trust Signals */}
-            <div className="trust-signals-container" ref={heroRef}>
-              <div className={`trust-signal-card transition-all duration-300 ${heroVisible ? 'animate-slide-in-left opacity-100' : 'opacity-0 -translate-x-20'}`}>
+            <div className="trust-signals-container">
+              <div className="trust-signal-card animate-slide-in-left">
                 <div className="trust-signal-icon verified">
                   <Shield className="h-6 w-6 text-white" />
                 </div>
@@ -133,7 +125,7 @@ const Landing = () => {
                 </div>
               </div>
               
-              <div className={`trust-signal-card transition-all duration-300 ${heroVisible ? 'animate-slide-in-bottom opacity-100' : 'opacity-0 translate-y-10'}`}>
+              <div className="trust-signal-card animate-slide-in-bottom">
                 <div className="trust-signal-icon ai-powered">
                   <Brain className="h-6 w-6 text-white" />
                 </div>
@@ -143,7 +135,7 @@ const Landing = () => {
                 </div>
               </div>
               
-              <div className={`trust-signal-card transition-all duration-300 ${heroVisible ? 'animate-slide-in-right opacity-100' : 'opacity-0 translate-x-20'}`}>
+              <div className="trust-signal-card animate-slide-in-right">
                 <div className="trust-signal-icon secure">
                   <Lock className="h-6 w-6 text-white" />
                 </div>
