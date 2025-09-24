@@ -18,10 +18,14 @@ const Landing = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [showPromoPopup, setShowPromoPopup] = useState(false);
-  const { elementRef: heroRef, isVisible: heroVisible } = useIntersectionObserver({
+  
+  // Intersection observer for hero animations
+  const heroObserver = useIntersectionObserver({
     threshold: 0.3,
     triggerOnce: true
   });
+  const heroRef = heroObserver.elementRef;
+  const heroVisible = heroObserver.isVisible;
 
   useEffect(() => {
     // Check if user explicitly wants to view homepage (bypass auto-redirect)
