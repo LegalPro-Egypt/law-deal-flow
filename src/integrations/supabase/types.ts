@@ -14,6 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      additional_fee_requests: {
+        Row: {
+          additional_fee_amount: number
+          case_id: string
+          client_id: string
+          client_responded_at: string | null
+          client_response: string | null
+          created_at: string
+          id: string
+          justification: string
+          lawyer_id: string
+          metadata: Json | null
+          original_proposal_id: string
+          payment_due_date: string | null
+          request_description: string
+          request_title: string
+          reviewed_at: string | null
+          status: string
+          timeline_extension_days: number | null
+          updated_at: string
+        }
+        Insert: {
+          additional_fee_amount: number
+          case_id: string
+          client_id: string
+          client_responded_at?: string | null
+          client_response?: string | null
+          created_at?: string
+          id?: string
+          justification: string
+          lawyer_id: string
+          metadata?: Json | null
+          original_proposal_id: string
+          payment_due_date?: string | null
+          request_description: string
+          request_title: string
+          reviewed_at?: string | null
+          status?: string
+          timeline_extension_days?: number | null
+          updated_at?: string
+        }
+        Update: {
+          additional_fee_amount?: number
+          case_id?: string
+          client_id?: string
+          client_responded_at?: string | null
+          client_response?: string | null
+          created_at?: string
+          id?: string
+          justification?: string
+          lawyer_id?: string
+          metadata?: Json | null
+          original_proposal_id?: string
+          payment_due_date?: string | null
+          request_description?: string
+          request_title?: string
+          reviewed_at?: string | null
+          status?: string
+          timeline_extension_days?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       anonymous_qa_sessions: {
         Row: {
           actual_message_count: number | null
