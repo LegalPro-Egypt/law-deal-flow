@@ -334,7 +334,7 @@ const ClientDashboard = () => {
           </div>
         </header>
         <div className="container mx-auto px-4 py-8 text-center">
-          <Card className="max-w-md mx-auto">
+          <Card className="max-w-md mx-auto drop-shadow-lg">
             <CardContent className="p-8">
               <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h2 className="text-xl font-semibold mb-2">No Active Cases</h2>
@@ -451,7 +451,7 @@ const ClientDashboard = () => {
       <div className="container mx-auto px-4 py-8 max-w-6xl space-y-4">
         {/* Case Timeline Card */}
         <Collapsible open={!collapsedCards.timeline} onOpenChange={() => toggleCard('timeline')}>
-          <Card className="bg-gradient-card shadow-card border-2 border-primary/20 hover:border-primary/40 transition-colors">
+          <Card className="bg-gradient-card shadow-card border-2 border-primary/20 hover:border-primary/40 transition-colors drop-shadow-lg">
             <CollapsibleTrigger asChild>
               <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
                 <div className="flex items-center justify-between">
@@ -522,7 +522,7 @@ const ClientDashboard = () => {
         {/* Case Setup Progress Card */}
         {!stepCompletion.allComplete && (
           <Collapsible open={!collapsedCards.progress} onOpenChange={() => toggleCard('progress')}>
-            <Card className="bg-gradient-card shadow-card">
+            <Card className="bg-gradient-card shadow-card drop-shadow-lg">
               <CollapsibleTrigger asChild>
                 <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
                   <div className="flex items-center justify-between">
@@ -603,7 +603,7 @@ const ClientDashboard = () => {
         )}
 
         {/* Proposals Card */}
-        <Card className="bg-gradient-card shadow-card border-2 border-accent/20 hover:border-accent/40 transition-colors" id="inbox-section">
+        <Card className="bg-gradient-card shadow-card border-2 border-accent/20 hover:border-accent/40 transition-colors drop-shadow-lg" id="inbox-section">
           <CardHeader>
             <CardTitle className="flex items-center">
               <Mail className="h-5 w-5 mr-2" />
@@ -625,7 +625,7 @@ const ClientDashboard = () => {
 
         {/* Communication Center */}
         <Collapsible open={!collapsedCards.communication} onOpenChange={() => toggleCard('communication')}>
-          <Card className="bg-gradient-card shadow-card border-2 border-success/20 hover:border-success/40 transition-colors">
+          <Card className="bg-gradient-card shadow-card border-2 border-success/20 hover:border-success/40 transition-colors drop-shadow-lg">
             <CollapsibleTrigger asChild>
               <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
                 <div className="flex items-center justify-between">
@@ -693,7 +693,7 @@ const ClientDashboard = () => {
 
         {/* Case Documents Card */}
         <Collapsible open={!collapsedCards.documents} onOpenChange={() => toggleCard('documents')}>
-          <Card className="bg-gradient-card shadow-card border-2 border-warning/20 hover:border-warning/40 transition-colors">
+          <Card className="bg-gradient-card shadow-card border-2 border-warning/20 hover:border-warning/40 transition-colors drop-shadow-lg">
             <CollapsibleTrigger asChild>
               <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
                 <div className="flex items-center justify-between">
