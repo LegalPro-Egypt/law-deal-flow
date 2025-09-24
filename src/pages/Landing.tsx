@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Scale, Shield, MessageSquare, Users, Clock, Check, Brain, Lock, ShieldCheck } from "lucide-react";
+import { Scale, Shield, MessageSquare, Users, Clock, Check, Brain, Lock, ShieldCheck, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { HomepageChatbot } from "@/components/HomepageChatbot";
@@ -122,7 +122,7 @@ const Landing = () => {
             <div className="trust-signals-container">
               <div className="trust-signal-card animate-slide-in-left opacity-0">
                 <div className="trust-signal-icon verified">
-                  <Shield className="h-6 w-6 text-white" />
+                  <CheckCircle className="h-6 w-6 text-white" />
                 </div>
                 <div className="trust-signal-content">
                   <h3>{t('landing.hero.trustSignals.verifiedLawyers.title')}</h3>
