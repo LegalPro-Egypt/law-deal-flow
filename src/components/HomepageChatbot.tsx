@@ -139,8 +139,10 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
           {/* Chat Interface Card */}
           <Card className="shadow-lg border-0 overflow-hidden bg-background">
             {/* Professional Header */}
-            <CardHeader className="bg-gradient-primary text-white">
-              <div className={`flex items-center justify-between ${isRTL() ? 'flex-row-reverse' : ''}`}>
+            <CardHeader className="bg-primary/20 backdrop-blur-xl text-white border-b border-white/20 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/30 to-primary/10"></div>
+              <div className="relative z-10">
+                <div className={`flex items-center justify-between ${isRTL() ? 'flex-row-reverse' : ''}`}>
                 <div className={`flex items-center gap-4 ${isRTL() ? 'flex-row-reverse' : ''}`}>
                   <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
                     <Scale className="h-6 w-6 text-white" />
@@ -162,6 +164,7 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
                     <option value="de">🇩🇪 Deutsch</option>
                   </select>
                 </div>
+               </div>
               </div>
             </CardHeader>
 
