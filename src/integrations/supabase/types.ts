@@ -1019,6 +1019,7 @@ export type Database = {
           payment_processing_fee_percentage: number | null
           platform_fee_amount: number | null
           platform_fee_percentage: number | null
+          proposal_type: string | null
           remaining_fee: number | null
           response_at: string | null
           status: string
@@ -1027,6 +1028,7 @@ export type Database = {
           total_additional_fees: number | null
           total_fee: number | null
           updated_at: string
+          uploaded_pdf_url: string | null
           viewed_at: string | null
         }
         Insert: {
@@ -1046,6 +1048,7 @@ export type Database = {
           payment_processing_fee_percentage?: number | null
           platform_fee_amount?: number | null
           platform_fee_percentage?: number | null
+          proposal_type?: string | null
           remaining_fee?: number | null
           response_at?: string | null
           status?: string
@@ -1054,6 +1057,7 @@ export type Database = {
           total_additional_fees?: number | null
           total_fee?: number | null
           updated_at?: string
+          uploaded_pdf_url?: string | null
           viewed_at?: string | null
         }
         Update: {
@@ -1073,6 +1077,7 @@ export type Database = {
           payment_processing_fee_percentage?: number | null
           platform_fee_amount?: number | null
           platform_fee_percentage?: number | null
+          proposal_type?: string | null
           remaining_fee?: number | null
           response_at?: string | null
           status?: string
@@ -1081,6 +1086,7 @@ export type Database = {
           total_additional_fees?: number | null
           total_fee?: number | null
           updated_at?: string
+          uploaded_pdf_url?: string | null
           viewed_at?: string | null
         }
         Relationships: [
