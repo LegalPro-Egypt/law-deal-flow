@@ -122,8 +122,12 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
 
   // Always visible professional chat interface
   return (
-    <section className={`py-16 bg-muted/30 ${className} ${isRTL() ? 'rtl' : 'ltr'}`}>
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <section className={`py-16 relative overflow-hidden ${className} ${isRTL() ? 'rtl' : 'ltr'}`}>
+      {/* Glassmorphism Background with Reversed Colors */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background/10 to-primary/30 backdrop-blur-3xl"></div>
+      <div className="absolute inset-0 bg-gradient-to-t from-accent/40 via-transparent to-accent/20"></div>
+      
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="max-w-4xl mx-auto">
           {/* Professional Header */}
           <div className="text-center mb-8">
