@@ -71,8 +71,8 @@ export const CommunicationInbox: React.FC<CommunicationInboxProps> = ({
   // Determine if communication should be enabled
   const shouldEnableCommunication = () => {
     if (userRole === 'lawyer') {
-      // Lawyers can communicate once proposal is accepted
-      return ['proposal_accepted', 'consultation_paid', 'active', 'in_progress', 'completed'].includes(caseStatus);
+      // Lawyers can communicate only after client pays for consultation
+      return consultationPaid && paymentStatus === 'paid';
     } else {
       // Clients can communicate once they've paid for consultation
       return consultationPaid && paymentStatus === 'paid';
