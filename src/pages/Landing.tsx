@@ -122,7 +122,7 @@ const Landing = () => {
             
             {/* Premium Trust Signals */}
             <div className="trust-signals-container" ref={heroRef}>
-              <div className={`trust-signal-card ${heroVisible ? 'animate-slide-in-left' : 'opacity-0 -translate-x-20'}`}>
+              <div className={`trust-signal-card transition-all duration-800 ${heroVisible ? 'animate-slide-in-left' : ''}`}>
                 <div className="trust-signal-icon verified">
                   <Shield className="h-6 w-6 text-white" />
                 </div>
@@ -132,7 +132,7 @@ const Landing = () => {
                 </div>
               </div>
               
-              <div className={`trust-signal-card ${heroVisible ? 'animate-slide-in-bottom' : 'opacity-0 translate-y-10'}`}>
+              <div className={`trust-signal-card transition-all duration-800 ${heroVisible ? 'animate-slide-in-bottom' : ''}`}>
                 <div className="trust-signal-icon ai-powered">
                   <Brain className="h-6 w-6 text-white" />
                 </div>
@@ -142,7 +142,7 @@ const Landing = () => {
                 </div>
               </div>
               
-              <div className={`trust-signal-card ${heroVisible ? 'animate-slide-in-right' : 'opacity-0 translate-x-20'}`}>
+              <div className={`trust-signal-card transition-all duration-800 ${heroVisible ? 'animate-slide-in-right' : ''}`}>
                 <div className="trust-signal-icon secure">
                   <Lock className="h-6 w-6 text-white" />
                 </div>
