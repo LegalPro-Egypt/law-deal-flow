@@ -1640,6 +1640,10 @@ export type Database = {
         Args: { conversation_session_id: string; new_user_id: string }
         Returns: undefined
       }
+      reclassify_visitor_bots: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       verification_status: "pending_basic" | "pending_complete" | "verified"
