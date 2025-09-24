@@ -180,17 +180,17 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
                     {/* Benefits bullet points */}
                     <div className="bg-gray-50 rounded-lg p-4 text-left">
                       <ul className="space-y-2 text-sm font-modern leading-relaxed">
-                        <li className="flex items-center text-green-600">
+                        <li className="flex items-center text-gray-700">
                           <CheckCircle className="w-4 h-4 text-green-500 mr-3 flex-shrink-0 drop-shadow-sm" />
-                          <span className="text-green-700 drop-shadow-sm">Early access to LegalPro</span>
+                          <span className="text-gray-700">Early access to LegalPro</span>
                         </li>
-                        <li className="flex items-center text-green-600">
+                        <li className="flex items-center text-gray-700">
                           <CheckCircle className="w-4 h-4 text-green-500 mr-3 flex-shrink-0 drop-shadow-sm" />
-                          <span className="text-green-700 drop-shadow-sm">Exclusive launch updates</span>
+                          <span className="text-gray-700">Exclusive launch updates</span>
                         </li>
-                        <li className="flex items-center text-green-600">
+                        <li className="flex items-center text-gray-700">
                           <CheckCircle className="w-4 h-4 text-green-500 mr-3 flex-shrink-0 drop-shadow-sm" />
-                          <span className="text-green-700 drop-shadow-sm">Chance to win up to 50,000 EGP off your first case</span>
+                          <span className="text-gray-700">Chance to win up to 50,000 EGP off your first case</span>
                         </li>
                       </ul>
                     </div>
