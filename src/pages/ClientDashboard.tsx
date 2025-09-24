@@ -362,7 +362,7 @@ const ClientDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen neomorphism-background">
       {/* Header */}
       <header className="backdrop-blur-md bg-background/40 border-b border-border/30 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
@@ -451,7 +451,7 @@ const ClientDashboard = () => {
       <div className="container mx-auto px-4 py-8 max-w-6xl space-y-4">
         {/* Case Timeline Card */}
         <Collapsible open={!collapsedCards.timeline} onOpenChange={() => toggleCard('timeline')}>
-          <Card className="bg-gradient-card shadow-card border-2 border-primary/20 hover:border-primary/40 transition-colors">
+          <Card className="neomorphism-card border-0 hover:shadow-lg transition-all duration-300">
             <CollapsibleTrigger asChild>
               <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
                 <div className="flex items-center justify-between">
@@ -522,7 +522,7 @@ const ClientDashboard = () => {
         {/* Case Setup Progress Card */}
         {!stepCompletion.allComplete && (
           <Collapsible open={!collapsedCards.progress} onOpenChange={() => toggleCard('progress')}>
-            <Card className="bg-gradient-card shadow-card">
+            <Card className="neomorphism-card border-0 hover:shadow-lg transition-all duration-300">
               <CollapsibleTrigger asChild>
                 <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
                   <div className="flex items-center justify-between">
@@ -603,7 +603,7 @@ const ClientDashboard = () => {
         )}
 
         {/* Proposals Card */}
-        <Card className="bg-gradient-card shadow-card border-2 border-accent/20 hover:border-accent/40 transition-colors" id="inbox-section">
+        <Card className="neomorphism-card border-0 hover:shadow-lg transition-all duration-300" id="inbox-section">
           <CardHeader>
             <CardTitle className="flex items-center">
               <Mail className="h-5 w-5 mr-2" />
@@ -625,7 +625,7 @@ const ClientDashboard = () => {
 
         {/* Communication Center */}
         <Collapsible open={!collapsedCards.communication} onOpenChange={() => toggleCard('communication')}>
-          <Card className="bg-gradient-card shadow-card border-2 border-success/20 hover:border-success/40 transition-colors">
+          <Card className="neomorphism-card border-0 hover:shadow-lg transition-all duration-300">
             <CollapsibleTrigger asChild>
               <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
                 <div className="flex items-center justify-between">
@@ -693,7 +693,7 @@ const ClientDashboard = () => {
 
         {/* Case Documents Card */}
         <Collapsible open={!collapsedCards.documents} onOpenChange={() => toggleCard('documents')}>
-          <Card className="bg-gradient-card shadow-card border-2 border-warning/20 hover:border-warning/40 transition-colors">
+          <Card className="neomorphism-card border-0 hover:shadow-lg transition-all duration-300">
             <CollapsibleTrigger asChild>
               <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
                 <div className="flex items-center justify-between">
