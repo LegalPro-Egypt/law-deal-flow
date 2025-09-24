@@ -25,7 +25,8 @@ import {
   ChevronDown,
   ChevronRight,
   UserCircle,
-  Bot
+  Bot,
+  HelpCircle
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import jsPDF from 'jspdf';
@@ -371,7 +372,7 @@ const ClientDashboard = () => {
               <Scale className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
               <div className="flex items-center space-x-1 sm:space-x-2">
                 <h1 className="text-lg sm:text-xl font-bold text-foreground hidden xs:block sm:block">
-                  LegalConnect
+                  LegalPro
                 </h1>
                 <Badge variant="secondary" className="text-xs hidden sm:block">
                   Client Portal
@@ -420,6 +421,11 @@ const ClientDashboard = () => {
                   <DropdownMenuItem onClick={() => setIntakeConversationOpen(true)}>
                     <Bot className="h-4 w-4 mr-2" />
                     AI Intake Conversation
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => window.open('mailto:support@legalpro.com?subject=Support Request - Case ' + activeCase.case_number, '_blank')}>
+                    <HelpCircle className="h-4 w-4 mr-2" />
+                    Contact Support
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleDownloadCaseSummary}>
