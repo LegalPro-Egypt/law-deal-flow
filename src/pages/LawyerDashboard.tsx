@@ -23,13 +23,21 @@ import {
   ShieldCheck,
   AlertTriangle,
   Settings,
-  PhoneCall
+  PhoneCall,
+  Menu
 } from "lucide-react";
 import { LawyerQAChatbot } from "@/components/LawyerQAChatbot";
 import { CompleteVerificationForm } from "@/components/CompleteVerificationForm";
 import { CaseDetailsDialog } from "@/components/CaseDetailsDialog";
 import { CreateProposalDialog } from "@/components/CreateProposalDialog";
 import { CommunicationInbox } from "@/components/CommunicationInbox";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { getClientNameForRole } from "@/utils/clientPrivacy";
 import { useLanguage } from "@/hooks/useLanguage";
 import { LanguageToggle } from "@/components/LanguageToggle";
@@ -459,14 +467,32 @@ const LawyerDashboard = () => {
                   </Select>
                 </div>
               )}
-              <LanguageToggle />
               <span className={`text-sm text-muted-foreground hidden sm:block ${isRTL() ? 'text-right' : ''}`}>
                 {t('dashboard.welcome', { name: profile?.first_name || 'Lawyer' })}
               </span>
-              <Button variant="ghost" size="sm" onClick={handleSignOut} aria-label={t('dashboard.signOut')}>
-                <LogOut className={`h-4 w-4 ${isRTL() ? 'ml-2' : 'mr-2'}`} />
-                <span>{t('dashboard.signOut')}</span>
-              </Button>
+              
+              {/* Header Menu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
+                    <Menu className="h-5 w-5" />
+                    <span className="sr-only">Open menu</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 bg-background border shadow-lg z-50">
+                  <DropdownMenuItem asChild>
+                    <div className="flex items-center justify-between py-2">
+                      <span className="text-sm font-medium">Language</span>
+                      <LanguageToggle />
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
+                    <LogOut className={`h-4 w-4 ${isRTL() ? 'ml-2' : 'mr-2'}`} />
+                    <span>{t('dashboard.signOut')}</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
