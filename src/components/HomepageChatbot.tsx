@@ -133,17 +133,21 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
           <div className={`text-center mb-8 transition-all duration-1000 ${
             isVisible ? 'animate-slide-in-bottom opacity-100' : 'opacity-0 translate-y-10'
           }`}>
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+            <h2 className={`text-3xl sm:text-4xl font-bold mb-4 transition-all duration-1000 ${
+              isVisible ? 'animate-slide-in-bottom opacity-100' : 'opacity-0 translate-y-10'
+            }`}>
               {t('landing.chatbot.title')}{" "}
               <span className="text-primary">{t('landing.chatbot.titleAccent')}</span>
             </h2>
-            <p className="text-base sm:text-xl text-muted-foreground max-w-3xl mx-auto">
+            <p className={`text-base sm:text-xl text-muted-foreground max-w-3xl mx-auto transition-all duration-1000 delay-300 ${
+              isVisible ? 'animate-slide-in-bottom opacity-100' : 'opacity-0 translate-y-10'
+            }`}>
               {t('landing.chatbot.subtitle')}
             </p>
           </div>
 
           {/* Chat Interface Card */}
-          <Card className={`shadow-lg border-0 overflow-hidden bg-background transition-all duration-1000 delay-300 ${
+          <Card className={`shadow-lg border-0 overflow-hidden bg-background transition-all duration-1000 delay-700 ${
             isVisible ? 'animate-slide-up-fade opacity-100' : 'opacity-0 translate-y-10'
           }`}>
             {/* Professional Header */}
