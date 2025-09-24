@@ -190,7 +190,7 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
                         </li>
                         <li className="flex items-start text-gray-700">
                           <CheckCircle className="w-4 h-4 text-neomorphism-primary mr-3 flex-shrink-0 mt-0.5" />
-                          Chance to win up to <span className="font-bold bg-gradient-to-r from-neomorphism-primary to-neomorphism-accent bg-clip-text text-transparent">50,000 EGP</span> off your first case
+                          Chance to win up to 50,000 EGP off your first case
                         </li>
                       </ul>
                     </div>
