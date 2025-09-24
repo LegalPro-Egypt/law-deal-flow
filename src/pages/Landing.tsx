@@ -122,7 +122,7 @@ const Landing = () => {
             <div className="trust-signals-container">
               <div className="trust-signal-card animate-slide-in-left opacity-0">
                 <div className="trust-signal-icon verified">
-                  <Shield className="h-6 w-6 text-primary" />
+                  <Shield className="h-6 w-6 text-white" />
                 </div>
                 <div className="trust-signal-content">
                   <h3>{t('landing.hero.trustSignals.verifiedLawyers.title')}</h3>
@@ -132,7 +132,7 @@ const Landing = () => {
               
               <div className="trust-signal-card animate-slide-in-bottom opacity-0">
                 <div className="trust-signal-icon ai-powered">
-                  <Brain className="h-6 w-6 text-primary" />
+                  <Brain className="h-6 w-6 text-white" />
                 </div>
                 <div className="trust-signal-content">
                   <h3>{t('landing.hero.trustSignals.aiIntake.title')}</h3>
@@ -142,7 +142,7 @@ const Landing = () => {
               
               <div className="trust-signal-card animate-slide-in-right opacity-0">
                 <div className="trust-signal-icon secure">
-                  <Lock className="h-6 w-6 text-primary" />
+                  <Lock className="h-6 w-6 text-white" />
                 </div>
                 <div className="trust-signal-content">
                   <h3>{t('landing.hero.trustSignals.securePayments.title')}</h3>
