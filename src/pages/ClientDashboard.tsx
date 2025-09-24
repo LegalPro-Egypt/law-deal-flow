@@ -461,11 +461,12 @@ const ClientDashboard = () => {
         <Collapsible open={!collapsedCards.timeline} onOpenChange={() => toggleCard('timeline')}>
           <Card 
             ref={timelineCard.elementRef}
-            className={`bg-gradient-card shadow-card border-2 border-primary/20 hover:border-primary/40 transition-all duration-300 ${
+            className={`bg-gradient-card shadow-card border-2 border-primary/20 hover:border-primary/40 transition-all duration-800 ${
               timelineCard.isVisible 
                 ? 'animate-card-slide-up' 
-                : 'opacity-0 translate-y-10'
+                : 'translate-y-10'
             }`}
+            style={{ animationDelay: '0ms' }}
           >
             <CollapsibleTrigger asChild>
               <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
@@ -539,12 +540,12 @@ const ClientDashboard = () => {
           <Collapsible open={!collapsedCards.progress} onOpenChange={() => toggleCard('progress')}>
             <Card 
               ref={progressCard.elementRef}
-              className={`bg-gradient-card shadow-card transition-all duration-300 ${
+              className={`bg-gradient-card shadow-card transition-all duration-800 ${
                 progressCard.isVisible 
                   ? 'animate-card-slide-up' 
-                  : 'opacity-0 translate-y-10'
+                  : 'translate-y-10'
               }`}
-              style={{ animationDelay: progressCard.isVisible ? '100ms' : '0ms' }}
+              style={{ animationDelay: '100ms' }}
             >
               <CollapsibleTrigger asChild>
                 <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
@@ -628,12 +629,12 @@ const ClientDashboard = () => {
         {/* Proposals Card */}
         <Card 
           ref={proposalsCard.elementRef}
-          className={`bg-gradient-card shadow-card border-2 border-accent/20 hover:border-accent/40 transition-all duration-300 ${
+          className={`bg-gradient-card shadow-card border-2 border-accent/20 hover:border-accent/40 transition-all duration-800 ${
             proposalsCard.isVisible 
               ? 'animate-card-slide-up' 
-              : 'opacity-0 translate-y-10'
+              : 'translate-y-10'
           }`}
-          style={{ animationDelay: proposalsCard.isVisible ? '200ms' : '0ms' }}
+          style={{ animationDelay: '200ms' }}
           id="inbox-section"
         >
           <CardHeader>
@@ -659,12 +660,12 @@ const ClientDashboard = () => {
         <Collapsible open={!collapsedCards.communication} onOpenChange={() => toggleCard('communication')}>
           <Card 
             ref={communicationCard.elementRef}
-            className={`bg-gradient-card shadow-card border-2 border-success/20 hover:border-success/40 transition-all duration-300 ${
+            className={`bg-gradient-card shadow-card border-2 border-success/20 hover:border-success/40 transition-all duration-800 ${
               communicationCard.isVisible 
                 ? 'animate-card-slide-up' 
-                : 'opacity-0 translate-y-10'
+                : 'translate-y-10'
             }`}
-            style={{ animationDelay: communicationCard.isVisible ? '300ms' : '0ms' }}
+            style={{ animationDelay: '300ms' }}
           >
             <CollapsibleTrigger asChild>
               <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
@@ -735,12 +736,12 @@ const ClientDashboard = () => {
         <Collapsible open={!collapsedCards.documents} onOpenChange={() => toggleCard('documents')}>
           <Card 
             ref={documentsCard.elementRef}
-            className={`bg-gradient-card shadow-card border-2 border-warning/20 hover:border-warning/40 transition-all duration-300 ${
+            className={`bg-gradient-card shadow-card border-2 border-warning/20 hover:border-warning/40 transition-all duration-800 ${
               documentsCard.isVisible 
                 ? 'animate-card-slide-up' 
-                : 'opacity-0 translate-y-10'
+                : 'translate-y-10'
             }`}
-            style={{ animationDelay: documentsCard.isVisible ? '400ms' : '0ms' }}
+            style={{ animationDelay: '400ms' }}
           >
             <CollapsibleTrigger asChild>
               <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
