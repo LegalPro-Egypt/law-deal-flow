@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 import { 
   Scale, 
   User,
@@ -78,13 +77,6 @@ const ClientDashboard = () => {
   
   const { unreadCount } = useNotifications();
   const { totalUnreadCount } = useChatNotifications();
-
-  // Animation observers for each card
-  const timelineCard = useIntersectionObserver({ threshold: 0.1, triggerOnce: true });
-  const progressCard = useIntersectionObserver({ threshold: 0.1, triggerOnce: true });
-  const proposalsCard = useIntersectionObserver({ threshold: 0.1, triggerOnce: true });
-  const communicationCard = useIntersectionObserver({ threshold: 0.1, triggerOnce: true });
-  const documentsCard = useIntersectionObserver({ threshold: 0.1, triggerOnce: true });
 
 
   const handleSendMessage = async () => {
@@ -379,7 +371,7 @@ const ClientDashboard = () => {
             <Link to="/?force=true" className="flex items-center space-x-2 sm:space-x-4 hover:opacity-80 transition-opacity">
               <Scale className="h-8 w-8 text-primary" />
               <div className="flex items-center space-x-1 sm:space-x-2">
-                <h1 className="text-xl font-bold text-foreground">
+                <h1 className="text-xl font-bold font-futura text-foreground">
                   LegalPro
                 </h1>
                 <Badge variant="secondary" className="text-xs hidden sm:block">
@@ -459,15 +451,7 @@ const ClientDashboard = () => {
       <div className="container mx-auto px-4 py-8 max-w-6xl space-y-6">
         {/* Case Timeline Card */}
         <Collapsible open={!collapsedCards.timeline} onOpenChange={() => toggleCard('timeline')}>
-          <Card 
-            ref={timelineCard.elementRef}
-            className={`bg-gradient-card shadow-card border-2 border-primary/20 hover:border-primary/40 transition-all duration-800 ${
-              timelineCard.isVisible 
-                ? 'animate-card-slide-up' 
-                : 'translate-y-10'
-            }`}
-            style={{ animationDelay: '0ms' }}
-          >
+          <Card className="bg-gradient-card shadow-card border-2 border-primary/20 hover:border-primary/40 transition-colors">
             <CollapsibleTrigger asChild>
               <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
                 <div className="flex items-center justify-between">
@@ -538,15 +522,7 @@ const ClientDashboard = () => {
         {/* Case Setup Progress Card */}
         {!stepCompletion.allComplete && (
           <Collapsible open={!collapsedCards.progress} onOpenChange={() => toggleCard('progress')}>
-            <Card 
-              ref={progressCard.elementRef}
-              className={`bg-gradient-card shadow-card transition-all duration-800 ${
-                progressCard.isVisible 
-                  ? 'animate-card-slide-up' 
-                  : 'translate-y-10'
-              }`}
-              style={{ animationDelay: '100ms' }}
-            >
+            <Card className="bg-gradient-card shadow-card">
               <CollapsibleTrigger asChild>
                 <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
                   <div className="flex items-center justify-between">
@@ -627,16 +603,7 @@ const ClientDashboard = () => {
         )}
 
         {/* Proposals Card */}
-        <Card 
-          ref={proposalsCard.elementRef}
-          className={`bg-gradient-card shadow-card border-2 border-accent/20 hover:border-accent/40 transition-all duration-800 ${
-            proposalsCard.isVisible 
-              ? 'animate-card-slide-up' 
-              : 'translate-y-10'
-          }`}
-          style={{ animationDelay: '200ms' }}
-          id="inbox-section"
-        >
+        <Card className="bg-gradient-card shadow-card border-2 border-accent/20 hover:border-accent/40 transition-colors" id="inbox-section">
           <CardHeader>
             <CardTitle className="flex items-center">
               <Mail className="h-5 w-5 mr-2" />
@@ -658,15 +625,7 @@ const ClientDashboard = () => {
 
         {/* Communication Center */}
         <Collapsible open={!collapsedCards.communication} onOpenChange={() => toggleCard('communication')}>
-          <Card 
-            ref={communicationCard.elementRef}
-            className={`bg-gradient-card shadow-card border-2 border-success/20 hover:border-success/40 transition-all duration-800 ${
-              communicationCard.isVisible 
-                ? 'animate-card-slide-up' 
-                : 'translate-y-10'
-            }`}
-            style={{ animationDelay: '300ms' }}
-          >
+          <Card className="bg-gradient-card shadow-card border-2 border-success/20 hover:border-success/40 transition-colors">
             <CollapsibleTrigger asChild>
               <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
                 <div className="flex items-center justify-between">
@@ -734,15 +693,7 @@ const ClientDashboard = () => {
 
         {/* Case Documents Card */}
         <Collapsible open={!collapsedCards.documents} onOpenChange={() => toggleCard('documents')}>
-          <Card 
-            ref={documentsCard.elementRef}
-            className={`bg-gradient-card shadow-card border-2 border-warning/20 hover:border-warning/40 transition-all duration-800 ${
-              documentsCard.isVisible 
-                ? 'animate-card-slide-up' 
-                : 'translate-y-10'
-            }`}
-            style={{ animationDelay: '400ms' }}
-          >
+          <Card className="bg-gradient-card shadow-card border-2 border-warning/20 hover:border-warning/40 transition-colors">
             <CollapsibleTrigger asChild>
               <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
                 <div className="flex items-center justify-between">
