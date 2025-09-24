@@ -4,6 +4,7 @@ import { formatCaseStatus } from "@/utils/caseUtils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { 
   Scale, 
   MessageSquare, 
@@ -19,7 +20,9 @@ import {
   Receipt,
   Plus,
   Settings,
-  LogOut
+  LogOut,
+  ChevronDown,
+  ChevronRight
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import jsPDF from 'jspdf';
@@ -43,6 +46,13 @@ import { downloadPDF, getUserFriendlyDownloadMessage } from "@/utils/pdfDownload
 
 const ClientDashboard = () => {
   const [newMessage, setNewMessage] = useState("");
+  const [collapsedCards, setCollapsedCards] = useState({
+    timeline: false,
+    progress: false,
+    personal: false,
+    intake: false,
+    documents: false
+  });
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const { 
@@ -241,6 +251,13 @@ const ClientDashboard = () => {
     }
   };
 
+  const toggleCard = (cardName: keyof typeof collapsedCards) => {
+    setCollapsedCards(prev => ({
+      ...prev,
+      [cardName]: !prev[cardName]
+    }));
+  };
+
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -427,172 +444,215 @@ const ClientDashboard = () => {
 
       <div className="container mx-auto px-4 py-8 max-w-6xl space-y-6">
         {/* Case Timeline Card */}
-        <Card className="bg-gradient-card shadow-card">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Clock className="h-5 w-5 mr-2" />
-              Case Timeline
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-3 h-3 rounded-full bg-success" />
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium">Case Created</span>
-                    <span className="text-sm text-muted-foreground">{formatDate(activeCase.created_at)}</span>
+        <Collapsible open={!collapsedCards.timeline} onOpenChange={() => toggleCard('timeline')}>
+          <Card className="bg-gradient-card shadow-card">
+            <CollapsibleTrigger asChild>
+              <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Clock className="h-5 w-5 mr-2" />
+                    Case Timeline
                   </div>
-                </div>
-                <CheckCircle className="h-4 w-4 text-success" />
-              </div>
-              
-              {activeCase.assigned_lawyer_id && (
-                <div className="flex items-center space-x-3">
-                  <div className="w-3 h-3 rounded-full bg-success" />
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium">Case Approved</span>
-                      <span className="text-sm text-muted-foreground">{formatDate(activeCase.updated_at)}</span>
+                  {collapsedCards.timeline ? (
+                    <ChevronRight className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </CardTitle>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-3 h-3 rounded-full bg-success" />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">Case Created</span>
+                        <span className="text-sm text-muted-foreground">{formatDate(activeCase.created_at)}</span>
+                      </div>
                     </div>
+                    <CheckCircle className="h-4 w-4 text-success" />
                   </div>
-                  <CheckCircle className="h-4 w-4 text-success" />
-                </div>
-              )}
-              
-              <div className="flex items-center space-x-3">
-                <div className={`w-3 h-3 rounded-full ${getStatusColor(activeCase.status)}`} />
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium">
-                      Current Status: {formatCaseStatus(activeCase.status, activeCase.consultation_paid, activeCase.payment_status)}
-                    </span>
-                    <span className="text-sm text-muted-foreground">{formatDate(activeCase.updated_at)}</span>
+                  
+                  {activeCase.assigned_lawyer_id && (
+                    <div className="flex items-center space-x-3">
+                      <div className="w-3 h-3 rounded-full bg-success" />
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">Case Approved</span>
+                          <span className="text-sm text-muted-foreground">{formatDate(activeCase.updated_at)}</span>
+                        </div>
+                      </div>
+                      <CheckCircle className="h-4 w-4 text-success" />
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-3 h-3 rounded-full ${getStatusColor(activeCase.status)}`} />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">
+                          Current Status: {formatCaseStatus(activeCase.status, activeCase.consultation_paid, activeCase.payment_status)}
+                        </span>
+                        <span className="text-sm text-muted-foreground">{formatDate(activeCase.updated_at)}</span>
+                      </div>
+                    </div>
+                    <Clock className="h-4 w-4 text-accent" />
                   </div>
                 </div>
-                <Clock className="h-4 w-4 text-accent" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
 
         {/* Case Setup Progress Card */}
         {!stepCompletion.allComplete && (
-          <Card className="bg-gradient-card shadow-card">
-            <CardHeader>
-              <CardTitle>Case Setup Progress</CardTitle>
-              <CardDescription>
-                Complete these steps to proceed with your case
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  {stepCompletion.step1 ? (
-                    <CheckCircle className="h-5 w-5 text-success" />
-                  ) : (
-                    <div className="h-5 w-5 rounded-full border-2 border-muted-foreground" />
-                  )}
-                  <span className={stepCompletion.step1 ? "text-success font-medium" : ""}>
-                    AI Chat Complete
-                  </span>
-                </div>
-                <div className="flex items-center gap-3">
-                  {stepCompletion.step2 ? (
-                    <CheckCircle className="h-5 w-5 text-success" />
-                  ) : (
-                    <div className="h-5 w-5 rounded-full border-2 border-muted-foreground" />
-                  )}
-                  <span className={stepCompletion.step2 ? "text-success font-medium" : ""}>
-                    Personal Details Provided
-                  </span>
-                </div>
-                <div className="flex items-center gap-3">
-                  {stepCompletion.step3 ? (
-                    <CheckCircle className="h-5 w-5 text-success" />
-                  ) : (
-                    <div className="h-5 w-5 rounded-full border-2 border-muted-foreground" />
-                  )}
-                  <span className={stepCompletion.step3 ? "text-success font-medium" : ""}>
-                    Required Documents Uploaded
-                  </span>
-                </div>
-              </div>
-              
-              <div className="pt-4 border-t">
-                {stepCompletion.allComplete && activeCase.status === 'intake' ? (
-                  <Button 
-                    className="w-full justify-start bg-gradient-primary" 
-                    onClick={handleReviewCase}
-                  >
-                    <ArrowRight className="h-4 w-4 mr-2" />
-                    Review Case & Submit
-                  </Button>
-                ) : !stepCompletion.allComplete ? (
-                  <Button 
-                    asChild 
-                    className="w-full justify-start bg-gradient-primary"
-                  >
-                    <Link to={`/intake?case=${activeCase.id}`}>
-                      <ArrowRight className="h-4 w-4 mr-2" />
-                      Continue Setup
-                    </Link>
-                  </Button>
-                ) : null}
-              </div>
-            </CardContent>
-          </Card>
+          <Collapsible open={!collapsedCards.progress} onOpenChange={() => toggleCard('progress')}>
+            <Card className="bg-gradient-card shadow-card">
+              <CollapsibleTrigger asChild>
+                <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Case Setup Progress</CardTitle>
+                      <CardDescription>
+                        Complete these steps to proceed with your case
+                      </CardDescription>
+                    </div>
+                    {collapsedCards.progress ? (
+                      <ChevronRight className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
+                  </div>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      {stepCompletion.step1 ? (
+                        <CheckCircle className="h-5 w-5 text-success" />
+                      ) : (
+                        <div className="h-5 w-5 rounded-full border-2 border-muted-foreground" />
+                      )}
+                      <span className={stepCompletion.step1 ? "text-success font-medium" : ""}>
+                        AI Chat Complete
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {stepCompletion.step2 ? (
+                        <CheckCircle className="h-5 w-5 text-success" />
+                      ) : (
+                        <div className="h-5 w-5 rounded-full border-2 border-muted-foreground" />
+                      )}
+                      <span className={stepCompletion.step2 ? "text-success font-medium" : ""}>
+                        Personal Details Provided
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {stepCompletion.step3 ? (
+                        <CheckCircle className="h-5 w-5 text-success" />
+                      ) : (
+                        <div className="h-5 w-5 rounded-full border-2 border-muted-foreground" />
+                      )}
+                      <span className={stepCompletion.step3 ? "text-success font-medium" : ""}>
+                        Required Documents Uploaded
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="pt-4 border-t">
+                    {stepCompletion.allComplete && activeCase.status === 'intake' ? (
+                      <Button 
+                        className="w-full justify-start bg-gradient-primary" 
+                        onClick={handleReviewCase}
+                      >
+                        <ArrowRight className="h-4 w-4 mr-2" />
+                        Review Case & Submit
+                      </Button>
+                    ) : !stepCompletion.allComplete ? (
+                      <Button 
+                        asChild 
+                        className="w-full justify-start bg-gradient-primary"
+                      >
+                        <Link to={`/intake?case=${activeCase.id}`}>
+                          <ArrowRight className="h-4 w-4 mr-2" />
+                          Continue Setup
+                        </Link>
+                      </Button>
+                    ) : null}
+                  </div>
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
         )}
 
         {/* Personal Information Card */}
-        <Card className="bg-gradient-card shadow-card">
-          <CardHeader>
-            <CardTitle>Personal Information</CardTitle>
-            <CardDescription>
-              View and manage your contact information
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <Label className="text-sm font-medium">Full Name</Label>
-                <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
-                  {activeCase?.client_name || 'Not provided'}
-                </p>
-              </div>
-              <div>
-                <Label className="text-sm font-medium">Email</Label>
-                <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
-                  {activeCase?.client_email || 'Not provided'}
-                </p>
-              </div>
-              <div>
-                <Label className="text-sm font-medium">Phone</Label>
-                <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
-                  {activeCase?.client_phone || 'Not provided'}
-                </p>
-              </div>
-              <div>
-                <Label className="text-sm font-medium">Language</Label>
-                <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
-                  {activeCase?.language === 'en' && 'English'}
-                  {activeCase?.language === 'ar' && 'Arabic'}  
-                  {activeCase?.language === 'de' && 'German'}
-                  {!activeCase?.language && 'Not specified'}
-                </p>
-              </div>
-            </div>
-            
-            <div className="pt-4 border-t">
-              <Button asChild variant="outline">
-                <Link to={`/intake?case=${activeCase.id}&edit=personal`}>
-                  <FileText className="h-4 w-4 mr-2" />
-                  Edit Details
-                </Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <Collapsible open={!collapsedCards.personal} onOpenChange={() => toggleCard('personal')}>
+          <Card className="bg-gradient-card shadow-card">
+            <CollapsibleTrigger asChild>
+              <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Personal Information</CardTitle>
+                    <CardDescription>
+                      View and manage your contact information
+                    </CardDescription>
+                  </div>
+                  {collapsedCards.personal ? (
+                    <ChevronRight className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </div>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="space-y-4">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium">Full Name</Label>
+                    <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
+                      {activeCase?.client_name || 'Not provided'}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Email</Label>
+                    <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
+                      {activeCase?.client_email || 'Not provided'}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Phone</Label>
+                    <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
+                      {activeCase?.client_phone || 'Not provided'}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Language</Label>
+                    <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
+                      {activeCase?.language === 'en' && 'English'}
+                      {activeCase?.language === 'ar' && 'Arabic'}  
+                      {activeCase?.language === 'de' && 'German'}
+                      {!activeCase?.language && 'Not specified'}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="pt-4 border-t">
+                  <Button asChild variant="outline">
+                    <Link to={`/intake?case=${activeCase.id}&edit=personal`}>
+                      <FileText className="h-4 w-4 mr-2" />
+                      Edit Details
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
 
         {/* Proposals & Communications Card */}
         <Card className="bg-gradient-card shadow-card" id="inbox-section">
@@ -616,122 +676,152 @@ const ClientDashboard = () => {
         </Card>
 
         {/* AI Intake Conversation Card */}
-        <Card className="bg-gradient-card shadow-card">
-          <CardHeader>
-            <CardTitle>AI Intake Conversation</CardTitle>
-            <CardDescription>
-              Your conversation history with our AI legal assistant during case intake
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {/* Messages */}
-            <div className="h-96 border rounded-lg p-4 overflow-y-auto mb-4 bg-background space-y-4">
-              {messages.length > 0 ? messages.map((msg, index) => (
-                <div key={index} className={`flex ${msg.sender === 'client' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[70%] ${
-                    msg.sender === 'client' 
-                      ? 'bg-primary text-primary-foreground' 
-                      : 'bg-muted'
-                  } rounded-lg p-3`}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium">{msg.name}</span>
-                      <span className="text-xs opacity-70">{msg.time}</span>
+        <Collapsible open={!collapsedCards.intake} onOpenChange={() => toggleCard('intake')}>
+          <Card className="bg-gradient-card shadow-card">
+            <CollapsibleTrigger asChild>
+              <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>AI Intake Conversation</CardTitle>
+                    <CardDescription>
+                      Your conversation history with our AI legal assistant during case intake
+                    </CardDescription>
+                  </div>
+                  {collapsedCards.intake ? (
+                    <ChevronRight className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </div>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent>
+                {/* Messages */}
+                <div className="h-96 border rounded-lg p-4 overflow-y-auto mb-4 bg-background space-y-4">
+                  {messages.length > 0 ? messages.map((msg, index) => (
+                    <div key={index} className={`flex ${msg.sender === 'client' ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[70%] ${
+                        msg.sender === 'client' 
+                          ? 'bg-primary text-primary-foreground' 
+                          : 'bg-muted'
+                      } rounded-lg p-3`}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm font-medium">{msg.name}</span>
+                          <span className="text-xs opacity-70">{msg.time}</span>
+                        </div>
+                        <p className="text-sm">{msg.content}</p>
+                      </div>
                     </div>
-                    <p className="text-sm">{msg.content}</p>
+                  )) : (
+                    <div className="text-center text-muted-foreground py-8">
+                      <MessageSquare className="h-8 w-8 mx-auto mb-2" />
+                      <p>No messages yet. Start a conversation with your lawyer.</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Message Input */}
+                <div className="flex space-x-2">
+                  <Textarea
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Type your message..."
+                    className="flex-1 min-h-[80px]"
+                  />
+                  <div className="flex flex-col space-y-2">
+                    <Button 
+                      size="sm" 
+                      className="bg-gradient-primary"
+                      onClick={handleSendMessage}
+                      disabled={!newMessage.trim()}
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="outline">
+                      <Upload className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
-              )) : (
-                <div className="text-center text-muted-foreground py-8">
-                  <MessageSquare className="h-8 w-8 mx-auto mb-2" />
-                  <p>No messages yet. Start a conversation with your lawyer.</p>
+
+                <div className="mt-2 p-2 bg-muted/50 rounded text-xs text-muted-foreground">
+                  <AlertCircle className="h-3 w-3 inline mr-1" />
+                  All communication must remain on platform. External contact details will be automatically redacted.
                 </div>
-              )}
-            </div>
-
-            {/* Message Input */}
-            <div className="flex space-x-2">
-              <Textarea
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Type your message..."
-                className="flex-1 min-h-[80px]"
-              />
-              <div className="flex flex-col space-y-2">
-                <Button 
-                  size="sm" 
-                  className="bg-gradient-primary"
-                  onClick={handleSendMessage}
-                  disabled={!newMessage.trim()}
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
-                <Button size="sm" variant="outline">
-                  <Upload className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-
-            <div className="mt-2 p-2 bg-muted/50 rounded text-xs text-muted-foreground">
-              <AlertCircle className="h-3 w-3 inline mr-1" />
-              All communication must remain on platform. External contact details will be automatically redacted.
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
 
         {/* Case Documents Card */}
-        <Card className="bg-gradient-card shadow-card">
-          <CardHeader>
-            <CardTitle>Case Documents</CardTitle>
-            <CardDescription>
-              Upload and manage all case-related documents
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {/* Uploaded Documents List */}
-            {documents.length > 0 && (
-              <div className="mb-6">
-                <h4 className="font-medium mb-4">Uploaded Documents</h4>
-                <div className="grid gap-4">
-                  {documents.map((doc, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <FileText className="h-5 w-5 text-muted-foreground" />
-                        <div>
-                          <p className="font-medium">{doc.file_name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {Math.round(doc.file_size / 1024)} KB • Uploaded {formatDate(doc.created_at)}
-                            {doc.document_category && ` • ${doc.document_category}`}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Badge variant="secondary">
-                          {doc.file_type}
-                        </Badge>
-                        <Button size="sm" variant="ghost" asChild>
-                          <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
-                            <Download className="h-4 w-4" />
-                          </a>
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+        <Collapsible open={!collapsedCards.documents} onOpenChange={() => toggleCard('documents')}>
+          <Card className="bg-gradient-card shadow-card">
+            <CollapsibleTrigger asChild>
+              <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Case Documents</CardTitle>
+                    <CardDescription>
+                      Upload and manage all case-related documents
+                    </CardDescription>
+                  </div>
+                  {collapsedCards.documents ? (
+                    <ChevronRight className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
                 </div>
-              </div>
-            )}
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent>
+                {/* Uploaded Documents List */}
+                {documents.length > 0 && (
+                  <div className="mb-6">
+                    <h4 className="font-medium mb-4">Uploaded Documents</h4>
+                    <div className="grid gap-4">
+                      {documents.map((doc, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                          <div className="flex items-center space-x-3">
+                            <FileText className="h-5 w-5 text-muted-foreground" />
+                            <div>
+                              <p className="font-medium">{doc.file_name}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {Math.round(doc.file_size / 1024)} KB • Uploaded {formatDate(doc.created_at)}
+                                {doc.document_category && ` • ${doc.document_category}`}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Badge variant="secondary">
+                              {doc.file_type}
+                            </Badge>
+                            <Button size="sm" variant="ghost" asChild>
+                              <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
+                                <Download className="h-4 w-4" />
+                              </a>
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
-            {/* Document Upload Component */}
-            <DocumentUpload 
-              caseId={activeCase?.id}
-              existingDocuments={documents}
-              onFilesUploaded={(files) => {
-                console.log('Files uploaded:', files);
-                // Documents will be refreshed via realtime subscription
-              }}
-              onRefreshRequested={refreshData}
-            />
-          </CardContent>
-        </Card>
+                {/* Document Upload Component */}
+                <DocumentUpload 
+                  caseId={activeCase?.id}
+                  existingDocuments={documents}
+                  onFilesUploaded={(files) => {
+                    console.log('Files uploaded:', files);
+                    // Documents will be refreshed via realtime subscription
+                  }}
+                  onRefreshRequested={refreshData}
+                />
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
 
         {/* Payment History Dialog */}
         <Dialog>
