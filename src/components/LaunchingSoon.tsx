@@ -157,15 +157,15 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
 
           {/* Email Signup Card */}
           <div className={`transition-all duration-1000 delay-300 ${isLoaded ? 'animate-hero-fade-in' : 'opacity-0'}`}>
-            <Card className="max-w-md mx-auto neomorphism-card">
+            <Card className="max-w-lg mx-auto neomorphism-card">
               <CardContent className="p-8">
                 {!isSubscribed ? (
                   <form onSubmit={handleEmailSignup}>
-                    <h3 className="text-2xl font-semibold font-futura text-gray-900 mb-4">
-                      {getText('getNotified')}
+                    <h3 className="text-2xl font-bold font-futura text-gray-900 mb-4">
+                      Win Up to 50,000 EGP Off Your First Case
                     </h3>
                     <p className="text-gray-600 font-modern mb-6 leading-relaxed">
-                      {getText('getNotifiedDescription')}
+                      Sign up for our waitlist and get early access when we launch. Plus, enter our draw for a chance to win a legal fee reduction of up to 50,000 EGP on your first case with LegalPro.
                     </p>
                     <div className="space-y-4">
                       <Input
@@ -176,6 +176,25 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
                         className="w-full neomorphism-input text-gray-700 placeholder:text-gray-500 font-modern"
                         required
                       />
+                      
+                      {/* Benefits bullet points */}
+                      <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                        <ul className="space-y-2 text-sm text-gray-700 font-modern">
+                          <li className="flex items-center">
+                            <CheckCircle className="w-4 h-4 text-neomorphism-primary mr-2 flex-shrink-0" />
+                            Be the first to access LegalPro
+                          </li>
+                          <li className="flex items-center">
+                            <CheckCircle className="w-4 h-4 text-neomorphism-primary mr-2 flex-shrink-0" />
+                            Get exclusive launch updates
+                          </li>
+                          <li className="flex items-center">
+                            <CheckCircle className="w-4 h-4 text-neomorphism-primary mr-2 flex-shrink-0" />
+                            Chance to win up to 50,000 EGP off your first case
+                          </li>
+                        </ul>
+                      </div>
+                      
                       <Button
                         type="submit"
                         disabled={isLoading || !email}
@@ -183,6 +202,11 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
                       >
                         {isLoading ? 'Joining...' : 'Join the Waitlist'}
                       </Button>
+                      
+                      {/* Disclaimer */}
+                      <p className="text-xs text-gray-500 font-modern text-center leading-relaxed mt-3">
+                        *Terms and conditions apply. Maximum reduction 50,000 EGP on first case only.
+                      </p>
                     </div>
                   </form>
                 ) : (
