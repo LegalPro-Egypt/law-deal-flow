@@ -9,6 +9,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { 
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -28,7 +37,10 @@ import {
   Globe,
   Building,
   MessageSquare,
-  User
+  User,
+  Shield,
+  Clock,
+  FileCheck
 } from "lucide-react";
 
 const verificationSchema = z.object({
@@ -51,6 +63,15 @@ const verificationSchema = z.object({
   licenseNumber: z.string().min(1, "License number is required"),
   yearsExperience: z.coerce.number().min(0, "Years of experience must be 0 or greater").optional(),
   barAdmissionsInput: z.string().optional(),
+  // New fields (27-34)
+  confirmGoodStanding: z.boolean().refine(val => val === true, "You must confirm you are in good standing with the Egyptian Bar Association"),
+  hasDisciplinaryHistory: z.boolean(),
+  disciplinaryDetails: z.string().optional(),
+  maxResponseTime: z.string().min(1, "Please select your maximum response time"),
+  currentCaseload: z.coerce.number().min(0).optional(),
+  clientReferences: z.string().optional(),
+  consentPlatformRules: z.boolean().refine(val => val === true, "You must agree to abide by EgyptLegalPro's Terms of Service, Privacy Policy, and Payment Rules"),
+  nonCircumventionAgreement: z.boolean().refine(val => val === true, "You must acknowledge that all payments must be processed through EgyptLegalPro"),
 });
 
 type VerificationData = z.infer<typeof verificationSchema>;
@@ -126,9 +147,11 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
   const [lawyerCardFront, setLawyerCardFront] = useState<File | null>(null);
   const [lawyerCardBack, setLawyerCardBack] = useState<File | null>(null);
   const [profilePicture, setProfilePicture] = useState<File | null>(null);
+  const [nationalIdFile, setNationalIdFile] = useState<File | null>(null);
   const [uploadingFront, setUploadingFront] = useState(false);
   const [uploadingBack, setUploadingBack] = useState(false);
   const [uploadingProfile, setUploadingProfile] = useState(false);
+  const [uploadingNationalId, setUploadingNationalId] = useState(false);
   const [selectedConsultationMethods, setSelectedConsultationMethods] = useState<string[]>(["in-person"]);
   const [selectedPaymentStructures, setSelectedPaymentStructures] = useState<string[]>(["hourly"]);
   const [selectedMemberships, setSelectedMemberships] = useState<string[]>([]);
@@ -150,11 +173,20 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
       licenseNumber: initialData?.licenseNumber || "",
       yearsExperience: initialData?.yearsExperience || undefined,
       barAdmissionsInput: initialData?.barAdmissionsInput || "",
+      // New fields defaults
+      confirmGoodStanding: false,
+      hasDisciplinaryHistory: false,
+      disciplinaryDetails: "",
+      maxResponseTime: "",
+      currentCaseload: undefined,
+      clientReferences: "",
+      consentPlatformRules: false,
+      nonCircumventionAgreement: false,
       ...initialData,
     },
   });
 
-  const uploadFile = async (file: File, type: 'front' | 'back') => {
+  const uploadFile = async (file: File, type: 'front' | 'back' | 'national_id') => {
     console.log(`Starting upload for ${type} card:`, { fileName: file.name, fileSize: file.size, fileType: file.type });
     
     if (!user?.id) {
@@ -171,7 +203,13 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
     }
 
     const fileExt = file.name.split('.').pop();
-    const fileName = `${user.id}/lawyer-cards/${type}.${fileExt}`;
+    let fileName;
+    
+    if (type === 'national_id') {
+      fileName = `${user.id}/lawyer-cards/national-id.${fileExt}`;
+    } else {
+      fileName = `${user.id}/lawyer-cards/${type}.${fileExt}`;
+    }
     
     console.log(`Uploading to path: ${fileName}`);
     
@@ -305,11 +343,12 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
       return;
     }
 
-    if (!lawyerCardFront || !lawyerCardBack || !profilePicture) {
+    if (!lawyerCardFront || !lawyerCardBack || !profilePicture || !nationalIdFile) {
       const missing = [];
       if (!lawyerCardFront) missing.push('front side of lawyer card');
       if (!lawyerCardBack) missing.push('back side of lawyer card');
       if (!profilePicture) missing.push('profile picture');
+      if (!nationalIdFile) missing.push('National ID or Passport copy');
       
       toast({
         title: "Missing Files",
@@ -346,9 +385,10 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
       setUploadingFront(true);
       setUploadingBack(true);
       setUploadingProfile(true);
+      setUploadingNationalId(true);
 
-      // Upload lawyer card front and back and profile picture with detailed error handling
-      let lawyerCardFrontUrl, lawyerCardBackUrl, profilePictureUrl;
+      // Upload lawyer card front and back, profile picture, and national ID with detailed error handling
+      let lawyerCardFrontUrl, lawyerCardBackUrl, profilePictureUrl, nationalIdUrl;
       
       try {
         lawyerCardFrontUrl = await uploadFile(lawyerCardFront, 'front');
@@ -378,6 +418,16 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
         setUploadingProfile(false);
         console.error('Profile picture upload failed:', error);
         throw new Error(`Profile picture upload failed: ${error.message}`);
+      }
+
+      try {
+        nationalIdUrl = await uploadFile(nationalIdFile, 'national_id');
+        setUploadingNationalId(false);
+        console.log('National ID uploaded successfully');
+      } catch (error) {
+        setUploadingNationalId(false);
+        console.error('National ID upload failed:', error);
+        throw new Error(`National ID upload failed: ${error.message}`);
       }
 
       console.log('Both files uploaded, updating profile...');
@@ -436,6 +486,18 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
           bar_admissions: barAdmissions.length ? barAdmissions : null,
           verification_status: "pending_complete",
           updated_at: new Date().toISOString(),
+          // Store additional verification data in metadata
+          verification_metadata: {
+            national_id_url: nationalIdUrl,
+            confirm_good_standing: data.confirmGoodStanding,
+            has_disciplinary_history: data.hasDisciplinaryHistory,
+            disciplinary_details: data.disciplinaryDetails || null,
+            max_response_time: data.maxResponseTime,
+            current_caseload: data.currentCaseload ?? null,
+            client_references: data.clientReferences || null,
+            consent_platform_rules: data.consentPlatformRules,
+            non_circumvention_agreement: data.nonCircumventionAgreement,
+          },
         })
         .eq("user_id", user.id);
 
@@ -947,6 +1009,245 @@ export function CompleteVerificationForm({ onComplete, initialData }: CompleteVe
               placeholder="Describe any notable cases, awards, publications, or professional achievements..."
               rows={4}
               {...form.register("notableAchievements")}
+            />
+          </div>
+
+          {/* National ID / Passport Copy */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <FileText className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-semibold">National ID / Passport Copy *</h3>
+            </div>
+            
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Upload National ID or Passport Copy</Label>
+                <Input
+                  type="file"
+                  accept="image/*,.pdf"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setNationalIdFile(file);
+                    }
+                  }}
+                  className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                />
+                {nationalIdFile && (
+                  <p className="text-sm text-muted-foreground">
+                    Selected: {nationalIdFile.name}
+                  </p>
+                )}
+                {uploadingNationalId && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Uploading...
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Professional Standing */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Shield className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-semibold">Professional Standing</h3>
+            </div>
+
+            <FormField
+              control={form.control}
+              name="confirmGoodStanding"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>
+                      I confirm I am in good standing with the Egyptian Bar Association *
+                    </FormLabel>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="hasDisciplinaryHistory"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>
+                      I have faced disciplinary action before
+                    </FormLabel>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {form.watch("hasDisciplinaryHistory") && (
+              <FormField
+                control={form.control}
+                name="disciplinaryDetails"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Disciplinary History Details</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        placeholder="Please provide details about any disciplinary actions..."
+                        rows={3}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+          </div>
+
+          {/* Response Time & Availability */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Clock className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-semibold">Response Time & Availability</h3>
+            </div>
+
+            <FormField
+              control={form.control}
+              name="maxResponseTime"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Maximum Response Time Commitment *</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select your maximum response time" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="12_hours">Within 12 hours</SelectItem>
+                      <SelectItem value="24_hours">Within 24 hours</SelectItem>
+                      <SelectItem value="48_hours">Within 48 hours</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="currentCaseload"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Current Caseload (Optional)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min="0"
+                      placeholder="How many active cases are you handling now?"
+                      {...field}
+                      onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    This helps clients understand your current availability
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {/* Client References */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Users className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-semibold">Client References (Optional)</h3>
+            </div>
+
+            <FormField
+              control={form.control}
+              name="clientReferences"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Past Case References or Testimonials</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      {...field}
+                      placeholder="Provide 1-2 anonymized past cases or client testimonials that demonstrate your expertise..."
+                      rows={4}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Share anonymized success stories or testimonials to build credibility
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {/* Platform Agreements */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <FileCheck className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-semibold">Platform Agreements</h3>
+            </div>
+
+            <FormField
+              control={form.control}
+              name="consentPlatformRules"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>
+                      I agree to abide by EgyptLegalPro's Terms of Service, Privacy Policy, and Payment Rules *
+                    </FormLabel>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="nonCircumventionAgreement"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>
+                      I acknowledge that all payments must be processed through EgyptLegalPro and off-platform transactions are prohibited *
+                    </FormLabel>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
           </div>
 
