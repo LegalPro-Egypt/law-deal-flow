@@ -10,6 +10,7 @@ import { ProBonoSection } from "@/components/ProBonoSection";
 import { PromotionalPopup } from "@/components/PromotionalPopup";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 
 const Landing = () => {
   const { isAuthenticated, role, loading } = useAuth();
@@ -17,6 +18,10 @@ const Landing = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [showPromoPopup, setShowPromoPopup] = useState(false);
+  const { elementRef: heroRef, isVisible: heroVisible } = useIntersectionObserver({
+    threshold: 0.3,
+    triggerOnce: true
+  });
 
   useEffect(() => {
     // Check if user explicitly wants to view homepage (bypass auto-redirect)
@@ -112,8 +117,8 @@ const Landing = () => {
             </div>
             
             {/* Premium Trust Signals */}
-            <div className="trust-signals-container">
-              <div className="trust-signal-card">
+            <div className="trust-signals-container" ref={heroRef}>
+              <div className={`trust-signal-card ${heroVisible ? 'animate-slide-in-left' : 'opacity-0 -translate-x-20'}`}>
                 <div className="trust-signal-icon verified">
                   <Shield className="h-6 w-6 text-white" />
                 </div>
@@ -123,7 +128,7 @@ const Landing = () => {
                 </div>
               </div>
               
-              <div className="trust-signal-card">
+              <div className={`trust-signal-card ${heroVisible ? 'animate-slide-in-bottom' : 'opacity-0 translate-y-10'}`}>
                 <div className="trust-signal-icon ai-powered">
                   <Brain className="h-6 w-6 text-white" />
                 </div>
@@ -133,7 +138,7 @@ const Landing = () => {
                 </div>
               </div>
               
-              <div className="trust-signal-card">
+              <div className={`trust-signal-card ${heroVisible ? 'animate-slide-in-right' : 'opacity-0 translate-x-20'}`}>
                 <div className="trust-signal-icon secure">
                   <Lock className="h-6 w-6 text-white" />
                 </div>
