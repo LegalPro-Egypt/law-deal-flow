@@ -166,11 +166,6 @@ const Landing = () => {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               {
-                icon: <ShieldCheck className="h-8 w-8" />,
-                title: "Client Protection Guarantee",
-                description: "LegalPro protects clients by covering part or all of their case fees in the rare event of proven misconduct or malpractice."
-              },
-              {
                 icon: <Shield className="h-8 w-8" />,
                 title: t('landing.features.paymentProtection.title'),
                 description: t('landing.features.paymentProtection.description')
@@ -194,6 +189,11 @@ const Landing = () => {
                 icon: <Check className="h-8 w-8" />,
                 title: t('landing.features.caseTracking.title'),
                 description: t('landing.features.caseTracking.description')
+              },
+              {
+                icon: <ShieldCheck className="h-8 w-8" />,
+                title: "Client Protection Guarantee",
+                description: "LegalPro protects clients by covering part or all of their case fees in the rare event of proven misconduct or malpractice."
               }
             ].map((feature, index) => (
               <Card key={index} className={`p-6 card-hover bg-gradient-card animate-slide-up text-center ${isRTL() ? 'md:text-right' : 'md:text-left'}`}>
