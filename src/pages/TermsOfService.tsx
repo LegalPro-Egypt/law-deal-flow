@@ -103,7 +103,22 @@ const TermsOfService = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>6. Client Protection Policy</CardTitle>
+              <CardTitle>6. Payment Structure</CardTitle>
+            </CardHeader>
+            <CardContent className="prose prose-gray max-w-none">
+              <ul className="list-disc pl-6 space-y-2">
+                <li>All client payments must be made through the EgyptLegalPro platform.</li>
+                <li>Payments are held and released to the lawyer in <strong>stages</strong>, not in full upfront.</li>
+                <li>The payment schedule may be tied to milestones or stages of the case, as determined by EgyptLegalPro.</li>
+                <li>The final portion of the payment is only released upon <strong>case completion</strong> or mutual confirmation from both client and lawyer.</li>
+                <li>This staged payment system ensures accountability and protects both clients and lawyers.</li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>7. Client Protection Policy</CardTitle>
             </CardHeader>
             <CardContent className="prose prose-gray max-w-none">
               <p>The 3% Client Protection Fee provides limited financial coverage in proven cases of lawyer malpractice or misconduct.</p>
@@ -135,7 +150,7 @@ const TermsOfService = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>7. Lawyer Responsibilities</CardTitle>
+              <CardTitle>8. Lawyer Responsibilities</CardTitle>
             </CardHeader>
             <CardContent className="prose prose-gray max-w-none">
               <ul className="list-disc pl-6 space-y-2">
@@ -148,7 +163,7 @@ const TermsOfService = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>8. Client Responsibilities</CardTitle>
+              <CardTitle>9. Client Responsibilities</CardTitle>
             </CardHeader>
             <CardContent className="prose prose-gray max-w-none">
               <ul className="list-disc pl-6 space-y-2">
@@ -163,7 +178,7 @@ const TermsOfService = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="w-5 h-5" />
-                9. Lawyer Replacement Policy
+                10. Lawyer Replacement Policy
               </CardTitle>
             </CardHeader>
             <CardContent className="prose prose-gray max-w-none">
@@ -185,7 +200,7 @@ const TermsOfService = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>10. Communication Recording & Monitoring</CardTitle>
+              <CardTitle>11. Communication Recording & Monitoring</CardTitle>
             </CardHeader>
             <CardContent className="prose prose-gray max-w-none">
               <p className="font-semibold">
@@ -209,7 +224,7 @@ const TermsOfService = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>11. Data Use & Third-Party Sharing</CardTitle>
+              <CardTitle>12. Data Use & Third-Party Sharing</CardTitle>
             </CardHeader>
             <CardContent className="prose prose-gray max-w-none">
               <ul className="list-disc pl-6 space-y-2">
@@ -223,7 +238,7 @@ const TermsOfService = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>12. Confidentiality</CardTitle>
+              <CardTitle>13. Confidentiality</CardTitle>
             </CardHeader>
             <CardContent className="prose prose-gray max-w-none">
               <ul className="list-disc pl-6 space-y-2">
@@ -235,7 +250,7 @@ const TermsOfService = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>13. Prohibited Activities</CardTitle>
+              <CardTitle>14. Prohibited Activities</CardTitle>
             </CardHeader>
             <CardContent className="prose prose-gray max-w-none">
               <p>Users may not:</p>
@@ -250,7 +265,7 @@ const TermsOfService = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>14. Termination of Accounts</CardTitle>
+              <CardTitle>15. Termination of Accounts</CardTitle>
             </CardHeader>
             <CardContent className="prose prose-gray max-w-none">
               <ul className="list-disc pl-6 space-y-2">
@@ -265,7 +280,7 @@ const TermsOfService = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5" />
-                15. Limitation of Liability
+                16. Limitation of Liability
               </CardTitle>
             </CardHeader>
             <CardContent className="prose prose-gray max-w-none">
@@ -279,7 +294,7 @@ const TermsOfService = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>16. Dispute Resolution & Governing Law</CardTitle>
+              <CardTitle>17. Dispute Resolution & Governing Law</CardTitle>
             </CardHeader>
             <CardContent className="prose prose-gray max-w-none">
               <ul className="list-disc pl-6 space-y-2">
@@ -292,7 +307,7 @@ const TermsOfService = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>17. Intellectual Property</CardTitle>
+              <CardTitle>18. Intellectual Property</CardTitle>
             </CardHeader>
             <CardContent className="prose prose-gray max-w-none">
               <ul className="list-disc pl-6 space-y-2">
@@ -304,7 +319,7 @@ const TermsOfService = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>18. Modifications</CardTitle>
+              <CardTitle>19. Modifications</CardTitle>
             </CardHeader>
             <CardContent className="prose prose-gray max-w-none">
               <ul className="list-disc pl-6 space-y-2">
@@ -316,7 +331,7 @@ const TermsOfService = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>19. Contact Information</CardTitle>
+              <CardTitle>20. Contact Information</CardTitle>
             </CardHeader>
             <CardContent className="prose prose-gray max-w-none">
               <p>For questions regarding these Terms, contact us at:</p>
