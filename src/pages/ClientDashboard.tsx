@@ -633,8 +633,27 @@ const ClientDashboard = () => {
                         </Badge>
                       )}
                     </CardTitle>
-                    <CardDescription>
-                      Direct communication with your legal team
+                    <CardDescription className="flex items-center justify-between">
+                      <span>Direct communication with your legal team</span>
+                      {cases.length > 1 && (
+                        <div className="flex items-center gap-2 ml-4">
+                          <span className="text-xs">Case:</span>
+                          <select 
+                            value={activeCase.id} 
+                            onChange={(e) => {
+                              const selectedCase = cases.find(c => c.id === e.target.value);
+                              if (selectedCase) setActiveCase(selectedCase);
+                            }}
+                            className="text-xs bg-background border border-border rounded px-2 py-1"
+                          >
+                            {cases.map((caseItem) => (
+                              <option key={caseItem.id} value={caseItem.id}>
+                                {caseItem.case_number} - {caseItem.title}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
                     </CardDescription>
                   </div>
                   {collapsedCards.communication ? (

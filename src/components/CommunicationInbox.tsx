@@ -172,52 +172,19 @@ export const CommunicationInbox: React.FC<CommunicationInboxProps> = ({
 
   if (cases.length === 0) {
     return (
-      <Card className={`bg-gradient-card shadow-card ${isRTL() ? 'rtl-card' : ''}`}>
-        <CardHeader>
-          <CardTitle className={`flex items-center gap-2 relative ${isRTL() ? 'flex-row-reverse justify-end' : ''}`}>
-            <MessageSquare className="h-5 w-5" />
-            {t('communication.inbox.title')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className={isRTL() ? 'text-right' : ''}>
-          <Alert>
-            <Clock className="h-4 w-4" />
-            <AlertDescription>
-              No cases available for communication
-            </AlertDescription>
-          </Alert>
-        </CardContent>
-      </Card>
+      <div className={isRTL() ? 'text-right' : ''}>
+        <Alert>
+          <Clock className="h-4 w-4" />
+          <AlertDescription>
+            No cases available for communication
+          </AlertDescription>
+        </Alert>
+      </div>
     );
   }
 
   return (
-    <Card className={`bg-gradient-card shadow-card ${isRTL() ? 'rtl-card' : ''}`}>
-      <CardHeader>
-        <CardTitle className={`flex items-center gap-2 relative ${isRTL() ? 'flex-row-reverse justify-end' : ''}`}>
-          <MessageSquare className="h-5 w-5" />
-          {t('communication.inbox.title')}
-          <NotificationBadge count={chatNotificationCount} />
-        </CardTitle>
-        <CardDescription className={`flex items-center justify-between ${isRTL() ? 'text-right flex-row-reverse' : ''}`}>
-          <span>{t(`communication.inbox.description.${userRole}`)}</span>
-          {cases.length > 1 && (
-            <Select value={selectedCaseId} onValueChange={setSelectedCaseId}>
-              <SelectTrigger className="w-auto min-w-[200px] ml-4">
-                <SelectValue placeholder="Select Case" />
-              </SelectTrigger>
-              <SelectContent>
-                {cases.map((caseItem) => (
-                  <SelectItem key={caseItem.id} value={caseItem.id}>
-                    {caseItem.case_number} - {caseItem.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className={isRTL() ? 'text-right' : ''}>
+    <div className={isRTL() ? 'text-right' : ''}>
         {!selectedCase ? (
           <Alert>
             <Clock className="h-4 w-4" />
@@ -310,8 +277,7 @@ export const CommunicationInbox: React.FC<CommunicationInboxProps> = ({
               />
             </TabsContent>
           </Tabs>
-        )}
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 };
