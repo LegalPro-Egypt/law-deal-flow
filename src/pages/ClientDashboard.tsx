@@ -20,7 +20,7 @@ import {
   Mail,
   Receipt,
   Plus,
-  Menu,
+  AlignJustify,
   LogOut,
   ChevronDown,
   ChevronRight,
@@ -406,7 +406,7 @@ const ClientDashboard = () => {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="h-9 w-9 sm:h-10 sm:w-auto sm:px-4">
-                    <Menu className="h-4 w-4" />
+                    <AlignJustify className="h-4 w-4" />
                     <span className="hidden sm:inline sm:ml-2">More</span>
                   </Button>
                 </DropdownMenuTrigger>
