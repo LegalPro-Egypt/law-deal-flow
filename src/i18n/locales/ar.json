@@ -62,10 +62,19 @@
       "details": "تفاصيل العرض",
       "preview": "معاينة وإرسال"
     },
+    "paymentStructure": {
+      "title": "هيكل الدفع",
+      "label": "اختر هيكل الدفع",
+      "fixedFee": "أتعاب ثابتة",
+      "contingency": "أتعاب طوارئ",
+      "contingencyPercentage": "نسبة أتعاب الطوارئ (%)*",
+      "contingencyDisclaimer": "أتفهم وأوافق على أن مدفوعات الطوارئ يجب أن تتم من خلال المنصة وتنطبق عمولة المنصة على أتعاب الطوارئ",
+      "contingencyNote": "* رسوم المنصة لا تنطبق على مبالغ الطوارئ"
+    },
     "feeStructure": {
       "title": "هيكل الأتعاب",
-      "consultation": "أتعاب الاستشارة ($)",
-      "remaining": "الأتعاب المتبقية ($)",
+      "consultation": "أتعاب الاستشارة ($)*",
+      "remaining": "الأتعاب المتبقية ($)*",
       "total": "إجمالي الأتعاب"
     },
     "timeline": {

@@ -7,10 +7,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/hooks/useLanguage";
-import { Loader2, FileText, DollarSign, Clock, Target, CheckCircle } from "lucide-react";
+import { Loader2, FileText, DollarSign, Clock, Target, CheckCircle, AlertTriangle } from "lucide-react";
 
 interface CreateProposalDialogProps {
   open: boolean;
@@ -27,6 +29,9 @@ interface ProposalForm {
   remaining_fee: number;
   timeline: string;
   strategy: string;
+  payment_structure: 'fixed_fee' | 'contingency';
+  contingency_percentage?: number;
+  contingency_disclaimer_accepted?: boolean;
 }
 
 export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
@@ -43,7 +48,10 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
     consultation_fee: existingProposal?.consultation_fee || 500,
     remaining_fee: existingProposal?.remaining_fee || 2000,
     timeline: existingProposal?.timeline || "4-6 weeks",
-    strategy: existingProposal?.strategy || ""
+    strategy: existingProposal?.strategy || "",
+    payment_structure: (existingProposal?.payment_structure as 'fixed_fee' | 'contingency') || 'fixed_fee',
+    contingency_percentage: existingProposal?.contingency_percentage || undefined,
+    contingency_disclaimer_accepted: existingProposal?.contingency_disclaimer_accepted || false
   });
   const [generatedProposal, setGeneratedProposal] = useState<string>(existingProposal?.generated_content || "");
   const [feeStructure, setFeeStructure] = useState<any>(null);
@@ -76,6 +84,26 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
   const clientProtectionFeePercentage = 3.0;
   
   const calculateFees = () => {
+    if (formData.payment_structure === 'contingency') {
+      // For contingency, platform fees don't apply to the contingency portion
+      const platformFeeAmount = 0;
+      const paymentProcessingFeeAmount = 0;
+      const clientProtectionFeeAmount = 0;
+      const totalAdditionalFees = 0;
+      const baseTotalFee = formData.consultation_fee;
+      const finalTotalFee = baseTotalFee;
+      
+      return {
+        platformFeeAmount,
+        paymentProcessingFeeAmount,
+        clientProtectionFeeAmount,
+        totalAdditionalFees,
+        baseTotalFee,
+        finalTotalFee
+      };
+    }
+    
+    // Fixed fee calculation (existing logic)
     const remainingFee = formData.remaining_fee || 0;
     const platformFeeAmount = remainingFee * (platformFeePercentage / 100);
     const paymentProcessingFeeAmount = remainingFee * (paymentProcessingFeePercentage / 100);
@@ -96,7 +124,7 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
 
   const calculatedFees = calculateFees();
 
-  const handleInputChange = (field: keyof ProposalForm, value: string | number) => {
+  const handleInputChange = (field: keyof ProposalForm, value: string | number | boolean) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -159,6 +187,16 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
   };
 
   const generateProposal = async () => {
+    // Validate required fields first
+    if (!formData.consultation_fee || !formData.remaining_fee || !formData.timeline.trim()) {
+      toast({
+        title: t('proposal.messages.feesRequired'),
+        description: t('proposal.messages.feesRequiredDesc'),
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (!formData.strategy.trim()) {
       toast({
         title: t('proposal.messages.strategyRequired'),
@@ -234,13 +272,55 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
   };
 
   const sendProposal = async () => {
-    if (proposalType === 'generated' && !generatedProposal) {
+    // Validate required fields
+    if (!formData.consultation_fee || !formData.timeline.trim()) {
       toast({
-        title: t('proposal.messages.noProposal'),
-        description: t('proposal.messages.noProposalDesc'),
+        title: t('proposal.messages.feesRequired'),
+        description: t('proposal.messages.feesRequiredDesc'),
         variant: "destructive"
       });
       return;
+    }
+
+    // Validate payment structure specific requirements
+    if (formData.payment_structure === 'fixed_fee' && !formData.remaining_fee) {
+      toast({
+        title: t('proposal.messages.feesRequired'),
+        description: t('proposal.messages.feesRequiredDesc'),
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (formData.payment_structure === 'contingency') {
+      if (!formData.contingency_percentage || !formData.contingency_disclaimer_accepted) {
+        toast({
+          title: t('proposal.messages.contingencyRequired'),
+          description: t('proposal.messages.contingencyRequiredDesc'),
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+
+    // Validate proposal content based on type
+    if (proposalType === 'generated') {
+      if (!generatedProposal) {
+        toast({
+          title: t('proposal.messages.noProposal'),
+          description: t('proposal.messages.noProposalDesc'),
+          variant: "destructive"
+        });
+        return;
+      }
+      if (!formData.strategy.trim()) {
+        toast({
+          title: t('proposal.messages.strategyRequired'),
+          description: t('proposal.messages.strategyRequiredDesc'),
+          variant: "destructive"
+        });
+        return;
+      }
     }
     
     if (proposalType === 'uploaded' && !uploadedFileUrl) {
@@ -260,8 +340,10 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
           .from('proposals')
           .update({
             consultation_fee: formData.consultation_fee,
-            remaining_fee: formData.remaining_fee,
-            total_fee: formData.consultation_fee + formData.remaining_fee,
+            remaining_fee: formData.payment_structure === 'fixed_fee' ? formData.remaining_fee : null,
+            total_fee: formData.payment_structure === 'fixed_fee' 
+              ? formData.consultation_fee + formData.remaining_fee 
+              : formData.consultation_fee,
             platform_fee_amount: calculatedFees.platformFeeAmount,
             payment_processing_fee_amount: calculatedFees.paymentProcessingFeeAmount,
             client_protection_fee_amount: calculatedFees.clientProtectionFeeAmount,
@@ -269,7 +351,10 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
             total_additional_fees: calculatedFees.totalAdditionalFees,
             final_total_fee: calculatedFees.finalTotalFee,
             timeline: formData.timeline,
-            strategy: formData.strategy,
+            strategy: proposalType === 'generated' ? formData.strategy : null,
+            payment_structure: formData.payment_structure,
+            contingency_percentage: formData.contingency_percentage || null,
+            contingency_disclaimer_accepted: formData.contingency_disclaimer_accepted || false,
             generated_content: proposalType === 'generated' ? generatedProposal : null,
             uploaded_pdf_url: proposalType === 'uploaded' ? uploadedFileUrl : null,
             proposal_type: proposalType,
@@ -287,8 +372,10 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
             lawyer_id: (await supabase.auth.getUser()).data.user?.id,
             client_id: (await supabase.from('cases').select('user_id').eq('id', caseId).single()).data?.user_id,
             consultation_fee: formData.consultation_fee,
-            remaining_fee: formData.remaining_fee,
-            total_fee: formData.consultation_fee + formData.remaining_fee,
+            remaining_fee: formData.payment_structure === 'fixed_fee' ? formData.remaining_fee : null,
+            total_fee: formData.payment_structure === 'fixed_fee' 
+              ? formData.consultation_fee + formData.remaining_fee 
+              : formData.consultation_fee,
             platform_fee_percentage: platformFeePercentage,
             payment_processing_fee_percentage: paymentProcessingFeePercentage,
             client_protection_fee_percentage: clientProtectionFeePercentage,
@@ -299,7 +386,10 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
             total_additional_fees: calculatedFees.totalAdditionalFees,
             final_total_fee: calculatedFees.finalTotalFee,
             timeline: formData.timeline,
-            strategy: formData.strategy,
+            strategy: proposalType === 'generated' ? formData.strategy : null,
+            payment_structure: formData.payment_structure,
+            contingency_percentage: formData.contingency_percentage || null,
+            contingency_disclaimer_accepted: formData.contingency_disclaimer_accepted || false,
             generated_content: proposalType === 'generated' ? generatedProposal : null,
             uploaded_pdf_url: proposalType === 'uploaded' ? uploadedFileUrl : null,
             proposal_type: proposalType,
@@ -337,7 +427,10 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
         consultation_fee: 500,
         remaining_fee: 2000,
         timeline: "4-6 weeks",
-        strategy: ""
+        strategy: "",
+        payment_structure: 'fixed_fee',
+        contingency_percentage: undefined,
+        contingency_disclaimer_accepted: false
       });
       setGeneratedProposal("");
       setActiveTab("form");
@@ -376,6 +469,76 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
           </TabsList>
 
           <TabsContent value="form" className="space-y-6 overflow-y-auto max-h-[60vh]">
+            {/* Payment Structure Selection */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className={`text-sm flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}>
+                  <DollarSign className="h-4 w-4" />
+                  {t('proposal.paymentStructure.title')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="payment_structure">{t('proposal.paymentStructure.label')}</Label>
+                  <Select 
+                    value={formData.payment_structure} 
+                    onValueChange={(value) => handleInputChange('payment_structure', value as 'fixed_fee' | 'contingency')}
+                  >
+                    <SelectTrigger className="bg-background border-input">
+                      <SelectValue placeholder={t('proposal.paymentStructure.label')} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border-input z-50">
+                      <SelectItem value="fixed_fee">{t('proposal.paymentStructure.fixedFee')}</SelectItem>
+                      <SelectItem value="contingency">{t('proposal.paymentStructure.contingency')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {formData.payment_structure === 'contingency' && (
+                  <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                    <div className="space-y-2">
+                      <Label htmlFor="contingency_percentage">{t('proposal.paymentStructure.contingencyPercentage')}</Label>
+                      <Input
+                        id="contingency_percentage"
+                        type="number"
+                        value={formData.contingency_percentage || ''}
+                        onChange={(e) => handleInputChange('contingency_percentage', Number(e.target.value))}
+                        min="0"
+                        max="100"
+                        step="5"
+                        placeholder="e.g., 30"
+                      />
+                    </div>
+                    
+                    <div className="flex items-start space-x-2 p-3 bg-orange-50 border-l-4 border-orange-400 rounded">
+                      <AlertTriangle className="h-5 w-5 text-orange-500 flex-shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="contingency_disclaimer"
+                            checked={formData.contingency_disclaimer_accepted}
+                            onCheckedChange={(checked) => 
+                              handleInputChange('contingency_disclaimer_accepted', checked as boolean)
+                            }
+                          />
+                          <Label 
+                            htmlFor="contingency_disclaimer" 
+                            className="text-sm font-medium cursor-pointer"
+                          >
+                            {t('proposal.paymentStructure.contingencyDisclaimer')}
+                          </Label>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="text-xs text-muted-foreground">
+                      <p>{t('proposal.paymentStructure.contingencyNote')}</p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card>
                 <CardHeader className="pb-3">
@@ -394,46 +557,80 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
                       onChange={(e) => handleInputChange('consultation_fee', Number(e.target.value))}
                       min="0"
                       step="50"
+                      required
                     />
                   </div>
-                  <div className={`space-y-2 ${isRTL() ? 'text-right' : ''}`}>
-                    <Label htmlFor="remaining_fee">{t('proposal.feeStructure.remaining')}</Label>
-                    <Input
-                      id="remaining_fee"
-                      type="number"
-                      value={formData.remaining_fee}
-                      onChange={(e) => handleInputChange('remaining_fee', Number(e.target.value))}
-                      min="0"
-                      step="100"
-                    />
-                  </div>
-                  <Separator />
                   
-                  {/* Additional Fees Section */}
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between text-muted-foreground">
-                      <span>Platform Fee (5%):</span>
-                      <span>${calculatedFees.platformFeeAmount.toFixed(2)}</span>
+                  {formData.payment_structure === 'fixed_fee' && (
+                    <div className={`space-y-2 ${isRTL() ? 'text-right' : ''}`}>
+                      <Label htmlFor="remaining_fee">{t('proposal.feeStructure.remaining')}</Label>
+                      <Input
+                        id="remaining_fee"
+                        type="number"
+                        value={formData.remaining_fee}
+                        onChange={(e) => handleInputChange('remaining_fee', Number(e.target.value))}
+                        min="0"
+                        step="100"
+                        required
+                      />
                     </div>
-                    <div className="flex justify-between text-muted-foreground">
-                      <span>Payment Processing Fee (3%):</span>
-                      <span>${calculatedFees.paymentProcessingFeeAmount.toFixed(2)}</span>
+                  )}
+                  
+                  {formData.payment_structure === 'contingency' && (
+                    <div className="space-y-2 p-3 bg-blue-50 border border-blue-200 rounded">
+                      <p className="text-sm text-blue-800 font-medium">Contingency Fee Structure</p>
+                      <p className="text-sm text-blue-700">
+                        Client pays consultation fee upfront + {formData.contingency_percentage || 0}% of case outcome
+                      </p>
                     </div>
-                    <div className="flex justify-between text-muted-foreground">
-                      <span>Client Protection Fee (3%):</span>
-                      <span>${calculatedFees.clientProtectionFeeAmount.toFixed(2)}</span>
-                    </div>
-                  </div>
+                  )}
                   
                   <Separator />
+                  
+                  {/* Additional Fees Section - Only for fixed fee */}
+                  {formData.payment_structure === 'fixed_fee' && (
+                    <>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between text-muted-foreground">
+                          <span>Platform Fee (5%):</span>
+                          <span>${calculatedFees.platformFeeAmount.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-muted-foreground">
+                          <span>Payment Processing Fee (3%):</span>
+                          <span>${calculatedFees.paymentProcessingFeeAmount.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-muted-foreground">
+                          <span>Client Protection Fee (3%):</span>
+                          <span>${calculatedFees.clientProtectionFeeAmount.toFixed(2)}</span>
+                        </div>
+                      </div>
+                      <Separator />
+                    </>
+                  )}
+                  
                   <div className="flex justify-between items-center font-semibold">
                     <span>{t('proposal.feeStructure.total')}:</span>
-                    <span>${calculatedFees.finalTotalFee.toLocaleString()}</span>
+                    <span>
+                      {formData.payment_structure === 'contingency' 
+                        ? `$${formData.consultation_fee.toLocaleString()} + ${formData.contingency_percentage || 0}% of outcome`
+                        : `$${calculatedFees.finalTotalFee.toLocaleString()}`
+                      }
+                    </span>
                   </div>
                   
                   <div className="text-xs text-muted-foreground mt-2">
-                    <p>* Additional fees apply to remaining payment only</p>
-                    <p>* Consultation fee ({formData.consultation_fee.toLocaleString()}) paid upfront</p>
+                    {formData.payment_structure === 'fixed_fee' ? (
+                      <>
+                        <p>* Additional fees apply to remaining payment only</p>
+                        <p>* Consultation fee ($${formData.consultation_fee.toLocaleString()}) paid upfront</p>
+                      </>
+                    ) : (
+                      <>
+                        <p>* Contingency percentage applies to settlement/award amount</p>
+                        <p>* Platform commission applies to contingency fees</p>
+                        <p>* Consultation fee ($${formData.consultation_fee.toLocaleString()}) paid upfront</p>
+                      </>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -453,6 +650,7 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
                     onChange={(e) => handleInputChange('timeline', e.target.value)}
                     placeholder={t('proposal.timeline.placeholder')}
                     className={isRTL() ? 'text-right' : ''}
+                    required
                   />
                 </CardContent>
               </Card>
@@ -466,7 +664,12 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <Label htmlFor="strategy">{t('proposal.strategy.label')}</Label>
+                <Label htmlFor="strategy">
+                  {proposalType === 'generated' 
+                    ? t('proposal.strategy.labelRequired')
+                    : t('proposal.strategy.labelOptional')
+                  }
+                </Label>
                 <Textarea
                   id="strategy"
                   value={formData.strategy}
@@ -474,9 +677,13 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
                   placeholder={t('proposal.strategy.placeholder')}
                   rows={4}
                   className={`resize-none ${isRTL() ? 'text-right leading-relaxed' : ''}`}
+                  required={proposalType === 'generated'}
                 />
                 <p className="text-xs text-muted-foreground mt-2">
-                  {t('proposal.strategy.description')}
+                  {proposalType === 'generated' 
+                    ? t('proposal.strategy.description')
+                    : "Optional for PDF uploads. This information won't be used if you upload your own proposal."
+                  }
                 </p>
               </CardContent>
             </Card>

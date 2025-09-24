@@ -1009,6 +1009,8 @@ export type Database = {
           client_protection_fee_amount: number | null
           client_protection_fee_percentage: number | null
           consultation_fee: number | null
+          contingency_disclaimer_accepted: boolean | null
+          contingency_percentage: number | null
           created_at: string
           final_total_fee: number | null
           generated_content: string
@@ -1017,6 +1019,7 @@ export type Database = {
           metadata: Json | null
           payment_processing_fee_amount: number | null
           payment_processing_fee_percentage: number | null
+          payment_structure: string | null
           platform_fee_amount: number | null
           platform_fee_percentage: number | null
           proposal_type: string | null
@@ -1038,6 +1041,8 @@ export type Database = {
           client_protection_fee_amount?: number | null
           client_protection_fee_percentage?: number | null
           consultation_fee?: number | null
+          contingency_disclaimer_accepted?: boolean | null
+          contingency_percentage?: number | null
           created_at?: string
           final_total_fee?: number | null
           generated_content: string
@@ -1046,6 +1051,7 @@ export type Database = {
           metadata?: Json | null
           payment_processing_fee_amount?: number | null
           payment_processing_fee_percentage?: number | null
+          payment_structure?: string | null
           platform_fee_amount?: number | null
           platform_fee_percentage?: number | null
           proposal_type?: string | null
@@ -1067,6 +1073,8 @@ export type Database = {
           client_protection_fee_amount?: number | null
           client_protection_fee_percentage?: number | null
           consultation_fee?: number | null
+          contingency_disclaimer_accepted?: boolean | null
+          contingency_percentage?: number | null
           created_at?: string
           final_total_fee?: number | null
           generated_content?: string
@@ -1075,6 +1083,7 @@ export type Database = {
           metadata?: Json | null
           payment_processing_fee_amount?: number | null
           payment_processing_fee_percentage?: number | null
+          payment_structure?: string | null
           platform_fee_amount?: number | null
           platform_fee_percentage?: number | null
           proposal_type?: string | null

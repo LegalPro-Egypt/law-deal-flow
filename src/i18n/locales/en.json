@@ -62,10 +62,19 @@
       "details": "Proposal Details",
       "preview": "Preview & Send"
     },
+    "paymentStructure": {
+      "title": "Payment Structure",
+      "label": "Select Payment Structure",
+      "fixedFee": "Fixed Fee",
+      "contingency": "Contingency Fee",
+      "contingencyPercentage": "Contingency Percentage (%)*",
+      "contingencyDisclaimer": "I understand and agree that contingency payments must be processed through the platform and platform commission applies to contingency fees",
+      "contingencyNote": "* Platform fees do not apply to contingency amounts"
+    },
     "feeStructure": {
       "title": "Fee Structure",
-      "consultation": "Consultation Fee ($)",
-      "remaining": "Remaining Fee ($)",
+      "consultation": "Consultation Fee ($)*",
+      "remaining": "Remaining Fee ($)*",
       "total": "Total Fee"
     },
     "timeline": {
@@ -76,6 +85,8 @@
     "strategy": {
       "title": "Legal Strategy",
       "label": "Your Approach & Strategy",
+      "labelRequired": "Your Approach & Strategy (Required for AI Generation)",
+      "labelOptional": "Your Approach & Strategy (Optional for PDF Upload)",
       "placeholder": "Describe your legal strategy, approach, and key points you'll address in this case...",
       "description": "This will be used by AI to generate a comprehensive proposal with professional legal language."
     },
@@ -87,8 +98,12 @@
       "backToEdit": "Back to Edit"
     },
     "messages": {
-      "strategyRequired": "Strategy Required",
+      "strategyRequired": "Strategy Required for AI Generation",
       "strategyRequiredDesc": "Please provide your legal strategy before generating the proposal.",
+      "feesRequired": "Required Fields Missing",
+      "feesRequiredDesc": "Please fill in all required fields: consultation fee, remaining fee, and timeline.",
+      "contingencyRequired": "Contingency Information Required",
+      "contingencyRequiredDesc": "Please provide contingency percentage and accept the disclaimer.",
       "generated": "Proposal Generated",
       "generatedDesc": "Your AI-powered proposal has been created successfully.",
       "generationFailed": "Generation Failed",
