@@ -448,7 +448,7 @@ const ClientDashboard = () => {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8 max-w-6xl space-y-6">
+      <div className="container mx-auto px-4 py-8 max-w-6xl space-y-4">
         {/* Case Timeline Card */}
         <Collapsible open={!collapsedCards.timeline} onOpenChange={() => toggleCard('timeline')}>
           <Card className="bg-gradient-card shadow-card border-2 border-primary/20 hover:border-primary/40 transition-colors">
