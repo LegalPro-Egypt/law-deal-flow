@@ -11,14 +11,11 @@ export const ProBonoSection = () => {
   const { elementRef, isVisible } = useIntersectionObserver({ threshold: 0.2 });
 
   return (
-    <section className="relative py-12 md:py-16 bg-muted/30 overflow-hidden">
-      {/* Animated Background Accent - Desktop/Tablet only */}
-      <div className="hidden md:block absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-gradient-to-br from-primary/6 to-accent/4 rounded-full blur-3xl animate-drift-rotate -translate-x-1/2 -translate-y-1/2"></div>
-        <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-gradient-to-tr from-accent/5 to-primary/3 rounded-full blur-2xl animate-gentle-pulse"></div>
-        <div className="absolute bottom-1/3 left-1/4 w-80 h-80 bg-gradient-to-bl from-primary/4 to-accent/6 rounded-full blur-3xl animate-drift-rotate" style={{ animationDelay: '-10s' }}></div>
-      </div>
-
+    <section className="relative py-12 md:py-16 overflow-hidden">
+      {/* Glassmorphism Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-accent/20 via-primary/10 to-accent/30 backdrop-blur-3xl"></div>
+      <div className="absolute inset-0 bg-gradient-to-t from-background/40 via-transparent to-background/20"></div>
+      
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-4xl mx-auto">
           <Card 
