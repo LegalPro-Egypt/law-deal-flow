@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,7 @@ interface CreateProposalDialogProps {
   caseId: string;
   caseTitle: string;
   clientName: string;
+  existingProposal?: any;
   onProposalSent: () => void;
 }
 
@@ -34,21 +35,32 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
   caseId,
   caseTitle,
   clientName,
+  existingProposal,
   onProposalSent
 }) => {
+  const isEditMode = !!existingProposal;
   const [formData, setFormData] = useState<ProposalForm>({
-    consultation_fee: 500,
-    remaining_fee: 2000,
-    timeline: "4-6 weeks",
-    strategy: ""
+    consultation_fee: existingProposal?.consultation_fee || 500,
+    remaining_fee: existingProposal?.remaining_fee || 2000,
+    timeline: existingProposal?.timeline || "4-6 weeks",
+    strategy: existingProposal?.strategy || ""
   });
-  const [generatedProposal, setGeneratedProposal] = useState<string>("");
+  const [generatedProposal, setGeneratedProposal] = useState<string>(existingProposal?.generated_content || "");
   const [feeStructure, setFeeStructure] = useState<any>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [activeTab, setActiveTab] = useState("form");
   const { toast } = useToast();
   const { t, isRTL } = useLanguage();
+
+  // Set active tab when editing existing proposal
+  useEffect(() => {
+    if (isEditMode && existingProposal?.generated_content) {
+      setActiveTab("preview");
+    } else {
+      setActiveTab("form");
+    }
+  }, [isEditMode, existingProposal]);
 
   // Calculate additional fees in real-time
   const platformFeePercentage = 5.0;
@@ -169,34 +181,58 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
 
     setIsSending(true);
     try {
-      // Create proposal record in dedicated proposals table
-      const { data: proposalData, error: proposalError } = await supabase
-        .from('proposals')
-        .insert({
-          case_id: caseId,
-          lawyer_id: (await supabase.auth.getUser()).data.user?.id,
-          client_id: (await supabase.from('cases').select('user_id').eq('id', caseId).single()).data?.user_id,
-          consultation_fee: formData.consultation_fee,
-          remaining_fee: formData.remaining_fee,
-          total_fee: formData.consultation_fee + formData.remaining_fee,
-          platform_fee_percentage: platformFeePercentage,
-          payment_processing_fee_percentage: paymentProcessingFeePercentage,
-          client_protection_fee_percentage: clientProtectionFeePercentage,
-          platform_fee_amount: calculatedFees.platformFeeAmount,
-          payment_processing_fee_amount: calculatedFees.paymentProcessingFeeAmount,
-          client_protection_fee_amount: calculatedFees.clientProtectionFeeAmount,
-          base_total_fee: calculatedFees.baseTotalFee,
-          total_additional_fees: calculatedFees.totalAdditionalFees,
-          final_total_fee: calculatedFees.finalTotalFee,
-          timeline: formData.timeline,
-          strategy: formData.strategy,
-          generated_content: generatedProposal,
-          status: 'pending_admin_review'
-        })
-        .select()
-        .single();
+      if (isEditMode) {
+        // Update existing proposal
+        const { error: proposalError } = await supabase
+          .from('proposals')
+          .update({
+            consultation_fee: formData.consultation_fee,
+            remaining_fee: formData.remaining_fee,
+            total_fee: formData.consultation_fee + formData.remaining_fee,
+            platform_fee_amount: calculatedFees.platformFeeAmount,
+            payment_processing_fee_amount: calculatedFees.paymentProcessingFeeAmount,
+            client_protection_fee_amount: calculatedFees.clientProtectionFeeAmount,
+            base_total_fee: calculatedFees.baseTotalFee,
+            total_additional_fees: calculatedFees.totalAdditionalFees,
+            final_total_fee: calculatedFees.finalTotalFee,
+            timeline: formData.timeline,
+            strategy: formData.strategy,
+            generated_content: generatedProposal,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingProposal.id);
 
-      if (proposalError) throw proposalError;
+        if (proposalError) throw proposalError;
+      } else {
+        // Create new proposal record
+        const { data: proposalData, error: proposalError } = await supabase
+          .from('proposals')
+          .insert({
+            case_id: caseId,
+            lawyer_id: (await supabase.auth.getUser()).data.user?.id,
+            client_id: (await supabase.from('cases').select('user_id').eq('id', caseId).single()).data?.user_id,
+            consultation_fee: formData.consultation_fee,
+            remaining_fee: formData.remaining_fee,
+            total_fee: formData.consultation_fee + formData.remaining_fee,
+            platform_fee_percentage: platformFeePercentage,
+            payment_processing_fee_percentage: paymentProcessingFeePercentage,
+            client_protection_fee_percentage: clientProtectionFeePercentage,
+            platform_fee_amount: calculatedFees.platformFeeAmount,
+            payment_processing_fee_amount: calculatedFees.paymentProcessingFeeAmount,
+            client_protection_fee_amount: calculatedFees.clientProtectionFeeAmount,
+            base_total_fee: calculatedFees.baseTotalFee,
+            total_additional_fees: calculatedFees.totalAdditionalFees,
+            final_total_fee: calculatedFees.finalTotalFee,
+            timeline: formData.timeline,
+            strategy: formData.strategy,
+            generated_content: generatedProposal,
+            status: 'pending_admin_review'
+          })
+          .select()
+          .single();
+
+        if (proposalError) throw proposalError;
+      }
 
       // Update case status to indicate proposal is under admin review
       const { error: caseError } = await supabase
@@ -210,8 +246,10 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
       if (caseError) throw caseError;
 
       toast({
-        title: "Proposal Sent for Review",
-        description: "Your proposal has been sent to the admin for review and approval."
+        title: isEditMode ? "Proposal Updated" : "Proposal Sent for Review",
+        description: isEditMode 
+          ? "Your proposal has been updated successfully." 
+          : "Your proposal has been sent to the admin for review and approval."
       });
 
       onProposalSent();
@@ -245,7 +283,7 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
         <DialogHeader>
           <DialogTitle className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}>
             <FileText className="h-5 w-5" />
-            {t('proposal.title')}
+            {isEditMode ? 'Edit Proposal' : t('proposal.title')}
           </DialogTitle>
           <p className="text-sm text-muted-foreground">
             {t('proposal.subtitle', { caseTitle, clientName })}
@@ -417,7 +455,7 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
                     {t('proposal.buttons.sending')}
                   </>
                 ) : (
-                  t('proposal.buttons.send')
+                  isEditMode ? 'Update Proposal' : t('proposal.buttons.send')
                 )}
               </Button>
             </div>

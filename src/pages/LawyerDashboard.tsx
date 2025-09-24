@@ -57,6 +57,7 @@ interface Case {
   updated_at: string;
   consultation_paid: boolean;
   payment_status: string;
+  proposal?: any;
 }
 
 const LawyerDashboard = () => {
@@ -648,7 +649,7 @@ const LawyerDashboard = () => {
                   onClick={() => setSelectedCaseForProposal(currentCase)}
                 >
                   <FileText className={`h-4 w-4 ${isRTL() ? 'ml-2' : 'mr-2'}`} />
-                  {t('dashboard.cases.createProposal')}
+                  {currentCase.proposal ? t('dashboard.cases.editProposal') : t('dashboard.cases.createProposal')}
                 </Button>
               </div>
             </CardContent>
@@ -686,6 +687,7 @@ const LawyerDashboard = () => {
         caseId={selectedCaseForProposal?.id || ''}
         caseTitle={selectedCaseForProposal?.title || ''}
         clientName={selectedCaseForProposal?.client_name || ''}
+        existingProposal={selectedCaseForProposal?.proposal}
         onProposalSent={() => {
           fetchDashboardData();
           setSelectedCaseForProposal(null);

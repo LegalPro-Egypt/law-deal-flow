@@ -17,6 +17,7 @@ interface LawyerCase {
   total_fee?: number;
   consultation_fee?: number;
   remaining_fee?: number;
+  proposal?: Proposal;
 }
 
 interface Proposal {
@@ -25,8 +26,11 @@ interface Proposal {
   consultation_fee: number;
   remaining_fee: number;
   timeline: string;
-  scope: string;
-  status: 'draft' | 'sent' | 'accepted' | 'rejected';
+  strategy: string;
+  generated_content: string;
+  status: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface Payout {
@@ -55,15 +59,32 @@ export const useLawyerData = () => {
     if (!user) return;
     
     try {
-      const { data, error } = await supabase
+      const { data: casesData, error: casesError } = await supabase
         .from('cases')
         .select('*')
         .eq('assigned_lawyer_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (casesError) throw casesError;
       
-      setAssignedCases(data || []);
+      // Fetch proposals for each case
+      const casesWithProposals = await Promise.all(
+        (casesData || []).map(async (caseItem) => {
+          const { data: proposalData } = await supabase
+            .from('proposals')
+            .select('*')
+            .eq('case_id', caseItem.id)
+            .eq('lawyer_id', user.id)
+            .single();
+          
+          return {
+            ...caseItem,
+            proposal: proposalData || undefined
+          };
+        })
+      );
+      
+      setAssignedCases(casesWithProposals);
     } catch (error) {
       console.error('Error fetching assigned cases:', error);
       toast({
@@ -113,7 +134,7 @@ Total Fee: $${proposal.consultation_fee + proposal.remaining_fee}
 Timeline: ${proposal.timeline}
 
 Scope of Work:
-${proposal.scope}
+${proposal.strategy}
 
 Please review and let me know if you have any questions.`
           });
@@ -237,12 +258,44 @@ Please review and let me know if you have any questions.`
     };
   }, [user]);
 
+  const updateProposal = async (proposalId: string, updatedData: Partial<Proposal>) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('proposals')
+        .update({
+          ...updatedData,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', proposalId)
+        .eq('lawyer_id', user.id);
+
+      if (error) throw error;
+
+      await fetchAssignedCases();
+      
+      toast({
+        title: "Proposal updated",
+        description: "Your proposal has been updated successfully"
+      });
+    } catch (error) {
+      console.error('Error updating proposal:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update proposal",
+        variant: "destructive"
+      });
+    }
+  };
+
   return {
     assignedCases,
     payouts,
     stats,
     loading,
     sendProposal,
+    updateProposal,
     sendMessage,
     refreshData: fetchAssignedCases
   };
