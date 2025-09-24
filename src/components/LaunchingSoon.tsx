@@ -179,18 +179,18 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
                     
                     {/* Benefits bullet points */}
                     <div className="bg-gray-50 rounded-lg p-4 text-left">
-                      <ul className="space-y-2 text-base font-modern leading-relaxed">
-                        <li className="flex items-start text-gray-700">
-                          <CheckCircle className="w-4 h-4 text-neomorphism-primary mr-3 flex-shrink-0 mt-0.5" />
-                          Early access to LegalPro
+                      <ul className="space-y-2 text-sm font-modern leading-relaxed">
+                        <li className="flex items-center text-green-600">
+                          <CheckCircle className="w-4 h-4 text-green-500 mr-3 flex-shrink-0 drop-shadow-sm" />
+                          <span className="text-green-700 drop-shadow-sm">Early access to LegalPro</span>
                         </li>
-                        <li className="flex items-start text-gray-700">
-                          <CheckCircle className="w-4 h-4 text-neomorphism-primary mr-3 flex-shrink-0 mt-0.5" />
-                          Exclusive launch updates
+                        <li className="flex items-center text-green-600">
+                          <CheckCircle className="w-4 h-4 text-green-500 mr-3 flex-shrink-0 drop-shadow-sm" />
+                          <span className="text-green-700 drop-shadow-sm">Exclusive launch updates</span>
                         </li>
-                        <li className="flex items-start text-gray-700">
-                          <CheckCircle className="w-4 h-4 text-neomorphism-primary mr-3 flex-shrink-0 mt-0.5" />
-                          Chance to win up to 50,000 EGP off your first case
+                        <li className="flex items-center text-green-600">
+                          <CheckCircle className="w-4 h-4 text-green-500 mr-3 flex-shrink-0 drop-shadow-sm" />
+                          <span className="text-green-700 drop-shadow-sm">Chance to win up to 50,000 EGP off your first case</span>
                         </li>
                       </ul>
                     </div>
