@@ -47,11 +47,12 @@ import { downloadPDF, getUserFriendlyDownloadMessage } from "@/utils/pdfDownload
 const ClientDashboard = () => {
   const [newMessage, setNewMessage] = useState("");
   const [collapsedCards, setCollapsedCards] = useState({
-    timeline: false,
-    progress: false,
-    personal: false,
-    intake: false,
-    documents: false
+    timeline: true,
+    progress: true,
+    personal: true,
+    intake: true,
+    documents: true,
+    communication: true
   });
   const { signOut } = useAuth();
   const navigate = useNavigate();
@@ -855,17 +856,50 @@ const ClientDashboard = () => {
         </Dialog>
 
         {/* Communication Inbox Section */}
-        <CommunicationInbox
-          cases={cases}
-          userRole="client"
-          caseId={activeCase.id}
-          caseTitle={activeCase.title}
-          caseStatus={activeCase.status}
-          consultationPaid={activeCase.consultation_paid || false}
-          paymentStatus={activeCase.payment_status || 'pending'}
-          lawyerAssigned={!!activeCase.assigned_lawyer_id}
-          chatNotificationCount={totalUnreadCount}
-        />
+        <Collapsible open={!collapsedCards.communication} onOpenChange={() => toggleCard('communication')}>
+          <Card className="bg-gradient-card shadow-card">
+            <CollapsibleTrigger asChild>
+              <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center">
+                      <MessageSquare className="h-5 w-5 mr-2" />
+                      Communication Center
+                      {totalUnreadCount > 0 && (
+                        <Badge variant="destructive" className="ml-2">
+                          {totalUnreadCount}
+                        </Badge>
+                      )}
+                    </CardTitle>
+                    <CardDescription>
+                      Direct communication with your legal team
+                    </CardDescription>
+                  </div>
+                  {collapsedCards.communication ? (
+                    <ChevronRight className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </div>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent>
+                <CommunicationInbox
+                  cases={cases}
+                  userRole="client"
+                  caseId={activeCase.id}
+                  caseTitle={activeCase.title}
+                  caseStatus={activeCase.status}
+                  consultationPaid={activeCase.consultation_paid || false}
+                  paymentStatus={activeCase.payment_status || 'pending'}
+                  lawyerAssigned={!!activeCase.assigned_lawyer_id}
+                  chatNotificationCount={totalUnreadCount}
+                />
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
       </div>
     </div>
   );
