@@ -11,12 +11,33 @@ interface VisitorData {
   screen_resolution?: string;
   timezone?: string;
   language_preferences?: string[];
+  // Enhanced human verification data
+  mouse_activity?: boolean;
+  scroll_behavior?: boolean;
+  touch_events?: boolean;
+  canvas_fingerprint?: string;
+  webgl_fingerprint?: string;
+  javascript_enabled?: boolean;
+  local_storage_enabled?: boolean;
+  cookie_enabled?: boolean;
+  // Page view tracking
+  page_views_in_session?: number;
+  time_on_page?: number;
+  navigation_flow?: string[];
 }
 
 export const useVisitorTracking = (profile?: { role?: string } | null) => {
   const sessionStartTime = useRef<number>(Date.now());
   const sessionId = useRef<string>('');
   const hasTracked = useRef<boolean>(false);
+  const pageViews = useRef<number>(0);
+  const navigationFlow = useRef<string[]>([]);
+  const lastPageTime = useRef<number>(Date.now());
+  
+  // Human verification indicators
+  const mouseActivity = useRef<boolean>(false);
+  const scrollActivity = useRef<boolean>(false);
+  const touchActivity = useRef<boolean>(false);
 
   // Generate or retrieve session ID
   const getSessionId = (): string => {
@@ -30,6 +51,54 @@ export const useVisitorTracking = (profile?: { role?: string } | null) => {
       }
     }
     return sessionId.current;
+  };
+
+  // Enhanced human verification functions
+  const generateCanvasFingerprint = (): string => {
+    try {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return 'no-canvas';
+      
+      ctx.textBaseline = 'top';
+      ctx.font = '14px Arial';
+      ctx.fillText('Human verification test 🤖', 2, 2);
+      return canvas.toDataURL().slice(-50);
+    } catch {
+      return 'canvas-error';
+    }
+  };
+
+  const generateWebGLFingerprint = (): string => {
+    try {
+      const canvas = document.createElement('canvas');
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      if (!gl) return 'no-webgl';
+      
+      const renderer = gl.getParameter(gl.RENDERER);
+      const vendor = gl.getParameter(gl.VENDOR);
+      return btoa((renderer + vendor).slice(0, 30));
+    } catch {
+      return 'webgl-error';
+    }
+  };
+
+  const detectCapabilities = () => {
+    return {
+      javascript_enabled: true, // If this runs, JS is enabled
+      local_storage_enabled: (() => {
+        try {
+          localStorage.setItem('test', 'test');
+          localStorage.removeItem('test');
+          return true;
+        } catch {
+          return false;
+        }
+      })(),
+      cookie_enabled: navigator.cookieEnabled,
+      canvas_fingerprint: generateCanvasFingerprint(),
+      webgl_fingerprint: generateWebGLFingerprint()
+    };
   };
 
   // Check if tracking should be disabled
@@ -52,17 +121,31 @@ export const useVisitorTracking = (profile?: { role?: string } | null) => {
     return true;
   };
 
-  // Track visitor data
+  // Track visitor data with enhanced verification
   const trackVisitor = async (additionalData?: Partial<VisitorData>) => {
-    if (!shouldTrack() || hasTracked.current) {
+    if (!shouldTrack()) {
       return;
     }
 
     try {
-      const sessionDuration = Math.floor((Date.now() - sessionStartTime.current) / 1000);
+      const currentTime = Date.now();
+      const sessionDuration = Math.floor((currentTime - sessionStartTime.current) / 1000);
+      const timeOnPage = Math.floor((currentTime - lastPageTime.current) / 1000);
+      
+      // Update page views and navigation flow
+      pageViews.current++;
+      const currentPath = window.location.pathname;
+      navigationFlow.current.push(currentPath);
+      
+      // Keep navigation flow reasonable in size
+      if (navigationFlow.current.length > 20) {
+        navigationFlow.current = navigationFlow.current.slice(-20);
+      }
+      
+      const capabilities = detectCapabilities();
       
       const visitorData: VisitorData = {
-        page_path: window.location.pathname,
+        page_path: currentPath,
         referrer_url: document.referrer || undefined,
         user_agent: navigator.userAgent,
         session_id: getSessionId(),
@@ -71,6 +154,16 @@ export const useVisitorTracking = (profile?: { role?: string } | null) => {
         screen_resolution: `${screen.width}x${screen.height}`,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         language_preferences: navigator.languages ? Array.from(navigator.languages) : [navigator.language],
+        
+        // Enhanced human verification data
+        mouse_activity: mouseActivity.current,
+        scroll_behavior: scrollActivity.current,
+        touch_events: touchActivity.current,
+        page_views_in_session: pageViews.current,
+        time_on_page: timeOnPage,
+        navigation_flow: [...navigationFlow.current],
+        
+        ...capabilities,
         ...additionalData
       };
 
@@ -84,6 +177,8 @@ export const useVisitorTracking = (profile?: { role?: string } | null) => {
         console.log('Visitor tracked:', data);
         hasTracked.current = true;
       }
+      
+      lastPageTime.current = currentTime;
     } catch (error) {
       console.error('Failed to track visitor:', error);
     }
@@ -124,10 +219,28 @@ export const useVisitorTracking = (profile?: { role?: string } | null) => {
   };
 
   useEffect(() => {
+    // Human activity detection
+    const handleMouseMove = () => {
+      mouseActivity.current = true;
+    };
+
+    const handleScroll = () => {
+      scrollActivity.current = true;
+    };
+
+    const handleTouch = () => {
+      touchActivity.current = true;
+    };
+
     // Only track after profile is determined (either loaded or confirmed null for anonymous users)
     if (profile !== undefined) {
       // Track initial page load
       trackVisitor();
+      
+      // Set up human activity listeners
+      document.addEventListener('mousemove', handleMouseMove, { passive: true });
+      document.addEventListener('scroll', handleScroll, { passive: true });
+      document.addEventListener('touchstart', handleTouch, { passive: true });
     }
 
     // Track when user leaves the page
@@ -143,6 +256,11 @@ export const useVisitorTracking = (profile?: { role?: string } | null) => {
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       clearInterval(sessionInterval);
+      
+      // Clean up activity listeners
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('scroll', handleScroll);
+      document.removeEventListener('touchstart', handleTouch);
     };
   }, [profile]); // Re-run when profile changes
 

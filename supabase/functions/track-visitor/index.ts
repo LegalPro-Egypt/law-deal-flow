@@ -17,6 +17,19 @@ interface VisitorData {
   screen_resolution?: string;
   timezone?: string;
   language_preferences?: string[];
+  // Enhanced human verification data
+  mouse_activity?: boolean;
+  scroll_behavior?: boolean;
+  touch_events?: boolean;
+  canvas_fingerprint?: string;
+  webgl_fingerprint?: string;
+  javascript_enabled?: boolean;
+  local_storage_enabled?: boolean;
+  cookie_enabled?: boolean;
+  // Page view tracking
+  page_views_in_session?: number;
+  time_on_page?: number;
+  navigation_flow?: string[];
 }
 
 interface BotDetectionResult {
@@ -64,6 +77,33 @@ const BOT_PATTERNS = [
   /bot|crawler|spider|scraper|parser/i,
   /curl|wget|python-requests|go-http-client/i,
   /http|fetch|axios|urllib/i
+];
+
+// Enhanced suspicious patterns with version checking
+const BROWSER_VERSION_PATTERNS = {
+  chrome: /chrome\/(\d+)/i,
+  firefox: /firefox\/(\d+)/i,
+  safari: /version\/(\d+)/i,
+  edge: /edg\/(\d+)/i
+};
+
+// Invalid version ranges (current valid versions as of 2024)
+const VALID_VERSION_RANGES = {
+  chrome: { min: 90, max: 130 }, // Chrome 140+ is suspicious
+  firefox: { min: 80, max: 120 },
+  safari: { min: 14, max: 18 },
+  edge: { min: 90, max: 130 }
+};
+
+// Data center ASN patterns (commonly used by bots)
+const DATA_CENTER_ASNS = [
+  /AS13335/, // Cloudflare
+  /AS16509/, // Amazon AWS
+  /AS15169/, // Google Cloud
+  /AS8075/,  // Microsoft Azure
+  /AS14061/, // DigitalOcean
+  /AS20473/, // Choopa/Vultr
+  /AS16276/  // OVH
 ];
 
 // Suspicious user agent patterns
@@ -132,7 +172,36 @@ function detectBot(visitorData: VisitorData, clientIP: string): BotDetectionResu
   // Check user agent patterns
   const userAgent = visitorData.user_agent || '';
   
-  // Confirmed bots (high confidence)
+  // CRITICAL: Page view rate analysis (most important check)
+  const duration = visitorData.session_duration || 0;
+  const pageViews = visitorData.page_views_in_session || 1;
+  
+  if (duration > 0) {
+    const pageViewRate = pageViews / duration; // pages per second
+    const pageViewRatePerMinute = pageViews / (duration / 60); // pages per minute
+    
+    if (pageViewRate > 2) {
+      reasons.push(`Extreme page view rate: ${pageViewRate.toFixed(2)} pages/sec`);
+      score += 95; // Almost certain bot
+    } else if (pageViewRate > 1) {
+      reasons.push(`Very high page view rate: ${pageViewRate.toFixed(2)} pages/sec`);
+      score += 80;
+    } else if (pageViewRate > 0.5) {
+      reasons.push(`High page view rate: ${pageViewRate.toFixed(2)} pages/sec`);
+      score += 60;
+    } else if (pageViewRatePerMinute > 30) {
+      reasons.push(`High page view rate: ${pageViewRatePerMinute.toFixed(1)} pages/min`);
+      score += 40;
+    }
+    
+    // Detect rapid-fire patterns
+    if (pageViews > 100 && duration < 300) { // >100 pages in <5 minutes
+      reasons.push(`Rapid browsing: ${pageViews} pages in ${duration}s`);
+      score += 70;
+    }
+  }
+  
+  // Enhanced user agent analysis
   for (const pattern of BOT_PATTERNS) {
     if (pattern.test(userAgent)) {
       reasons.push(`Known bot user agent: ${userAgent.substring(0, 50)}...`);
@@ -141,10 +210,78 @@ function detectBot(visitorData: VisitorData, clientIP: string): BotDetectionResu
     }
   }
   
+  // Browser version validation
+  const chromeMatch = userAgent.match(BROWSER_VERSION_PATTERNS.chrome);
+  const firefoxMatch = userAgent.match(BROWSER_VERSION_PATTERNS.firefox);
+  const safariMatch = userAgent.match(BROWSER_VERSION_PATTERNS.safari);
+  const edgeMatch = userAgent.match(BROWSER_VERSION_PATTERNS.edge);
+  
+  if (chromeMatch) {
+    const version = parseInt(chromeMatch[1]);
+    const valid = VALID_VERSION_RANGES.chrome;
+    if (version < valid.min || version > valid.max) {
+      reasons.push(`Invalid Chrome version: ${version}`);
+      score += 50;
+    }
+  }
+  
+  if (firefoxMatch) {
+    const version = parseInt(firefoxMatch[1]);
+    const valid = VALID_VERSION_RANGES.firefox;
+    if (version < valid.min || version > valid.max) {
+      reasons.push(`Invalid Firefox version: ${version}`);
+      score += 50;
+    }
+  }
+  
+  // Detect generic device indicators
+  if (userAgent.includes('Android 10; K') || userAgent.includes('Android 9; K')) {
+    reasons.push('Generic Android device identifier');
+    score += 40;
+  }
+  
+  // JavaScript capability checks (humans should have these)
+  if (visitorData.javascript_enabled === false) {
+    reasons.push('JavaScript disabled');
+    score += 70;
+  }
+  
+  if (visitorData.cookie_enabled === false) {
+    reasons.push('Cookies disabled');
+    score += 50;
+  }
+  
+  if (visitorData.local_storage_enabled === false) {
+    reasons.push('Local storage disabled');
+    score += 40;
+  }
+  
+  // Human interaction indicators
+  if (visitorData.mouse_activity === false && visitorData.touch_events === false) {
+    reasons.push('No mouse or touch activity detected');
+    score += 60;
+  }
+  
+  if (visitorData.scroll_behavior === false) {
+    reasons.push('No scroll behavior detected');
+    score += 30;
+  }
+  
+  // Canvas and WebGL fingerprinting (bots often lack these)
+  if (!visitorData.canvas_fingerprint || visitorData.canvas_fingerprint.length < 10) {
+    reasons.push('Missing or invalid canvas fingerprint');
+    score += 35;
+  }
+  
+  if (!visitorData.webgl_fingerprint || visitorData.webgl_fingerprint.length < 10) {
+    reasons.push('Missing or invalid WebGL fingerprint');
+    score += 30;
+  }
+  
   // Suspicious patterns
   for (const pattern of SUSPICIOUS_PATTERNS) {
     if (pattern.test(userAgent)) {
-      reasons.push(`Suspicious user agent pattern`);
+      reasons.push('Suspicious user agent pattern');
       score += 40;
       break;
     }
@@ -162,14 +299,33 @@ function detectBot(visitorData: VisitorData, clientIP: string): BotDetectionResu
     score += 30;
   }
   
-  // Session duration analysis
-  const duration = visitorData.session_duration || 0;
-  if (duration < 2) {
+  // Session duration analysis (improved)
+  if (duration < 1) {
+    reasons.push('Extremely short session duration');
+    score += 30;
+  } else if (duration < 2) {
     reasons.push('Very short session duration');
     score += 20;
   } else if (duration === 0) {
     reasons.push('Zero session duration');
     score += 10;
+  }
+  
+  // Time on page analysis
+  const timeOnPage = visitorData.time_on_page || 0;
+  if (timeOnPage < 0.5 && pageViews > 1) {
+    reasons.push('Extremely short time on page');
+    score += 25;
+  }
+  
+  // Navigation flow analysis
+  const navFlow = visitorData.navigation_flow || [];
+  if (navFlow.length > 5) {
+    const uniquePages = new Set(navFlow).size;
+    if (uniquePages / navFlow.length < 0.3) { // Low diversity in pages visited
+      reasons.push('Repetitive navigation pattern');
+      score += 20;
+    }
   }
   
   // Referrer analysis
@@ -196,15 +352,15 @@ function detectBot(visitorData: VisitorData, clientIP: string): BotDetectionResu
     score += 30;
   }
   
-  // Classification based on score
+  // Enhanced classification with more granular scoring
   let classification: BotDetectionResult['classification'];
-  if (score >= 80) {
+  if (score >= 90) {
     classification = 'confirmed_bot';
-  } else if (score >= 50) {
+  } else if (score >= 65) {
     classification = 'likely_bot';
-  } else if (score >= 30) {
+  } else if (score >= 40) {
     classification = 'uncertain';
-  } else if (score >= 10) {
+  } else if (score >= 15) {
     classification = 'likely_human';
   } else {
     classification = 'human';
