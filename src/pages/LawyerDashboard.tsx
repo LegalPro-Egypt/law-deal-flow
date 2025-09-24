@@ -182,8 +182,35 @@ const LawyerDashboard = () => {
         .order('created_at', { ascending: false });
 
       if (casesError) throw casesError;
+      
+      console.log('fetchDashboardData: Found cases:', casesData?.length);
 
-      setCases(casesData || []);
+      // Fetch proposals for each case
+      const casesWithProposals = await Promise.all(
+        (casesData || []).map(async (caseItem) => {
+          console.log('fetchDashboardData: Fetching proposal for case:', caseItem.id);
+          
+          const { data: proposalData, error: proposalError } = await supabase
+            .from('proposals')
+            .select('*')
+            .eq('case_id', caseItem.id)
+            .eq('lawyer_id', user.id)
+            .maybeSingle();
+          
+          console.log('fetchDashboardData: Proposal data for case', caseItem.id, ':', proposalData);
+          if (proposalError) {
+            console.error('fetchDashboardData: Proposal fetch error:', proposalError);
+          }
+          
+          return {
+            ...caseItem,
+            proposal: proposalData || undefined
+          };
+        })
+      );
+      
+      console.log('fetchDashboardData: Cases with proposals:', casesWithProposals);
+      setCases(casesWithProposals);
 
       // Fetch existing scheduled communication sessions (only those not initiated by current lawyer)
       const { data: scheduledSessions, error: sessionsError } = await supabase
@@ -200,15 +227,15 @@ const LawyerDashboard = () => {
       }
 
       // Calculate stats with proper status mapping
-      const pendingCases = casesData?.filter(c => 
+      const pendingCases = casesWithProposals?.filter(c => 
         c.status === 'lawyer_assigned' || c.status === 'proposal_sent'
       ).length || 0;
       
-      const activeCases = casesData?.filter(c => 
+      const activeCases = casesWithProposals?.filter(c => 
         c.status === 'accepted' || c.status === 'active' || c.status === 'in_progress'
       ).length || 0;
       
-      const completedCases = casesData?.filter(c => 
+      const completedCases = casesWithProposals?.filter(c => 
         c.status === 'completed' || c.status === 'closed'
       ).length || 0;
 
