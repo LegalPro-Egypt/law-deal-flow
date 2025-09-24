@@ -369,9 +369,9 @@ const ClientDashboard = () => {
           <div className="flex items-center justify-between h-14 sm:h-16">
             {/* Logo and Title */}
             <Link to="/?force=true" className="flex items-center space-x-2 sm:space-x-4 hover:opacity-80 transition-opacity">
-              <Scale className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+              <Scale className="h-8 w-8 text-primary" />
               <div className="flex items-center space-x-1 sm:space-x-2">
-                <h1 className="text-sm sm:text-lg md:text-xl font-bold text-foreground">
+                <h1 className="text-xl font-bold text-foreground">
                   LegalPro
                 </h1>
                 <Badge variant="secondary" className="text-xs hidden sm:block">
