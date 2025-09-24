@@ -24,7 +24,7 @@ import {
   ChevronDown,
   ChevronRight
 } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import jsPDF from 'jspdf';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -46,6 +46,7 @@ import { downloadPDF, getUserFriendlyDownloadMessage } from "@/utils/pdfDownload
 
 const ClientDashboard = () => {
   const [newMessage, setNewMessage] = useState("");
+  const [paymentHistoryOpen, setPaymentHistoryOpen] = useState(false);
   const [collapsedCards, setCollapsedCards] = useState({
     timeline: true,
     progress: true,
@@ -388,31 +389,6 @@ const ClientDashboard = () => {
 
             {/* Actions */}
             <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4">
-              {/* Inbox Button */}
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9 w-9 sm:h-10 sm:w-auto sm:px-4 relative"
-                onClick={() => {
-                  const inboxSection = document.getElementById('inbox-section');
-                  inboxSection?.scrollIntoView({ behavior: 'smooth' });
-                }}
-              >
-                <Mail className="h-4 w-4" />
-                <span className="hidden sm:inline sm:ml-2">Inbox</span>
-                <NotificationBadge count={unreadCount} />
-              </Button>
-              
-              {/* Download Case Summary */}
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9 w-9 sm:h-10 sm:w-auto sm:px-4"
-                onClick={handleDownloadCaseSummary}
-              >
-                <Download className="h-4 w-4" />
-                <span className="hidden sm:inline sm:ml-2">Summary</span>
-              </Button>
               <Button
                 asChild
                 className="bg-primary hover:bg-primary/90 text-primary-foreground h-9 sm:h-10"
@@ -431,7 +407,16 @@ const ClientDashboard = () => {
                     <span className="hidden sm:inline sm:ml-2">Settings</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-background border border-border shadow-lg z-50">
+                <DropdownMenuContent align="end" className="bg-background border border-border shadow-lg z-50 w-48">
+                  <DropdownMenuItem onClick={handleDownloadCaseSummary}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Download Summary
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setPaymentHistoryOpen(true)}>
+                    <Receipt className="h-4 w-4 mr-2" />
+                    Payment History
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut} className="text-destructive hover:text-destructive">
                     <LogOut className="h-4 w-4 mr-2" />
                     Sign Out
@@ -832,13 +817,7 @@ const ClientDashboard = () => {
         </Collapsible>
 
         {/* Payment History Dialog */}
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="outline" className="w-full">
-              <Receipt className="h-4 w-4 mr-2" />
-              View Payment History
-            </Button>
-          </DialogTrigger>
+        <Dialog open={paymentHistoryOpen} onOpenChange={setPaymentHistoryOpen}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Payment History</DialogTitle>
