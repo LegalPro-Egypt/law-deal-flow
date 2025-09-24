@@ -111,6 +111,7 @@ export default {
             height: "0",
           },
         },
+        // Enhanced Scroll Animations
         "slide-up-fade": {
           "0%": {
             opacity: "0",
@@ -121,6 +122,27 @@ export default {
             transform: "translateY(0)",
           },
         },
+        "fade-in": {
+          "0%": {
+            opacity: "0",
+            transform: "translateY(20px)",
+          },
+          "100%": {
+            opacity: "1",
+            transform: "translateY(0)",
+          },
+        },
+        "slide-up": {
+          "0%": {
+            opacity: "0",
+            transform: "translateY(30px)",
+          },
+          "100%": {
+            opacity: "1",
+            transform: "translateY(0)",
+          },
+        },
+        // Background Animations
         "drift-rotate": {
           "0%": {
             transform: "rotate(0deg) translate(0px, 0px)",
@@ -140,14 +162,46 @@ export default {
         },
         "gentle-pulse": {
           "0%, 100%": {
-            opacity: "0.5",
+            opacity: "0.4",
             transform: "scale(1)",
           },
           "50%": {
-            opacity: "0.8",
-            transform: "scale(1.05)",
+            opacity: "0.7",
+            transform: "scale(1.02)",
           },
         },
+        "float-orb": {
+          "0%, 100%": { transform: "translate(0, 0) scale(1)" },
+          "25%": { transform: "translate(10px, -15px) scale(1.05)" },
+          "50%": { transform: "translate(-5px, -25px) scale(0.95)" },
+          "75%": { transform: "translate(-15px, -10px) scale(1.02)" }
+        },
+        "gradient-shift": {
+          "0%, 100%": { backgroundPosition: "0% 50%" },
+          "50%": { backgroundPosition: "100% 50%" }
+        },
+        // Enhanced Button Animations
+        "button-glow": {
+          "0%, 100%": { 
+            boxShadow: "0 0 20px hsl(var(--primary) / 0.3), 0 4px 12px hsl(var(--primary) / 0.2)" 
+          },
+          "50%": { 
+            boxShadow: "0 0 30px hsl(var(--primary) / 0.5), 0 6px 20px hsl(var(--primary) / 0.3)" 
+          }
+        },
+        "accent-glow": {
+          "0%, 100%": { 
+            boxShadow: "0 0 20px hsl(var(--accent) / 0.3), 0 4px 12px hsl(var(--accent) / 0.2)" 
+          },
+          "50%": { 
+            boxShadow: "0 0 30px hsl(var(--accent) / 0.5), 0 6px 20px hsl(var(--accent) / 0.3)" 
+          }
+        },
+        "shimmer": {
+          "0%": { transform: "translateX(-100%) skewX(-15deg)" },
+          "100%": { transform: "translateX(200%) skewX(-15deg)" }
+        },
+        // Card Animations
         "hero-fade-in": {
           "0%": { opacity: "0", transform: "translateY(30px)" },
           "100%": { opacity: "1", transform: "translateY(0)" }
@@ -156,15 +210,13 @@ export default {
           "0%": { opacity: "0", transform: "translateY(40px)" },
           "100%": { opacity: "1", transform: "translateY(0)" }
         },
+        "card-hover-lift": {
+          "0%": { transform: "translateY(0px)" },
+          "100%": { transform: "translateY(-8px)" }
+        },
         "glow-pulse": {
           "0%, 100%": { boxShadow: "0 0 20px rgba(99, 102, 241, 0.3)" },
           "50%": { boxShadow: "0 0 30px rgba(99, 102, 241, 0.6)" }
-        },
-        "float-orb": {
-          "0%, 100%": { transform: "translate(0, 0) scale(1)" },
-          "25%": { transform: "translate(10px, -15px) scale(1.1)" },
-          "50%": { transform: "translate(-5px, -25px) scale(0.9)" },
-          "75%": { transform: "translate(-15px, -10px) scale(1.05)" }
         },
         "dot-blink": {
           "0%, 30%": { opacity: "1" },
@@ -175,13 +227,24 @@ export default {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "dot-blink": "dot-blink 1.4s ease-in-out infinite",
-        "slide-up-fade": "slide-up-fade 0.8s ease-out forwards",
-        "drift-rotate": "drift-rotate 20s ease-in-out infinite",
-        "gentle-pulse": "gentle-pulse 4s ease-in-out infinite",
-        "hero-fade-in": "hero-fade-in 1s ease-out",
-        "card-slide-up": "card-slide-up 0.8s ease-out",
-        "glow-pulse": "glow-pulse 2s ease-in-out infinite",
+        // Enhanced Scroll Animations
+        "fade-in": "fade-in 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards",
+        "slide-up": "slide-up 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards",
+        "slide-up-fade": "slide-up-fade 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards",
+        // Background Animations
+        "drift-rotate": "drift-rotate 25s ease-in-out infinite",
+        "gentle-pulse": "gentle-pulse 6s ease-in-out infinite",
         "float-orb": "float-orb 20s ease-in-out infinite",
+        "gradient-shift": "gradient-shift 8s ease-in-out infinite",
+        // Enhanced Button Animations
+        "button-glow": "button-glow 2s ease-in-out infinite",
+        "accent-glow": "accent-glow 2s ease-in-out infinite",
+        "shimmer": "shimmer 2s ease-in-out infinite",
+        // Card Animations
+        "hero-fade-in": "hero-fade-in 1s cubic-bezier(0.4, 0, 0.2, 1)",
+        "card-slide-up": "card-slide-up 0.8s cubic-bezier(0.4, 0, 0.2, 1)",
+        "card-hover-lift": "card-hover-lift 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        "glow-pulse": "glow-pulse 3s ease-in-out infinite",
       },
     },
   },
