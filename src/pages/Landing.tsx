@@ -21,8 +21,9 @@ const Landing = () => {
   
   // Intersection observer for hero animations
   const heroObserver = useIntersectionObserver({
-    threshold: 0.3,
-    triggerOnce: true
+    threshold: 0.1,
+    triggerOnce: true,
+    rootMargin: '50px'
   });
   const heroRef = heroObserver.elementRef;
   const heroVisible = heroObserver.isVisible;
@@ -122,7 +123,7 @@ const Landing = () => {
             
             {/* Premium Trust Signals */}
             <div className="trust-signals-container" ref={heroRef}>
-              <div className={`trust-signal-card transition-all duration-800 ${heroVisible ? 'animate-slide-in-left' : ''}`}>
+              <div className={`trust-signal-card transition-all duration-300 ${heroVisible ? 'animate-slide-in-left opacity-100' : 'opacity-0 -translate-x-20'}`}>
                 <div className="trust-signal-icon verified">
                   <Shield className="h-6 w-6 text-white" />
                 </div>
@@ -132,7 +133,7 @@ const Landing = () => {
                 </div>
               </div>
               
-              <div className={`trust-signal-card transition-all duration-800 ${heroVisible ? 'animate-slide-in-bottom' : ''}`}>
+              <div className={`trust-signal-card transition-all duration-300 ${heroVisible ? 'animate-slide-in-bottom opacity-100' : 'opacity-0 translate-y-10'}`}>
                 <div className="trust-signal-icon ai-powered">
                   <Brain className="h-6 w-6 text-white" />
                 </div>
@@ -142,7 +143,7 @@ const Landing = () => {
                 </div>
               </div>
               
-              <div className={`trust-signal-card transition-all duration-800 ${heroVisible ? 'animate-slide-in-right' : ''}`}>
+              <div className={`trust-signal-card transition-all duration-300 ${heroVisible ? 'animate-slide-in-right opacity-100' : 'opacity-0 translate-x-20'}`}>
                 <div className="trust-signal-icon secure">
                   <Lock className="h-6 w-6 text-white" />
                 </div>
