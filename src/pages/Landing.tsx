@@ -96,14 +96,18 @@ const Landing = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="bg-gradient-hero text-white py-20 sm:py-32">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="relative py-20 sm:py-32 overflow-hidden">
+        {/* Glassmorphism Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-accent/20 via-primary/10 to-accent/30 backdrop-blur-3xl"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-background/40 via-transparent to-background/20"></div>
+        
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl sm:text-6xl font-bold mb-6 animate-hero-title opacity-0">
+            <h1 className="text-4xl sm:text-6xl font-bold mb-6 animate-hero-title opacity-0 text-foreground">
               {t('landing.hero.title')}{" "}
               <span className="text-accent sm:block sm:mt-2">{t('landing.hero.titleAccent')}</span>
             </h1>
-            <p className="text-xl sm:text-2xl text-gray-200 mb-8 max-w-3xl mx-auto animate-hero-subtitle opacity-0">
+            <p className="text-xl sm:text-2xl mb-8 max-w-3xl mx-auto animate-hero-subtitle opacity-0 text-muted-foreground">
               {t('landing.hero.subtitle')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center animate-hero-button opacity-0">
@@ -118,7 +122,7 @@ const Landing = () => {
             <div className="trust-signals-container">
               <div className="trust-signal-card animate-slide-in-left opacity-0">
                 <div className="trust-signal-icon verified">
-                  <Shield className="h-6 w-6 text-white" />
+                  <Shield className="h-6 w-6 text-primary" />
                 </div>
                 <div className="trust-signal-content">
                   <h3>{t('landing.hero.trustSignals.verifiedLawyers.title')}</h3>
@@ -128,7 +132,7 @@ const Landing = () => {
               
               <div className="trust-signal-card animate-slide-in-bottom opacity-0">
                 <div className="trust-signal-icon ai-powered">
-                  <Brain className="h-6 w-6 text-white" />
+                  <Brain className="h-6 w-6 text-primary" />
                 </div>
                 <div className="trust-signal-content">
                   <h3>{t('landing.hero.trustSignals.aiIntake.title')}</h3>
@@ -138,7 +142,7 @@ const Landing = () => {
               
               <div className="trust-signal-card animate-slide-in-right opacity-0">
                 <div className="trust-signal-icon secure">
-                  <Lock className="h-6 w-6 text-white" />
+                  <Lock className="h-6 w-6 text-primary" />
                 </div>
                 <div className="trust-signal-content">
                   <h3>{t('landing.hero.trustSignals.securePayments.title')}</h3>
