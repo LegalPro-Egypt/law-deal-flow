@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useVisitorAnalytics } from '@/hooks/useVisitorAnalytics';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 import { 
   Users, 
   Eye, 
@@ -37,13 +38,46 @@ const browserIcons = {
   unknown: Globe
 };
 
-export const AdminAnalytics = () => {
-  const [dateRange] = useState({
-    from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
-    to: new Date()
-  });
+type DateRangeOption = 'today' | '7days' | '30days' | 'alltime';
 
-  const { data: analytics, isLoading, refetch, isFetching } = useVisitorAnalytics(dateRange);
+const getDateRange = (option: DateRangeOption): { from: Date; to: Date } => {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  
+  switch (option) {
+    case 'today':
+      return { from: today, to: now };
+    case '7days':
+      return { from: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), to: now };
+    case '30days':
+      return { from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), to: now };
+    case 'alltime':
+      return { from: new Date('2024-01-01'), to: now }; // Adjust start date as needed
+    default:
+      return { from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), to: now };
+  }
+};
+
+const getDateRangeLabel = (option: DateRangeOption): string => {
+  switch (option) {
+    case 'today':
+      return 'today';
+    case '7days':
+      return 'last 7 days';
+    case '30days':
+      return 'last 30 days';
+    case 'alltime':
+      return 'all time';
+    default:
+      return 'last 30 days';
+  }
+};
+
+export const AdminAnalytics = () => {
+  const [selectedRange, setSelectedRange] = useState<DateRangeOption>('30days');
+  const dateRange = getDateRange(selectedRange);
+
+  const { data: analytics, isLoading, refetch, isFetching } = useVisitorAnalytics(dateRange, selectedRange);
   const { toast } = useToast();
 
   const handleRefresh = async () => {
@@ -92,7 +126,7 @@ export const AdminAnalytics = () => {
         <div>
           <h2 className="text-2xl font-bold">Visitor Analytics</h2>
           <p className="text-muted-foreground">
-            Track your website visitors and their behavior (last 30 days)
+            Track your website visitors and their behavior ({getDateRangeLabel(selectedRange)})
           </p>
         </div>
         <Button 
@@ -113,6 +147,29 @@ export const AdminAnalytics = () => {
             </>
           )}
         </Button>
+      </div>
+
+      {/* Date Range Filters */}
+      <div className="flex flex-wrap gap-2 p-1 bg-muted rounded-lg w-fit">
+        {([
+          { key: 'today', label: 'Today' },
+          { key: '7days', label: 'Last 7 Days' },
+          { key: '30days', label: 'Last 30 Days' },
+          { key: 'alltime', label: 'All Time' }
+        ] as const).map(({ key, label }) => (
+          <Button
+            key={key}
+            variant={selectedRange === key ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setSelectedRange(key)}
+            className={cn(
+              "transition-all",
+              selectedRange === key && "shadow-sm"
+            )}
+          >
+            {label}
+          </Button>
+        ))}
       </div>
 
       {/* Overview Cards */}
@@ -186,8 +243,12 @@ export const AdminAnalytics = () => {
         <TabsContent value="traffic" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Daily Visitors</CardTitle>
-              <CardDescription>Visitor trends over the last 7 days</CardDescription>
+              <CardTitle>
+                {selectedRange === 'today' ? 'Hourly Visitors' : 'Daily Visitors'}
+              </CardTitle>
+              <CardDescription>
+                Visitor trends over the {getDateRangeLabel(selectedRange)}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>

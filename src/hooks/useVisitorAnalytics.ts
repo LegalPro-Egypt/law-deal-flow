@@ -36,9 +36,9 @@ interface AnalyticsStats {
   dailyVisitors: Array<{ date: string; visitors: number; pageViews: number }>;
 }
 
-export const useVisitorAnalytics = (dateRange: { from: Date; to: Date }) => {
+export const useVisitorAnalytics = (dateRange: { from: Date; to: Date }, rangeType?: string) => {
   return useQuery({
-    queryKey: ['visitor-analytics', dateRange.from.toISOString(), dateRange.to.toISOString()],
+    queryKey: ['visitor-analytics', dateRange.from.toISOString(), dateRange.to.toISOString(), rangeType],
     queryFn: async (): Promise<AnalyticsStats> => {
       const fromDate = dateRange.from.toISOString();
       const toDate = dateRange.to.toISOString();
@@ -113,22 +113,46 @@ export const useVisitorAnalytics = (dateRange: { from: Date; to: Date }) => {
         .map(([browser, count]) => ({ browser, count }))
         .sort((a, b) => b.count - a.count);
 
-      // Daily visitors (last 7 days)
-      const dailyStats = Array.from({ length: 7 }, (_, i) => {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        const dateStr = date.toISOString().split('T')[0];
-        
-        const dayVisitors = visitorData.filter(v => 
-          v.created_at.startsWith(dateStr)
-        );
-        
-        return {
-          date: dateStr,
-          visitors: new Set(dayVisitors.map(v => v.visitor_hash)).size,
-          pageViews: dayVisitors.reduce((sum, v) => sum + v.page_views_count, 0)
-        };
-      }).reverse();
+      // Generate time-based statistics based on range type
+      const generateTimeStats = () => {
+        if (rangeType === 'today') {
+          // Hourly stats for today
+          return Array.from({ length: 24 }, (_, i) => {
+            const hour = String(i).padStart(2, '0');
+            const hourStr = `${new Date().toISOString().split('T')[0]}T${hour}`;
+            
+            const hourVisitors = visitorData.filter(v => 
+              v.created_at.startsWith(hourStr)
+            );
+            
+            return {
+              date: `${hour}:00`,
+              visitors: new Set(hourVisitors.map(v => v.visitor_hash)).size,
+              pageViews: hourVisitors.reduce((sum, v) => sum + v.page_views_count, 0)
+            };
+          });
+        } else {
+          // Daily stats for other ranges
+          const days = rangeType === '7days' ? 7 : rangeType === '30days' ? 30 : 60; // Show more days for all time
+          return Array.from({ length: days }, (_, i) => {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            const dateStr = date.toISOString().split('T')[0];
+            
+            const dayVisitors = visitorData.filter(v => 
+              v.created_at.startsWith(dateStr)
+            );
+            
+            return {
+              date: dateStr,
+              visitors: new Set(dayVisitors.map(v => v.visitor_hash)).size,
+              pageViews: dayVisitors.reduce((sum, v) => sum + v.page_views_count, 0)
+            };
+          }).reverse();
+        }
+      };
+
+      const dailyStats = generateTimeStats();
 
       return {
         totalVisitors,
