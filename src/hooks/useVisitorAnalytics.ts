@@ -18,6 +18,14 @@ interface VisitorAnalytics {
   page_views_count: number;
   session_duration: number | null;
   is_excluded: boolean;
+  is_excluded_admin: boolean;
+  bot_confidence_score: number;
+  bot_classification: 'human' | 'likely_human' | 'uncertain' | 'likely_bot' | 'confirmed_bot';
+  detection_reasons: string[];
+  meaningful_interaction: boolean;
+  screen_resolution: string | null;
+  timezone: string | null;
+  language_preferences: string[] | null;
   ip_info: any;
   created_at: string;
   updated_at: string;
@@ -32,13 +40,21 @@ interface AnalyticsStats {
   topPages: Array<{ page: string; count: number }>;
   deviceBreakdown: Array<{ device: string; count: number }>;
   browserBreakdown: Array<{ browser: string; count: number }>;
+  botBreakdown: Array<{ classification: string; count: number }>;
   recentVisitors: VisitorAnalytics[];
-  dailyVisitors: Array<{ date: string; visitors: number; pageViews: number }>;
+  dailyVisitors: Array<{ date: string; visitors: number; pageViews: number; bots: number }>;
+  botStats: {
+    totalBots: number;
+    confirmedBots: number;
+    likelyBots: number;
+    uncertainVisitors: number;
+    humanVisitors: number;
+  };
 }
 
-export const useVisitorAnalytics = (dateRange: { from: Date; to: Date }, rangeType?: string) => {
+export const useVisitorAnalytics = (dateRange: { from: Date; to: Date }, rangeType?: string, botFilter: 'all' | 'humans' | 'bots' = 'humans') => {
   return useQuery({
-    queryKey: ['visitor-analytics', dateRange.from.getTime(), dateRange.to.getTime(), rangeType],
+    queryKey: ['visitor-analytics', dateRange.from.getTime(), dateRange.to.getTime(), rangeType, botFilter],
     queryFn: async (): Promise<AnalyticsStats> => {
       const fromISO = dateRange.from.toISOString();
       const toISO = dateRange.to.toISOString();
@@ -47,18 +63,29 @@ export const useVisitorAnalytics = (dateRange: { from: Date; to: Date }, rangeTy
         from: fromISO,
         to: toISO,
         rangeType,
+        botFilter,
         fromDate: dateRange.from,
         toDate: dateRange.to
       });
 
-      // Query visitor analytics with date filtering
-      const { data: visitors, error } = await supabase
+      // Query visitor analytics with date filtering and bot detection
+      let query = supabase
         .from('visitor_analytics')
         .select('*')
         .gte('created_at', fromISO)
         .lte('created_at', toISO)
-        .eq('is_excluded', false)
+        .eq('is_excluded_admin', false) // Exclude admin users
         .order('created_at', { ascending: false });
+
+      // Apply bot filtering
+      if (botFilter === 'humans') {
+        query = query.in('bot_classification', ['human', 'likely_human']);
+      } else if (botFilter === 'bots') {
+        query = query.in('bot_classification', ['likely_bot', 'confirmed_bot']);
+      }
+      // For 'all', don't add any bot classification filter
+
+      const { data: visitors, error } = await query;
 
       if (error) {
         console.error('Analytics query error:', error);
@@ -68,7 +95,7 @@ export const useVisitorAnalytics = (dateRange: { from: Date; to: Date }, rangeTy
       console.log(`Found ${visitors?.length || 0} analytics records`);
 
       if (!visitors || visitors.length === 0) {
-        console.log('No analytics data found for date range');
+        console.log('No analytics data found for date range with bot filter:', botFilter);
         return {
           totalVisitors: 0,
           uniqueVisitors: 0,
@@ -78,8 +105,16 @@ export const useVisitorAnalytics = (dateRange: { from: Date; to: Date }, rangeTy
           topPages: [],
           deviceBreakdown: [],
           browserBreakdown: [],
+          botBreakdown: [],
           recentVisitors: [],
-          dailyVisitors: []
+          dailyVisitors: [],
+          botStats: {
+            totalBots: 0,
+            confirmedBots: 0,
+            likelyBots: 0,
+            uncertainVisitors: 0,
+            humanVisitors: 0
+          }
         };
       }
 
@@ -139,8 +174,29 @@ export const useVisitorAnalytics = (dateRange: { from: Date; to: Date }, rangeTy
           .map(([browser, count]) => ({ browser, count }))
           .sort((a, b) => b.count - a.count);
 
+        // Bot classification breakdown
+        const botCount = visitorData.reduce((acc, v) => {
+          if (v.bot_classification) {
+            acc[v.bot_classification] = (acc[v.bot_classification] || 0) + 1;
+          }
+          return acc;
+        }, {} as Record<string, number>);
+        
+        const botBreakdown = Object.entries(botCount)
+          .map(([classification, count]) => ({ classification, count }))
+          .sort((a, b) => b.count - a.count);
+
+        // Calculate bot statistics
+        const botStats = {
+          totalBots: visitorData.filter(v => ['likely_bot', 'confirmed_bot'].includes(v.bot_classification)).length,
+          confirmedBots: visitorData.filter(v => v.bot_classification === 'confirmed_bot').length,
+          likelyBots: visitorData.filter(v => v.bot_classification === 'likely_bot').length,
+          uncertainVisitors: visitorData.filter(v => v.bot_classification === 'uncertain').length,
+          humanVisitors: visitorData.filter(v => ['human', 'likely_human'].includes(v.bot_classification)).length
+        };
+
         // Generate time-based visitor data based on range type
-        let dailyVisitors: { date: string; visitors: number; pageViews: number }[] = [];
+        let dailyVisitors: { date: string; visitors: number; pageViews: number; bots: number }[] = [];
         
         if (rangeType === 'today') {
           // Generate hourly data for today
@@ -159,10 +215,15 @@ export const useVisitorAnalytics = (dateRange: { from: Date; to: Date }, rangeTy
               return visitTime >= hour && visitTime < hourEnd;
             });
             
+            const hourlyBots = hourlyVisitors.filter(v => 
+              ['likely_bot', 'confirmed_bot'].includes(v.bot_classification)
+            );
+            
             return {
               date: hour.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
               visitors: new Set(hourlyVisitors.map(v => v.visitor_hash)).size,
-              pageViews: hourlyVisitors.reduce((sum, v) => sum + v.page_views_count, 0)
+              pageViews: hourlyVisitors.reduce((sum, v) => sum + v.page_views_count, 0),
+              bots: hourlyBots.length
             };
           });
         } else {
@@ -187,10 +248,15 @@ export const useVisitorAnalytics = (dateRange: { from: Date; to: Date }, rangeTy
               return visitTime >= dayStart && visitTime <= dayEnd;
             });
             
+            const dailyBots = dailyData.filter(v => 
+              ['likely_bot', 'confirmed_bot'].includes(v.bot_classification)
+            );
+            
             return {
               date: day.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
               visitors: new Set(dailyData.map(v => v.visitor_hash)).size,
-              pageViews: dailyData.reduce((sum, v) => sum + v.page_views_count, 0)
+              pageViews: dailyData.reduce((sum, v) => sum + v.page_views_count, 0),
+              bots: dailyBots.length
             };
           });
         }
@@ -204,8 +270,10 @@ export const useVisitorAnalytics = (dateRange: { from: Date; to: Date }, rangeTy
           topPages,
           deviceBreakdown,
           browserBreakdown,
+          botBreakdown,
           recentVisitors: visitorData.slice(0, 50),
-          dailyVisitors
+          dailyVisitors,
+          botStats
         };
 
         console.log('Final analytics result:', result);

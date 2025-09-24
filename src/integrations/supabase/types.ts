@@ -14,6 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      additional_fee_requests: {
+        Row: {
+          additional_fee_amount: number
+          case_id: string
+          client_id: string
+          client_responded_at: string | null
+          client_response: string | null
+          created_at: string
+          id: string
+          justification: string
+          lawyer_id: string
+          metadata: Json | null
+          original_proposal_id: string
+          payment_due_date: string | null
+          request_description: string
+          request_title: string
+          reviewed_at: string | null
+          status: string
+          timeline_extension_days: number | null
+          updated_at: string
+        }
+        Insert: {
+          additional_fee_amount: number
+          case_id: string
+          client_id: string
+          client_responded_at?: string | null
+          client_response?: string | null
+          created_at?: string
+          id?: string
+          justification: string
+          lawyer_id: string
+          metadata?: Json | null
+          original_proposal_id: string
+          payment_due_date?: string | null
+          request_description: string
+          request_title: string
+          reviewed_at?: string | null
+          status?: string
+          timeline_extension_days?: number | null
+          updated_at?: string
+        }
+        Update: {
+          additional_fee_amount?: number
+          case_id?: string
+          client_id?: string
+          client_responded_at?: string | null
+          client_response?: string | null
+          created_at?: string
+          id?: string
+          justification?: string
+          lawyer_id?: string
+          metadata?: Json | null
+          original_proposal_id?: string
+          payment_due_date?: string | null
+          request_description?: string
+          request_title?: string
+          reviewed_at?: string | null
+          status?: string
+          timeline_extension_days?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       anonymous_qa_sessions: {
         Row: {
           actual_message_count: number | null
@@ -1456,64 +1519,88 @@ export type Database = {
       }
       visitor_analytics: {
         Row: {
+          bot_classification: string | null
+          bot_confidence_score: number | null
           browser: string | null
           city: string | null
           country: string | null
           created_at: string
+          detection_reasons: Json | null
           device_type: string | null
           first_visit: string
           id: string
           ip_info: Json | null
           is_excluded: boolean
+          is_excluded_admin: boolean | null
+          language_preferences: string[] | null
           last_visit: string
+          meaningful_interaction: boolean | null
           page_path: string
           page_views_count: number
           referrer_url: string | null
           region: string | null
+          screen_resolution: string | null
           session_duration: number | null
           session_id: string
+          timezone: string | null
           updated_at: string
           user_agent: string | null
           visitor_hash: string
         }
         Insert: {
+          bot_classification?: string | null
+          bot_confidence_score?: number | null
           browser?: string | null
           city?: string | null
           country?: string | null
           created_at?: string
+          detection_reasons?: Json | null
           device_type?: string | null
           first_visit?: string
           id?: string
           ip_info?: Json | null
           is_excluded?: boolean
+          is_excluded_admin?: boolean | null
+          language_preferences?: string[] | null
           last_visit?: string
+          meaningful_interaction?: boolean | null
           page_path: string
           page_views_count?: number
           referrer_url?: string | null
           region?: string | null
+          screen_resolution?: string | null
           session_duration?: number | null
           session_id?: string
+          timezone?: string | null
           updated_at?: string
           user_agent?: string | null
           visitor_hash: string
         }
         Update: {
+          bot_classification?: string | null
+          bot_confidence_score?: number | null
           browser?: string | null
           city?: string | null
           country?: string | null
           created_at?: string
+          detection_reasons?: Json | null
           device_type?: string | null
           first_visit?: string
           id?: string
           ip_info?: Json | null
           is_excluded?: boolean
+          is_excluded_admin?: boolean | null
+          language_preferences?: string[] | null
           last_visit?: string
+          meaningful_interaction?: boolean | null
           page_path?: string
           page_views_count?: number
           referrer_url?: string | null
           region?: string | null
+          screen_resolution?: string | null
           session_duration?: number | null
           session_id?: string
+          timezone?: string | null
           updated_at?: string
           user_agent?: string | null
           visitor_hash?: string

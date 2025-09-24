@@ -8,6 +8,9 @@ interface VisitorData {
   session_id: string;
   session_duration?: number;
   user_role?: string;
+  screen_resolution?: string;
+  timezone?: string;
+  language_preferences?: string[];
 }
 
 export const useVisitorTracking = (profile?: { role?: string } | null) => {
@@ -65,6 +68,9 @@ export const useVisitorTracking = (profile?: { role?: string } | null) => {
         session_id: getSessionId(),
         session_duration: sessionDuration,
         user_role: profile?.role,
+        screen_resolution: `${screen.width}x${screen.height}`,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        language_preferences: navigator.languages ? Array.from(navigator.languages) : [navigator.language],
         ...additionalData
       };
 
@@ -106,7 +112,10 @@ export const useVisitorTracking = (profile?: { role?: string } | null) => {
           user_agent: navigator.userAgent,
           session_id: sessionId.current,
           session_duration: sessionDuration,
-          user_role: profile?.role
+          user_role: profile?.role,
+          screen_resolution: `${screen.width}x${screen.height}`,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          language_preferences: navigator.languages ? Array.from(navigator.languages) : [navigator.language]
         }
       });
     } catch (error) {
