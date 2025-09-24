@@ -437,9 +437,11 @@ const LawyerDashboard = () => {
             <div className={`flex items-center gap-4 ${isRTL() ? 'flex-row-reverse' : ''}`}>
               {cases.length > 0 && (
                 <div className="flex items-center gap-2">
-                  <Select value={selectedCaseId || cases[0]?.id} onValueChange={setSelectedCaseId}>
-                    <SelectTrigger className="w-[200px]">
-                      <SelectValue placeholder="Select a case" />
+                   <Select value={selectedCaseId || cases[0]?.id} onValueChange={setSelectedCaseId}>
+                    <SelectTrigger className="w-[100px]">
+                      <SelectValue>
+                        Cases
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {cases.map((caseItem) => (
