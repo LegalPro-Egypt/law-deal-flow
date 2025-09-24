@@ -157,57 +157,56 @@ export const LaunchingSoon = ({ onPasswordAccess }: LaunchingSoonProps) => {
 
           {/* Email Signup Card */}
           <div className={`transition-all duration-1000 delay-300 ${isLoaded ? 'animate-hero-fade-in' : 'opacity-0'}`}>
-            <Card className="max-w-lg mx-auto neomorphism-card">
-              <CardContent className="p-8">
+            <Card className="max-w-xl mx-auto neomorphism-card">
+              <CardContent className="p-6 md:p-8">
                 {!isSubscribed ? (
-                  <form onSubmit={handleEmailSignup}>
-                    <h3 className="text-2xl font-bold font-futura text-gray-900 mb-4">
-                      Win Up to 50,000 EGP Off Your First Case
+                  <form onSubmit={handleEmailSignup} className="space-y-5 md:space-y-6">
+                    <h3 className="text-2xl md:text-3xl font-semibold font-futura text-gray-900 tracking-tight leading-tight">
+                      Get Up to <span className="text-gray-800">50,000 EGP</span> Off Your First Case
                     </h3>
-                    <p className="text-gray-600 font-modern mb-6 leading-relaxed">
-                      Sign up for our waitlist and get early access when we launch. Plus, enter our draw for a chance to win a legal fee reduction of up to 50,000 EGP on your first case with LegalPro.
+                    <p className="text-base md:text-lg font-modern text-gray-600 leading-relaxed max-w-[52ch] mx-auto">
+                      Join the LegalPro waitlist for early access and a chance to win a legal fee reduction of up to 50,000 EGP.
                     </p>
-                    <div className="space-y-4">
-                      <Input
-                        type="email"
-                        placeholder={getText('enterYourEmail')}
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full neomorphism-input text-gray-700 placeholder:text-gray-500 font-modern"
-                        required
-                      />
-                      
-                      {/* Benefits bullet points */}
-                      <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                        <ul className="space-y-2 text-sm text-gray-700 font-modern">
-                          <li className="flex items-center">
-                            <CheckCircle className="w-4 h-4 text-neomorphism-primary mr-2 flex-shrink-0" />
-                            Be the first to access LegalPro
-                          </li>
-                          <li className="flex items-center">
-                            <CheckCircle className="w-4 h-4 text-neomorphism-primary mr-2 flex-shrink-0" />
-                            Get exclusive launch updates
-                          </li>
-                          <li className="flex items-center">
-                            <CheckCircle className="w-4 h-4 text-neomorphism-primary mr-2 flex-shrink-0" />
-                            Chance to win up to 50,000 EGP off your first case
-                          </li>
-                        </ul>
-                      </div>
-                      
-                      <Button
-                        type="submit"
-                        disabled={isLoading || !email}
-                        className="w-full neomorphism-button text-white font-medium font-modern py-3"
-                      >
-                        {isLoading ? 'Joining...' : 'Join the Waitlist'}
-                      </Button>
-                      
-                      {/* Disclaimer */}
-                      <p className="text-xs text-gray-500 font-modern text-center leading-relaxed mt-3">
-                        *Terms and conditions apply. Maximum reduction 50,000 EGP on first case only.
-                      </p>
+                    
+                    <Input
+                      type="email"
+                      placeholder={getText('enterYourEmail')}
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full neomorphism-input text-gray-700 placeholder:text-gray-500 font-modern mt-1"
+                      required
+                    />
+                    
+                    {/* Benefits bullet points */}
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <ul className="space-y-2 text-base font-modern leading-relaxed">
+                        <li className="flex items-center text-gray-700">
+                          <CheckCircle className="w-4 h-4 text-neomorphism-primary mr-3 flex-shrink-0" />
+                          Early access to LegalPro
+                        </li>
+                        <li className="flex items-center text-gray-700">
+                          <CheckCircle className="w-4 h-4 text-neomorphism-primary mr-3 flex-shrink-0" />
+                          Exclusive launch updates
+                        </li>
+                        <li className="flex items-center text-gray-700">
+                          <CheckCircle className="w-4 h-4 text-neomorphism-primary mr-3 flex-shrink-0" />
+                          Chance to win up to 50,000 EGP off your first case
+                        </li>
+                      </ul>
                     </div>
+                    
+                    <Button
+                      type="submit"
+                      disabled={isLoading || !email}
+                      className="w-full md:w-auto px-6 py-3 neomorphism-button text-white font-medium font-modern text-base md:text-lg"
+                    >
+                      {isLoading ? 'Joining...' : 'Join the Waitlist Today'}
+                    </Button>
+                    
+                    {/* Disclaimer */}
+                    <p className="text-xs text-gray-400 font-modern text-center leading-relaxed">
+                      *Terms apply. Max reduction 50,000 EGP on first case.
+                    </p>
                   </form>
                 ) : (
                   <div className="text-center">
