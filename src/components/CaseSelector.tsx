@@ -13,6 +13,8 @@ interface CaseSelectorProps {
     status: string;
     category: string;
     created_at: string;
+    consultation_paid?: boolean;
+    payment_status?: string;
   }>;
   activeCase: {
     id: string;
@@ -20,11 +22,14 @@ interface CaseSelectorProps {
     title: string;
     status: string;
     category: string;
+    consultation_paid?: boolean;
+    payment_status?: string;
   } | null;
   onCaseSelect: (caseId: string) => void;
+  showCaseDetails?: boolean;
 }
 
-const CaseSelector = ({ cases, activeCase, onCaseSelect }: CaseSelectorProps) => {
+const CaseSelector = ({ cases, activeCase, onCaseSelect, showCaseDetails = false }: CaseSelectorProps) => {
   const [open, setOpen] = useState(false);
 
   const getStatusColor = (status: string) => {
@@ -43,8 +48,11 @@ const CaseSelector = ({ cases, activeCase, onCaseSelect }: CaseSelectorProps) =>
     }
   };
 
-  const formatStatus = (status: string) => {
-    return status === 'submitted' ? 'Under Review' : status.replace('_', ' ');
+  const formatStatus = (status: string, consultationPaid?: boolean, paymentStatus?: string) => {
+    if (status === 'submitted') return 'Under Review';
+    if (status === 'active' && consultationPaid) return 'Active';
+    if (status === 'lawyer_assigned') return 'Lawyer Assigned';
+    return status.replace('_', ' ');
   };
 
   if (cases.length <= 1) {
@@ -66,6 +74,22 @@ const CaseSelector = ({ cases, activeCase, onCaseSelect }: CaseSelectorProps) =>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0">
+        {showCaseDetails && activeCase && (
+          <div className="p-4 border-b bg-muted/50">
+            <div className="space-y-3">
+              <div>
+                <h4 className="font-semibold text-lg">{activeCase.title}</h4>
+                <p className="text-sm text-muted-foreground">{activeCase.case_number} • {activeCase.category}</p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className={`w-2 h-2 rounded-full ${getStatusColor(activeCase.status)}`} />
+                <Badge variant="outline" className="text-xs">
+                  {formatStatus(activeCase.status, activeCase.consultation_paid, activeCase.payment_status)}
+                </Badge>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="p-4 border-b">
           <div className="flex items-center justify-between">
             <h4 className="font-medium">Your Cases ({cases.length})</h4>
@@ -98,7 +122,7 @@ const CaseSelector = ({ cases, activeCase, onCaseSelect }: CaseSelectorProps) =>
                     </div>
                     <div className="flex items-center justify-between">
                       <Badge variant="outline" className="text-xs">
-                        {formatStatus(caseItem.status)}
+                        {formatStatus(caseItem.status, caseItem.consultation_paid, caseItem.payment_status)}
                       </Badge>
                       <span className="text-xs text-muted-foreground">
                         {new Date(caseItem.created_at).toLocaleDateString()}
