@@ -116,7 +116,7 @@ const Landing = () => {
             
             {/* Premium Trust Signals */}
             <div className="trust-signals-container">
-              <div className="trust-signal-card animate-slide-in-left">
+              <div className="trust-signal-card animate-slide-in-left opacity-0">
                 <div className="trust-signal-icon verified">
                   <Shield className="h-6 w-6 text-white" />
                 </div>
@@ -126,7 +126,7 @@ const Landing = () => {
                 </div>
               </div>
               
-              <div className="trust-signal-card animate-slide-in-bottom">
+              <div className="trust-signal-card animate-slide-in-bottom opacity-0">
                 <div className="trust-signal-icon ai-powered">
                   <Brain className="h-6 w-6 text-white" />
                 </div>
@@ -136,7 +136,7 @@ const Landing = () => {
                 </div>
               </div>
               
-              <div className="trust-signal-card animate-slide-in-right">
+              <div className="trust-signal-card animate-slide-in-right opacity-0">
                 <div className="trust-signal-icon secure">
                   <Lock className="h-6 w-6 text-white" />
                 </div>
