@@ -308,7 +308,7 @@ const LawyerDashboard = () => {
             <div className="flex items-center justify-between h-16">
               <Link to="/?force=true" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
                 <Scale className="h-8 w-8 text-primary" />
-                <span className="text-xl font-bold">LegalConnect</span>
+                <span className="text-xl font-bold">LegalPro</span>
               </Link>
               <Button variant="ghost" size="sm" onClick={handleSignOut} aria-label={t('dashboard.signOut')}>
                 <LogOut className={`h-4 w-4 ${isRTL() ? '' : 'mr-2'}`} />
@@ -359,7 +359,7 @@ const LawyerDashboard = () => {
             <div className="flex items-center justify-between h-16">
               <Link to="/?force=true" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
                 <Scale className="h-8 w-8 text-primary" />
-                <span className="text-xl font-bold">LegalConnect</span>
+                <span className="text-xl font-bold">LegalPro</span>
               </Link>
               <Button variant="ghost" size="sm" onClick={() => setShowVerificationForm(false)}>
                 {isRTL() ? 'العودة إلى لوحة التحكم' : 'Back to Dashboard'}
@@ -432,7 +432,7 @@ const LawyerDashboard = () => {
           <div className={`flex items-center justify-between h-16 ${isRTL() ? 'flex-row-reverse' : ''}`}>
             <Link to="/?force=true" className={`flex items-center gap-2 hover:opacity-80 transition-opacity ${isRTL() ? 'flex-row-reverse' : ''}`}>
               <Scale className="h-8 w-8 text-primary" />
-              <span className="text-xl font-bold">LegalConnect</span>
+              <span className="text-xl font-bold">LegalPro</span>
             </Link>
             <div className={`flex items-center gap-4 ${isRTL() ? 'flex-row-reverse' : ''}`}>
               {cases.length > 0 && (

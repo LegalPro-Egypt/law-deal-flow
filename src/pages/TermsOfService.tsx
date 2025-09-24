@@ -10,9 +10,9 @@ const TermsOfService = () => {
       <div className="bg-primary text-primary-foreground py-16">
         <div className="container mx-auto px-4 text-center">
           <Scale className="w-16 h-16 mx-auto mb-4" />
-          <h1 className="text-4xl font-bold mb-4">Terms of Service – EgyptLegalPro</h1>
+          <h1 className="text-4xl font-bold mb-4">Terms of Service – LegalPro</h1>
           <p className="text-xl opacity-90 max-w-2xl mx-auto">
-            Please read these terms carefully before using EgyptLegalPro services.
+            Please read these terms carefully before using LegalPro services.
           </p>
         </div>
       </div>

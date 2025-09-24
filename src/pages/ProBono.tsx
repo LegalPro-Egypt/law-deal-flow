@@ -149,7 +149,7 @@ const ProBono = () => {
               onClick={() => navigate('/')}
             >
               <Scale className="h-8 w-8 text-primary" />
-              <span className="text-xl font-bold">LegalConnect</span>
+              <span className="text-xl font-bold">LegalPro</span>
             </div>
             <Badge variant="secondary" className="bg-success/10 text-success border-success/20">
               {t('proBono.badge')}

@@ -10,9 +10,9 @@ const PrivacyPolicy = () => {
       <div className="bg-primary text-primary-foreground py-16">
         <div className="container mx-auto px-4 text-center">
           <Shield className="w-16 h-16 mx-auto mb-4" />
-          <h1 className="text-4xl font-bold mb-4">Privacy Policy – EgyptLegalPro</h1>
+          <h1 className="text-4xl font-bold mb-4">Privacy Policy – LegalPro</h1>
           <p className="text-xl opacity-90 max-w-2xl mx-auto">
-            Your privacy is important to us. Learn how EgyptLegalPro collects, uses, and protects your information.
+            Your privacy is important to us. Learn how LegalPro collects, uses, and protects your information.
           </p>
         </div>
       </div>
@@ -183,7 +183,7 @@ const PrivacyPolicy = () => {
               <CardTitle>10. Legal Compliance</CardTitle>
             </CardHeader>
             <CardContent className="prose prose-gray max-w-none">
-              <p>EgyptLegalPro may disclose user data if required to do so by law, regulation, court order, or government authority in Egypt.</p>
+              <p>LegalPro may disclose user data if required to do so by law, regulation, court order, or government authority in Egypt.</p>
             </CardContent>
           </Card>
 
