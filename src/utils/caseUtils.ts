@@ -175,34 +175,3 @@ export function formatCaseStatus(status: string, consultationPaid?: boolean, pay
       return status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
   }
 }
-
-export function getCaseStatusVariant(status: string): 'default' | 'secondary' | 'destructive' | 'outline' {
-  switch (status) {
-    case 'completed':
-    case 'consultation_completed':
-      return 'default';
-    case 'in_progress':
-    case 'work_in_progress':
-      return 'secondary';
-    case 'submitted':
-    case 'lawyer_assigned':
-    case 'proposal_sent':
-      return 'outline';
-    default:
-      return 'secondary';
-  }
-}
-
-export function getCaseUrgencyVariant(urgency: string): 'default' | 'secondary' | 'destructive' | 'outline' {
-  switch (urgency?.toLowerCase()) {
-    case 'high':
-    case 'urgent':
-      return 'destructive';
-    case 'medium':
-      return 'secondary';
-    case 'low':
-      return 'outline';
-    default:
-      return 'default';
-  }
-}
