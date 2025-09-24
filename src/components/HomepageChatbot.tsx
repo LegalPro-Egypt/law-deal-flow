@@ -139,17 +139,17 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
           {/* Chat Interface Card */}
           <Card className="shadow-lg border-0 overflow-hidden bg-background">
             {/* Professional Header */}
-            <CardHeader className="bg-primary/20 backdrop-blur-xl text-white border-b border-white/20 relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/30 to-primary/10"></div>
+            <CardHeader className="bg-primary/80 backdrop-blur-xl text-white border-b border-white/20 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/60 to-primary/40"></div>
               <div className="relative z-10">
                 <div className={`flex items-center justify-between ${isRTL() ? 'flex-row-reverse' : ''}`}>
                 <div className={`flex items-center gap-4 ${isRTL() ? 'flex-row-reverse' : ''}`}>
-                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                  <div className="w-12 h-12 bg-white/30 rounded-full flex items-center justify-center backdrop-blur-sm">
                     <Scale className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <CardTitle className="text-lg text-white">{t('landing.chatbot.lexaTitle')}</CardTitle>
-                    <p className="text-sm text-white/80">{t('landing.chatbot.lexaSubtitle')}</p>
+                    <CardTitle className="text-lg text-white font-semibold">{t('landing.chatbot.lexaTitle')}</CardTitle>
+                    <p className="text-sm text-white/90">{t('landing.chatbot.lexaSubtitle')}</p>
                   </div>
                 </div>
                 
@@ -157,7 +157,7 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
                   <select
                     value={language}
                     onChange={(e) => setLanguage(e.target.value as 'en' | 'ar' | 'de')}
-                    className="appearance-none bg-white/20 border border-white/30 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white/50"
+                    className="appearance-none bg-white/30 backdrop-blur-sm border border-white/40 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white/50"
                   >
                     <option value="en">🇺🇸 English</option>
                     <option value="ar">🇪🇬 العربية</option>
