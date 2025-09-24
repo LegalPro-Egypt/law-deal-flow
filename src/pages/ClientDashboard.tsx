@@ -449,17 +449,24 @@ const ClientDashboard = () => {
           <Card className="bg-gradient-card shadow-card">
             <CollapsibleTrigger asChild>
               <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
-                <CardTitle className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <Clock className="h-5 w-5 mr-2" />
-                    Case Timeline
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center">
+                      <Clock className="h-5 w-5 mr-2" />
+                      Case Timeline
+                    </CardTitle>
+                    {collapsedCards.timeline && (
+                      <CardDescription>
+                        Current Status: {formatCaseStatus(activeCase.status, activeCase.consultation_paid, activeCase.payment_status)}
+                      </CardDescription>
+                    )}
                   </div>
                   {collapsedCards.timeline ? (
                     <ChevronRight className="h-4 w-4" />
                   ) : (
                     <ChevronDown className="h-4 w-4" />
                   )}
-                </CardTitle>
+                </div>
               </CardHeader>
             </CollapsibleTrigger>
             <CollapsibleContent>
