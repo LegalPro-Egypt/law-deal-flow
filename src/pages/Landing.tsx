@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Scale, Shield, MessageSquare, Users, Clock, Check, Brain, Lock } from "lucide-react";
+import { Scale, Shield, MessageSquare, Users, Clock, Check, Brain, Lock, ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { HomepageChatbot } from "@/components/HomepageChatbot";
@@ -166,9 +166,9 @@ const Landing = () => {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               {
-                icon: <MessageSquare className="h-8 w-8" />,
-                title: t('landing.features.lexaIntake.title'),
-                description: t('landing.features.lexaIntake.description')
+                icon: <ShieldCheck className="h-8 w-8" />,
+                title: "Client Protection Guarantee",
+                description: "LegalPro protects clients by covering part or all of their case fees in the rare event of proven misconduct or malpractice."
               },
               {
                 icon: <Shield className="h-8 w-8" />,
