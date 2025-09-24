@@ -131,13 +131,13 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
         <div className="max-w-4xl mx-auto">
           {/* Professional Header */}
           <div className="text-center mb-8">
-            <h2 className={`text-3xl sm:text-4xl font-bold mb-4 transition-all duration-1000 ${
+            <h2 className={`text-3xl sm:text-4xl font-bold mb-4 transition-all duration-1000 delay-0 ${
               isVisible ? 'animate-slide-in-bottom opacity-100' : 'opacity-0 translate-y-10'
             }`}>
               {t('landing.chatbot.title')}{" "}
               <span className="text-primary">{t('landing.chatbot.titleAccent')}</span>
             </h2>
-            <p className={`text-base sm:text-xl text-muted-foreground max-w-3xl mx-auto transition-all duration-1000 delay-300 ${
+            <p className={`text-base sm:text-xl text-muted-foreground max-w-3xl mx-auto transition-all duration-1000 delay-200 ${
               isVisible ? 'animate-slide-in-bottom opacity-100' : 'opacity-0 translate-y-10'
             }`}>
               {t('landing.chatbot.subtitle')}
@@ -145,8 +145,8 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
           </div>
 
           {/* Chat Interface Card */}
-          <Card className={`shadow-lg border-0 overflow-hidden bg-background transition-all duration-1000 delay-600 ${
-            isVisible ? 'animate-slide-up-fade opacity-100' : 'opacity-0 translate-y-10'
+          <Card className={`shadow-lg border-0 overflow-hidden bg-background transition-all duration-1000 delay-500 ${
+            isVisible ? 'animate-slide-up-fade opacity-100' : 'opacity-0 translate-y-16'
           }`}>
             {/* Professional Header */}
             <CardHeader className="bg-primary/80 backdrop-blur-xl text-white border-b border-white/20 relative overflow-hidden">
