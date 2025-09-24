@@ -98,15 +98,15 @@ const Landing = () => {
       {/* Hero Section */}
       <section className="bg-gradient-hero text-white py-20 sm:py-32">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto text-center animate-fade-in">
-            <h1 className="text-4xl sm:text-6xl font-bold mb-6">
+          <div className="max-w-4xl mx-auto text-center">
+            <h1 className="text-4xl sm:text-6xl font-bold mb-6 animate-hero-title opacity-0">
               {t('landing.hero.title')}{" "}
               <span className="text-accent sm:block sm:mt-2">{t('landing.hero.titleAccent')}</span>
             </h1>
-            <p className="text-xl sm:text-2xl text-gray-200 mb-8 max-w-3xl mx-auto">
+            <p className="text-xl sm:text-2xl text-gray-200 mb-8 max-w-3xl mx-auto animate-hero-subtitle opacity-0">
               {t('landing.hero.subtitle')}
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center animate-hero-button opacity-0">
               <Link to="/auth?force=true&redirect=intake">
                 <Button size="lg" className="bg-accent hover:bg-accent-hover text-xl px-12 py-4">
                   {t('landing.hero.startCase')}
