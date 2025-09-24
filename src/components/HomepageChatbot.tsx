@@ -130,9 +130,7 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           {/* Professional Header */}
-          <div className={`text-center mb-8 transition-all duration-1000 ${
-            isVisible ? 'animate-slide-in-bottom opacity-100' : 'opacity-0 translate-y-10'
-          }`}>
+          <div className="text-center mb-8">
             <h2 className={`text-3xl sm:text-4xl font-bold mb-4 transition-all duration-1000 ${
               isVisible ? 'animate-slide-in-bottom opacity-100' : 'opacity-0 translate-y-10'
             }`}>
@@ -147,7 +145,7 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
           </div>
 
           {/* Chat Interface Card */}
-          <Card className={`shadow-lg border-0 overflow-hidden bg-background transition-all duration-1000 delay-700 ${
+          <Card className={`shadow-lg border-0 overflow-hidden bg-background transition-all duration-1000 delay-600 ${
             isVisible ? 'animate-slide-up-fade opacity-100' : 'opacity-0 translate-y-10'
           }`}>
             {/* Professional Header */}
