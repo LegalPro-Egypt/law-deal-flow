@@ -10,7 +10,6 @@ import { ProBonoSection } from "@/components/ProBonoSection";
 import { PromotionalPopup } from "@/components/PromotionalPopup";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useLanguage } from "@/hooks/useLanguage";
-import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 
 const Landing = () => {
   const { isAuthenticated, role, loading } = useAuth();
@@ -18,12 +17,6 @@ const Landing = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [showPromoPopup, setShowPromoPopup] = useState(false);
-
-  // Intersection observers for scroll animations
-  const { elementRef: heroRef, isVisible: heroVisible } = useIntersectionObserver({ threshold: 0.2 });
-  const { elementRef: featuresRef, isVisible: featuresVisible } = useIntersectionObserver({ threshold: 0.1 });
-  const { elementRef: howItWorksRef, isVisible: howItWorksVisible } = useIntersectionObserver({ threshold: 0.1 });
-  const { elementRef: ctaRef, isVisible: ctaVisible } = useIntersectionObserver({ threshold: 0.3 });
 
   useEffect(() => {
     // Check if user explicitly wants to view homepage (bypass auto-redirect)
@@ -100,34 +93,27 @@ const Landing = () => {
       </header>
 
       {/* Hero Section */}
-      <section 
-        ref={heroRef}
-        className="bg-hero-enhanced text-white py-20 sm:py-32 relative overflow-hidden"
-      >
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className={`max-w-4xl mx-auto text-center ${
-            heroVisible ? 'animate-hero-fade-in' : 'opacity-0'
-          }`}>
-            <h1 className="heading-hero text-white mb-6">
+      <section className="bg-gradient-hero text-white py-20 sm:py-32">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-4xl mx-auto text-center animate-fade-in">
+            <h1 className="text-4xl sm:text-6xl font-bold mb-6">
               {t('landing.hero.title')}{" "}
               <span className="text-accent sm:block sm:mt-2">{t('landing.hero.titleAccent')}</span>
             </h1>
-            <p className="text-xl sm:text-2xl text-gray-100 mb-8 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl sm:text-2xl text-gray-200 mb-8 max-w-3xl mx-auto">
               {t('landing.hero.subtitle')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/auth?force=true&redirect=intake">
-                <Button size="lg" className="btn-enhanced btn-enhanced-accent btn-shimmer bg-accent hover:bg-accent-hover text-xl px-12 py-4 font-semibold">
+                <Button size="lg" className="bg-accent hover:bg-accent-hover text-xl px-12 py-4">
                   {t('landing.hero.startCase')}
                 </Button>
               </Link>
             </div>
             
-            {/* Enhanced Premium Trust Signals */}
-            <div className={`trust-signals-container ${
-              heroVisible ? 'animate-slide-up stagger-2' : 'opacity-0 translate-y-10'
-            }`}>
-              <div className="trust-signal-card hover:scale-105 transition-transform duration-300">
+            {/* Premium Trust Signals */}
+            <div className="trust-signals-container">
+              <div className="trust-signal-card">
                 <div className="trust-signal-icon verified">
                   <Shield className="h-6 w-6 text-white" />
                 </div>
@@ -137,7 +123,7 @@ const Landing = () => {
                 </div>
               </div>
               
-              <div className="trust-signal-card hover:scale-105 transition-transform duration-300">
+              <div className="trust-signal-card">
                 <div className="trust-signal-icon ai-powered">
                   <Brain className="h-6 w-6 text-white" />
                 </div>
@@ -147,7 +133,7 @@ const Landing = () => {
                 </div>
               </div>
               
-              <div className="trust-signal-card hover:scale-105 transition-transform duration-300">
+              <div className="trust-signal-card">
                 <div className="trust-signal-icon secure">
                   <Lock className="h-6 w-6 text-white" />
                 </div>
@@ -159,10 +145,6 @@ const Landing = () => {
             </div>
           </div>
         </div>
-        
-        {/* Modern background elements */}
-        <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-primary/10 rounded-full blur-3xl animate-gentle-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-24 h-24 bg-accent/10 rounded-full blur-2xl animate-gentle-pulse" style={{ animationDelay: '2s' }}></div>
       </section>
 
       {/* Anonymous Q&A Chatbot Section */}
@@ -172,16 +154,11 @@ const Landing = () => {
       <ProBonoSection />
 
       {/* Features Section */}
-      <section 
-        ref={featuresRef}
-        className="py-20 bg-muted/30 relative overflow-hidden"
-      >
+      <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className={`text-center mb-16 ${
-            featuresVisible ? 'animate-fade-in' : 'opacity-0'
-          }`}>
-            <h2 className="heading-section mb-4">{t('landing.features.title')}</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">{t('landing.features.title')}</h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               {t('landing.features.subtitle')}
             </p>
           </div>
@@ -219,128 +196,94 @@ const Landing = () => {
                 description: "LegalPro protects clients by covering part or all of their case fees in the rare event of proven misconduct or malpractice."
               }
             ].map((feature, index) => (
-              <Card 
-                key={index} 
-                className={`card-enhanced p-6 text-center group ${isRTL() ? 'md:text-right' : 'md:text-left'} ${
-                  featuresVisible ? `animate-slide-up stagger-${index + 1}` : 'opacity-0 translate-y-10'
-                }`}
-              >
-                <div className={`text-primary mb-4 flex justify-center group-hover:scale-110 transition-transform duration-300 ${isRTL() ? 'md:justify-end' : 'md:justify-start'}`}>
-                  {feature.icon}
-                </div>
-                <h3 className="text-xl font-semibold mb-3 text-foreground">{feature.title}</h3>
-                <p className="text-muted-foreground leading-relaxed">{feature.description}</p>
+              <Card key={index} className={`p-6 card-hover bg-gradient-card animate-slide-up text-center ${isRTL() ? 'md:text-right' : 'md:text-left'}`}>
+                <div className={`text-primary mb-4 flex justify-center ${isRTL() ? 'md:justify-end' : 'md:justify-start'}`}>{feature.icon}</div>
+                <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
+                <p className="text-muted-foreground">{feature.description}</p>
               </Card>
             ))}
           </div>
         </div>
-        
-        {/* Subtle background accent */}
-        <div className="absolute top-1/2 left-0 w-40 h-40 bg-primary/5 rounded-full blur-3xl animate-gentle-pulse"></div>
-        <div className="absolute bottom-0 right-0 w-32 h-32 bg-accent/5 rounded-full blur-2xl animate-gentle-pulse" style={{ animationDelay: '3s' }}></div>
       </section>
 
       {/* How It Works */}
-      <section 
-        ref={howItWorksRef}
-        className="py-20 relative overflow-hidden"
-      >
+      <section className="py-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className={`text-center mb-16 ${
-            howItWorksVisible ? 'animate-fade-in' : 'opacity-0'
-          }`}>
-            <h2 className="heading-section mb-4">{t('landing.howItWorks.title')}</h2>
-            <p className="text-xl text-muted-foreground leading-relaxed">{t('landing.howItWorks.subtitle')}</p>
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">{t('landing.howItWorks.title')}</h2>
+            <p className="text-xl text-muted-foreground">{t('landing.howItWorks.subtitle')}</p>
           </div>
 
           <div>
             {/* Step 1 - Mobile: Text → Image, Desktop: Text → Image */}
-            <div className={`flex flex-col md:grid md:grid-cols-2 gap-8 items-center mb-12 ${
-              howItWorksVisible ? 'animate-slide-up stagger-1' : 'opacity-0 translate-y-10'
-            }`}>
+            <div className="flex flex-col md:grid md:grid-cols-2 gap-8 items-center mb-12">
               <div className="order-1 text-center md:text-left">
-                <div className="text-accent font-bold mb-2 text-lg">Step 1</div>
-                <h3 className="text-2xl font-bold mb-4 text-foreground">{t('landing.howItWorks.step1.title')}</h3>
-                <p className="text-muted-foreground text-lg leading-relaxed">
+                <div className="text-accent font-bold mb-2">Step 1</div>
+                <h3 className="text-2xl font-bold mb-4">{t('landing.howItWorks.step1.title')}</h3>
+                <p className="text-muted-foreground text-lg">
                   {t('landing.howItWorks.step1.description')}
                 </p>
               </div>
               <div className="order-2">
-                <div className="card-enhanced p-6 h-36 sm:h-40 md:h-56 w-full flex items-center justify-center group">
-                  <MessageSquare className="h-24 w-24 text-primary group-hover:scale-110 transition-transform duration-300" />
+                <div className="bg-muted/50 rounded-lg p-4 h-36 sm:h-40 md:h-56 w-full flex items-center justify-center">
+                  <MessageSquare className="h-24 w-24 text-primary" />
                 </div>
               </div>
             </div>
 
             {/* Step 2 - Mobile: Text → Image, Desktop: Image → Text */}
-            <div className={`flex flex-col md:grid md:grid-cols-2 gap-8 items-center mb-12 ${
-              howItWorksVisible ? 'animate-slide-up stagger-2' : 'opacity-0 translate-y-10'
-            }`}>
+            <div className="flex flex-col md:grid md:grid-cols-2 gap-8 items-center mb-12">
               <div className="order-1 md:order-2 text-center md:text-left">
-                <div className="text-accent font-bold mb-2 text-lg">Step 2</div>
-                <h3 className="text-2xl font-bold mb-4 text-foreground">{t('landing.howItWorks.step2.title')}</h3>
-                <p className="text-muted-foreground text-lg leading-relaxed">
+                <div className="text-accent font-bold mb-2">Step 2</div>
+                <h3 className="text-2xl font-bold mb-4">{t('landing.howItWorks.step2.title')}</h3>
+                <p className="text-muted-foreground text-lg">
                   {t('landing.howItWorks.step2.description')}
                 </p>
               </div>
               <div className="order-2 md:order-1">
-                <div className="card-enhanced p-6 h-36 sm:h-40 md:h-56 w-full flex items-center justify-center group">
-                  <Users className="h-24 w-24 text-primary group-hover:scale-110 transition-transform duration-300" />
+                <div className="bg-muted/50 rounded-lg p-4 h-36 sm:h-40 md:h-56 w-full flex items-center justify-center">
+                  <Users className="h-24 w-24 text-primary" />
                 </div>
               </div>
             </div>
 
             {/* Step 3 - Mobile: Text → Image, Desktop: Text → Image */}
-            <div className={`flex flex-col md:grid md:grid-cols-2 gap-8 items-center ${
-              howItWorksVisible ? 'animate-slide-up stagger-3' : 'opacity-0 translate-y-10'
-            }`}>
+            <div className="flex flex-col md:grid md:grid-cols-2 gap-8 items-center">
               <div className="order-1 text-center md:text-left">
-                <div className="text-accent font-bold mb-2 text-lg">Step 3</div>
-                <h3 className="text-2xl font-bold mb-4 text-foreground">{t('landing.howItWorks.step3.title')}</h3>
-                <p className="text-muted-foreground text-lg leading-relaxed">
+                <div className="text-accent font-bold mb-2">Step 3</div>
+                <h3 className="text-2xl font-bold mb-4">{t('landing.howItWorks.step3.title')}</h3>
+                <p className="text-muted-foreground text-lg">
                   {t('landing.howItWorks.step3.description')}
                 </p>
               </div>
               <div className="order-2">
-                <div className="card-enhanced p-6 h-36 sm:h-40 md:h-56 w-full flex items-center justify-center group">
-                  <Shield className="h-24 w-24 text-primary group-hover:scale-110 transition-transform duration-300" />
+                <div className="bg-muted/50 rounded-lg p-4 h-36 sm:h-40 md:h-56 w-full flex items-center justify-center">
+                  <Shield className="h-24 w-24 text-primary" />
                 </div>
               </div>
             </div>
           </div>
         </div>
-        
-        {/* Background accent */}
-        <div className="absolute top-1/4 right-0 w-36 h-36 bg-primary/5 rounded-full blur-3xl animate-gentle-pulse"></div>
       </section>
 
       {/* CTA Section */}
-      <section 
-        ref={ctaRef}
-        className="bg-footer-enhanced text-white py-20 relative overflow-hidden"
-      >
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <div className={ctaVisible ? 'animate-fade-in' : 'opacity-0'}>
-            <h2 className="heading-section text-white mb-4">{t('landing.cta.title')}</h2>
-            <p className="text-xl mb-8 max-w-2xl mx-auto text-gray-100 leading-relaxed">
-              {t('landing.cta.subtitle')}
-            </p>
-            <Link to="/auth?redirect=intake">
-              <Button size="lg" className="btn-enhanced btn-enhanced-accent btn-shimmer bg-accent hover:bg-accent-hover text-lg px-8 py-3 font-semibold">
-                {t('landing.cta.button')}
-              </Button>
-            </Link>
-          </div>
+      <section className="bg-gradient-primary text-white py-20">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl sm:text-4xl font-bold mb-4">{t('landing.cta.title')}</h2>
+          <p className="text-xl mb-8 max-w-2xl mx-auto text-gray-200">
+            {t('landing.cta.subtitle')}
+          </p>
+          <Link to="/auth?redirect=intake">
+            <Button size="lg" className="bg-accent hover:bg-accent-hover text-lg px-8 py-3">
+              {t('landing.cta.button')}
+            </Button>
+          </Link>
         </div>
-        
-        {/* Background elements */}
-        <div className="absolute top-1/2 left-1/4 w-28 h-28 bg-accent/10 rounded-full blur-3xl animate-gentle-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/3 w-20 h-20 bg-primary/10 rounded-full blur-2xl animate-gentle-pulse" style={{ animationDelay: '1.5s' }}></div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-footer-enhanced border-t py-12 relative overflow-hidden">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <footer className="bg-card border-t py-12">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {/* Mobile Layout */}
           <div className="md:hidden">
             {/* LegalPro section centered on top */}

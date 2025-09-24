@@ -82,38 +82,25 @@
     --glow-ai-strong: 0 0 30px hsl(192 100% 75% / 0.8), 0 0 60px hsl(192 100% 75% / 0.4);
     --shadow-glass: 0 8px 32px hsl(0 0% 0% / 0.3);
 
-    /* Enhanced Smooth Transitions */
-    --transition-all: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-colors: color 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-glow: box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-transform: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-smooth: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    /* Smooth Transitions */
+    --transition-all: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-colors: color 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-glow: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-transform: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
-    /* Enhanced Premium Trust Signals */
+    /* Premium Trust Signals */
     --trust-signal-bg: 0 0% 100%;
     --trust-signal-border: 0 0% 0% / 0.06;
-    --trust-signal-shadow-primary: 0 6px 30px rgba(0, 0, 0, 0.08);
-    --trust-signal-shadow-secondary: 0 3px 12px rgba(0, 0, 0, 0.04);
-    --trust-signal-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.15);
+    --trust-signal-shadow-primary: 0 4px 24px rgba(0, 0, 0, 0.08);
+    --trust-signal-shadow-secondary: 0 2px 8px rgba(0, 0, 0, 0.04);
+    --trust-signal-shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.12);
     --trust-signal-text: 26 26% 10%;
     --trust-signal-subtitle: 26 26% 10% / 0.7;
     
-    /* Enhanced Trust Signal Icon Gradients */
+    /* Trust Signal Icon Gradients */
     --trust-gradient-verified: linear-gradient(135deg, hsl(222, 84%, 35%), hsl(222, 84%, 55%));
     --trust-gradient-ai: linear-gradient(135deg, hsl(195, 100%, 50%), hsl(271, 81%, 56%));
     --trust-gradient-secure: linear-gradient(135deg, hsl(142, 76%, 36%), hsl(173, 80%, 40%));
-    
-    /* Modern Button Effects */
-    --button-shadow-default: 0 4px 14px hsl(var(--primary) / 0.15);
-    --button-shadow-hover: 0 6px 20px hsl(var(--primary) / 0.25);
-    --button-shadow-accent: 0 4px 14px hsl(var(--accent) / 0.15);
-    --button-shadow-accent-hover: 0 6px 20px hsl(var(--accent) / 0.25);
-    
-    /* Enhanced Background Gradients */
-    --gradient-hero-enhanced: linear-gradient(135deg, hsl(224 76% 48%) 0%, hsl(220 15% 15%) 70%, hsl(224 76% 48%) 100%);
-    --gradient-footer-accent: linear-gradient(135deg, hsl(224 76% 48%) 0%, hsl(220 15% 10%) 50%, hsl(224 76% 52%) 100%);
-    --gradient-card-enhanced: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(220 13% 99%) 50%, hsl(220 13% 97%) 100%);
 
     --sidebar-background: 0 0% 98%;
 
@@ -691,7 +678,7 @@
     }
   }
 
-  /* Enhanced Animation Utilities */
+  /* Animation Utilities */
   .animate-fade-in {
     animation: fadeIn 0.6s ease-out;
   }
@@ -710,126 +697,6 @@
   
   .animate-gradient {
     animation: gradientShift 4s ease-in-out infinite;
-  }
-
-  /* Enhanced Button Utilities */
-  .btn-enhanced {
-    position: relative;
-    overflow: hidden;
-    box-shadow: var(--button-shadow-default);
-    transition: var(--transition-all);
-  }
-
-  .btn-enhanced:hover {
-    transform: translateY(-2px) scale(1.02);
-    box-shadow: var(--button-shadow-hover);
-  }
-
-  .btn-enhanced-accent {
-    box-shadow: var(--button-shadow-accent);
-  }
-
-  .btn-enhanced-accent:hover {
-    box-shadow: var(--button-shadow-accent-hover);
-  }
-
-  .btn-shimmer::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-    transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .btn-shimmer:hover::before {
-    left: 100%;
-  }
-
-  /* Enhanced Card Utilities */
-  .card-enhanced {
-    background: var(--gradient-card-enhanced);
-    border-radius: calc(var(--radius) + 4px);
-    box-shadow: var(--shadow-card);
-    transition: var(--transition-all);
-    border: 1px solid hsl(var(--border) / 0.5);
-  }
-
-  .card-enhanced:hover {
-    transform: translateY(-8px);
-    box-shadow: var(--shadow-elevated);
-    border-color: hsl(var(--primary) / 0.2);
-  }
-
-  /* Background Accent Utilities */
-  .bg-hero-enhanced {
-    background: var(--gradient-hero-enhanced);
-    position: relative;
-    overflow: hidden;
-  }
-
-  .bg-hero-enhanced::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: radial-gradient(circle at 20% 80%, hsl(var(--primary) / 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, hsl(var(--accent) / 0.15) 0%, transparent 50%);
-    pointer-events: none;
-  }
-
-  .bg-footer-enhanced {
-    background: var(--gradient-footer-accent);
-    position: relative;
-    overflow: hidden;
-  }
-
-  .bg-footer-enhanced::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: radial-gradient(circle at 10% 10%, hsl(var(--primary) / 0.1) 0%, transparent 50%);
-    pointer-events: none;
-  }
-
-  /* Staggered Animation Utilities */
-  .stagger-1 { animation-delay: 0.1s; }
-  .stagger-2 { animation-delay: 0.2s; }
-  .stagger-3 { animation-delay: 0.3s; }
-  .stagger-4 { animation-delay: 0.4s; }
-  .stagger-5 { animation-delay: 0.5s; }
-  .stagger-6 { animation-delay: 0.6s; }
-
-  /* Enhanced Typography */
-  .heading-enhanced {
-    font-weight: 700;
-    letter-spacing: -0.025em;
-    line-height: 1.1;
-    background: linear-gradient(135deg, hsl(var(--foreground)), hsl(var(--foreground) / 0.8));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .heading-hero {
-    font-size: clamp(2.5rem, 5vw, 4rem);
-    font-weight: 800;
-    letter-spacing: -0.03em;
-    line-height: 1.05;
-  }
-
-  .heading-section {
-    font-size: clamp(2rem, 4vw, 3rem);
-    font-weight: 700;
-    letter-spacing: -0.025em;
-    line-height: 1.1;
   }
 }
 
