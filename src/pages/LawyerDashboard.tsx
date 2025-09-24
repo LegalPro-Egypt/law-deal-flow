@@ -91,11 +91,21 @@ const LawyerDashboard = () => {
 
   // Get the currently selected case or default to the first case
   const currentCase = cases.find(c => c.id === selectedCaseId) || cases[0];
+  
+  // Debug current case data
+  useEffect(() => {
+    if (currentCase) {
+      console.log('Current case in LawyerDashboard:', currentCase);
+      console.log('Current case proposal:', currentCase.proposal);
+    }
+  }, [currentCase]);
 
   const { unreadCounts, getTotalUnreadCount } = useLawyerChatNotifications();
 
   useEffect(() => {
+    console.log('LawyerDashboard: User state changed', { user: user?.id, authLoading });
     if (!authLoading && user) {
+      console.log('LawyerDashboard: Fetching dashboard data for user', user.id);
       fetchDashboardData();
     }
   }, [user, authLoading]);
@@ -672,7 +682,11 @@ const LawyerDashboard = () => {
                 <Button 
                   size="sm" 
                   className="bg-primary hover:bg-primary/90 flex-shrink-0"
-                  onClick={() => setSelectedCaseForProposal(currentCase)}
+                  onClick={() => {
+                    console.log('Button clicked, currentCase:', currentCase);
+                    console.log('Current case proposal:', currentCase.proposal);
+                    setSelectedCaseForProposal(currentCase);
+                  }}
                 >
                   <FileText className={`h-4 w-4 ${isRTL() ? 'ml-2' : 'mr-2'}`} />
                   {currentCase.proposal ? t('dashboard.cases.editProposal') : t('dashboard.cases.createProposal')}

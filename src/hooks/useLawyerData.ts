@@ -59,6 +59,8 @@ export const useLawyerData = () => {
     if (!user) return;
     
     try {
+      console.log('Fetching assigned cases for lawyer:', user.id);
+      
       const { data: casesData, error: casesError } = await supabase
         .from('cases')
         .select('*')
@@ -67,15 +69,24 @@ export const useLawyerData = () => {
 
       if (casesError) throw casesError;
       
+      console.log('Found cases:', casesData?.length);
+      
       // Fetch proposals for each case
       const casesWithProposals = await Promise.all(
         (casesData || []).map(async (caseItem) => {
-          const { data: proposalData } = await supabase
+          console.log('Fetching proposal for case:', caseItem.id);
+          
+          const { data: proposalData, error: proposalError } = await supabase
             .from('proposals')
             .select('*')
             .eq('case_id', caseItem.id)
             .eq('lawyer_id', user.id)
-            .single();
+            .maybeSingle();
+          
+          console.log('Proposal data for case', caseItem.id, ':', proposalData);
+          if (proposalError) {
+            console.error('Proposal fetch error:', proposalError);
+          }
           
           return {
             ...caseItem,
@@ -84,6 +95,7 @@ export const useLawyerData = () => {
         })
       );
       
+      console.log('Cases with proposals:', casesWithProposals);
       setAssignedCases(casesWithProposals);
     } catch (error) {
       console.error('Error fetching assigned cases:', error);
