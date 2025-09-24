@@ -13,6 +13,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 
 
 const Landing = () => {
+  console.log("Landing component loaded"); // Debug line to force refresh
   const { isAuthenticated, role, loading } = useAuth();
   const { t, isRTL } = useLanguage();
   const navigate = useNavigate();
