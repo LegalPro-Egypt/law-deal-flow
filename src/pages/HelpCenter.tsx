@@ -20,44 +20,104 @@ const HelpCenter = () => {
 
   const faqs = [
     {
-      question: "How do I find a lawyer on LegalPro?",
-      answer: "Simply click 'Start Your Case' and fill out our intake form. We'll match you with verified lawyers in Egypt who specialize in your specific legal issue within 24 hours."
+      question: "Is EgyptLegalPro a law firm?",
+      answer: "No. EgyptLegalPro is not a law firm and does not provide legal advice. We are a platform that connects clients with independent, licensed lawyers in Egypt."
     },
     {
-      question: "Are all lawyers on LegalPro verified?",
-      answer: "Yes, all lawyers on our platform go through a rigorous verification process. We check their credentials, bar association membership, and professional standing before approval."
+      question: "How does EgyptLegalPro make money?",
+      answer: "We take: A platform fee from clients on each transaction, A 3% Client Protection Fee from clients, And a small commission from lawyers. These fees keep the platform operating securely and fund the Client Protection Policy."
     },
     {
-      question: "How much does LegalPro cost?",
-      answer: "LegalPro offers various pricing plans to suit different needs. Our basic consultation starts at competitive rates, and we also offer subscription plans for ongoing legal support."
+      question: "What is the Client Protection Fee?",
+      answer: "The 3% fee provides limited financial protection in the event of proven malpractice or misconduct by a lawyer. Up to 25,000 EGP per case and up to 75,000 EGP per client per year."
     },
     {
-      question: "Can I get legal advice without revealing my identity?",
-      answer: "Yes, we offer anonymous Q&A sessions where you can get preliminary legal advice without disclosing personal information. However, for full representation, identification is required."
+      question: "What is the Platform Fee?",
+      answer: "The platform fee is charged to clients on every payment. This fee covers: Secure payment processing, Technology costs (servers, app, support systems), Ongoing improvements to the platform. This fee is separate from the 3% Client Protection Fee and is not refundable."
     },
     {
-      question: "What types of legal cases do you handle?",
-      answer: "We handle a wide range of cases including family law, criminal defense, civil litigation, business law, real estate, employment disputes, and more. Our network covers most areas of Egyptian law."
+      question: "What counts as malpractice or misconduct?",
+      answer: "Misconduct means a lawyer clearly violated professional duties under Egyptian law, such as: Missing critical legal deadlines, Misusing client funds, Having an undisclosed conflict of interest. It does not include losing a case, strategic disagreements, or general dissatisfaction."
     },
     {
-      question: "How quickly can I get matched with a lawyer?",
-      answer: "Most clients are matched with suitable lawyers within 24 hours of submitting their case details. Urgent cases can be prioritized for faster matching."
+      question: "How do I prove misconduct or malpractice?",
+      answer: "To qualify for coverage, you must provide independent proof, such as: A final court ruling against the lawyer, or A disciplinary decision from the Egyptian Bar Association. Without this evidence, a claim cannot be approved."
     },
     {
-      question: "Is my information secure on LegalPro?",
-      answer: "Absolutely. We use bank-level encryption and security measures to protect all client data. Your information is only shared with verified lawyers with your explicit consent."
+      question: "Are calls and messages recorded?",
+      answer: "Yes. For the safety of both clients and lawyers, all messages, audio calls, and video calls on the platform are recorded. These may be used for conflict resolution, fraud prevention, or compliance with Egyptian law."
     },
     {
-      question: "Can I communicate with my lawyer through the platform?",
-      answer: "Yes, our platform includes secure messaging, video calls, and document sharing features so you can communicate with your lawyer conveniently and securely."
+      question: "How is my data used?",
+      answer: "Your data is processed to provide services, improve the platform, and enhance user experience. We may share data with trusted third parties (such as payment processors, cloud storage, and analytics providers). EgyptLegalPro does not sell personal data for unrelated advertising."
     },
     {
-      question: "What if I'm not satisfied with my matched lawyer?",
-      answer: "We offer a satisfaction guarantee. If you're not happy with your initial match, we'll help you find another lawyer at no additional cost within the first 7 days."
+      question: "How do I pay my lawyer?",
+      answer: "All payments must go through EgyptLegalPro. The lawyer receives their fee in stages, not all at once. The platform fee and Client Protection Fee are deducted. Off-platform payments are not allowed and may void your Client Protection coverage."
     },
     {
-      question: "Do you offer payment plans or financial assistance?",
-      answer: "Yes, we work with lawyers who offer flexible payment plans. We also have pro bono programs for clients who qualify based on financial need and case merit."
+      question: "How are lawyer fees paid out?",
+      answer: "Payments are released to lawyers in stages, linked to case progress. The final portion is only released after the case is completed or confirmed by both sides. This protects clients and ensures accountability."
+    },
+    {
+      question: "What happens if I am unhappy with my lawyer?",
+      answer: "You may request a replacement lawyer within the first 15 days of your case. A valid reason must be provided (e.g., lack of communication, unprofessional behavior, conflict of interest). If no valid reason is given, or if the request comes after 15 days, a cancellation fee will apply."
+    },
+    {
+      question: "Can lawyers contact me outside the platform?",
+      answer: "No. For safety and compliance, all communication must remain inside the EgyptLegalPro platform. Off-platform communication may affect your eligibility for Client Protection."
+    },
+    {
+      question: "What happens if a lawyer misrepresents their license?",
+      answer: "Lawyers must be licensed and in good standing. Any lawyer found to have provided false information will be permanently removed from the platform."
+    },
+    {
+      question: "What law governs EgyptLegalPro?",
+      answer: "All services are governed by the laws of the Arab Republic of Egypt, and disputes fall under the jurisdiction of the courts of Cairo, Egypt."
+    },
+    {
+      question: "How can I contact EgyptLegalPro?",
+      answer: "For support, email us at support@egyptlegalpro.com"
+    },
+    {
+      question: "What happens if I cancel my case?",
+      answer: "If you cancel a case after it has started, cancellation fees may apply depending on the stage of the work already completed by the lawyer."
+    },
+    {
+      question: "Can I get a refund?",
+      answer: "Refunds are only available in limited situations, such as: If no lawyer accepts your case, or If EgyptLegalPro cancels the case before it begins. Refunds are not available once legal work has started, except as required by the Client Protection Policy."
+    },
+    {
+      question: "Can I hire more than one lawyer through the platform?",
+      answer: "Yes, you may engage multiple lawyers for different cases or for the same case if needed. Each engagement is billed and covered separately."
+    },
+    {
+      question: "What happens if my lawyer becomes unavailable?",
+      answer: "If a lawyer becomes unavailable for legitimate reasons, EgyptLegalPro will help you transition to a new lawyer without additional platform charges."
+    },
+    {
+      question: "How are disputes between clients and lawyers resolved?",
+      answer: "Disputes should first be raised through the platform. EgyptLegalPro may review communication records and payments to mediate. Final responsibility, however, rests with the client and lawyer."
+    },
+    {
+      question: "How are lawyers verified?",
+      answer: "Lawyers must submit proof of Egyptian Bar Association membership, valid ID, and supporting documents. EgyptLegalPro reviews these before activation."
+    },
+    {
+      question: "Can I choose my lawyer?",
+      answer: "Yes. You can review lawyer profiles, areas of specialization, and user ratings before engaging a lawyer."
+    },
+    {
+      question: "Are case outcomes guaranteed?",
+      answer: "No. Legal outcomes depend on many factors outside anyone's control. EgyptLegalPro cannot guarantee results."
+    },
+    {
+      question: "What happens if I submit false information?",
+      answer: "Providing false or misleading information may result in account suspension, cancellation of your case, and loss of eligibility for Client Protection."
+    },
+    {
+      question: "How do I close my account?",
+      answer: "You may request account deletion at any time by contacting support@egyptlegalpro.com. Certain data may be retained as required by Egyptian law."
     }
   ];
 
@@ -201,7 +261,7 @@ const HelpCenter = () => {
                   <Mail className="w-5 h-5 text-primary" />
                   <div>
                     <p className="font-medium">Email Support</p>
-                    <p className="text-sm text-muted-foreground">support@legalpro-egypt.com</p>
+                    <p className="text-sm text-muted-foreground">support@egyptlegalpro.com</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -221,7 +281,7 @@ const HelpCenter = () => {
               <CardHeader>
                 <CardTitle>Frequently Asked Questions</CardTitle>
                 <CardDescription>
-                  Find answers to common questions about LegalPro
+                  Find answers to common questions about EgyptLegalPro
                 </CardDescription>
               </CardHeader>
               <CardContent>
