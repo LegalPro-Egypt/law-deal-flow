@@ -15,6 +15,7 @@ import {
 import { useLegalChatbot, ChatMessage } from '@/hooks/useLegalChatbot';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/hooks/useLanguage';
+import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
 
 interface HomepageChatbotProps {
   className?: string;
@@ -28,6 +29,9 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
   const [connectionFailed, setConnectionFailed] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const { t, isRTL } = useLanguage();
+  
+  // Intersection observer for animations
+  const { elementRef: sectionRef, isVisible } = useIntersectionObserver({ threshold: 0.2 });
 
   const {
     messages,
@@ -122,11 +126,13 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
 
   // Always visible professional chat interface
   return (
-    <section className={`py-16 bg-muted/30 ${className} ${isRTL() ? 'rtl' : 'ltr'}`}>
+    <section ref={sectionRef as React.RefObject<HTMLElement>} className={`py-16 bg-muted/30 ${className} ${isRTL() ? 'rtl' : 'ltr'}`}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           {/* Professional Header */}
-          <div className="text-center mb-8">
+          <div className={`text-center mb-8 transition-all duration-1000 ${
+            isVisible ? 'animate-slide-in-bottom opacity-100' : 'opacity-0 translate-y-10'
+          }`}>
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
               {t('landing.chatbot.title')}{" "}
               <span className="text-primary">{t('landing.chatbot.titleAccent')}</span>
@@ -137,7 +143,9 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
           </div>
 
           {/* Chat Interface Card */}
-          <Card className="shadow-lg border-0 overflow-hidden bg-background">
+          <Card className={`shadow-lg border-0 overflow-hidden bg-background transition-all duration-1000 delay-300 ${
+            isVisible ? 'animate-slide-up-fade opacity-100' : 'opacity-0 translate-y-10'
+          }`}>
             {/* Professional Header */}
             <CardHeader className="bg-primary/80 backdrop-blur-xl text-white border-b border-white/20 relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-r from-primary/60 to-primary/40"></div>
