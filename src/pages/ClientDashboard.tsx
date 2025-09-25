@@ -113,7 +113,15 @@ const ClientDashboard = () => {
 
   // Compute completion status from actual data
   const getStepCompletion = () => {
-    if (!activeCase) return { step1: false, step2: false, step3: false, allComplete: false };
+    if (!activeCase) return { step1: false, step2: false, step3: false, allComplete: false, isSubmittedCase: false };
+    
+    // Check if case is already submitted or beyond intake phase
+    const isSubmittedCase = activeCase.status !== 'intake' && activeCase.status !== 'draft';
+    
+    // If case is already submitted, don't show setup steps
+    if (isSubmittedCase) {
+      return { step1: true, step2: true, step3: true, allComplete: true, isSubmittedCase: true };
+    }
     
     // Step 1: Case data exists (AI summary)
     const step1Complete = !!(activeCase.ai_summary);
@@ -132,7 +140,7 @@ const ClientDashboard = () => {
     
     const allComplete = step1Complete && step2Complete && step3Complete;
     
-    return { step1: step1Complete, step2: step2Complete, step3: step3Complete, allComplete };
+    return { step1: step1Complete, step2: step2Complete, step3: step3Complete, allComplete, isSubmittedCase: false };
   };
 
   const stepCompletion = getStepCompletion();
@@ -597,7 +605,7 @@ const ClientDashboard = () => {
                         <ArrowRight className="h-4 w-4 mr-2" />
                         Review Case & Submit
                       </Button>
-                    ) : !stepCompletion.allComplete ? (
+                    ) : !stepCompletion.allComplete && !stepCompletion.isSubmittedCase && (activeCase.status === 'intake' || activeCase.status === 'draft') ? (
                       <Button 
                         asChild 
                         className="w-full justify-start bg-gradient-primary"
@@ -607,6 +615,10 @@ const ClientDashboard = () => {
                           Continue Setup
                         </Link>
                       </Button>
+                    ) : stepCompletion.isSubmittedCase ? (
+                      <div className="text-sm text-muted-foreground text-center py-2">
+                        Case has been submitted and is being processed
+                      </div>
                     ) : null}
                   </div>
                 </CardContent>

@@ -199,6 +199,16 @@ const Intake = () => {
 
           // Set current step - handle edit mode
           if (editParam === 'personal') {
+            // Check if case is already submitted
+            if (targetCase.status !== 'intake' && targetCase.status !== 'draft') {
+              toast({
+                title: "Case Already Submitted", 
+                description: "This case has already been submitted and cannot be edited through the intake process. Use the Personal Information dialog instead.",
+                variant: "destructive",
+              });
+              navigate('/dashboard');
+              return;
+            }
             // Force show personal form for editing
             setCurrentStep(2);
             setShowPersonalForm(true);
