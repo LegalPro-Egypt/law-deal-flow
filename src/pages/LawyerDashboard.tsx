@@ -248,7 +248,9 @@ const LawyerDashboard = () => {
 
       // Calculate stats with proper status mapping
       const pendingCases = casesWithProposals?.filter(c => 
-        c.status === 'lawyer_assigned' || c.status === 'proposal_sent'
+        c.status === 'lawyer_assigned' || 
+        c.status === 'proposal_sent' ||
+        (c.status === 'proposal_accepted' && !c.consultation_paid)
       ).length || 0;
       
       const activeCases = casesWithProposals?.filter(c => 
