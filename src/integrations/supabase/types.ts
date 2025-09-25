@@ -1713,6 +1713,8 @@ export type Database = {
         | "communication_request"
         | "system_update"
         | "general"
+        | "proposal_accepted"
+        | "proposal_sent"
       verification_status: "pending_basic" | "pending_complete" | "verified"
     }
     CompositeTypes: {
@@ -1854,6 +1856,8 @@ export const Constants = {
         "communication_request",
         "system_update",
         "general",
+        "proposal_accepted",
+        "proposal_sent",
       ],
       verification_status: ["pending_basic", "pending_complete", "verified"],
     },
