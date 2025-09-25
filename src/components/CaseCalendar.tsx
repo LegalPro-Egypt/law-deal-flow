@@ -108,12 +108,23 @@ export const CaseCalendar: React.FC<CaseCalendarProps> = ({
                   }
                 </CardDescription>
               </div>
-              {dayAppointments.length > 0 && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Sparkles className="h-4 w-4" />
-                  <span>{dayAppointments.length} meetings</span>
-                </div>
-              )}
+              <div className="flex items-center gap-2">
+                {isLawyer && selectedDate && (
+                  <Button 
+                    onClick={() => setShowCreateDialog(true)}
+                    size="sm"
+                    className="bg-primary hover:bg-primary/90"
+                  >
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Schedule
+                  </Button>
+                )}
+                {dayAppointments.length > 0 && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>{dayAppointments.length} meetings</span>
+                  </div>
+                )}
+              </div>
             </div>
           </CardHeader>
           <CardContent>

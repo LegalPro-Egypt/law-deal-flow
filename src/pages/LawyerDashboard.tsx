@@ -37,6 +37,8 @@ import { CaseActivityForm } from "@/components/CaseActivityForm";
 import { CaseTimeline } from "@/components/CaseTimeline";
 import { CaseCalendar } from "@/components/CaseCalendar";
 import { NotificationMenu } from "@/components/NotificationMenu";
+import { CollapsibleCard } from "@/components/CollapsibleCard";
+import { Label } from "@/components/ui/label";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -715,30 +717,83 @@ const LawyerDashboard = () => {
                 <CaseWorkProgress caseData={currentCase} />
               )}
               
-                  {/* Case Milestone Form - Allow lawyers to add milestone updates */}
+              {/* Case Milestone Updates */}
+              <CollapsibleCard
+                title="Case Milestones"
+                icon={<Clock className="h-5 w-5" />}
+                description="Add updates and track case progress"
+                defaultOpen={false}
+              >
+                <div className="space-y-4">
                   <CaseActivityForm caseId={currentCase.id} />
-                  
-                  {/* Case Milestones - Show milestone history */}
                   <CaseTimeline caseId={currentCase.id} caseData={currentCase} />
-                  
-                  {/* Calendar & Appointments */}
-                  <Card className="border-info/20">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <CalendarIcon className="h-4 w-4" />
-                        Calendar & Appointments
-                      </CardTitle>
-                      <CardDescription>Manage meetings and appointments with your client</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <CaseCalendar
-                        caseId={currentCase.id}
-                        isLawyer={true}
-                        clientId={currentCase.user_id}
-                        lawyerId={profile?.user_id}
-                      />
-                    </CardContent>
-                  </Card>
+                </div>
+              </CollapsibleCard>
+
+              {/* Calendar & Appointments */}
+              <CollapsibleCard
+                title="Calendar & Appointments"
+                icon={<CalendarIcon className="h-5 w-5" />}
+                description="Schedule and manage client meetings"
+                defaultOpen={false}
+              >
+                <CaseCalendar
+                  caseId={currentCase.id}
+                  isLawyer={true}
+                  clientId={currentCase.user_id}
+                  lawyerId={profile?.user_id}
+                />
+              </CollapsibleCard>
+
+              {/* Case Details */}
+              <CollapsibleCard
+                title="Case Information"
+                icon={<FileText className="h-5 w-5" />}
+                description="View detailed case information and documents"
+                defaultOpen={false}
+                headerAction={
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => handleViewDetails(currentCase.id)}
+                  >
+                    View Full Details
+                  </Button>
+                }
+              >
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Case Number</Label>
+                      <Badge variant="outline" className="font-mono">
+                        {currentCase.case_number}
+                      </Badge>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Status</Label>
+                      <Badge variant={getStatusVariant(currentCase.status)}>
+                        {currentCase.status.replace('_', ' ').toUpperCase()}
+                      </Badge>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Category</Label>
+                      <p className="text-sm">{currentCase.category}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Urgency</Label>
+                      <Badge variant={getUrgencyVariant(currentCase.urgency)}>
+                        {currentCase.urgency} Priority
+                      </Badge>
+                    </div>
+                  </div>
+                  {currentCase.description && (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Description</Label>
+                      <p className="text-sm text-muted-foreground">{currentCase.description}</p>
+                    </div>
+                  )}
+                </div>
+              </CollapsibleCard>
               
               <div className="flex gap-2 flex-wrap">
                 <Button 

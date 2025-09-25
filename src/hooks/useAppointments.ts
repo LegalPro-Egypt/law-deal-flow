@@ -75,6 +75,11 @@ export const useAppointments = (caseId?: string) => {
 
       if (error) throw error;
 
+      // Send notification to client
+      await supabase.functions.invoke('create-appointment-notification', {
+        body: { appointmentId: data.id }
+      });
+
       toast({
         title: "Appointment Created",
         description: "The appointment has been scheduled successfully.",
