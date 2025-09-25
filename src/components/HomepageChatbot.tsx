@@ -150,7 +150,7 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({
           </div>
 
           {/* Chat Interface Card */}
-          <ChatFlip3D flips={5} spinOnScroll3D={spinOnScroll3D}>
+          <ChatFlip3D flips={1} spinOnScroll3D={spinOnScroll3D}>
             <Card 
               id="lexa-chat"
               className={`shadow-lg border-0 overflow-hidden bg-background transition-all duration-1000 delay-500 ${

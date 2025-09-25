@@ -9,7 +9,7 @@ interface ChatFlip3DProps {
 
 export const ChatFlip3D: React.FC<ChatFlip3DProps> = ({ 
   children, 
-  flips = 5,
+  flips = 1,
   spinOnScroll3D = true 
 }) => {
   const ref = useRef<HTMLDivElement>(null);
