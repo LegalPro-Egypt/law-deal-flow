@@ -786,12 +786,6 @@ const LawyerDashboard = () => {
                       </Badge>
                     </div>
                   </div>
-                  {currentCase.description && (
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Description</Label>
-                      <p className="text-sm text-muted-foreground">{currentCase.description}</p>
-                    </div>
-                  )}
                 </div>
               </CollapsibleCard>
               
