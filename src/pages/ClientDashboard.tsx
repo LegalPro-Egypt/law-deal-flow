@@ -430,7 +430,7 @@ const ClientDashboard = () => {
                     AI Intake Conversation
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => window.open('mailto:support@legalpro.com?subject=Support Request - Case ' + activeCase.case_number, '_blank')}>
+                  <DropdownMenuItem onClick={() => navigate('/help')}>
                     <HelpCircle className="h-4 w-4 mr-2" />
                     Contact Support
                   </DropdownMenuItem>
