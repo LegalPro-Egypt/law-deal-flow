@@ -32,6 +32,9 @@ import { CaseDetailsDialog } from "@/components/CaseDetailsDialog";
 import { CreateProposalDialog } from "@/components/CreateProposalDialog";
 import { CommunicationInbox } from "@/components/CommunicationInbox";
 import { CaseWorkProgress } from "@/components/CaseWorkProgress";
+import { CaseActivityForm } from "@/components/CaseActivityForm";
+import { CaseTimeline } from "@/components/CaseTimeline";
+import { NotificationMenu } from "@/components/NotificationMenu";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -514,13 +517,15 @@ const LawyerDashboard = () => {
               </span>
               
               {/* Header Menu */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
-                    <Menu className="h-5 w-5" />
-                    <span className="sr-only">Open menu</span>
-                  </Button>
-                </DropdownMenuTrigger>
+              <div className="flex items-center gap-2">
+                <NotificationMenu />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
+                      <Menu className="h-5 w-5" />
+                      <span className="sr-only">Open menu</span>
+                    </Button>
+                  </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 bg-background border shadow-lg z-50">
                   <DropdownMenuItem asChild>
                     <div className="flex items-center justify-between py-2">
@@ -535,6 +540,7 @@ const LawyerDashboard = () => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              </div>
             </div>
           </div>
         </div>
@@ -706,6 +712,12 @@ const LawyerDashboard = () => {
               {(currentCase.status === 'work_in_progress' || currentCase.status === 'pending_client_confirmation' || currentCase.status === 'completed') && (
                 <CaseWorkProgress caseData={currentCase} />
               )}
+              
+              {/* Case Activity Form - Allow lawyers to add progress updates */}
+              <CaseActivityForm caseId={currentCase.id} />
+              
+              {/* Case Timeline - Show activity history */}
+              <CaseTimeline caseId={currentCase.id} caseData={currentCase} />
               
               <div className="flex gap-2 flex-wrap">
                 <Button 

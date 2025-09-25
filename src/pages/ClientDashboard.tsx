@@ -41,6 +41,8 @@ import CaseSelector from "@/components/CaseSelector";
 import { CommunicationInbox } from "@/components/CommunicationInbox";
 import { NotificationsInbox } from "@/components/NotificationsInbox";
 import { CaseWorkProgress } from "@/components/CaseWorkProgress";
+import { CaseTimeline } from "@/components/CaseTimeline";
+import { NotificationMenu } from "@/components/NotificationMenu";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useChatNotifications } from "@/hooks/useChatNotifications";
 import { NotificationBadge } from "@/components/ui/notification-badge";
@@ -403,6 +405,7 @@ const ClientDashboard = () => {
 
             {/* Actions */}
             <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4">
+              <NotificationMenu />
               <Button
                 asChild
                 className="bg-primary hover:bg-primary/90 text-primary-foreground h-9 sm:h-10"
@@ -527,6 +530,13 @@ const ClientDashboard = () => {
                         status: activeCase.status,
                         assigned_lawyer_id: activeCase.assigned_lawyer_id
                       }} />
+                    </div>
+                  )}
+                  
+                  {/* Case Timeline */}
+                  {activeCase.assigned_lawyer_id && (
+                    <div className="mt-4">
+                      <CaseTimeline caseId={activeCase.id} caseData={activeCase} />
                     </div>
                   )}
                 </div>
