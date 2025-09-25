@@ -153,31 +153,31 @@ export const NotificationMenu: React.FC<NotificationMenuProps> = ({ className })
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80 sm:w-96 max-w-[95vw] max-h-[80vh] p-0 overflow-hidden bg-background border z-[60]">
-        <Card className="border-0 shadow-none">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center justify-between">
-              <span className="flex items-center gap-2">
+      <DropdownMenuContent align="end" sideOffset={8} className="w-[min(92vw,420px)] p-0 overflow-x-hidden bg-background border z-[60] rounded-2xl">
+        <div className="p-3">
+          <div className="pb-3">
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-2 text-lg font-semibold">
                 <Bell className="h-5 w-5" />
                 Notifications
               </span>
-            </CardTitle>
-          </CardHeader>
+            </div>
+          </div>
           <Separator />
-          <CardContent className="p-0">
+          <div className="pt-3">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 m-3 mb-0">
-                <TabsTrigger value="new" className="text-xs">
+              <TabsList className="grid grid-cols-2 w-full bg-muted rounded-xl p-1">
+                <TabsTrigger value="new" className="text-sm rounded">
                   New ({newNotifications.length})
                 </TabsTrigger>
-                <TabsTrigger value="history" className="text-xs">
+                <TabsTrigger value="history" className="text-sm rounded">
                   <History className="h-3 w-3 mr-1" />
                   History ({historyNotifications.length})
                 </TabsTrigger>
               </TabsList>
               
-              <TabsContent value="new" className="mt-0">
-                <ScrollArea className="h-[60vh] sm:h-96">
+              <TabsContent value="new" className="mt-3">
+                <ScrollArea className="max-h-[65vh] overflow-x-hidden pr-2">
                   {loading ? (
                     <div className="p-4 space-y-3">
                       {[1, 2, 3].map(i => (
@@ -202,8 +202,8 @@ export const NotificationMenu: React.FC<NotificationMenuProps> = ({ className })
                 </ScrollArea>
               </TabsContent>
               
-              <TabsContent value="history" className="mt-0">
-                <ScrollArea className="h-[60vh] sm:h-96">
+              <TabsContent value="history" className="mt-3">
+                <ScrollArea className="max-h-[65vh] overflow-x-hidden pr-2">
                   {loading ? (
                     <div className="p-4 space-y-3">
                       {[1, 2, 3].map(i => (
@@ -228,8 +228,8 @@ export const NotificationMenu: React.FC<NotificationMenuProps> = ({ className })
                 </ScrollArea>
               </TabsContent>
             </Tabs>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
         
         {/* Money Request Notification Dialog */}
         <MoneyRequestNotification 
