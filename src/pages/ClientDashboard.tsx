@@ -26,7 +26,8 @@ import {
   ChevronRight,
   UserCircle,
   Bot,
-  HelpCircle
+  HelpCircle,
+  Calendar as CalendarIcon
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import jsPDF from 'jspdf';
@@ -42,6 +43,7 @@ import { CommunicationInbox } from "@/components/CommunicationInbox";
 import { NotificationsInbox } from "@/components/NotificationsInbox";
 import { CaseWorkProgress } from "@/components/CaseWorkProgress";
 import { CaseTimeline } from "@/components/CaseTimeline";
+import { CaseCalendar } from "@/components/CaseCalendar";
 import { NotificationMenu } from "@/components/NotificationMenu";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useChatNotifications } from "@/hooks/useChatNotifications";
@@ -61,9 +63,10 @@ const ClientDashboard = () => {
     personal: true,
     intake: true,
     documents: true,
-    communication: true
+    communication: true,
+    calendar: true
   });
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const navigate = useNavigate();
   const { 
     cases, 
@@ -716,6 +719,42 @@ const ClientDashboard = () => {
                   <AlertCircle className="h-3 w-3 inline mr-1" />
                   All communication must remain on platform. External contact details will be automatically redacted.
                 </div>
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
+
+        {/* Calendar Card */}
+        <Collapsible open={!collapsedCards.calendar} onOpenChange={() => toggleCard('calendar')}>
+          <Card className="bg-gradient-card shadow-card border-2 border-info/20 hover:border-info/40 transition-colors">
+            <CollapsibleTrigger asChild>
+              <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center">
+                      <CalendarIcon className="h-5 w-5 mr-2" />
+                      Calendar & Appointments
+                    </CardTitle>
+                    <CardDescription>
+                      View scheduled meetings and appointments
+                    </CardDescription>
+                  </div>
+                  {collapsedCards.calendar ? (
+                    <ChevronRight className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </div>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent>
+                <CaseCalendar
+                  caseId={activeCase.id}
+                  isLawyer={false}
+                  clientId={user?.id}
+                  lawyerId={activeCase.assigned_lawyer_id}
+                />
               </CardContent>
             </CollapsibleContent>
           </Card>

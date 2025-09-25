@@ -24,7 +24,8 @@ import {
   AlertTriangle,
   Settings,
   PhoneCall,
-  Menu
+  Menu,
+  Calendar as CalendarIcon
 } from "lucide-react";
 import { LawyerQAChatbot } from "@/components/LawyerQAChatbot";
 import { CompleteVerificationForm } from "@/components/CompleteVerificationForm";
@@ -34,6 +35,7 @@ import { CommunicationInbox } from "@/components/CommunicationInbox";
 import { CaseWorkProgress } from "@/components/CaseWorkProgress";
 import { CaseActivityForm } from "@/components/CaseActivityForm";
 import { CaseTimeline } from "@/components/CaseTimeline";
+import { CaseCalendar } from "@/components/CaseCalendar";
 import { NotificationMenu } from "@/components/NotificationMenu";
 import {
   DropdownMenu,
@@ -718,6 +720,25 @@ const LawyerDashboard = () => {
                   
                   {/* Case Milestones - Show milestone history */}
                   <CaseTimeline caseId={currentCase.id} caseData={currentCase} />
+                  
+                  {/* Calendar & Appointments */}
+                  <Card className="border-info/20">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <CalendarIcon className="h-4 w-4" />
+                        Calendar & Appointments
+                      </CardTitle>
+                      <CardDescription>Manage meetings and appointments with your client</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <CaseCalendar
+                        caseId={currentCase.id}
+                        isLawyer={true}
+                        clientId={currentCase.user_id}
+                        lawyerId={profile?.user_id}
+                      />
+                    </CardContent>
+                  </Card>
               
               <div className="flex gap-2 flex-wrap">
                 <Button 
