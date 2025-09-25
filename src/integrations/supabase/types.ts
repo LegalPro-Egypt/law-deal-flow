@@ -1043,6 +1043,51 @@ export type Database = {
           },
         ]
       }
+      money_requests: {
+        Row: {
+          amount: number
+          case_id: string
+          client_id: string
+          created_at: string
+          currency: string
+          description: string
+          id: string
+          lawyer_id: string
+          paid_at: string | null
+          payment_intent_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          case_id: string
+          client_id: string
+          created_at?: string
+          currency?: string
+          description: string
+          id?: string
+          lawyer_id: string
+          paid_at?: string | null
+          payment_intent_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          case_id?: string
+          client_id?: string
+          created_at?: string
+          currency?: string
+          description?: string
+          id?: string
+          lawyer_id?: string
+          paid_at?: string | null
+          payment_intent_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           action_required: boolean

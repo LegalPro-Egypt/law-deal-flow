@@ -18,12 +18,17 @@ interface PaymentState {
   consultationFee: number;
   remainingFee: number;
   lawyerName: string;
-  type: 'consultation' | 'remaining';
+  type: 'consultation' | 'remaining' | 'money_request';
   platformFeeAmount?: number;
   paymentProcessingFeeAmount?: number;
   clientProtectionFeeAmount?: number;
   totalAdditionalFees?: number;
   finalTotalFee?: number;
+  // Money request specific
+  moneyRequestId?: string;
+  amount?: number;
+  currency?: string;
+  description?: string;
 }
 
 const Payment: React.FC = () => {
@@ -46,6 +51,7 @@ const Payment: React.FC = () => {
     if (location.state && location.state.paymentData) {
       setPaymentData(location.state.paymentData);
     } else {
+      // Redirect to appropriate dashboard based on expected payment type
       navigate('/client');
     }
   }, [location.state, navigate]);
@@ -63,52 +69,98 @@ const Payment: React.FC = () => {
       const isSuccess = Math.random() > 0.1;
       
       if (isSuccess) {
-        // Update case status to consultation_paid
-        const { error: caseError } = await supabase
-          .from('cases')
-          .update({
-            consultation_paid: true,
-            payment_status: 'completed',
-            payment_amount: paymentData.consultationFee,
-            payment_date: new Date().toISOString(),
-            status: 'consultation_paid'
-          })
-          .eq('id', paymentData.caseId);
+        if (paymentData.type === 'money_request') {
+          // Update money request status to paid
+          const { error: moneyRequestError } = await supabase
+            .from('money_requests')
+            .update({
+              status: 'paid',
+              paid_at: new Date().toISOString(),
+              payment_intent_id: 'mock_payment_' + Date.now() // Mock payment ID
+            })
+            .eq('id', paymentData.moneyRequestId);
 
-        if (caseError) throw caseError;
+          if (moneyRequestError) throw moneyRequestError;
 
-        // Create notification for lawyer
-        const { data: caseData } = await supabase
-          .from('cases')
-          .select('assigned_lawyer_id, case_number, title')
-          .eq('id', paymentData.caseId)
-          .single();
+          // Create notification for lawyer
+          const { data: caseData } = await supabase
+            .from('cases')
+            .select('assigned_lawyer_id, case_number, title')
+            .eq('id', paymentData.caseId)
+            .single();
 
-        if (caseData?.assigned_lawyer_id) {
-          await supabase
-            .from('notifications')
-            .insert({
-              user_id: caseData.assigned_lawyer_id,
-              title: language === 'ar' ? 'تم دفع رسوم الاستشارة' : 'Consultation Fee Paid',
-              message: language === 'ar' 
-                ? `تم دفع رسوم الاستشارة للقضية ${caseData.case_number}. يمكنك الآن بدء العمل مع العميل.`
-                : `Consultation fee has been paid for case ${caseData.case_number}. You can now start working with the client.`,
-              type: 'payment_completed',
-              case_id: paymentData.caseId,
-              action_required: false
-            });
+          if (caseData?.assigned_lawyer_id) {
+            await supabase
+              .from('notifications')
+              .insert({
+                user_id: caseData.assigned_lawyer_id,
+                title: 'Payment Received',
+                message: `Payment of ${paymentData.amount} ${paymentData.currency} has been received for case ${caseData.case_number}.`,
+                type: 'payment_completed',
+                case_id: paymentData.caseId,
+                action_required: false
+              });
+          }
+
+          toast({
+            title: "Payment Successful",
+            description: `Your payment of ${paymentData.amount} ${paymentData.currency} has been processed successfully.`,
+          });
+
+          // Navigate back to client dashboard
+          navigate('/client', { 
+            state: { 
+              message: `Payment of ${paymentData.amount} ${paymentData.currency} completed successfully` 
+            } 
+          });
+        } else {
+          // Existing consultation/remaining fee payment logic
+          const { error: caseError } = await supabase
+            .from('cases')
+            .update({
+              consultation_paid: true,
+              payment_status: 'completed',
+              payment_amount: paymentData.consultationFee,
+              payment_date: new Date().toISOString(),
+              status: 'consultation_paid'
+            })
+            .eq('id', paymentData.caseId);
+
+          if (caseError) throw caseError;
+
+          // Create notification for lawyer
+          const { data: caseData } = await supabase
+            .from('cases')
+            .select('assigned_lawyer_id, case_number, title')
+            .eq('id', paymentData.caseId)
+            .single();
+
+          if (caseData?.assigned_lawyer_id) {
+            await supabase
+              .from('notifications')
+              .insert({
+                user_id: caseData.assigned_lawyer_id,
+                title: language === 'ar' ? 'تم دفع رسوم الاستشارة' : 'Consultation Fee Paid',
+                message: language === 'ar' 
+                  ? `تم دفع رسوم الاستشارة للقضية ${caseData.case_number}. يمكنك الآن بدء العمل مع العميل.`
+                  : `Consultation fee has been paid for case ${caseData.case_number}. You can now start working with the client.`,
+                type: 'payment_completed',
+                case_id: paymentData.caseId,
+                action_required: false
+              });
+          }
+
+          toast({
+            title: t('payment.success'),
+            description: t('payment.successDescription'),
+          });
+
+          navigate('/client', { 
+            state: { 
+              message: "Payment completed successfully" 
+            } 
+          });
         }
-
-        toast({
-          title: language === 'ar' ? 'تم الدفع بنجاح' : 'Payment Successful',
-          description: language === 'ar' 
-            ? 'تم دفع رسوم الاستشارة بنجاح. ستتم إعادة توجيهك إلى لوحة التحكم.'
-            : 'Consultation fee has been paid successfully. Redirecting to your dashboard.',
-        });
-
-        setTimeout(() => {
-          navigate('/client');
-        }, 2000);
       } else {
         throw new Error('Payment failed');
       }
@@ -126,13 +178,6 @@ const Payment: React.FC = () => {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat(language === 'ar' ? 'ar-EG' : 'en-US', {
-      style: 'currency',
-      currency: 'EGP'
-    }).format(amount);
-  };
-
   if (!paymentData) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-muted/50">
@@ -140,6 +185,43 @@ const Payment: React.FC = () => {
       </div>
     );
   }
+
+  const getPaymentAmount = () => {
+    if (paymentData.type === 'money_request') {
+      return paymentData.amount || 0;
+    }
+    return paymentData.consultationFee;
+  };
+
+  const getCurrency = () => {
+    return paymentData.currency || 'USD';
+  };
+
+  const getPaymentTitle = () => {
+    if (paymentData.type === 'money_request') {
+      return 'Payment Request';
+    }
+    return paymentData.type === 'consultation' ? 'Consultation Fee' : 'Remaining Fee';
+  };
+
+  const formatCurrency = (amount: number) => {
+    if (paymentData?.type === 'money_request') {
+      const formatters = {
+        'USD': '$',
+        'EUR': '€',
+        'EGP': 'E£',
+        'GBP': '£',
+        'CAD': 'C$'
+      };
+      const currency = getCurrency();
+      return `${formatters[currency as keyof typeof formatters] || currency} ${amount.toLocaleString()}`;
+    }
+    
+    return new Intl.NumberFormat(language === 'ar' ? 'ar-EG' : 'en-US', {
+      style: 'currency',
+      currency: 'EGP'
+    }).format(amount);
+  };
 
   return (
     <div className={`min-h-screen bg-muted/50 ${language === 'ar' ? 'rtl' : 'ltr'}`} dir={language === 'ar' ? 'rtl' : 'ltr'}>
@@ -276,8 +358,14 @@ const Payment: React.FC = () => {
             <Card>
               <CardHeader>
                 <CardTitle>
-                  {language === 'ar' ? 'ملخص الطلب' : 'Order Summary'}
+                  {getPaymentTitle()}
                 </CardTitle>
+                <CardDescription>
+                  {paymentData.type === 'money_request' 
+                    ? paymentData.description || 'Payment requested by your lawyer'
+                    : language === 'ar' ? 'ملخص الطلب' : 'Order Summary'
+                  }
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Case Info */}
@@ -355,9 +443,11 @@ const Payment: React.FC = () => {
                 <div className="flex justify-between text-lg font-semibold">
                   <span>{language === 'ar' ? 'المجموع' : 'Total'}</span>
                   <span>
-                    {paymentData.type === 'consultation' 
-                      ? formatCurrency(paymentData.consultationFee)
-                      : formatCurrency(paymentData.finalTotalFee || paymentData.remainingFee + (paymentData.totalAdditionalFees || paymentData.remainingFee * 0.11))
+                    {paymentData.type === 'money_request'
+                      ? formatCurrency(getPaymentAmount())
+                      : paymentData.type === 'consultation' 
+                        ? formatCurrency(paymentData.consultationFee)
+                        : formatCurrency(paymentData.finalTotalFee || paymentData.remainingFee + (paymentData.totalAdditionalFees || paymentData.remainingFee * 0.11))
                     }
                   </span>
                 </div>
@@ -378,9 +468,11 @@ const Payment: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <Lock className="w-4 h-4" />
                       {language === 'ar' ? 'دفع آمن' : 'Pay Securely'} {
-                        paymentData.type === 'consultation' 
-                          ? formatCurrency(paymentData.consultationFee)
-                          : formatCurrency(paymentData.finalTotalFee || paymentData.remainingFee + (paymentData.totalAdditionalFees || paymentData.remainingFee * 0.11))
+                        paymentData.type === 'money_request'
+                          ? formatCurrency(getPaymentAmount())
+                          : paymentData.type === 'consultation' 
+                            ? formatCurrency(paymentData.consultationFee)
+                            : formatCurrency(paymentData.finalTotalFee || paymentData.remainingFee + (paymentData.totalAdditionalFees || paymentData.remainingFee * 0.11))
                       }
                     </div>
                   )}

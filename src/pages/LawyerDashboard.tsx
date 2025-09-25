@@ -25,12 +25,14 @@ import {
   Settings,
   PhoneCall,
   Menu,
-  Calendar as CalendarIcon
+  CalendarIcon,
+  DollarSign
 } from "lucide-react";
 import { LawyerQAChatbot } from "@/components/LawyerQAChatbot";
 import { CompleteVerificationForm } from "@/components/CompleteVerificationForm";
 import { CaseDetailsDialog } from "@/components/CaseDetailsDialog";
 import { CreateProposalDialog } from "@/components/CreateProposalDialog";
+import { MoneyRequestDialog } from "@/components/MoneyRequestDialog";
 import { CommunicationInbox } from "@/components/CommunicationInbox";
 import { CaseWorkProgress } from "@/components/CaseWorkProgress";
 import { CaseActivityForm } from "@/components/CaseActivityForm";
@@ -98,6 +100,7 @@ const LawyerDashboard = () => {
   const [selectedCaseId, setSelectedCaseId] = useState<string>("");
   const [caseDetailsOpen, setCaseDetailsOpen] = useState(false);
   const [selectedCaseForProposal, setSelectedCaseForProposal] = useState<Case | null>(null);
+  const [moneyRequestDialogOpen, setMoneyRequestDialogOpen] = useState(false);
   const [incomingCalls, setIncomingCalls] = useState<TwilioSession[]>([]);
   const { sessions, createAccessToken } = useTwilioSession();
 
@@ -531,6 +534,11 @@ const LawyerDashboard = () => {
                     </Button>
                   </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 bg-background border shadow-lg z-50">
+                  <DropdownMenuItem onClick={() => setMoneyRequestDialogOpen(true)} disabled={cases.length === 0}>
+                    <DollarSign className={`h-4 w-4 ${isRTL() ? 'ml-2' : 'mr-2'}`} />
+                    <span>Request Money</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <div className="flex items-center justify-between py-2">
                       <span className="text-sm font-medium">Language</span>
@@ -812,6 +820,13 @@ const LawyerDashboard = () => {
           fetchDashboardData();
           setSelectedCaseForProposal(null);
         }}
+      />
+
+      {/* Money Request Dialog */}
+      <MoneyRequestDialog
+        open={moneyRequestDialogOpen}
+        onOpenChange={setMoneyRequestDialogOpen}
+        cases={cases.map(c => ({ id: c.id, case_number: c.case_number, title: c.title }))}
       />
 
     </div>

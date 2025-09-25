@@ -12,6 +12,7 @@ export interface Notification {
   action_required: boolean;
   created_at: string;
   read_at?: string;
+  metadata?: any;
 }
 
 export interface Proposal {

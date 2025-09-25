@@ -16,9 +16,11 @@ import {
   Clock,
   CheckCircle,
   X,
-  History
+  History,
+  DollarSign
 } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
+import { MoneyRequestNotification } from '@/components/MoneyRequestNotification';
 import { format } from 'date-fns';
 import {
   DropdownMenu,
@@ -34,6 +36,8 @@ export const NotificationMenu: React.FC<NotificationMenuProps> = ({ className })
   const { notifications, newNotifications, unreadCount, markAsRead, markAllAsRead, loading } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('new');
+  const [moneyRequestNotificationOpen, setMoneyRequestNotificationOpen] = useState(false);
+  const [selectedMoneyRequestId, setSelectedMoneyRequestId] = useState<string>('');
 
   // Mark all notifications as read when dropdown is opened
   useEffect(() => {
@@ -57,6 +61,8 @@ export const NotificationMenu: React.FC<NotificationMenuProps> = ({ className })
       case 'proposal_received':
       case 'proposal_approved':
         return <FileText className="h-4 w-4 text-info" />;
+      case 'money_request':
+        return <DollarSign className="h-4 w-4 text-warning" />;
       default:
         return <Bell className="h-4 w-4 text-muted-foreground" />;
     }
@@ -85,6 +91,14 @@ export const NotificationMenu: React.FC<NotificationMenuProps> = ({ className })
     n.is_read && n.read_at && new Date(n.read_at) <= twentyFourHoursAgo
   );
 
+  const handleNotificationClick = (notification: typeof notifications[0]) => {
+    if (notification.type === 'money_request' && notification.metadata?.money_request_id) {
+      setSelectedMoneyRequestId(notification.metadata.money_request_id);
+      setMoneyRequestNotificationOpen(true);
+      markAsRead(notification.id);
+    }
+  };
+
   const renderNotifications = (notificationList: typeof notifications) => (
     <div className="divide-y">
       {notificationList.map((notification) => (
@@ -93,6 +107,7 @@ export const NotificationMenu: React.FC<NotificationMenuProps> = ({ className })
           className={`p-4 hover:bg-muted/50 transition-colors cursor-pointer ${
             !notification.is_read ? 'bg-muted/30' : ''
           }`}
+          onClick={() => handleNotificationClick(notification)}
         >
           <div className="flex items-start gap-3">
             <div className="flex-shrink-0 mt-0.5">
@@ -217,6 +232,13 @@ export const NotificationMenu: React.FC<NotificationMenuProps> = ({ className })
             </Tabs>
           </CardContent>
         </Card>
+        
+        {/* Money Request Notification Dialog */}
+        <MoneyRequestNotification 
+          moneyRequestId={selectedMoneyRequestId}
+          open={moneyRequestNotificationOpen}
+          onOpenChange={setMoneyRequestNotificationOpen}
+        />
       </DropdownMenuContent>
     </DropdownMenu>
   );
