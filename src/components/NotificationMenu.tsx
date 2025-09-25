@@ -113,19 +113,19 @@ export const NotificationMenu: React.FC<NotificationMenuProps> = ({ className })
             <div className="flex-shrink-0 mt-0.5">
               {getNotificationIcon(notification.type)}
             </div>
-            <div className="flex-1 min-w-0 max-w-0 overflow-hidden">
-              <div className="w-full">
-                <h4 className={`text-sm font-medium truncate w-full ${!notification.is_read ? 'font-semibold' : ''}`}>
+            <div className="flex-1 min-w-0">
+              <div className="space-y-1">
+                <h4 className={`text-sm font-medium truncate ${!notification.is_read ? 'font-semibold' : ''}`}>
                   {notification.title}
                 </h4>
-                <p className="text-sm text-muted-foreground mt-1 line-clamp-2 break-words w-full overflow-hidden">
+                <p className="text-sm text-muted-foreground line-clamp-2 break-words">
                   {notification.message}
                 </p>
                 <div className="flex items-center gap-2 mt-2 flex-wrap">
-                  <Badge variant="outline" className="text-xs flex-shrink-0 max-w-24 truncate">
+                  <Badge variant="outline" className="text-xs shrink-0">
                     {formatNotificationType(notification.type)}
                   </Badge>
-                  <span className="text-xs text-muted-foreground flex items-center gap-1 flex-shrink-0">
+                  <span className="text-xs text-muted-foreground flex items-center gap-1 shrink-0">
                     <Clock className="h-3 w-3" />
                     {format(new Date(notification.created_at), 'MMM d, h:mm a')}
                   </span>
@@ -153,7 +153,7 @@ export const NotificationMenu: React.FC<NotificationMenuProps> = ({ className })
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80 max-w-[90vw] p-0 overflow-hidden bg-background border z-50">
+      <DropdownMenuContent align="end" className="w-96 max-w-[90vw] p-0 overflow-hidden bg-background border z-50">
         <Card className="border-0 shadow-none">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center justify-between">
