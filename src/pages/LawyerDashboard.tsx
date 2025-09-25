@@ -721,69 +721,34 @@ const LawyerDashboard = () => {
             </Card>
             
             {/* Three Standalone Cards */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-            {/* Case Details */}
-            <CollapsibleCard
-              title="Case Information"
-              icon={<FileText className="h-5 w-5" />}
-              description="View detailed case information"
-              defaultOpen={true}
-            >
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Case Number</Label>
-                    <Badge variant="outline" className="font-mono">
-                      {currentCase.case_number}
-                    </Badge>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Status</Label>
-                    <Badge variant={getStatusVariant(currentCase.status)}>
-                      {currentCase.status.replace('_', ' ').toUpperCase()}
-                    </Badge>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Category</Label>
-                    <p className="text-sm">{currentCase.category}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Urgency</Label>
-                    <Badge variant={getUrgencyVariant(currentCase.urgency)}>
-                      {currentCase.urgency} Priority
-                    </Badge>
-                  </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+              {/* Case Milestones */}
+              <CollapsibleCard
+                title="Case Milestones"
+                icon={<Clock className="h-5 w-5" />}
+                description="Add updates and track case progress"
+                defaultOpen={false}
+              >
+                <div className="space-y-4">
+                  <CaseActivityForm caseId={currentCase.id} />
+                  <CaseTimeline caseId={currentCase.id} caseData={currentCase} />
                 </div>
-              </div>
-            </CollapsibleCard>
+              </CollapsibleCard>
 
-            {/* Case Milestones */}
-            <CollapsibleCard
-              title="Case Milestones"
-              icon={<Clock className="h-5 w-5" />}
-              description="Add updates and track case progress"
-              defaultOpen={false}
-            >
-              <div className="space-y-4">
-                <CaseActivityForm caseId={currentCase.id} />
-                <CaseTimeline caseId={currentCase.id} caseData={currentCase} />
-              </div>
-            </CollapsibleCard>
-
-            {/* Calendar & Appointments */}
-            <CollapsibleCard
-              title="Calendar & Appointments"
-              icon={<CalendarIcon className="h-5 w-5" />}
-              description="Schedule and manage client meetings"
-              defaultOpen={false}
-            >
-              <CaseCalendar
-                caseId={currentCase.id}
-                isLawyer={true}
-                clientId={currentCase.user_id}
-                lawyerId={profile?.user_id}
-              />
-            </CollapsibleCard>
+              {/* Calendar & Appointments */}
+              <CollapsibleCard
+                title="Calendar & Appointments"
+                icon={<CalendarIcon className="h-5 w-5" />}
+                description="Schedule and manage client meetings"
+                defaultOpen={false}
+              >
+                <CaseCalendar
+                  caseId={currentCase.id}
+                  isLawyer={true}
+                  clientId={currentCase.user_id}
+                  lawyerId={profile?.user_id}
+                />
+              </CollapsibleCard>
             </div>
 
             <div className="flex gap-2 flex-wrap mt-6">
