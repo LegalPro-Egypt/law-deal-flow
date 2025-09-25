@@ -11,6 +11,7 @@ export interface Notification {
   is_read: boolean;
   action_required: boolean;
   created_at: string;
+  read_at?: string;
 }
 
 export interface Proposal {
@@ -100,7 +101,10 @@ export const useNotifications = () => {
     try {
       const { error } = await supabase
         .from('notifications')
-        .update({ is_read: true })
+        .update({ 
+          is_read: true, 
+          read_at: new Date().toISOString() 
+        })
         .eq('id', notificationId);
 
       if (error) throw error;
@@ -108,7 +112,7 @@ export const useNotifications = () => {
       setNotifications(prev => 
         prev.map(notification => 
           notification.id === notificationId 
-            ? { ...notification, is_read: true }
+            ? { ...notification, is_read: true, read_at: new Date().toISOString() }
             : notification
         )
       );
@@ -126,16 +130,24 @@ export const useNotifications = () => {
     if (!user) return;
 
     try {
+      const now = new Date().toISOString();
       const { error } = await supabase
         .from('notifications')
-        .update({ is_read: true })
+        .update({ 
+          is_read: true, 
+          read_at: now 
+        })
         .eq('user_id', user.id)
         .eq('is_read', false);
 
       if (error) throw error;
 
       setNotifications(prev => 
-        prev.map(notification => ({ ...notification, is_read: true }))
+        prev.map(notification => 
+          !notification.is_read 
+            ? { ...notification, is_read: true, read_at: now }
+            : notification
+        )
       );
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
@@ -172,6 +184,14 @@ export const useNotifications = () => {
       });
     }
   };
+
+  // Calculate notifications for new tab (unread + read within 24 hours)
+  const now = new Date();
+  const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  
+  const newNotifications = notifications.filter(n => 
+    !n.is_read || !n.read_at || new Date(n.read_at) > twentyFourHoursAgo
+  );
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
@@ -237,6 +257,7 @@ export const useNotifications = () => {
 
   return {
     notifications,
+    newNotifications,
     proposals,
     proposalsWithCases,
     loading,

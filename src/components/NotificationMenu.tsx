@@ -31,7 +31,7 @@ interface NotificationMenuProps {
 }
 
 export const NotificationMenu: React.FC<NotificationMenuProps> = ({ className }) => {
-  const { notifications, unreadCount, markAsRead, markAllAsRead, loading } = useNotifications();
+  const { notifications, newNotifications, unreadCount, markAsRead, markAllAsRead, loading } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('new');
 
@@ -77,9 +77,13 @@ export const NotificationMenu: React.FC<NotificationMenuProps> = ({ className })
     ).join(' ');
   };
 
-  // Separate notifications into unread and read
-  const unreadNotifications = notifications.filter(n => !n.is_read);
-  const readNotifications = notifications.filter(n => n.is_read);
+  // Separate notifications into new and history based on 24-hour rule
+  const now = new Date();
+  const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  
+  const historyNotifications = notifications.filter(n => 
+    n.is_read && n.read_at && new Date(n.read_at) <= twentyFourHoursAgo
+  );
 
   const renderNotifications = (notificationList: typeof notifications) => (
     <div className="divide-y">
@@ -94,20 +98,20 @@ export const NotificationMenu: React.FC<NotificationMenuProps> = ({ className })
             <div className="flex-shrink-0 mt-0.5">
               {getNotificationIcon(notification.type)}
             </div>
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 overflow-hidden">
               <div className="flex items-start justify-between gap-2">
-                <div className="flex-1">
-                  <h4 className={`text-sm font-medium ${!notification.is_read ? 'font-semibold' : ''}`}>
+                <div className="flex-1 min-w-0">
+                  <h4 className={`text-sm font-medium truncate ${!notification.is_read ? 'font-semibold' : ''}`}>
                     {notification.title}
                   </h4>
-                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2 break-words">
                     {notification.message}
                   </p>
-                  <div className="flex items-center gap-2 mt-2">
-                    <Badge variant="outline" className="text-xs">
+                  <div className="flex items-center gap-2 mt-2 flex-wrap">
+                    <Badge variant="outline" className="text-xs flex-shrink-0">
                       {formatNotificationType(notification.type)}
                     </Badge>
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <span className="text-xs text-muted-foreground flex items-center gap-1 flex-shrink-0">
                       <Clock className="h-3 w-3" />
                       {format(new Date(notification.created_at), 'MMM d, h:mm a')}
                     </span>
@@ -136,7 +140,7 @@ export const NotificationMenu: React.FC<NotificationMenuProps> = ({ className })
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80 p-0">
+      <DropdownMenuContent align="end" className="w-96 max-w-[90vw] p-0 overflow-hidden">
         <Card className="border-0 shadow-none">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center justify-between">
@@ -151,11 +155,11 @@ export const NotificationMenu: React.FC<NotificationMenuProps> = ({ className })
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2 m-3 mb-0">
                 <TabsTrigger value="new" className="text-xs">
-                  New ({unreadNotifications.length})
+                  New ({newNotifications.length})
                 </TabsTrigger>
                 <TabsTrigger value="history" className="text-xs">
                   <History className="h-3 w-3 mr-1" />
-                  View History
+                  History ({historyNotifications.length})
                 </TabsTrigger>
               </TabsList>
               
@@ -173,14 +177,14 @@ export const NotificationMenu: React.FC<NotificationMenuProps> = ({ className })
                         </div>
                       ))}
                     </div>
-                  ) : unreadNotifications.length === 0 ? (
+                  ) : newNotifications.length === 0 ? (
                     <div className="p-8 text-center text-muted-foreground">
                       <Bell className="h-12 w-12 mx-auto mb-4 opacity-50" />
                       <p>No new notifications</p>
                       <p className="text-sm mt-1">You're all caught up!</p>
                     </div>
                   ) : (
-                    renderNotifications(unreadNotifications)
+                    renderNotifications(newNotifications)
                   )}
                 </ScrollArea>
               </TabsContent>
@@ -199,14 +203,14 @@ export const NotificationMenu: React.FC<NotificationMenuProps> = ({ className })
                         </div>
                       ))}
                     </div>
-                  ) : readNotifications.length === 0 ? (
+                  ) : historyNotifications.length === 0 ? (
                     <div className="p-8 text-center text-muted-foreground">
                       <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
                       <p>No notification history</p>
                       <p className="text-sm mt-1">Previous notifications will appear here</p>
                     </div>
                   ) : (
-                    renderNotifications(readNotifications)
+                    renderNotifications(historyNotifications)
                   )}
                 </ScrollArea>
               </TabsContent>
