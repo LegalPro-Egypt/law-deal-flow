@@ -52,7 +52,6 @@ import { downloadPDF, getUserFriendlyDownloadMessage } from "@/utils/pdfDownload
 const ClientDashboard = () => {
   const [newMessage, setNewMessage] = useState("");
   const [paymentHistoryOpen, setPaymentHistoryOpen] = useState(false);
-  const [personalInfoOpen, setPersonalInfoOpen] = useState(false);
   const [intakeConversationOpen, setIntakeConversationOpen] = useState(false);
   const [collapsedCards, setCollapsedCards] = useState({
     timeline: true,
@@ -423,10 +422,6 @@ const ClientDashboard = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="bg-background border border-border shadow-lg z-50 w-48">
-                  <DropdownMenuItem onClick={() => setPersonalInfoOpen(true)}>
-                    <UserCircle className="h-4 w-4 mr-2" />
-                    Personal Information
-                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setIntakeConversationOpen(true)}>
                     <Bot className="h-4 w-4 mr-2" />
                     AI Intake Conversation
@@ -785,58 +780,6 @@ const ClientDashboard = () => {
             </CollapsibleContent>
           </Card>
         </Collapsible>
-
-        {/* Personal Information Dialog */}
-        <Dialog open={personalInfoOpen} onOpenChange={setPersonalInfoOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Personal Information</DialogTitle>
-              <DialogDescription>
-                View and manage your contact information
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium">Full Name</Label>
-                  <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
-                    {activeCase?.client_name || 'Not provided'}
-                  </p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Email</Label>
-                  <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
-                    {activeCase?.client_email || 'Not provided'}
-                  </p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Phone</Label>
-                  <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
-                    {activeCase?.client_phone || 'Not provided'}
-                  </p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Language</Label>
-                  <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
-                    {activeCase?.language === 'en' && 'English'}
-                    {activeCase?.language === 'ar' && 'Arabic'}  
-                    {activeCase?.language === 'de' && 'German'}
-                    {!activeCase?.language && 'Not specified'}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="pt-4 border-t">
-                <Button asChild variant="outline" className="w-full">
-                  <Link to={`/intake?case=${activeCase.id}&edit=personal`}>
-                    <FileText className="h-4 w-4 mr-2" />
-                    Edit Details
-                  </Link>
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
 
         {/* AI Intake Conversation Dialog */}
         <Dialog open={intakeConversationOpen} onOpenChange={setIntakeConversationOpen}>
