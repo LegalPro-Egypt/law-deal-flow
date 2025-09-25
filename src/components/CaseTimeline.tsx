@@ -92,7 +92,7 @@ export const CaseTimeline: React.FC<CaseTimelineProps> = ({ caseId, caseData }) 
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Clock className="h-5 w-5" />
-          Case Timeline
+          Case Milestones
         </CardTitle>
       </CardHeader>
       <CardContent>
