@@ -16,12 +16,17 @@ import { useLegalChatbot, ChatMessage } from '@/hooks/useLegalChatbot';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
+import { ChatFlip3D } from './ChatFlip3D';
 
 interface HomepageChatbotProps {
   className?: string;
+  spinOnScroll3D?: boolean;
 }
 
-export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) => {
+export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ 
+  className, 
+  spinOnScroll3D = true 
+}) => {
   const [inputMessage, setInputMessage] = useState('');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -145,9 +150,13 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
           </div>
 
           {/* Chat Interface Card */}
-          <Card className={`shadow-lg border-0 overflow-hidden bg-background transition-all duration-1000 delay-500 ${
-            isVisible ? 'animate-slide-up-fade opacity-100' : 'opacity-0 translate-y-16'
-          }`}>
+          <ChatFlip3D flips={5} spinOnScroll3D={spinOnScroll3D}>
+            <Card 
+              id="lexa-chat"
+              className={`shadow-lg border-0 overflow-hidden bg-background transition-all duration-1000 delay-500 ${
+                isVisible ? 'animate-slide-up-fade opacity-100' : 'opacity-0 translate-y-16'
+              }`}
+            >
             {/* Professional Header */}
             <CardHeader className="bg-primary/80 backdrop-blur-xl text-white border-b border-white/20 relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-r from-primary/60 to-primary/40"></div>
@@ -306,7 +315,8 @@ export const HomepageChatbot: React.FC<HomepageChatbotProps> = ({ className }) =
                 )}
               </div>
             </CardContent>
-          </Card>
+            </Card>
+          </ChatFlip3D>
         </div>
       </div>
     </section>
