@@ -34,6 +34,10 @@ export interface Proposal {
   generated_content: string;
   status: string;
   created_at: string;
+  case?: {
+    case_number: string;
+    title: string;
+  };
 }
 
 export const useNotifications = () => {
@@ -73,8 +77,9 @@ export const useNotifications = () => {
         .from('proposals')
         .select(`
           *,
-          case:cases(*)
+          case:cases(case_number, title)
         `)
+        .eq('client_id', user.id)
         .in('status', ['approved', 'sent', 'viewed', 'accepted', 'rejected'])
         .order('created_at', { ascending: false });
 

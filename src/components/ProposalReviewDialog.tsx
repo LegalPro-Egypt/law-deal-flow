@@ -38,6 +38,10 @@ interface Proposal {
   status: string;
   created_at: string;
   viewed_at?: string;
+  case?: {
+    case_number: string;
+    title: string;
+  };
 }
 
 interface ProposalReviewDialogProps {
@@ -240,6 +244,11 @@ export const ProposalReviewDialog = ({
             <FileText className="h-5 w-5 flex-shrink-0" />
             <span className="flex-1 min-w-0">
               {currentLanguage === 'ar' ? 'مراجعة العرض القانوني' : 'Legal Proposal Review'}
+              {proposal.case?.case_number && (
+                <span className="block text-sm font-normal text-muted-foreground mt-1">
+                  {currentLanguage === 'ar' ? 'رقم القضية:' : 'Case:'} {proposal.case.case_number}
+                </span>
+              )}
             </span>
             {getStatusBadge(proposal.status)}
           </DialogTitle>
@@ -300,10 +309,13 @@ export const ProposalReviewDialog = ({
               
               <div className="text-center p-3 sm:p-4 bg-accent/5 rounded-lg border-2 border-primary/20 min-w-0">
                 <div className="font-semibold text-lg sm:text-xl text-primary break-words">
-                  ${(proposal.final_total_fee || proposal.total_fee)?.toLocaleString() || '0'}
+                  ${((proposal.consultation_fee || 0) + (proposal.final_total_fee || proposal.remaining_fee || 0) + (proposal.total_additional_fees || 0)).toLocaleString()}
                 </div>
                 <div className="text-xs sm:text-sm text-muted-foreground break-words">
-                  {currentLanguage === 'ar' ? 'المجموع النهائي' : 'Final Total'}
+                  {currentLanguage === 'ar' ? 'المجموع النهائي (شامل رسوم الاستشارة)' : 'Final Total (Including Consultation Fee)'}
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Consultation: ${proposal.consultation_fee?.toLocaleString() || '0'} + Remaining: ${(proposal.remaining_fee || 0).toLocaleString()} + Additional Fees: ${(proposal.total_additional_fees || 0).toFixed(2)}
                 </div>
               </div>
             </CardContent>
