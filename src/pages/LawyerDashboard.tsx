@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTwilioSession, TwilioSession } from "@/hooks/useTwilioSession";
 import { useLawyerChatNotifications } from "@/hooks/useLawyerChatNotifications";
 import { useToast } from "@/hooks/use-toast";
+import { useMoneyRequests } from "@/hooks/useMoneyRequests";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -103,6 +104,10 @@ const LawyerDashboard = () => {
   const [moneyRequestDialogOpen, setMoneyRequestDialogOpen] = useState(false);
   const [incomingCalls, setIncomingCalls] = useState<TwilioSession[]>([]);
   const { sessions, createAccessToken } = useTwilioSession();
+  const { isCaseEligibleForMoneyRequest } = useMoneyRequests();
+
+  // Check if any cases are eligible for money requests
+  const hasEligibleCases = cases.some(c => isCaseEligibleForMoneyRequest(c));
 
   // Get the currently selected case or default to the first case
   const currentCase = cases.find(c => c.id === selectedCaseId) || cases[0];
@@ -533,11 +538,14 @@ const LawyerDashboard = () => {
                       <span className="sr-only">Open menu</span>
                     </Button>
                   </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 bg-background border shadow-lg z-50">
-                  <DropdownMenuItem onClick={() => setMoneyRequestDialogOpen(true)} disabled={cases.length === 0}>
-                    <DollarSign className={`h-4 w-4 ${isRTL() ? 'ml-2' : 'mr-2'}`} />
-                    <span>Request Money</span>
-                  </DropdownMenuItem>
+                 <DropdownMenuContent align="end" className="w-48 bg-background border shadow-lg z-50">
+                   <DropdownMenuItem 
+                     onClick={() => setMoneyRequestDialogOpen(true)} 
+                     disabled={!hasEligibleCases}
+                   >
+                     <DollarSign className={`h-4 w-4 ${isRTL() ? 'ml-2' : 'mr-2'}`} />
+                     <span>Request Money</span>
+                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <div className="flex items-center justify-between py-2">
@@ -826,7 +834,7 @@ const LawyerDashboard = () => {
       <MoneyRequestDialog
         open={moneyRequestDialogOpen}
         onOpenChange={setMoneyRequestDialogOpen}
-        cases={cases.map(c => ({ id: c.id, case_number: c.case_number, title: c.title }))}
+        cases={cases}
       />
 
     </div>

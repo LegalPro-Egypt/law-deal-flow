@@ -38,16 +38,38 @@ export const useMoneyRequests = () => {
     try {
       const { data, error } = await supabase
         .from('money_requests')
-        .select(`
-          *,
-          case:cases(case_number, title),
-          lawyer:profiles(first_name, last_name, email)
-        `)
+        .select('*')
         .or(`lawyer_id.eq.${user.id},client_id.eq.${user.id}`)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setMoneyRequests((data as any[]) || []);
+
+      // Manually fetch case and lawyer information
+      const requestsWithDetails = await Promise.all(
+        (data || []).map(async (request) => {
+          // Fetch case info
+          const { data: caseData } = await supabase
+            .from('cases')
+            .select('case_number, title')
+            .eq('id', request.case_id)
+            .single();
+
+          // Fetch lawyer info
+          const { data: lawyerData } = await supabase
+            .from('profiles')
+            .select('first_name, last_name, email')
+            .eq('user_id', request.lawyer_id)
+            .single();
+
+          return {
+            ...request,
+            case: caseData,
+            lawyer: lawyerData
+          };
+        })
+      );
+
+      setMoneyRequests(requestsWithDetails as MoneyRequest[]);
     } catch (error) {
       console.error('Error fetching money requests:', error);
       toast({
@@ -60,6 +82,17 @@ export const useMoneyRequests = () => {
     }
   };
 
+  // Check if a case is eligible for additional money requests
+  const isCaseEligibleForMoneyRequest = (caseData: any) => {
+    // Case must have consultation paid and full payment completed
+    const isFullyPaid = caseData.consultation_paid && caseData.payment_status === 'paid';
+    
+    // Case must be in active work status
+    const isActive = ['active', 'work_in_progress', 'in_progress'].includes(caseData.status);
+    
+    return isFullyPaid && isActive;
+  };
+
   const createMoneyRequest = async (
     caseId: string,
     amount: number,
@@ -69,14 +102,24 @@ export const useMoneyRequests = () => {
     if (!user) return false;
 
     try {
-      // Get case details to get client_id
+      // Get case details to validate eligibility and get client_id
       const { data: caseData, error: caseError } = await supabase
         .from('cases')
-        .select('user_id')
+        .select('user_id, consultation_paid, payment_status, status')
         .eq('id', caseId)
         .single();
 
       if (caseError) throw caseError;
+
+      // Check if case is eligible for money requests
+      if (!isCaseEligibleForMoneyRequest(caseData)) {
+        toast({
+          title: "Not Eligible",
+          description: "This case is not eligible for additional money requests. The client must complete full payment first.",
+          variant: "destructive",
+        });
+        return false;
+      }
 
       const { error } = await supabase
         .from('money_requests')
@@ -185,6 +228,7 @@ export const useMoneyRequests = () => {
     loading,
     createMoneyRequest,
     updateMoneyRequestStatus,
-    fetchMoneyRequests
+    fetchMoneyRequests,
+    isCaseEligibleForMoneyRequest
   };
 };

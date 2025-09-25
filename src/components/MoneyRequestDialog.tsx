@@ -12,12 +12,16 @@ interface Case {
   id: string;
   case_number: string;
   title: string;
+  status: string;
+  consultation_paid: boolean;
+  payment_status: string;
 }
 
 interface MoneyRequestDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   cases: Case[];
+  onlyEligibleCases?: boolean;
 }
 
 const currencies = [
@@ -31,7 +35,8 @@ const currencies = [
 export const MoneyRequestDialog: React.FC<MoneyRequestDialogProps> = ({
   open,
   onOpenChange,
-  cases
+  cases,
+  onlyEligibleCases = true
 }) => {
   const [selectedCaseId, setSelectedCaseId] = useState('');
   const [amount, setAmount] = useState('');
@@ -39,7 +44,12 @@ export const MoneyRequestDialog: React.FC<MoneyRequestDialogProps> = ({
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { createMoneyRequest } = useMoneyRequests();
+  const { createMoneyRequest, isCaseEligibleForMoneyRequest } = useMoneyRequests();
+
+  // Filter cases based on eligibility
+  const eligibleCases = onlyEligibleCases ? 
+    cases.filter(c => isCaseEligibleForMoneyRequest(c)) : 
+    cases;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,21 +94,30 @@ export const MoneyRequestDialog: React.FC<MoneyRequestDialogProps> = ({
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="case">Select Case</Label>
-            <Select value={selectedCaseId} onValueChange={setSelectedCaseId} required>
-              <SelectTrigger>
-                <SelectValue placeholder="Choose a case" />
-              </SelectTrigger>
-              <SelectContent>
-                {cases.map((case_) => (
-                  <SelectItem key={case_.id} value={case_.id}>
-                    {case_.case_number} - {case_.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {eligibleCases.length === 0 ? (
+            <div className="text-center py-6 text-muted-foreground">
+              <p>No cases are currently eligible for money requests.</p>
+              <p className="text-sm mt-2">
+                Cases must have completed payment and be in active work status.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="case">Select Case</Label>
+                <Select value={selectedCaseId} onValueChange={setSelectedCaseId} required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose a case" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {eligibleCases.map((case_) => (
+                      <SelectItem key={case_.id} value={case_.id}>
+                        {case_.case_number} - {case_.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -156,22 +175,24 @@ export const MoneyRequestDialog: React.FC<MoneyRequestDialogProps> = ({
             />
           </div>
 
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => onOpenChange(false)}
-              disabled={loading}
-            >
-              Cancel
-            </Button>
-            <Button 
-              type="submit" 
-              disabled={loading || !selectedCaseId || !amount || !description}
-            >
-              {loading ? 'Sending...' : 'Send Request'}
-            </Button>
-          </div>
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => onOpenChange(false)}
+                  disabled={loading}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={loading || !selectedCaseId || !amount || !description}
+                >
+                  {loading ? 'Sending...' : 'Send Request'}
+                </Button>
+              </div>
+            </>
+          )}
         </form>
       </DialogContent>
     </Dialog>
