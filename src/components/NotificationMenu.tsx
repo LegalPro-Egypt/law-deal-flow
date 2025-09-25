@@ -153,7 +153,7 @@ export const NotificationMenu: React.FC<NotificationMenuProps> = ({ className })
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-96 max-w-[90vw] p-0 overflow-hidden bg-background border z-50">
+      <DropdownMenuContent align="end" className="w-80 sm:w-96 max-w-[95vw] max-h-[80vh] p-0 overflow-hidden bg-background border z-[60]">
         <Card className="border-0 shadow-none">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center justify-between">
@@ -177,7 +177,7 @@ export const NotificationMenu: React.FC<NotificationMenuProps> = ({ className })
               </TabsList>
               
               <TabsContent value="new" className="mt-0">
-                <ScrollArea className="h-96">
+                <ScrollArea className="h-[60vh] sm:h-96">
                   {loading ? (
                     <div className="p-4 space-y-3">
                       {[1, 2, 3].map(i => (
@@ -203,7 +203,7 @@ export const NotificationMenu: React.FC<NotificationMenuProps> = ({ className })
               </TabsContent>
               
               <TabsContent value="history" className="mt-0">
-                <ScrollArea className="h-96">
+                <ScrollArea className="h-[60vh] sm:h-96">
                   {loading ? (
                     <div className="p-4 space-y-3">
                       {[1, 2, 3].map(i => (
