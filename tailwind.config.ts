@@ -19,57 +19,99 @@ export default {
           'roboto': ['Roboto', 'sans-serif'],
         },
         colors: {
+          /* Core Layout Colors */
           border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
-        primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
-          hover: "hsl(var(--primary-hover))",
-        },
-        secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
-        },
-        destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
-        },
-        muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
-        },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
-          hover: "hsl(var(--accent-hover))",
-        },
-        success: {
-          DEFAULT: "hsl(var(--success))",
-          foreground: "hsl(var(--success-foreground))",
-        },
-        warning: {
-          DEFAULT: "hsl(var(--warning))",
-          foreground: "hsl(var(--warning-foreground))",
-        },
-        popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
-        },
-        card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
-        },
-        ai: {
-          primary: "hsl(var(--ai-primary))",
-          "primary-glow": "hsl(var(--ai-primary-glow))",
-          secondary: "hsl(var(--ai-secondary))",
-          accent: "hsl(var(--ai-accent))",
-          glass: "hsl(var(--ai-glass))",
-          "glass-border": "hsl(var(--ai-glass-border))",
-        },
+          input: "hsl(var(--input))",
+          ring: "hsl(var(--ring))",
+          background: "hsl(var(--background))",
+          foreground: "hsl(var(--foreground))",
+          surface: "hsl(var(--surface))",
+          
+          /* Legal Navy - Primary Brand */
+          primary: {
+            DEFAULT: "hsl(var(--primary))",
+            foreground: "hsl(var(--primary-foreground))",
+            hover: "hsl(var(--primary-hover))",
+            500: "hsl(var(--primary-500))",
+            600: "hsl(var(--primary-600))",
+            700: "hsl(var(--primary-700))",
+          },
+          
+          /* Professional Secondary */
+          secondary: {
+            DEFAULT: "hsl(var(--secondary))",
+            foreground: "hsl(var(--secondary-foreground))",
+          },
+          
+          /* System States */
+          destructive: {
+            DEFAULT: "hsl(var(--destructive))",
+            foreground: "hsl(var(--destructive-foreground))",
+          },
+          danger: {
+            DEFAULT: "hsl(var(--danger))",
+            foreground: "hsl(var(--destructive-foreground))",
+          },
+          
+          /* UI Elements */
+          muted: {
+            DEFAULT: "hsl(var(--muted))",
+            foreground: "hsl(var(--muted-foreground))",
+          },
+          
+          /* AI Teal - Interactive Accent */
+          accent: {
+            DEFAULT: "hsl(var(--accent))",
+            foreground: "hsl(var(--accent-foreground))",
+            hover: "hsl(var(--accent-hover))",
+            600: "hsl(var(--accent-600))",
+            700: "hsl(var(--accent-700))",
+          },
+          
+          /* Action Emerald - CTA */
+          cta: {
+            DEFAULT: "hsl(var(--cta))",
+            foreground: "hsl(var(--cta-foreground))",
+            600: "hsl(var(--cta-600))",
+            700: "hsl(var(--cta-700))",
+          },
+          
+          /* System Colors */
+          success: {
+            DEFAULT: "hsl(var(--success))",
+            foreground: "hsl(var(--success-foreground))",
+          },
+          info: "hsl(var(--info))",
+          warning: {
+            DEFAULT: "hsl(var(--warning))",
+            foreground: "hsl(var(--warning-foreground))",
+          },
+          
+          /* Layout Components */
+          popover: {
+            DEFAULT: "hsl(var(--popover))",
+            foreground: "hsl(var(--popover-foreground))",
+          },
+          card: {
+            DEFAULT: "hsl(var(--card))",
+            foreground: "hsl(var(--card-foreground))",
+          },
+          
+          /* Text Hierarchy */
+          text: {
+            strong: "hsl(var(--text-strong))",
+            DEFAULT: "hsl(var(--text))",
+            muted: "hsl(var(--text-muted))",
+          },
+          /* Legacy AI colors - updated to legal-tech palette */
+          ai: {
+            primary: "hsl(var(--accent))",
+            "primary-glow": "hsl(var(--accent-600))",
+            secondary: "hsl(var(--primary))",
+            accent: "hsl(var(--cta))",
+            glass: "hsl(var(--surface) / 0.8)",
+            "glass-border": "hsl(var(--border))",
+          },
           sidebar: {
             DEFAULT: "hsl(var(--sidebar-background))",
             foreground: "hsl(var(--sidebar-foreground))",
@@ -80,20 +122,28 @@ export default {
             border: "hsl(var(--sidebar-border))",
             ring: "hsl(var(--sidebar-ring))",
           },
+          /* Updated neomorphism to legal-tech palette */
           'neomorphism': {
-            light: "hsl(248 17% 98%)",
-            base: "hsl(240 13% 96%)", 
-            shadow: "hsl(240 4% 85%)",
-            highlight: "hsl(0 0% 100%)",
-            primary: "hsl(217 91% 60%)",
-            'primary-glow': "hsl(262 83% 68%)",
-            accent: "hsl(262 83% 68%)",
+            light: "hsl(var(--surface))",
+            base: "hsl(var(--muted))", 
+            shadow: "hsl(var(--border))",
+            highlight: "hsl(var(--surface))",
+            primary: "hsl(var(--primary))",
+            'primary-glow': "hsl(var(--accent))",
+            accent: "hsl(var(--cta))",
           },
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        xl: "1rem",
+        "2xl": "1.25rem",
+      },
+      boxShadow: {
+        card: "var(--shadow-card)",
+        elevated: "var(--shadow-elevated)",
+        hero: "var(--shadow-hero)",
       },
       keyframes: {
         "accordion-down": {

@@ -6,63 +6,79 @@
 
 @layer base {
   :root {
-    /* Core Brand Colors */
-    --background: 0 0% 100%;
-    --foreground: 220 15% 15%;
-
-    /* Card System */
+    /* Legal-Tech Professional Palette */
+    --bg: 246 33% 97%;                    /* #F6F8FB - App Background */
+    --background: 246 33% 97%;
+    --surface: 0 0% 100%;                 /* #FFFFFF - Cards/Containers */
     --card: 0 0% 100%;
-    --card-foreground: 220 15% 15%;
+    --foreground: 222 47% 11%;            /* #0F172A - Text Strong */
+    --card-foreground: 222 47% 11%;
 
     /* Interactive Elements */
     --popover: 0 0% 100%;
-    --popover-foreground: 220 15% 15%;
+    --popover-foreground: 222 47% 11%;
 
-    /* Professional Primary (Navy Blue) */
-    --primary: 224 76% 48%;
+    /* Legal Navy - Primary Brand */
+    --primary: 210 28% 17%;               /* #1E2A38 - Legal Navy */
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 224 76% 42%;
+    --primary-hover: 212 28% 21%;         /* #213244 - Primary 600 */
+    --primary-500: 212 31% 25%;           /* #2B3E52 - Primary 500 */
+    --primary-600: 212 28% 21%;           /* #213244 - Primary 600 */
+    --primary-700: 214 30% 16%;           /* #1A2430 - Primary 700 */
 
-    /* Trust Secondary (Professional Gray) */
-    --secondary: 220 13% 91%;
-    --secondary-foreground: 220 15% 25%;
+    /* Professional Secondary */
+    --secondary: 214 28% 93%;             /* #EEF2F6 - Muted */
+    --secondary-foreground: 217 19% 27%;  /* #1F2937 - Text Default */
 
     /* Subtle UI Elements */
-    --muted: 220 13% 95%;
-    --muted-foreground: 220 9% 46%;
+    --muted: 214 28% 93%;                 /* #EEF2F6 - Muted */
+    --muted-foreground: 215 20% 45%;      /* #475569 - Text Muted */
 
-    /* Action Accent (Orange) */
-    --accent: 24 95% 53%;
+    /* AI Teal - Interactive Accent */
+    --accent: 173 64% 45%;                /* #2BBBAD - AI Teal */
     --accent-foreground: 0 0% 100%;
-    --accent-hover: 24 95% 47%;
+    --accent-hover: 173 63% 40%;          /* #239F94 - Accent 600 */
+    --accent-600: 173 63% 40%;            /* #239F94 - Accent 600 */
+    --accent-700: 173 62% 35%;            /* #1E8A81 - Accent 700 */
 
-    /* Success (Legal Green) */
-    --success: 158 64% 52%;
+    /* Action Emerald - CTA */
+    --cta: 133 46% 34%;                   /* #2E7D32 - Action Emerald */
+    --cta-foreground: 0 0% 100%;
+    --cta-600: 133 44% 28%;               /* #256628 - CTA 600 */
+    --cta-700: 133 49% 23%;               /* #1E5521 - CTA 700 */
+
+    /* System Colors */
+    --success: 133 46% 34%;               /* #2E7D32 - Same as CTA */
     --success-foreground: 0 0% 100%;
-
-    /* Warning & Destructive */
-    --warning: 43 96% 56%;
+    --info: 199 98% 41%;                  /* #0288D1 - Info */
+    --warning: 32 86% 47%;                /* #ED6C02 - Warning */
     --warning-foreground: 0 0% 100%;
-    --destructive: 0 84% 60%;
+    --danger: 0 68% 51%;                  /* #D32F2F - Danger */
+    --destructive: 0 68% 51%;
     --destructive-foreground: 0 0% 100%;
 
+    /* Text Hierarchy */
+    --text-strong: 222 47% 11%;           /* #0F172A - Text Strong */
+    --text: 217 19% 27%;                  /* #1F2937 - Text Default */
+    --text-muted: 215 20% 45%;            /* #475569 - Text Muted */
+
     /* Borders & Inputs */
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 224 76% 48%;
+    --border: 210 24% 90%;                /* #E2E8F0 - Border */
+    --input: 210 24% 90%;
+    --ring: 173 64% 45%;                  /* Accent for focus rings */
 
     /* Layout */
     --radius: 0.75rem;
 
-    /* Professional Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(224 76% 48%), hsl(224 76% 42%));
-    --gradient-hero: linear-gradient(135deg, hsl(224 76% 48%) 0%, hsl(220 15% 15%) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(220 13% 98%) 100%);
+    /* Legal-Tech Professional Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(210 28% 17%), hsl(212 28% 21%));
+    --gradient-hero: radial-gradient(1200px 600px at 10% -10%, hsl(173 64% 45% / 0.18), transparent 60%), linear-gradient(180deg, hsl(246 33% 97%), hsl(0 0% 100%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(214 28% 98%) 100%);
     
     /* Professional Shadows */
-    --shadow-card: 0 4px 6px -1px hsl(220 13% 91% / 0.1), 0 2px 4px -1px hsl(220 13% 91% / 0.06);
-    --shadow-elevated: 0 10px 15px -3px hsl(220 13% 91% / 0.1), 0 4px 6px -2px hsl(220 13% 91% / 0.05);
-    --shadow-hero: 0 25px 50px -12px hsl(224 76% 48% / 0.25);
+    --shadow-card: 0 6px 24px rgba(0,0,0,.08);
+    --shadow-elevated: 0 10px 15px -3px hsl(210 24% 90% / 0.1), 0 4px 6px -2px hsl(210 24% 90% / 0.05);
+    --shadow-hero: 0 25px 50px -12px hsl(210 28% 17% / 0.25);
 
     /* Futuristic AI Colors */
     --ai-primary: 192 100% 75%;
@@ -120,45 +136,67 @@
   }
 
   .dark {
-    --background: 220 15% 8%;
-    --foreground: 220 13% 91%;
+    /* Dark Mode Legal-Tech Palette */
+    --bg: 214 36% 8%;                     /* #0B1119 - Dark Background */
+    --background: 214 36% 8%;
+    --surface: 218 41% 11%;               /* #101826 - Dark Surface */
+    --card: 218 41% 11%;
+    --foreground: 214 44% 92%;            /* #E6EDF6 - Dark Text Strong */
+    --card-foreground: 214 44% 92%;
 
-    --card: 220 15% 10%;
-    --card-foreground: 220 13% 91%;
+    --popover: 218 41% 11%;
+    --popover-foreground: 214 44% 92%;
 
-    --popover: 220 15% 10%;
-    --popover-foreground: 220 13% 91%;
-
-    --primary: 224 76% 48%;
+    /* Legal Navy - Adjusted for dark mode */
+    --primary: 210 28% 17%;               /* Keep same primary */
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 224 76% 42%;
+    --primary-hover: 212 28% 21%;
+    --primary-500: 212 31% 25%;
+    --primary-600: 212 28% 21%;
+    --primary-700: 214 30% 16%;
 
-    --secondary: 220 15% 15%;
-    --secondary-foreground: 220 13% 91%;
+    --secondary: 215 38% 15%;             /* #162234 - Dark Muted */
+    --secondary-foreground: 213 24% 84%;  /* #CBD5E1 - Dark Text */
 
-    --muted: 220 15% 15%;
-    --muted-foreground: 220 9% 60%;
+    --muted: 215 38% 15%;                 /* #162234 - Dark Muted */
+    --muted-foreground: 215 20% 70%;      /* #94A3B8 - Dark Text Muted */
 
-    --accent: 24 95% 53%;
+    /* AI Teal - Same values work in dark */
+    --accent: 173 64% 45%;                /* #2BBBAD - AI Teal */
     --accent-foreground: 0 0% 100%;
-    --accent-hover: 24 95% 47%;
+    --accent-hover: 173 63% 40%;
+    --accent-600: 173 63% 40%;
+    --accent-700: 173 62% 35%;
 
-    --success: 158 64% 52%;
+    /* Action Emerald - Same values work in dark */
+    --cta: 133 46% 34%;                   /* #2E7D32 - Action Emerald */
+    --cta-foreground: 0 0% 100%;
+    --cta-600: 133 44% 28%;
+    --cta-700: 133 49% 23%;
+
+    /* System Colors */
+    --success: 133 46% 34%;
     --success-foreground: 0 0% 100%;
-
-    --warning: 43 96% 56%;
+    --info: 199 98% 41%;
+    --warning: 32 86% 47%;
     --warning-foreground: 0 0% 100%;
-    --destructive: 0 84% 60%;
+    --danger: 0 68% 51%;
+    --destructive: 0 68% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 15% 15%;
-    --input: 220 15% 15%;
-    --ring: 224 76% 48%;
+    /* Dark Text Hierarchy */
+    --text-strong: 214 44% 92%;           /* #E6EDF6 - Dark Text Strong */
+    --text: 213 24% 84%;                  /* #CBD5E1 - Dark Text */
+    --text-muted: 215 20% 70%;            /* #94A3B8 - Dark Text Muted */
+
+    --border: 213 36% 25%;                /* #223047 - Dark Border */
+    --input: 213 36% 25%;
+    --ring: 173 64% 45%;
 
     /* Dark Mode Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(224 76% 48%), hsl(224 76% 42%));
-    --gradient-hero: linear-gradient(135deg, hsl(220 15% 8%) 0%, hsl(220 15% 5%) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(220 15% 10%) 0%, hsl(220 15% 12%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(210 28% 17%), hsl(212 28% 21%));
+    --gradient-hero: radial-gradient(1200px 600px at 10% -10%, hsl(173 64% 45% / 0.12), transparent 60%), linear-gradient(180deg, hsl(214 36% 8%), hsl(218 41% 11%));
+    --gradient-card: linear-gradient(145deg, hsl(218 41% 11%) 0%, hsl(215 38% 13%) 100%);
     
     /* Enhanced Dark Mode AI Colors */
     --ai-glass: 192 100% 75% / 0.08;
