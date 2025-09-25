@@ -86,7 +86,7 @@ interface Case {
 const LawyerDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, profile, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading, role } = useAuth();
   const { t, isRTL } = useLanguage();
   const [stats, setStats] = useState<LawyerStats>({
     activeCases: 0,
@@ -769,7 +769,7 @@ const LawyerDashboard = () => {
               >
                 <div className="space-y-4">
                   <CaseActivityForm caseId={currentCase.id} />
-                  <CaseTimeline caseId={currentCase.id} caseData={currentCase} />
+                  <CaseTimeline caseId={currentCase.id} caseData={currentCase} userRole={role} />
                 </div>
               </CollapsibleCard>
 

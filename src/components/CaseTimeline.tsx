@@ -13,9 +13,10 @@ interface CaseTimelineProps {
     status: string;
     title: string;
   };
+  userRole?: string;
 }
 
-export const CaseTimeline: React.FC<CaseTimelineProps> = ({ caseId, caseData }) => {
+export const CaseTimeline: React.FC<CaseTimelineProps> = ({ caseId, caseData, userRole }) => {
   const { activities, loading } = useCaseActivities(caseId);
 
   const getActivityIcon = (activityType: string) => {
@@ -169,7 +170,10 @@ export const CaseTimeline: React.FC<CaseTimelineProps> = ({ caseId, caseData }) 
                 </div>
                 <div className="flex-1">
                   <p className="text-muted-foreground">
-                    No milestones yet. Your lawyer will add updates as they work on your case.
+                    {userRole === 'lawyer' 
+                      ? "No milestones yet. Use the form above to add updates for your client."
+                      : "No milestones yet. Your lawyer will add updates as they work on your case."
+                    }
                   </p>
                 </div>
               </div>

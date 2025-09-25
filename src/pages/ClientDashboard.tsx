@@ -66,7 +66,7 @@ const ClientDashboard = () => {
     communication: true,
     calendar: true
   });
-  const { signOut, user } = useAuth();
+  const { signOut, user, role } = useAuth();
   const navigate = useNavigate();
   const { 
     cases, 
@@ -539,7 +539,7 @@ const ClientDashboard = () => {
                   {/* Case Milestones */}
                   {activeCase.assigned_lawyer_id && (
                     <div className="mt-4">
-                      <CaseTimeline caseId={activeCase.id} caseData={activeCase} />
+                      <CaseTimeline caseId={activeCase.id} caseData={activeCase} userRole={role} />
                     </div>
                   )}
                 </div>
