@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon, Plus, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { useAppointments } from '@/hooks/useAppointments';
 import { useAuth } from '@/hooks/useAuth';
 import { format, isSameDay, parseISO } from 'date-fns';
@@ -62,30 +62,6 @@ export const CaseCalendar: React.FC<CaseCalendarProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-primary/10 p-2">
-            <CalendarIcon className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-semibold text-foreground">Case Calendar</h2>
-            <p className="text-sm text-muted-foreground">
-              {isLawyer 
-                ? "Manage appointments and schedule meetings with your client"
-                : "View scheduled appointments and meetings with your lawyer"
-              }
-            </p>
-          </div>
-        </div>
-        {isLawyer && (
-          <Button onClick={() => setShowCreateDialog(true)} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Schedule Meeting
-          </Button>
-        )}
-      </div>
-
       {/* Main Content */}
       <div className="grid lg:grid-cols-[400px_1fr] gap-8">
         {/* Calendar Section */}
