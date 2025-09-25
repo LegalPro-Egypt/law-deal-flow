@@ -155,7 +155,7 @@ export const CaseActivityForm: React.FC<CaseActivityFormProps> = ({ caseId, onAc
 
           <div className="flex gap-2 pt-4">
             <Button type="submit" disabled={isSubmitting || !formData.title.trim()}>
-              {isSubmitting ? 'Adding...' : 'Add Activity'}
+              {isSubmitting ? 'Adding...' : 'Add Milestone'}
             </Button>
             <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
               Cancel
