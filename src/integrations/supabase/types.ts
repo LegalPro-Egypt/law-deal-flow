@@ -130,6 +130,75 @@ export type Database = {
           },
         ]
       }
+      appointments: {
+        Row: {
+          appointment_type: string
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          case_id: string
+          client_id: string
+          created_at: string
+          created_by: string
+          description: string | null
+          duration_minutes: number
+          id: string
+          lawyer_id: string
+          location: string | null
+          meeting_link: string | null
+          metadata: Json | null
+          notes: string | null
+          scheduled_date: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          appointment_type?: string
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          case_id: string
+          client_id: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          lawyer_id: string
+          location?: string | null
+          meeting_link?: string | null
+          metadata?: Json | null
+          notes?: string | null
+          scheduled_date: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          appointment_type?: string
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          case_id?: string
+          client_id?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          lawyer_id?: string
+          location?: string | null
+          meeting_link?: string | null
+          metadata?: Json | null
+          notes?: string | null
+          scheduled_date?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       case_activities: {
         Row: {
           activity_type: string
@@ -768,6 +837,45 @@ export type Database = {
           notified?: boolean
           source?: string | null
           user_agent?: string | null
+        }
+        Relationships: []
+      }
+      lawyer_availability: {
+        Row: {
+          case_id: string | null
+          created_at: string
+          day_of_week: number
+          end_time: string
+          id: string
+          is_available: boolean
+          lawyer_id: string
+          metadata: Json | null
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          case_id?: string | null
+          created_at?: string
+          day_of_week: number
+          end_time: string
+          id?: string
+          is_available?: boolean
+          lawyer_id: string
+          metadata?: Json | null
+          start_time: string
+          updated_at?: string
+        }
+        Update: {
+          case_id?: string | null
+          created_at?: string
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          is_available?: boolean
+          lawyer_id?: string
+          metadata?: Json | null
+          start_time?: string
+          updated_at?: string
         }
         Relationships: []
       }
