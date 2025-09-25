@@ -16,8 +16,7 @@ import {
   Clock,
   CheckCircle,
   X,
-  History,
-  DollarSign
+  History
 } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
 import { format } from 'date-fns';
@@ -32,7 +31,7 @@ interface NotificationMenuProps {
 }
 
 export const NotificationMenu: React.FC<NotificationMenuProps> = ({ className }) => {
-  const { notifications, newNotifications, unreadCount, markAsRead, markAllAsRead, loading } = useNotifications();
+  const { notifications, unreadCount, markAsRead, markAllAsRead, loading } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('new');
 
@@ -78,22 +77,9 @@ export const NotificationMenu: React.FC<NotificationMenuProps> = ({ className })
     ).join(' ');
   };
 
-  // Separate notifications into categories
-  const now = new Date();
-  const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-  
-  const historyNotifications = notifications.filter(n => 
-    n.is_read && n.read_at && new Date(n.read_at) <= twentyFourHoursAgo
-  );
-
-  // Money-related notifications
-  const moneyNotifications = notifications.filter(n => 
-    n.type === 'payment_request' || 
-    n.type === 'proposal_received' || 
-    n.type === 'proposal_approved' || 
-    n.type === 'additional_fee_request' ||
-    (n.metadata && (n.metadata as any).payment_related)
-  );
+  // Separate notifications into unread and read
+  const unreadNotifications = notifications.filter(n => !n.is_read);
+  const readNotifications = notifications.filter(n => n.is_read);
 
   const renderNotifications = (notificationList: typeof notifications) => (
     <div className="divide-y">
@@ -108,20 +94,20 @@ export const NotificationMenu: React.FC<NotificationMenuProps> = ({ className })
             <div className="flex-shrink-0 mt-0.5">
               {getNotificationIcon(notification.type)}
             </div>
-            <div className="flex-1 min-w-0 overflow-hidden">
+            <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <h4 className={`text-sm font-medium truncate ${!notification.is_read ? 'font-semibold' : ''}`}>
+                <div className="flex-1">
+                  <h4 className={`text-sm font-medium ${!notification.is_read ? 'font-semibold' : ''}`}>
                     {notification.title}
                   </h4>
-                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2 break-words">
+                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                     {notification.message}
                   </p>
-                  <div className="flex items-center gap-2 mt-2 flex-wrap">
-                    <Badge variant="outline" className="text-xs flex-shrink-0">
+                  <div className="flex items-center gap-2 mt-2">
+                    <Badge variant="outline" className="text-xs">
                       {formatNotificationType(notification.type)}
                     </Badge>
-                    <span className="text-xs text-muted-foreground flex items-center gap-1 flex-shrink-0">
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
                       <Clock className="h-3 w-3" />
                       {format(new Date(notification.created_at), 'MMM d, h:mm a')}
                     </span>
@@ -150,7 +136,7 @@ export const NotificationMenu: React.FC<NotificationMenuProps> = ({ className })
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-96 max-w-[90vw] p-0 overflow-hidden">
+      <DropdownMenuContent align="end" className="w-80 p-0">
         <Card className="border-0 shadow-none">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center justify-between">
@@ -163,17 +149,13 @@ export const NotificationMenu: React.FC<NotificationMenuProps> = ({ className })
           <Separator />
           <CardContent className="p-0">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-3 m-3 mb-0">
+              <TabsList className="grid w-full grid-cols-2 m-3 mb-0">
                 <TabsTrigger value="new" className="text-xs">
-                  New ({newNotifications.length})
-                </TabsTrigger>
-                <TabsTrigger value="money" className="text-xs">
-                  <DollarSign className="h-3 w-3 mr-1" />
-                  Money ({moneyNotifications.length})
+                  New ({unreadNotifications.length})
                 </TabsTrigger>
                 <TabsTrigger value="history" className="text-xs">
                   <History className="h-3 w-3 mr-1" />
-                  History ({historyNotifications.length})
+                  View History
                 </TabsTrigger>
               </TabsList>
               
@@ -191,40 +173,14 @@ export const NotificationMenu: React.FC<NotificationMenuProps> = ({ className })
                         </div>
                       ))}
                     </div>
-                  ) : newNotifications.length === 0 ? (
+                  ) : unreadNotifications.length === 0 ? (
                     <div className="p-8 text-center text-muted-foreground">
                       <Bell className="h-12 w-12 mx-auto mb-4 opacity-50" />
                       <p>No new notifications</p>
                       <p className="text-sm mt-1">You're all caught up!</p>
                     </div>
                   ) : (
-                    renderNotifications(newNotifications)
-                  )}
-                </ScrollArea>
-              </TabsContent>
-              
-              <TabsContent value="money" className="mt-0">
-                <ScrollArea className="h-96">
-                  {loading ? (
-                    <div className="p-4 space-y-3">
-                      {[1, 2, 3].map(i => (
-                        <div key={i} className="flex items-start gap-3 animate-pulse">
-                          <div className="w-8 h-8 bg-muted rounded-full" />
-                          <div className="flex-1 space-y-2">
-                            <div className="h-4 bg-muted rounded w-3/4" />
-                            <div className="h-3 bg-muted rounded w-1/2" />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : moneyNotifications.length === 0 ? (
-                    <div className="p-8 text-center text-muted-foreground">
-                      <DollarSign className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>No payment requests</p>
-                      <p className="text-sm mt-1">Payment-related notifications will appear here</p>
-                    </div>
-                  ) : (
-                    renderNotifications(moneyNotifications)
+                    renderNotifications(unreadNotifications)
                   )}
                 </ScrollArea>
               </TabsContent>
@@ -243,14 +199,14 @@ export const NotificationMenu: React.FC<NotificationMenuProps> = ({ className })
                         </div>
                       ))}
                     </div>
-                  ) : historyNotifications.length === 0 ? (
+                  ) : readNotifications.length === 0 ? (
                     <div className="p-8 text-center text-muted-foreground">
                       <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
                       <p>No notification history</p>
                       <p className="text-sm mt-1">Previous notifications will appear here</p>
                     </div>
                   ) : (
-                    renderNotifications(historyNotifications)
+                    renderNotifications(readNotifications)
                   )}
                 </ScrollArea>
               </TabsContent>
