@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Bell, 
   BellRing, 
@@ -14,7 +15,8 @@ import {
   Gavel,
   Clock,
   CheckCircle,
-  X
+  X,
+  History
 } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
 import { format } from 'date-fns';
@@ -29,8 +31,16 @@ interface NotificationMenuProps {
 }
 
 export const NotificationMenu: React.FC<NotificationMenuProps> = ({ className }) => {
-  const { notifications, unreadCount, markAsRead, loading } = useNotifications();
+  const { notifications, unreadCount, markAsRead, markAllAsRead, loading } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('new');
+
+  // Mark all notifications as read when dropdown is opened
+  useEffect(() => {
+    if (isOpen && unreadCount > 0) {
+      markAllAsRead();
+    }
+  }, [isOpen, unreadCount, markAllAsRead]);
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -67,6 +77,50 @@ export const NotificationMenu: React.FC<NotificationMenuProps> = ({ className })
     ).join(' ');
   };
 
+  // Separate notifications into unread and read
+  const unreadNotifications = notifications.filter(n => !n.is_read);
+  const readNotifications = notifications.filter(n => n.is_read);
+
+  const renderNotifications = (notificationList: typeof notifications) => (
+    <div className="divide-y">
+      {notificationList.map((notification) => (
+        <div
+          key={notification.id}
+          className={`p-4 hover:bg-muted/50 transition-colors cursor-pointer ${
+            !notification.is_read ? 'bg-muted/30' : ''
+          }`}
+        >
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 mt-0.5">
+              {getNotificationIcon(notification.type)}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1">
+                  <h4 className={`text-sm font-medium ${!notification.is_read ? 'font-semibold' : ''}`}>
+                    {notification.title}
+                  </h4>
+                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                    {notification.message}
+                  </p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Badge variant="outline" className="text-xs">
+                      {formatNotificationType(notification.type)}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {format(new Date(notification.created_at), 'MMM d, h:mm a')}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
@@ -90,84 +144,73 @@ export const NotificationMenu: React.FC<NotificationMenuProps> = ({ className })
                 <Bell className="h-5 w-5" />
                 Notifications
               </span>
-              {unreadCount > 0 && (
-                <Badge variant="secondary">
-                  {unreadCount} unread
-                </Badge>
-              )}
             </CardTitle>
           </CardHeader>
           <Separator />
           <CardContent className="p-0">
-            <ScrollArea className="h-96">
-              {loading ? (
-                <div className="p-4 space-y-3">
-                  {[1, 2, 3].map(i => (
-                    <div key={i} className="flex items-start gap-3 animate-pulse">
-                      <div className="w-8 h-8 bg-muted rounded-full" />
-                      <div className="flex-1 space-y-2">
-                        <div className="h-4 bg-muted rounded w-3/4" />
-                        <div className="h-3 bg-muted rounded w-1/2" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : notifications.length === 0 ? (
-                <div className="p-8 text-center text-muted-foreground">
-                  <Bell className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No notifications yet</p>
-                  <p className="text-sm mt-1">You'll see updates here when they arrive</p>
-                </div>
-              ) : (
-                <div className="divide-y">
-                  {notifications.map((notification) => (
-                    <div
-                      key={notification.id}
-                      className={`p-4 hover:bg-muted/50 transition-colors cursor-pointer ${
-                        !notification.is_read ? 'bg-muted/30' : ''
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className="flex-shrink-0 mt-0.5">
-                          {getNotificationIcon(notification.type)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex-1">
-                              <h4 className={`text-sm font-medium ${!notification.is_read ? 'font-semibold' : ''}`}>
-                                {notification.title}
-                              </h4>
-                              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                                {notification.message}
-                              </p>
-                              <div className="flex items-center gap-2 mt-2">
-                                <Badge variant="outline" className="text-xs">
-                                  {formatNotificationType(notification.type)}
-                                </Badge>
-                                <span className="text-xs text-muted-foreground flex items-center gap-1">
-                                  <Clock className="h-3 w-3" />
-                                  {format(new Date(notification.created_at), 'MMM d, h:mm a')}
-                                </span>
-                              </div>
-                            </div>
-                            {!notification.is_read && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
-                                onClick={(e) => handleMarkAsRead(notification.id, e)}
-                              >
-                                <CheckCircle className="h-4 w-4" />
-                              </Button>
-                            )}
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 m-3 mb-0">
+                <TabsTrigger value="new" className="text-xs">
+                  New ({unreadNotifications.length})
+                </TabsTrigger>
+                <TabsTrigger value="history" className="text-xs">
+                  <History className="h-3 w-3 mr-1" />
+                  View History
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="new" className="mt-0">
+                <ScrollArea className="h-96">
+                  {loading ? (
+                    <div className="p-4 space-y-3">
+                      {[1, 2, 3].map(i => (
+                        <div key={i} className="flex items-start gap-3 animate-pulse">
+                          <div className="w-8 h-8 bg-muted rounded-full" />
+                          <div className="flex-1 space-y-2">
+                            <div className="h-4 bg-muted rounded w-3/4" />
+                            <div className="h-3 bg-muted rounded w-1/2" />
                           </div>
                         </div>
-                      </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              )}
-            </ScrollArea>
+                  ) : unreadNotifications.length === 0 ? (
+                    <div className="p-8 text-center text-muted-foreground">
+                      <Bell className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No new notifications</p>
+                      <p className="text-sm mt-1">You're all caught up!</p>
+                    </div>
+                  ) : (
+                    renderNotifications(unreadNotifications)
+                  )}
+                </ScrollArea>
+              </TabsContent>
+              
+              <TabsContent value="history" className="mt-0">
+                <ScrollArea className="h-96">
+                  {loading ? (
+                    <div className="p-4 space-y-3">
+                      {[1, 2, 3].map(i => (
+                        <div key={i} className="flex items-start gap-3 animate-pulse">
+                          <div className="w-8 h-8 bg-muted rounded-full" />
+                          <div className="flex-1 space-y-2">
+                            <div className="h-4 bg-muted rounded w-3/4" />
+                            <div className="h-3 bg-muted rounded w-1/2" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : readNotifications.length === 0 ? (
+                    <div className="p-8 text-center text-muted-foreground">
+                      <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No notification history</p>
+                      <p className="text-sm mt-1">Previous notifications will appear here</p>
+                    </div>
+                  ) : (
+                    renderNotifications(readNotifications)
+                  )}
+                </ScrollArea>
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       </DropdownMenuContent>

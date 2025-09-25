@@ -112,16 +112,36 @@ export const useNotifications = () => {
             : notification
         )
       );
-
-      toast({
-        title: "Marked as read",
-        description: "Notification has been marked as read",
-      });
     } catch (error) {
       console.error('Error marking notification as read:', error);
       toast({
         title: "Error",
         description: "Failed to mark notification as read",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const markAllAsRead = async () => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('user_id', user.id)
+        .eq('is_read', false);
+
+      if (error) throw error;
+
+      setNotifications(prev => 
+        prev.map(notification => ({ ...notification, is_read: true }))
+      );
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+      toast({
+        title: "Error",
+        description: "Failed to mark notifications as read",
         variant: "destructive",
       });
     }
@@ -222,6 +242,7 @@ export const useNotifications = () => {
     loading,
     unreadCount,
     markAsRead,
+    markAllAsRead,
     handleViewProposal,
     fetchNotifications,
     fetchProposals,
