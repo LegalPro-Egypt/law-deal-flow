@@ -686,133 +686,138 @@ const LawyerDashboard = () => {
             </CardContent>
           </Card>
         ) : currentCase ? (
-          <Card className="bg-gradient-card shadow-card hover:shadow-md transition-shadow">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Badge variant={getUrgencyVariant(currentCase.urgency)}>
-                    {t(`dashboard.cases.urgency.${currentCase.urgency}`)} {isRTL() ? 'أولوية' : 'Priority'}
-                  </Badge>
-                </div>
-                <div className={`text-xs text-muted-foreground flex-shrink-0 ${isRTL() ? 'text-left' : 'text-right'}`}>
-                  <div>Created: {formatDate(currentCase.created_at)}</div>
-                  <div>Updated: {formatDate(currentCase.updated_at)}</div>
-                </div>
-              </div>
-              <CardTitle className="text-lg">{currentCase.title}</CardTitle>
-              <CardDescription>
-                <div className="flex items-center gap-2 text-sm">
-                  <Users className="h-4 w-4" />
-                  Client: {getClientNameForRole(currentCase.client_name, profile?.role)}
-                </div>
-                <div className="flex items-center gap-2 text-sm mt-1">
-                  <FileText className="h-4 w-4" />
-                  Category: {currentCase.category}
-                </div>
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-0 space-y-4">
-              {/* Case Work Progress */}
-              {(currentCase.status === 'work_in_progress' || currentCase.status === 'pending_client_confirmation' || currentCase.status === 'completed') && (
-                <CaseWorkProgress caseData={currentCase} />
-              )}
-              
-              {/* Case Milestone Updates */}
-              <CollapsibleCard
-                title="Case Milestones"
-                icon={<Clock className="h-5 w-5" />}
-                description="Add updates and track case progress"
-                defaultOpen={false}
-              >
-                <div className="space-y-4">
-                  <CaseActivityForm caseId={currentCase.id} />
-                  <CaseTimeline caseId={currentCase.id} caseData={currentCase} />
-                </div>
-              </CollapsibleCard>
-
-              {/* Calendar & Appointments */}
-              <CollapsibleCard
-                title="Calendar & Appointments"
-                icon={<CalendarIcon className="h-5 w-5" />}
-                description="Schedule and manage client meetings"
-                defaultOpen={false}
-              >
-                <CaseCalendar
-                  caseId={currentCase.id}
-                  isLawyer={true}
-                  clientId={currentCase.user_id}
-                  lawyerId={profile?.user_id}
-                />
-              </CollapsibleCard>
-
-              {/* Case Details */}
-              <CollapsibleCard
-                title="Case Information"
-                icon={<FileText className="h-5 w-5" />}
-                description="View detailed case information and documents"
-                defaultOpen={false}
-                headerAction={
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => handleViewDetails(currentCase.id)}
-                  >
-                    View Full Details
-                  </Button>
-                }
-              >
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Case Number</Label>
-                      <Badge variant="outline" className="font-mono">
-                        {currentCase.case_number}
-                      </Badge>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Status</Label>
-                      <Badge variant={getStatusVariant(currentCase.status)}>
-                        {currentCase.status.replace('_', ' ').toUpperCase()}
-                      </Badge>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Category</Label>
-                      <p className="text-sm">{currentCase.category}</p>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Urgency</Label>
-                      <Badge variant={getUrgencyVariant(currentCase.urgency)}>
-                        {currentCase.urgency} Priority
-                      </Badge>
-                    </div>
+          <>
+            <Card className="bg-gradient-card shadow-card hover:shadow-md transition-shadow">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge variant={getUrgencyVariant(currentCase.urgency)}>
+                      {t(`dashboard.cases.urgency.${currentCase.urgency}`)} {isRTL() ? 'أولوية' : 'Priority'}
+                    </Badge>
+                  </div>
+                  <div className={`text-xs text-muted-foreground flex-shrink-0 ${isRTL() ? 'text-left' : 'text-right'}`}>
+                    <div>Created: {formatDate(currentCase.created_at)}</div>
+                    <div>Updated: {formatDate(currentCase.updated_at)}</div>
                   </div>
                 </div>
-              </CollapsibleCard>
-              
-              <div className="flex gap-2 flex-wrap">
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={() => handleViewDetails(currentCase.id)}
-                  className="flex-shrink-0"
-                >
-                  {t('dashboard.cases.viewDetails')}
-                </Button>
-                <Button 
-                  size="sm" 
-                  className="bg-primary hover:bg-primary/90 flex-shrink-0"
-                  onClick={() => {
-                    console.log('Button clicked, currentCase:', currentCase);
-                    console.log('Current case proposal:', currentCase.proposal);
-                    setSelectedCaseForProposal(currentCase);
-                  }}
-                >
-                  <FileText className={`h-4 w-4 ${isRTL() ? 'ml-2' : 'mr-2'}`} />
-                  {currentCase.proposal ? t('dashboard.cases.editProposal') : t('dashboard.cases.createProposal')}
-                </Button>
+                <CardTitle className="text-lg">{currentCase.title}</CardTitle>
+                <CardDescription>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Users className="h-4 w-4" />
+                    Client: {getClientNameForRole(currentCase.client_name, profile?.role)}
+                  </div>
+                  <div className="flex items-center gap-2 text-sm mt-1">
+                    <FileText className="h-4 w-4" />
+                    Category: {currentCase.category}
+                  </div>
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0 space-y-6">
+                {/* Case Work Progress */}
+                {(currentCase.status === 'work_in_progress' || currentCase.status === 'pending_client_confirmation' || currentCase.status === 'completed') && (
+                  <CaseWorkProgress caseData={currentCase} />
+                )}
+              </CardContent>
+            </Card>
+            
+            {/* Three Standalone Cards */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+            {/* Case Details */}
+            <CollapsibleCard
+              title="Case Information"
+              icon={<FileText className="h-5 w-5" />}
+              description="View detailed case information"
+              defaultOpen={true}
+            >
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Case Number</Label>
+                    <Badge variant="outline" className="font-mono">
+                      {currentCase.case_number}
+                    </Badge>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Status</Label>
+                    <Badge variant={getStatusVariant(currentCase.status)}>
+                      {currentCase.status.replace('_', ' ').toUpperCase()}
+                    </Badge>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Category</Label>
+                    <p className="text-sm">{currentCase.category}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Urgency</Label>
+                    <Badge variant={getUrgencyVariant(currentCase.urgency)}>
+                      {currentCase.urgency} Priority
+                    </Badge>
+                  </div>
+                </div>
               </div>
-            </CardContent>
-          </Card>
+            </CollapsibleCard>
+
+            {/* Case Milestones */}
+            <CollapsibleCard
+              title="Case Milestones"
+              icon={<Clock className="h-5 w-5" />}
+              description="Add updates and track case progress"
+              defaultOpen={false}
+            >
+              <div className="space-y-4">
+                <CaseActivityForm caseId={currentCase.id} />
+                <CaseTimeline caseId={currentCase.id} caseData={currentCase} />
+              </div>
+            </CollapsibleCard>
+
+            {/* Calendar & Appointments */}
+            <CollapsibleCard
+              title="Calendar & Appointments"
+              icon={<CalendarIcon className="h-5 w-5" />}
+              description="Schedule and manage client meetings"
+              defaultOpen={false}
+            >
+              <CaseCalendar
+                caseId={currentCase.id}
+                isLawyer={true}
+                clientId={currentCase.user_id}
+                lawyerId={profile?.user_id}
+              />
+            </CollapsibleCard>
+            </div>
+
+            <div className="flex gap-2 flex-wrap mt-6">
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={() => handleViewDetails(currentCase.id)}
+                className="flex-shrink-0"
+              >
+                {t('dashboard.cases.viewDetails')}
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={() => setSelectedCaseId(currentCase.id)}
+                className="flex-shrink-0"
+              >
+                <MessageSquare className="h-4 w-4 mr-1" />
+                Send Message
+              </Button>
+              <Button 
+                size="sm" 
+                className="bg-primary hover:bg-primary/90 flex-shrink-0"
+                onClick={() => {
+                  console.log('Button clicked, currentCase:', currentCase);
+                  console.log('Current case proposal:', currentCase.proposal);
+                  setSelectedCaseForProposal(currentCase);
+                }}
+              >
+                <FileText className={`h-4 w-4 mr-2`} />
+                {currentCase.proposal ? t('dashboard.cases.editProposal') : t('dashboard.cases.createProposal')}
+              </Button>
+            </div>
+          </>
         ) : null}
 
         {/* Communication Section */}
