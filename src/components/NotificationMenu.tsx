@@ -16,7 +16,8 @@ import {
   Clock,
   CheckCircle,
   X,
-  History
+  History,
+  DollarSign
 } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
 import { format } from 'date-fns';
@@ -77,12 +78,21 @@ export const NotificationMenu: React.FC<NotificationMenuProps> = ({ className })
     ).join(' ');
   };
 
-  // Separate notifications into new and history based on 24-hour rule
+  // Separate notifications into categories
   const now = new Date();
   const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
   
   const historyNotifications = notifications.filter(n => 
     n.is_read && n.read_at && new Date(n.read_at) <= twentyFourHoursAgo
+  );
+
+  // Money-related notifications
+  const moneyNotifications = notifications.filter(n => 
+    n.type === 'payment_request' || 
+    n.type === 'proposal_received' || 
+    n.type === 'proposal_approved' || 
+    n.type === 'additional_fee_request' ||
+    (n.metadata && (n.metadata as any).payment_related)
   );
 
   const renderNotifications = (notificationList: typeof notifications) => (
@@ -153,9 +163,13 @@ export const NotificationMenu: React.FC<NotificationMenuProps> = ({ className })
           <Separator />
           <CardContent className="p-0">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 m-3 mb-0">
+              <TabsList className="grid w-full grid-cols-3 m-3 mb-0">
                 <TabsTrigger value="new" className="text-xs">
                   New ({newNotifications.length})
+                </TabsTrigger>
+                <TabsTrigger value="money" className="text-xs">
+                  <DollarSign className="h-3 w-3 mr-1" />
+                  Money ({moneyNotifications.length})
                 </TabsTrigger>
                 <TabsTrigger value="history" className="text-xs">
                   <History className="h-3 w-3 mr-1" />
@@ -185,6 +199,32 @@ export const NotificationMenu: React.FC<NotificationMenuProps> = ({ className })
                     </div>
                   ) : (
                     renderNotifications(newNotifications)
+                  )}
+                </ScrollArea>
+              </TabsContent>
+              
+              <TabsContent value="money" className="mt-0">
+                <ScrollArea className="h-96">
+                  {loading ? (
+                    <div className="p-4 space-y-3">
+                      {[1, 2, 3].map(i => (
+                        <div key={i} className="flex items-start gap-3 animate-pulse">
+                          <div className="w-8 h-8 bg-muted rounded-full" />
+                          <div className="flex-1 space-y-2">
+                            <div className="h-4 bg-muted rounded w-3/4" />
+                            <div className="h-3 bg-muted rounded w-1/2" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : moneyNotifications.length === 0 ? (
+                    <div className="p-8 text-center text-muted-foreground">
+                      <DollarSign className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No payment requests</p>
+                      <p className="text-sm mt-1">Payment-related notifications will appear here</p>
+                    </div>
+                  ) : (
+                    renderNotifications(moneyNotifications)
                   )}
                 </ScrollArea>
               </TabsContent>
