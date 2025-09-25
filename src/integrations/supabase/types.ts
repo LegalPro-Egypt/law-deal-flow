@@ -130,6 +130,51 @@ export type Database = {
           },
         ]
       }
+      case_activities: {
+        Row: {
+          activity_type: string
+          attachments: Json | null
+          case_id: string
+          created_at: string
+          description: string | null
+          hours_worked: number | null
+          id: string
+          lawyer_id: string
+          metadata: Json | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          activity_type?: string
+          attachments?: Json | null
+          case_id: string
+          created_at?: string
+          description?: string | null
+          hours_worked?: number | null
+          id?: string
+          lawyer_id: string
+          metadata?: Json | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          activity_type?: string
+          attachments?: Json | null
+          case_id?: string
+          created_at?: string
+          description?: string | null
+          hours_worked?: number | null
+          id?: string
+          lawyer_id?: string
+          metadata?: Json | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       case_analysis: {
         Row: {
           analysis_data: Json
@@ -895,42 +940,51 @@ export type Database = {
           action_required: boolean
           action_url: string | null
           case_id: string | null
+          category: string | null
           created_at: string
+          expires_at: string | null
           id: string
           is_read: boolean
           message: string
           metadata: Json | null
+          priority: string | null
           read_at: string | null
           title: string
-          type: string
+          type: Database["public"]["Enums"]["notification_type"]
           user_id: string
         }
         Insert: {
           action_required?: boolean
           action_url?: string | null
           case_id?: string | null
+          category?: string | null
           created_at?: string
+          expires_at?: string | null
           id?: string
           is_read?: boolean
           message: string
           metadata?: Json | null
+          priority?: string | null
           read_at?: string | null
           title: string
-          type: string
+          type: Database["public"]["Enums"]["notification_type"]
           user_id: string
         }
         Update: {
           action_required?: boolean
           action_url?: string | null
           case_id?: string | null
+          category?: string | null
           created_at?: string
+          expires_at?: string | null
           id?: string
           is_read?: boolean
           message?: string
           metadata?: Json | null
+          priority?: string | null
           read_at?: string | null
           title?: string
-          type?: string
+          type?: Database["public"]["Enums"]["notification_type"]
           user_id?: string
         }
         Relationships: []
@@ -1646,6 +1700,19 @@ export type Database = {
       }
     }
     Enums: {
+      notification_type:
+        | "case_activity"
+        | "missed_call"
+        | "missed_message"
+        | "proposal_received"
+        | "proposal_approved"
+        | "proposal_rejected"
+        | "payment_request"
+        | "payment_completed"
+        | "case_assigned"
+        | "communication_request"
+        | "system_update"
+        | "general"
       verification_status: "pending_basic" | "pending_complete" | "verified"
     }
     CompositeTypes: {
@@ -1774,6 +1841,20 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      notification_type: [
+        "case_activity",
+        "missed_call",
+        "missed_message",
+        "proposal_received",
+        "proposal_approved",
+        "proposal_rejected",
+        "payment_request",
+        "payment_completed",
+        "case_assigned",
+        "communication_request",
+        "system_update",
+        "general",
+      ],
       verification_status: ["pending_basic", "pending_complete", "verified"],
     },
   },
