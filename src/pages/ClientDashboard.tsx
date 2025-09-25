@@ -639,7 +639,7 @@ const ClientDashboard = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <NotificationsInbox />
+            <NotificationsInbox activeCaseId={activeCase?.id} />
           </CardContent>
         </Card>
 

@@ -8,7 +8,11 @@ import { ProposalReviewDialog } from "@/components/ProposalReviewDialog";
 import { useNotifications, type Notification, type Proposal } from "@/hooks/useNotifications";
 import { useLanguage } from "@/hooks/useLanguage";
 
-export const NotificationsInbox = () => {
+interface NotificationsInboxProps {
+  activeCaseId?: string;
+}
+
+export const NotificationsInbox = ({ activeCaseId }: NotificationsInboxProps) => {
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
   const { currentLanguage } = useLanguage();
   const navigate = useNavigate();
@@ -22,6 +26,15 @@ export const NotificationsInbox = () => {
     handleViewProposal: updateProposalStatus,
     needsPayment
   } = useNotifications();
+
+  // Filter notifications and proposals by active case
+  const filteredNotifications = activeCaseId 
+    ? notifications.filter(n => (n as any).case_id === activeCaseId)
+    : notifications;
+    
+  const filteredProposalsWithCases = activeCaseId
+    ? proposalsWithCases.filter(p => p.case?.id === activeCaseId)
+    : proposalsWithCases;
 
   const handleViewProposal = async (proposalId: string) => {
     await updateProposalStatus(proposalId);
@@ -85,13 +98,13 @@ export const NotificationsInbox = () => {
 
   return (
     <>
-      {notifications.length === 0 ? (
+      {filteredNotifications.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
           {currentLanguage === 'ar' ? 'لا توجد عروض قانونية بعد' : 'No legal proposals yet'}
         </div>
       ) : (
         <div className="space-y-4">
-          {notifications.map((notification) => (
+          {filteredNotifications.map((notification) => (
             <div
               key={notification.id}
               className={`p-4 rounded-lg border ${
@@ -141,7 +154,7 @@ export const NotificationsInbox = () => {
                       
                       {(() => {
                         const proposalId = (notification as any).metadata?.proposal_id;
-                        const proposalWithCase = proposalsWithCases.find(p => p.id === proposalId);
+                        const proposalWithCase = filteredProposalsWithCases.find(p => p.id === proposalId);
                         if (!proposalWithCase || !needsPayment(proposalWithCase)) return null;
                         
                         const isGracePeriodPayment = proposalWithCase.case?.status === 'consultation_completed';
