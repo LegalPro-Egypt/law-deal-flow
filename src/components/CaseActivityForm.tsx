@@ -66,7 +66,7 @@ export const CaseActivityForm: React.FC<CaseActivityFormProps> = ({ caseId, onAc
     return (
       <Button onClick={() => setIsOpen(true)} className="w-full">
         <Plus className="h-4 w-4 mr-2" />
-        Add Progress Update
+        Add Milestone Update
       </Button>
     );
   }
@@ -76,13 +76,13 @@ export const CaseActivityForm: React.FC<CaseActivityFormProps> = ({ caseId, onAc
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileText className="h-5 w-5" />
-          Add Case Activity
+          Add Case Milestone
         </CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="title">Activity Title *</Label>
+            <Label htmlFor="title">Milestone Title *</Label>
             <Input
               id="title"
               value={formData.title}
@@ -98,14 +98,14 @@ export const CaseActivityForm: React.FC<CaseActivityFormProps> = ({ caseId, onAc
               id="description"
               value={formData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
-              placeholder="Provide details about the work completed..."
+              placeholder="Provide details about the milestone achieved..."
               rows={3}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="activity_type">Activity Type</Label>
+              <Label htmlFor="activity_type">Milestone Type</Label>
               <Select value={formData.activity_type} onValueChange={(value) => handleInputChange('activity_type', value)}>
                 <SelectTrigger>
                   <SelectValue />

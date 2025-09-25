@@ -713,11 +713,11 @@ const LawyerDashboard = () => {
                 <CaseWorkProgress caseData={currentCase} />
               )}
               
-              {/* Case Activity Form - Allow lawyers to add progress updates */}
-              <CaseActivityForm caseId={currentCase.id} />
-              
-              {/* Case Timeline - Show activity history */}
-              <CaseTimeline caseId={currentCase.id} caseData={currentCase} />
+                  {/* Case Milestone Form - Allow lawyers to add milestone updates */}
+                  <CaseActivityForm caseId={currentCase.id} />
+                  
+                  {/* Case Milestones - Show milestone history */}
+                  <CaseTimeline caseId={currentCase.id} caseData={currentCase} />
               
               <div className="flex gap-2 flex-wrap">
                 <Button 

@@ -65,10 +65,10 @@ export const CaseTimeline: React.FC<CaseTimelineProps> = ({ caseId, caseData }) 
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            Case Timeline
-          </CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <Clock className="h-5 w-5" />
+          Case Milestones
+        </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -121,7 +121,7 @@ export const CaseTimeline: React.FC<CaseTimelineProps> = ({ caseId, caseData }) 
               </div>
             )}
 
-            {/* Activity events */}
+            {/* Milestone events */}
             {activities.map((activity, index) => (
               <div key={activity.id} className="relative flex items-start gap-4">
                 <div className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full bg-card border-2 border-border">
@@ -169,7 +169,7 @@ export const CaseTimeline: React.FC<CaseTimelineProps> = ({ caseId, caseData }) 
                 </div>
                 <div className="flex-1">
                   <p className="text-muted-foreground">
-                    No activities yet. Your lawyer will add updates as they work on your case.
+                    No milestones yet. Your lawyer will add updates as they work on your case.
                   </p>
                 </div>
               </div>

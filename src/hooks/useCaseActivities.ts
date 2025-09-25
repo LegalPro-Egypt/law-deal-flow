@@ -102,7 +102,7 @@ export const useCaseActivities = (caseId?: string) => {
 
       toast({
         title: 'Success',
-        description: 'Activity added successfully'
+        description: 'Milestone added successfully'
       });
 
       return data;
@@ -110,7 +110,7 @@ export const useCaseActivities = (caseId?: string) => {
       console.error('Error adding activity:', error);
       toast({
         title: 'Error',
-        description: error.message || 'Failed to add activity',
+        description: error.message || 'Failed to add milestone',
         variant: 'destructive'
       });
       throw error;
@@ -130,7 +130,7 @@ export const useCaseActivities = (caseId?: string) => {
 
       toast({
         title: 'Success',
-        description: 'Activity updated successfully'
+        description: 'Milestone updated successfully'
       });
 
       return data;
@@ -138,7 +138,7 @@ export const useCaseActivities = (caseId?: string) => {
       console.error('Error updating activity:', error);
       toast({
         title: 'Error',
-        description: error.message || 'Failed to update activity',
+        description: error.message || 'Failed to update milestone',
         variant: 'destructive'
       });
       throw error;

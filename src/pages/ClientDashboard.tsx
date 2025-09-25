@@ -533,7 +533,7 @@ const ClientDashboard = () => {
                     </div>
                   )}
                   
-                  {/* Case Timeline */}
+                  {/* Case Milestones */}
                   {activeCase.assigned_lawyer_id && (
                     <div className="mt-4">
                       <CaseTimeline caseId={activeCase.id} caseData={activeCase} />
