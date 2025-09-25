@@ -6,7 +6,7 @@ import { useTwilioSession, TwilioSession } from "@/hooks/useTwilioSession";
 import { useLawyerChatNotifications } from "@/hooks/useLawyerChatNotifications";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -718,6 +718,28 @@ const LawyerDashboard = () => {
                   <CaseWorkProgress caseData={currentCase} />
                 )}
               </CardContent>
+              <CardFooter className="flex gap-2 flex-wrap">
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => handleViewDetails(currentCase.id)}
+                  className="flex-shrink-0"
+                >
+                  {t('dashboard.cases.viewDetails')}
+                </Button>
+                <Button 
+                  size="sm" 
+                  className="bg-primary hover:bg-primary/90 flex-shrink-0"
+                  onClick={() => {
+                    console.log('Button clicked, currentCase:', currentCase);
+                    console.log('Current case proposal:', currentCase.proposal);
+                    setSelectedCaseForProposal(currentCase);
+                  }}
+                >
+                  <FileText className={`h-4 w-4 mr-2`} />
+                  {currentCase.proposal ? t('dashboard.cases.editProposal') : t('dashboard.cases.createProposal')}
+                </Button>
+              </CardFooter>
             </Card>
             
             {/* Three Standalone Cards */}
@@ -751,37 +773,6 @@ const LawyerDashboard = () => {
               </CollapsibleCard>
             </div>
 
-            <div className="flex gap-2 flex-wrap mt-6">
-              <Button 
-                size="sm" 
-                variant="outline"
-                onClick={() => handleViewDetails(currentCase.id)}
-                className="flex-shrink-0"
-              >
-                {t('dashboard.cases.viewDetails')}
-              </Button>
-              <Button 
-                size="sm" 
-                variant="outline"
-                onClick={() => setSelectedCaseId(currentCase.id)}
-                className="flex-shrink-0"
-              >
-                <MessageSquare className="h-4 w-4 mr-1" />
-                Send Message
-              </Button>
-              <Button 
-                size="sm" 
-                className="bg-primary hover:bg-primary/90 flex-shrink-0"
-                onClick={() => {
-                  console.log('Button clicked, currentCase:', currentCase);
-                  console.log('Current case proposal:', currentCase.proposal);
-                  setSelectedCaseForProposal(currentCase);
-                }}
-              >
-                <FileText className={`h-4 w-4 mr-2`} />
-                {currentCase.proposal ? t('dashboard.cases.editProposal') : t('dashboard.cases.createProposal')}
-              </Button>
-            </div>
           </>
         ) : null}
 
