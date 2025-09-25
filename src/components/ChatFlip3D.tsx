@@ -32,7 +32,7 @@ export const ChatFlip3D: React.FC<ChatFlip3DProps> = ({
           } : { rotateY: 0, rotateX: 0 }}
           transition={{ 
             duration: 1.2, 
-            ease: "easeInOut",
+            ease: [0.25, 0.1, 0.25, 1],
             times: trigger ? [0, 0.25, 0.5, 0.75, 1] : undefined
           }}
           style={{
