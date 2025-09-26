@@ -29,13 +29,9 @@ export function AdminHeader() {
   return (
     <header className="h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
       <div className="flex items-center justify-between px-4 h-full">
-        {/* Left side: Sidebar trigger */}
-        <div className="flex items-center">
+        {/* Left side: Sidebar trigger + Logo */}
+        <div className="flex items-center gap-4">
           <SidebarTrigger className="h-8 w-8" />
-        </div>
-
-        {/* Center: Logo */}
-        <div className="flex items-center">
           <button
             onClick={handleLogoClick}
             className="flex items-center gap-2 font-bold text-xl hover:opacity-80 transition-opacity"
