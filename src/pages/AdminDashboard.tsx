@@ -198,6 +198,9 @@ const AdminDashboard = () => {
       setModalLoading(prev => ({ ...prev, [type]: false }));
     }
   };
+
+  useEffect(() => {
+    fetchAllLawyers();
     fetchAllProposals();
     fetchEmailSignups();
   }, []);
