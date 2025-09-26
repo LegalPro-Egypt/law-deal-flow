@@ -35,10 +35,14 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { useAdminData } from "@/hooks/useAdminData";
 
 export function AdminSidebar() {
-  const { state } = useSidebar();
+  const { state, setOpen } = useSidebar();
   const location = useLocation();
   const currentPath = location.pathname;
   const { stats } = useAdminData();
+
+  const handleNavClick = () => {
+    setOpen(false);
+  };
 
   const [openGroups, setOpenGroups] = useState({
     users: true,
@@ -91,7 +95,7 @@ export function AdminSidebar() {
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton asChild data-active={isActive("/admin")}>
-                <Link to="/admin">
+                <Link to="/admin" onClick={handleNavClick}>
                   <LayoutDashboard className="h-4 w-4" />
                   {state !== "collapsed" && <span>Dashboard</span>}
                 </Link>
@@ -114,7 +118,7 @@ export function AdminSidebar() {
                 <SidebarMenu>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild data-active={isActive("/admin/clients")}>
-                      <Link to="/admin/clients">
+                      <Link to="/admin/clients" onClick={handleNavClick}>
                         <Users className="h-4 w-4" />
                         {state !== "collapsed" && (
                           <>
@@ -131,7 +135,7 @@ export function AdminSidebar() {
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild data-active={isActive("/admin/lawyers")}>
-                      <Link to="/admin/lawyers">
+                      <Link to="/admin/lawyers" onClick={handleNavClick}>
                         <Scale className="h-4 w-4" />
                         {state !== "collapsed" && (
                           <>
@@ -148,7 +152,7 @@ export function AdminSidebar() {
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild data-active={isActive("/admin/lawyers/requests")}>
-                      <Link to="/admin/lawyers/requests">
+                      <Link to="/admin/lawyers/requests" onClick={handleNavClick}>
                         <FileSignature className="h-4 w-4" />
                         {state !== "collapsed" && (
                           <>
@@ -165,7 +169,7 @@ export function AdminSidebar() {
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild data-active={isActive("/admin/support")}>
-                      <Link to="/admin/support">
+                      <Link to="/admin/support" onClick={handleNavClick}>
                         <LifeBuoy className="h-4 w-4" />
                         {state !== "collapsed" && (
                           <>
@@ -200,7 +204,7 @@ export function AdminSidebar() {
                 <SidebarMenu>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild data-active={isActive("/admin/intakes/ai")}>
-                      <Link to="/admin/intakes/ai">
+                      <Link to="/admin/intakes/ai" onClick={handleNavClick}>
                         <Brain className="h-4 w-4" />
                         {state !== "collapsed" && (
                           <>
@@ -217,7 +221,7 @@ export function AdminSidebar() {
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild data-active={isActive("/admin/analytics")}>
-                      <Link to="/admin/analytics">
+                      <Link to="/admin/analytics" onClick={handleNavClick}>
                         <Activity className="h-4 w-4" />
                         {state !== "collapsed" && <span>Analytics</span>}
                       </Link>
@@ -225,7 +229,7 @@ export function AdminSidebar() {
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild data-active={isActive("/admin/lawyers/pro-bono")}>
-                      <Link to="/admin/lawyers/pro-bono">
+                      <Link to="/admin/lawyers/pro-bono" onClick={handleNavClick}>
                         <HandHeart className="h-4 w-4" />
                         {state !== "collapsed" && (
                           <>
@@ -242,7 +246,7 @@ export function AdminSidebar() {
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild data-active={isActive("/admin/lawyers/waiting-list")}>
-                      <Link to="/admin/lawyers/waiting-list">
+                      <Link to="/admin/lawyers/waiting-list" onClick={handleNavClick}>
                         <Clock className="h-4 w-4" />
                         {state !== "collapsed" && (
                           <>
@@ -259,7 +263,7 @@ export function AdminSidebar() {
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild data-active={isActive("/admin/anonymous")}>
-                      <Link to="/admin/anonymous">
+                      <Link to="/admin/anonymous" onClick={handleNavClick}>
                         <MessageCircle className="h-4 w-4" />
                         {state !== "collapsed" && <span>Anonymous Q&A</span>}
                       </Link>
@@ -285,7 +289,7 @@ export function AdminSidebar() {
                 <SidebarMenu>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild data-active={isActive("/admin/cases/review")}>
-                      <Link to="/admin/cases/review">
+                      <Link to="/admin/cases/review" onClick={handleNavClick}>
                         <ClipboardCheck className="h-4 w-4" />
                         {state !== "collapsed" && (
                           <>
@@ -302,7 +306,7 @@ export function AdminSidebar() {
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild data-active={isActive("/admin/proposals/review")}>
-                      <Link to="/admin/proposals/review">
+                      <Link to="/admin/proposals/review" onClick={handleNavClick}>
                         <FileSearch className="h-4 w-4" />
                         {state !== "collapsed" && (
                           <>
