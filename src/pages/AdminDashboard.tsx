@@ -605,66 +605,70 @@ const AdminDashboard = () => {
 
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Stats Overview */}
-        <div className="grid md:grid-cols-5 gap-4 mb-8">
-          <Card className="bg-gradient-card shadow-card">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total Cases</p>
-                  <p className="text-3xl font-bold">{stats.totalCases}</p>
+        <div className="space-y-4 mb-8">
+          {/* First 4 cards - 2 per row on mobile */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            <Card className="bg-gradient-card shadow-card">
+              <CardContent className="p-4 md:p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs md:text-sm font-medium text-muted-foreground">Total Cases</p>
+                    <p className="text-xl md:text-3xl font-bold">{stats.totalCases}</p>
+                  </div>
+                  <FileText className="h-6 w-6 md:h-8 md:w-8 text-primary" />
                 </div>
-                <FileText className="h-8 w-8 text-primary" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gradient-card shadow-card">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Active Cases</p>
-                  <p className="text-3xl font-bold">{stats.activeCases}</p>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gradient-card shadow-card">
+              <CardContent className="p-4 md:p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs md:text-sm font-medium text-muted-foreground">Active Cases</p>
+                    <p className="text-xl md:text-3xl font-bold">{stats.activeCases}</p>
+                  </div>
+                  <Clock className="h-6 w-6 md:h-8 md:w-8 text-accent" />
                 </div>
-                <Clock className="h-8 w-8 text-accent" />
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card className="bg-gradient-card shadow-card">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Pending Intakes</p>
-                  <p className="text-3xl font-bold">{stats.pendingIntakes}</p>
+            <Card className="bg-gradient-card shadow-card">
+              <CardContent className="p-4 md:p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs md:text-sm font-medium text-muted-foreground">Pending Intakes</p>
+                    <p className="text-xl md:text-3xl font-bold">{stats.pendingIntakes}</p>
+                  </div>
+                  <MessageSquare className="h-6 w-6 md:h-8 md:w-8 text-warning" />
                 </div>
-                <MessageSquare className="h-8 w-8 text-warning" />
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card className="bg-gradient-card shadow-card">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total Lawyers</p>
-                  <p className="text-3xl font-bold">{stats.totalLawyers}</p>
+            <Card className="bg-gradient-card shadow-card">
+              <CardContent className="p-4 md:p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs md:text-sm font-medium text-muted-foreground">Total Lawyers</p>
+                    <p className="text-xl md:text-3xl font-bold">{stats.totalLawyers}</p>
+                  </div>
+                  <Users className="h-6 w-6 md:h-8 md:w-8 text-success" />
                 </div>
-                <Users className="h-8 w-8 text-success" />
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
 
+          {/* 5th card - full width */}
           <Card className="bg-gradient-card shadow-card border-primary">
-            <CardContent className="p-6">
+            <CardContent className="p-4 md:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Pending Reviews</p>
-                  <p className="text-3xl font-bold text-primary">{stats.pendingReviews + stats.pendingVerifications}</p>
+                  <p className="text-xs md:text-sm font-medium text-muted-foreground">Pending Reviews</p>
+                  <p className="text-xl md:text-3xl font-bold text-primary">{stats.pendingReviews + stats.pendingVerifications}</p>
                   <p className="text-xs text-muted-foreground mt-1">
                     {stats.pendingReviews} cases • {stats.pendingVerifications} verifications
                   </p>
                 </div>
-                <AlertCircle className="h-8 w-8 text-primary" />
+                <AlertCircle className="h-6 w-6 md:h-8 md:w-8 text-primary" />
               </div>
             </CardContent>
           </Card>
