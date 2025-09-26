@@ -1,6 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { useIsMobile } from "@/hooks/use-mobile";
 import {
   LayoutDashboard,
   Users,
@@ -36,12 +35,27 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { useAdminData } from "@/hooks/useAdminData";
 
 export function AdminSidebar() {
-  const { state, setOpen, setOpenMobile } = useSidebar();
+  const { state, setOpen, setOpenMobile, isMobile } = useSidebar();
   const location = useLocation();
   const currentPath = location.pathname;
   const { stats } = useAdminData();
-  const isMobile = useIsMobile();
+  
+  // Always show labels on mobile, hide only when desktop is collapsed
   const showLabels = isMobile || state !== "collapsed";
+
+  // Close mobile sidebar on route change
+  useEffect(() => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  }, [currentPath, isMobile, setOpenMobile]);
+
+  // Ensure mobile sidebar is always in "open" state to show labels
+  useEffect(() => {
+    if (isMobile) {
+      setOpen(true);
+    }
+  }, [isMobile, setOpen]);
 
   const handleNavClick = () => {
     // Only collapse sidebar on mobile, keep open on desktop for better UX
