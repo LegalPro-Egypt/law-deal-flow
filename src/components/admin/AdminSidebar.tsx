@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   LayoutDashboard,
   Users,
@@ -39,9 +40,13 @@ export function AdminSidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
   const { stats } = useAdminData();
+  const isMobile = useIsMobile();
 
   const handleNavClick = () => {
-    setOpen(false);
+    // Only collapse sidebar on mobile, keep open on desktop for better UX
+    if (isMobile) {
+      setOpen(false);
+    }
   };
 
   const [openGroups, setOpenGroups] = useState({
