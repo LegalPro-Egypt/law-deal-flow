@@ -57,11 +57,32 @@ import AnonymousQAManager from "@/components/AnonymousQAManager";
 import { ProBonoApplicationsManager } from "@/components/ProBonoApplicationsManager";
 import { AdminProposalReviewDialog } from "@/components/AdminProposalReviewDialog";
 import { formatCaseStatus, getCaseCompletionStatus } from "@/utils/caseUtils";
+// Import modal components
+import { CaseListModal } from "@/components/admin/CaseListModal";
+import { IntakeListModal } from "@/components/admin/IntakeListModal";
+import { LawyerListModal } from "@/components/admin/LawyerListModal";
+import { ClientListModal } from "@/components/admin/ClientListModal";
+import { ReviewsListModal } from "@/components/admin/ReviewsListModal";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { stats, pendingIntakes, cases, loading, createCaseFromIntake, deleteSelectedIntakes, denyCaseAndDelete, deleteCase, refreshData } = useAdminData();
+  const { 
+    stats, 
+    pendingIntakes, 
+    cases, 
+    loading, 
+    createCaseFromIntake, 
+    deleteSelectedIntakes, 
+    denyCaseAndDelete, 
+    deleteCase, 
+    refreshData,
+    fetchAllCasesDetailed,
+    fetchActiveCasesDetailed,
+    fetchAllLawyersDetailed,
+    fetchAllClientsDetailed,
+    fetchPendingReviewsDetailed 
+  } = useAdminData();
   
   // State variables
   const [searchTerm, setSearchTerm] = useState("");
@@ -95,9 +116,88 @@ const AdminDashboard = () => {
   const [proposalToDelete, setProposalToDelete] = useState<string | null>(null);
   const [showProposalDeleteConfirm, setShowProposalDeleteConfirm] = useState(false);
   const [emailSignups, setEmailSignups] = useState<any[]>([]);
+  
+  // Modal states for detailed views
+  const [showAllCasesModal, setShowAllCasesModal] = useState(false);
+  const [showActiveCasesModal, setShowActiveCasesModal] = useState(false);
+  const [showIntakesModal, setShowIntakesModal] = useState(false);
+  const [showLawyersModal, setShowLawyersModal] = useState(false);
+  const [showClientsModal, setShowClientsModal] = useState(false);
+  const [showReviewsModal, setShowReviewsModal] = useState(false);
+  
+  // Modal data states
+  const [modalData, setModalData] = useState<{
+    allCases: any[];
+    activeCases: any[];
+    intakes: any[];
+    lawyers: any[];
+    clients: any[];
+    reviews: any[];
+  }>({
+    allCases: [],
+    activeCases: [],
+    intakes: [],
+    lawyers: [],
+    clients: [],
+    reviews: []
+  });
+  
+  const [modalLoading, setModalLoading] = useState({
+    allCases: false,
+    activeCases: false,
+    intakes: false,
+    lawyers: false,
+    clients: false,
+    reviews: false
+  });
 
-  useEffect(() => {
-    fetchAllLawyers();
+  // Modal handlers
+  const handleCardClick = async (type: string) => {
+    setModalLoading(prev => ({ ...prev, [type]: true }));
+    
+    try {
+      let data;
+      switch (type) {
+        case 'allCases':
+          data = await fetchAllCasesDetailed();
+          setModalData(prev => ({ ...prev, allCases: data }));
+          setShowAllCasesModal(true);
+          break;
+        case 'activeCases':
+          data = await fetchActiveCasesDetailed();
+          setModalData(prev => ({ ...prev, activeCases: data }));
+          setShowActiveCasesModal(true);
+          break;
+        case 'intakes':
+          setModalData(prev => ({ ...prev, intakes: pendingIntakes }));
+          setShowIntakesModal(true);
+          break;
+        case 'lawyers':
+          data = await fetchAllLawyersDetailed();
+          setModalData(prev => ({ ...prev, lawyers: data }));
+          setShowLawyersModal(true);  
+          break;
+        case 'clients':
+          data = await fetchAllClientsDetailed();
+          setModalData(prev => ({ ...prev, clients: data }));
+          setShowClientsModal(true);
+          break;
+        case 'reviews':
+          data = await fetchPendingReviewsDetailed();
+          setModalData(prev => ({ ...prev, reviews: data }));
+          setShowReviewsModal(true);
+          break;
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load data",
+        variant: "destructive"
+      });
+    } finally {
+      setModalLoading(prev => ({ ...prev, [type]: false }));
+    }
+  };
     fetchAllProposals();
     fetchEmailSignups();
   }, []);
@@ -608,7 +708,7 @@ const AdminDashboard = () => {
         <div className="space-y-4 mb-8">
           {/* All 6 cards - 2 per row on mobile, 6 on desktop */}
           <div className="grid grid-cols-2 md:grid-cols-6 gap-3 md:gap-4">
-            <Card className="bg-gradient-card shadow-card">
+            <Card className="bg-gradient-card shadow-card cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleCardClick('allCases')}>
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -620,7 +720,7 @@ const AdminDashboard = () => {
               </CardContent>
             </Card>
             
-            <Card className="bg-gradient-card shadow-card">
+            <Card className="bg-gradient-card shadow-card cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleCardClick('activeCases')}>
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -632,7 +732,7 @@ const AdminDashboard = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-card shadow-card">
+            <Card className="bg-gradient-card shadow-card cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleCardClick('intakes')}>
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -644,7 +744,7 @@ const AdminDashboard = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-card shadow-card">
+            <Card className="bg-gradient-card shadow-card cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleCardClick('lawyers')}>
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -656,7 +756,7 @@ const AdminDashboard = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-card shadow-card">
+            <Card className="bg-gradient-card shadow-card cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleCardClick('clients')}>
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -668,7 +768,7 @@ const AdminDashboard = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-card shadow-card border-primary">
+            <Card className="bg-gradient-card shadow-card border-primary cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleCardClick('reviews')}>
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -2018,6 +2118,63 @@ const AdminDashboard = () => {
            </AlertDialogContent>
          </AlertDialog>
       </div>
+      {/* All Modal Components */}
+      <CaseListModal
+        open={showAllCasesModal}
+        onOpenChange={setShowAllCasesModal}
+        title="All Cases"
+        cases={modalData.allCases}
+        isLoading={modalLoading.allCases}
+        onRefresh={() => handleCardClick('allCases')}
+        onViewCase={handleViewCaseDetails}
+      />
+
+      <CaseListModal
+        open={showActiveCasesModal}
+        onOpenChange={setShowActiveCasesModal}
+        title="Active Cases"
+        cases={modalData.activeCases}
+        isLoading={modalLoading.activeCases}
+        onRefresh={() => handleCardClick('activeCases')}
+        onViewCase={handleViewCaseDetails}
+      />
+
+      <IntakeListModal
+        open={showIntakesModal}
+        onOpenChange={setShowIntakesModal}
+        intakes={modalData.intakes}
+        isLoading={modalLoading.intakes}
+        onRefresh={() => handleCardClick('intakes')}
+        onViewIntake={handleViewConversation}
+        onCreateCase={handleCreateCase}
+      />
+
+      <LawyerListModal
+        open={showLawyersModal}
+        onOpenChange={setShowLawyersModal}
+        lawyers={modalData.lawyers}
+        isLoading={modalLoading.lawyers}
+        onRefresh={() => handleCardClick('lawyers')}
+        onViewLawyer={handleViewLawyerDetails}
+      />
+
+      <ClientListModal
+        open={showClientsModal}
+        onOpenChange={setShowClientsModal}
+        clients={modalData.clients}
+        isLoading={modalLoading.clients}
+        onRefresh={() => handleCardClick('clients')}
+        onViewClient={() => {}}
+      />
+
+      <ReviewsListModal
+        open={showReviewsModal}
+        onOpenChange={setShowReviewsModal}
+        reviews={modalData.reviews}
+        isLoading={modalLoading.reviews}
+        onRefresh={() => handleCardClick('reviews')}
+        onViewItem={(id, type) => type === 'case' ? handleViewCaseDetails(id) : handleViewLawyerDetails(id)}
+      />
     </div>
   );
 };

@@ -639,6 +639,217 @@ export const useAdminData = () => {
     }
   };
 
+  // Detailed data fetching functions for modals
+  const fetchAllCasesDetailed = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('cases')
+        .select(`
+          id,
+          case_number,
+          title,
+          category,
+          status,
+          urgency,
+          client_name,
+          created_at,
+          updated_at,
+          assigned_lawyer_id
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching detailed cases:', error);
+      return [];
+    }
+  };
+
+  const fetchActiveCasesDetailed = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('cases')
+        .select(`
+          id,
+          case_number,
+          title,
+          category,
+          status,
+          urgency,
+          client_name,
+          created_at,
+          updated_at,
+          assigned_lawyer_id
+        `)
+        .in('status', ['submitted', 'in_progress', 'lawyer_assigned'])
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching active cases:', error);
+      return [];
+    }
+  };
+
+  const fetchAllLawyersDetailed = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          user_id,
+          first_name,
+          last_name,
+          email,
+          phone,
+          law_firm,
+          specializations,
+          verification_status,
+          is_active,
+          created_at,
+          profile_picture_url,
+          years_experience
+        `)
+        .eq('role', 'lawyer')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching detailed lawyers:', error);
+      return [];
+    }
+  };
+
+  const fetchAllClientsDetailed = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          user_id,
+          first_name,
+          last_name,
+          email,
+          phone,
+          preferred_language,
+          is_active,
+          created_at,
+          profile_picture_url
+        `)
+        .eq('role', 'client')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      // Get case counts for each client
+      const clientsWithCaseCounts = await Promise.all(
+        data.map(async (client) => {
+          const { count } = await supabase
+            .from('cases')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', client.user_id);
+          
+          return {
+            ...client,
+            total_cases: count || 0
+          };
+        })
+      );
+
+      return clientsWithCaseCounts;
+    } catch (error) {
+      console.error('Error fetching detailed clients:', error);
+      return [];
+    }
+  };
+
+  const fetchPendingReviewsDetailed = async () => {
+    try {
+      const [casesResponse, lawyersResponse] = await Promise.all([
+        // Get cases that need review
+        supabase
+          .from('cases')
+          .select(`
+            id,
+            case_number,
+            title,
+            category,
+            status,
+            urgency,
+            client_name,
+            created_at
+          `)
+          .in('status', ['submitted']),
+        
+        // Get lawyers that need verification
+        supabase
+          .from('profiles')
+          .select(`
+            id,
+            first_name,
+            last_name,
+            email,
+            verification_status,
+            created_at,
+            profile_picture_url
+          `)
+          .eq('role', 'lawyer')
+          .in('verification_status', ['pending_basic', 'pending_complete'])
+      ]);
+
+      const reviewItems = [];
+
+      // Add case reviews
+      if (casesResponse.data) {
+        casesResponse.data.forEach(case_ => {
+          reviewItems.push({
+            id: case_.id,
+            type: 'case' as const,
+            title: case_.title,
+            status: case_.status,
+            created_at: case_.created_at,
+            case_number: case_.case_number,
+            category: case_.category,
+            urgency: case_.urgency,
+            client_name: case_.client_name
+          });
+        });
+      }
+
+      // Add lawyer verifications
+      if (lawyersResponse.data) {
+        lawyersResponse.data.forEach(lawyer => {
+          reviewItems.push({
+            id: lawyer.id,
+            type: 'verification' as const,
+            title: `${lawyer.first_name || ''} ${lawyer.last_name || ''}`.trim() || lawyer.email,
+            status: lawyer.verification_status,
+            created_at: lawyer.created_at,
+            lawyer_name: `${lawyer.first_name || ''} ${lawyer.last_name || ''}`.trim(),
+            lawyer_email: lawyer.email,
+            verification_status: lawyer.verification_status,
+            profile_picture_url: lawyer.profile_picture_url
+          });
+        });
+      }
+
+      // Sort by creation date
+      reviewItems.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      return reviewItems;
+    } catch (error) {
+      console.error('Error fetching pending reviews:', error);
+      return [];
+    }
+  };
+
+  const refreshData = () => {
+    return Promise.all([fetchAdminStats(), fetchPendingIntakes(), fetchCases()]);
+  };
+
   // Initialize data on component mount
   useEffect(() => {
     Promise.all([
@@ -657,8 +868,15 @@ export const useAdminData = () => {
     deleteSelectedIntakes,
     denyCaseAndDelete,
     deleteCase,
-    // cleanupDuplicateCases removed
+    getAnonymousIntakes,
+    cleanupAnonymousIntakes,
     repairCaseConversationLinks,
-    refreshData: () => Promise.all([fetchAdminStats(), fetchPendingIntakes(), fetchCases()])
+    refreshData,
+    // New detailed data functions
+    fetchAllCasesDetailed,
+    fetchActiveCasesDetailed,
+    fetchAllLawyersDetailed,
+    fetchAllClientsDetailed,
+    fetchPendingReviewsDetailed,
   };
 };
