@@ -63,6 +63,9 @@ import { IntakeListModal } from "@/components/admin/IntakeListModal";
 import { LawyerListModal } from "@/components/admin/LawyerListModal";
 import { ClientListModal } from "@/components/admin/ClientListModal";
 import { ReviewsListModal } from "@/components/admin/ReviewsListModal";
+// Import tab components
+import { ClientsTab } from "@/components/admin/ClientsTab";
+import { SupportTicketsTab } from "@/components/admin/SupportTicketsTab";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -814,6 +817,8 @@ const AdminDashboard = () => {
                 <TabsTrigger value="requests" className="whitespace-nowrap flex-shrink-0">Lawyer Requests</TabsTrigger>
                 <TabsTrigger value="waiting-list" className="whitespace-nowrap flex-shrink-0">Waiting List</TabsTrigger>
                 <TabsTrigger value="anonymous-qa" className="whitespace-nowrap flex-shrink-0">Anonymous Q&A</TabsTrigger>
+                <TabsTrigger value="clients" className="whitespace-nowrap flex-shrink-0">Clients</TabsTrigger>
+                <TabsTrigger value="support-tickets" className="whitespace-nowrap flex-shrink-0">Support Tickets</TabsTrigger>
               </TabsList>
             </div>
           </div>
@@ -1931,6 +1936,16 @@ const AdminDashboard = () => {
           {/* Anonymous Q&A Tab */}
           <TabsContent value="anonymous-qa" className="space-y-6">
             <AnonymousQAManager />
+          </TabsContent>
+
+          {/* Clients Tab */}
+          <TabsContent value="clients" className="space-y-6">
+            <ClientsTab />
+          </TabsContent>
+
+          {/* Support Tickets Tab */}
+          <TabsContent value="support-tickets" className="space-y-6">
+            <SupportTicketsTab />
           </TabsContent>
         </Tabs>
 

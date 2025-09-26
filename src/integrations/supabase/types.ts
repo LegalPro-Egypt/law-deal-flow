@@ -1544,6 +1544,60 @@ export type Database = {
           },
         ]
       }
+      support_tickets: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          email: string
+          id: string
+          ip_address: string | null
+          message: string
+          metadata: Json | null
+          name: string
+          priority: string
+          resolved_at: string | null
+          source: string | null
+          status: string
+          subject: string
+          updated_at: string
+          user_agent: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          ip_address?: string | null
+          message: string
+          metadata?: Json | null
+          name: string
+          priority?: string
+          resolved_at?: string | null
+          source?: string | null
+          status?: string
+          subject: string
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          ip_address?: string | null
+          message?: string
+          metadata?: Json | null
+          name?: string
+          priority?: string
+          resolved_at?: string | null
+          source?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       twilio_session_participants: {
         Row: {
           communication_session_id: string
