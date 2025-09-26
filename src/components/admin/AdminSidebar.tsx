@@ -36,16 +36,17 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { useAdminData } from "@/hooks/useAdminData";
 
 export function AdminSidebar() {
-  const { state, setOpen } = useSidebar();
+  const { state, setOpen, setOpenMobile } = useSidebar();
   const location = useLocation();
   const currentPath = location.pathname;
   const { stats } = useAdminData();
   const isMobile = useIsMobile();
+  const showLabels = isMobile || state !== "collapsed";
 
   const handleNavClick = () => {
     // Only collapse sidebar on mobile, keep open on desktop for better UX
     if (isMobile) {
-      setOpen(false);
+      setOpenMobile(false);
     }
   };
 
@@ -102,7 +103,7 @@ export function AdminSidebar() {
               <SidebarMenuButton asChild data-active={isActive("/admin")}>
                 <Link to="/admin" onClick={handleNavClick}>
                   <LayoutDashboard className="h-4 w-4" />
-                  {state !== "collapsed" && <span>Dashboard</span>}
+                  {showLabels && <span>Dashboard</span>}
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -115,7 +116,7 @@ export function AdminSidebar() {
             <CollapsibleTrigger asChild>
               <SidebarGroupLabel className="flex items-center justify-between cursor-pointer hover:bg-muted/50 rounded-md px-2 py-1">
                 <span>Users</span>
-                {state !== "collapsed" && <ChevronDown className={`h-4 w-4 transition-transform ${openGroups.users ? 'rotate-180' : ''}`} />}
+                {showLabels && <ChevronDown className={`h-4 w-4 transition-transform ${openGroups.users ? 'rotate-180' : ''}`} />}
               </SidebarGroupLabel>
             </CollapsibleTrigger>
             <CollapsibleContent>
@@ -125,7 +126,7 @@ export function AdminSidebar() {
                     <SidebarMenuButton asChild data-active={isActive("/admin/clients")}>
                       <Link to="/admin/clients" onClick={handleNavClick}>
                         <Users className="h-4 w-4" />
-                        {state !== "collapsed" && (
+                        {showLabels && (
                           <>
                             <span>Clients</span>
                             {stats.totalClients > 0 && (
@@ -142,7 +143,7 @@ export function AdminSidebar() {
                     <SidebarMenuButton asChild data-active={isActive("/admin/lawyers")}>
                       <Link to="/admin/lawyers" onClick={handleNavClick}>
                         <Scale className="h-4 w-4" />
-                        {state !== "collapsed" && (
+                        {showLabels && (
                           <>
                             <span>Lawyers</span>
                             {stats.totalLawyers > 0 && (
@@ -159,7 +160,7 @@ export function AdminSidebar() {
                     <SidebarMenuButton asChild data-active={isActive("/admin/lawyers/requests")}>
                       <Link to="/admin/lawyers/requests" onClick={handleNavClick}>
                         <FileSignature className="h-4 w-4" />
-                        {state !== "collapsed" && (
+                        {showLabels && (
                           <>
                             <span>Lawyer Requests</span>
                             {getBadgeCount('lawyers-requests') > 0 && (
@@ -176,7 +177,7 @@ export function AdminSidebar() {
                     <SidebarMenuButton asChild data-active={isActive("/admin/support")}>
                       <Link to="/admin/support" onClick={handleNavClick}>
                         <LifeBuoy className="h-4 w-4" />
-                        {state !== "collapsed" && (
+                        {showLabels && (
                           <>
                             <span>Support Tickets</span>
                             {getBadgeCount('support') > 0 && (
@@ -201,7 +202,7 @@ export function AdminSidebar() {
             <CollapsibleTrigger asChild>
             <SidebarGroupLabel className="flex items-center justify-between cursor-pointer hover:bg-muted/50 rounded-md px-2 py-1">
               <span>Community</span>
-              {state !== "collapsed" && <ChevronDown className={`h-4 w-4 transition-transform ${openGroups.community ? 'rotate-180' : ''}`} />}
+              {showLabels && <ChevronDown className={`h-4 w-4 transition-transform ${openGroups.community ? 'rotate-180' : ''}`} />}
             </SidebarGroupLabel>
             </CollapsibleTrigger>
             <CollapsibleContent>
@@ -211,7 +212,7 @@ export function AdminSidebar() {
                     <SidebarMenuButton asChild data-active={isActive("/admin/intakes/ai")}>
                       <Link to="/admin/intakes/ai" onClick={handleNavClick}>
                         <Brain className="h-4 w-4" />
-                        {state !== "collapsed" && (
+                        {showLabels && (
                           <>
                             <span>AI Intakes</span>
                             {stats.pendingIntakes > 0 && (
@@ -228,7 +229,7 @@ export function AdminSidebar() {
                     <SidebarMenuButton asChild data-active={isActive("/admin/analytics")}>
                       <Link to="/admin/analytics" onClick={handleNavClick}>
                         <Activity className="h-4 w-4" />
-                        {state !== "collapsed" && <span>Analytics</span>}
+                        {showLabels && <span>Analytics</span>}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -236,7 +237,7 @@ export function AdminSidebar() {
                     <SidebarMenuButton asChild data-active={isActive("/admin/lawyers/pro-bono")}>
                       <Link to="/admin/lawyers/pro-bono" onClick={handleNavClick}>
                         <HandHeart className="h-4 w-4" />
-                        {state !== "collapsed" && (
+                        {showLabels && (
                           <>
                             <span>Pro Bono</span>
                             {getBadgeCount('pro-bono') > 0 && (
@@ -253,7 +254,7 @@ export function AdminSidebar() {
                     <SidebarMenuButton asChild data-active={isActive("/admin/lawyers/waiting-list")}>
                       <Link to="/admin/lawyers/waiting-list" onClick={handleNavClick}>
                         <Clock className="h-4 w-4" />
-                        {state !== "collapsed" && (
+                        {showLabels && (
                           <>
                             <span>Waiting List</span>
                             {getBadgeCount('waiting-list') > 0 && (
@@ -270,7 +271,7 @@ export function AdminSidebar() {
                     <SidebarMenuButton asChild data-active={isActive("/admin/anonymous")}>
                       <Link to="/admin/anonymous" onClick={handleNavClick}>
                         <MessageCircle className="h-4 w-4" />
-                        {state !== "collapsed" && <span>Anonymous Q&A</span>}
+                        {showLabels && <span>Anonymous Q&A</span>}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -286,7 +287,7 @@ export function AdminSidebar() {
             <CollapsibleTrigger asChild>
             <SidebarGroupLabel className="flex items-center justify-between cursor-pointer hover:bg-muted/50 rounded-md px-2 py-1">
               <span>Reviews</span>
-              {state !== "collapsed" && <ChevronDown className={`h-4 w-4 transition-transform ${openGroups.reviews ? 'rotate-180' : ''}`} />}
+              {showLabels && <ChevronDown className={`h-4 w-4 transition-transform ${openGroups.reviews ? 'rotate-180' : ''}`} />}
             </SidebarGroupLabel>
             </CollapsibleTrigger>
             <CollapsibleContent>
@@ -296,7 +297,7 @@ export function AdminSidebar() {
                     <SidebarMenuButton asChild data-active={isActive("/admin/cases/review")}>
                       <Link to="/admin/cases/review" onClick={handleNavClick}>
                         <ClipboardCheck className="h-4 w-4" />
-                        {state !== "collapsed" && (
+                        {showLabels && (
                           <>
                             <span>Cases for Review</span>
                             {stats.pendingReviews > 0 && (
@@ -313,7 +314,7 @@ export function AdminSidebar() {
                     <SidebarMenuButton asChild data-active={isActive("/admin/proposals/review")}>
                       <Link to="/admin/proposals/review" onClick={handleNavClick}>
                         <FileSearch className="h-4 w-4" />
-                        {state !== "collapsed" && (
+                        {showLabels && (
                           <>
                             <span>Proposals for Review</span>
                             {getBadgeCount('proposals-review') > 0 && (
