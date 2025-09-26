@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { useVisitorTracking } from "@/hooks/useVisitorTracking";
 import { SiteProtectionProvider, useSiteProtection } from "@/contexts/SiteProtectionContext";
@@ -136,6 +136,7 @@ function AppContent() {
           </ProtectedRoute>
         } />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+        <Route path="/admin/*" element={<Navigate to="/admin" replace />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
   );
@@ -146,11 +147,11 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <HashRouter>
         <SiteProtectionProvider>
           <AppContent />
         </SiteProtectionProvider>
-      </BrowserRouter>
+      </HashRouter>
     </TooltipProvider>
   </QueryClientProvider>
 );
