@@ -75,44 +75,44 @@ function AppContent() {
 
   // Normal application flow
   return (
-    <Routes>
-      <Route path="/" element={<Landing />} />
-      <Route path="/auth" element={<Auth />} />
-      <Route path="/pro-bono" element={<ProBono />} />
-      <Route path="/intake" element={
-        <ProtectedRoute>
-          <Intake />
-        </ProtectedRoute>
-      } />
-      <Route path="/legal-database" element={<LegalDatabase />} />
-      <Route path="/legal-database/article/:id" element={<LegalArticle />} />
-      <Route path="/help" element={<HelpCenter />} />
-      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-      <Route path="/terms-of-service" element={<TermsOfService />} />
-      <Route path="/client" element={
-        <ProtectedRoute requiredRole="client">
-          <ClientDashboard />
-        </ProtectedRoute>
-      } />
-      <Route path="/lawyer" element={
-        <ProtectedRoute requiredRole="lawyer">
-          <LawyerDashboard />
-        </ProtectedRoute>
-      } />
-      <Route path="/admin" element={
-        <ProtectedRoute requiredRole="admin">
-          <AdminDashboard />
-        </ProtectedRoute>
-      } />
-      <Route path="/client-dashboard" element={<Navigate to="/client" replace />} />
-      <Route path="/payment" element={
-        <ProtectedRoute requiredRole="client">
-          <Payment />
-        </ProtectedRoute>
-      } />
-      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/pro-bono" element={<ProBono />} />
+        <Route path="/intake" element={
+          <ProtectedRoute>
+            <Intake />
+          </ProtectedRoute>
+        } />
+        <Route path="/legal-database" element={<LegalDatabase />} />
+        <Route path="/legal-database/article/:id" element={<LegalArticle />} />
+        <Route path="/help" element={<HelpCenter />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-of-service" element={<TermsOfService />} />
+        <Route path="/client" element={
+          <ProtectedRoute requiredRole="client">
+            <ClientDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/lawyer" element={
+          <ProtectedRoute requiredRole="lawyer">
+            <LawyerDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/*" element={
+          <ProtectedRoute requiredRole="admin">
+            <AdminDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/client-dashboard" element={<Navigate to="/client" replace />} />
+        <Route path="/payment" element={
+          <ProtectedRoute requiredRole="client">
+            <Payment />
+          </ProtectedRoute>
+        } />
+        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
   );
 }
 
