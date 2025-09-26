@@ -47,7 +47,10 @@ export function AdminSidebar() {
     reports: true,
   });
 
-  const isActive = (path: string) => currentPath === path;
+  const isActive = (path: string) => {
+    if (path === "/admin") return currentPath === "/admin";
+    return currentPath.startsWith(path);
+  };
 
   const toggleGroup = (groupKey: keyof typeof openGroups) => {
     setOpenGroups(prev => ({

@@ -16,7 +16,19 @@ import LegalDatabase from "./pages/LegalDatabase";
 import LegalArticle from "./pages/LegalArticle";
 import ClientDashboard from "./pages/ClientDashboard";
 import LawyerDashboard from "./pages/LawyerDashboard";
-import AdminDashboard from "./pages/AdminDashboard";
+import AdminLayout from "@/pages/admin/AdminLayout";
+import AdminHomePage from "@/pages/admin/AdminHomePage";
+import AdminClientsPage from "@/pages/admin/AdminClientsPage";
+import AdminLawyersPage from "@/pages/admin/AdminLawyersPage";
+import AdminLawyerRequestsPage from "@/pages/admin/AdminLawyerRequestsPage";
+import AdminSupportPage from "@/pages/admin/AdminSupportPage";
+import AdminAIIntakesPage from "@/pages/admin/AdminAIIntakesPage";
+import AdminAnalyticsPage from "@/pages/admin/AdminAnalyticsPage";
+import AdminProBonoPage from "@/pages/admin/AdminProBonoPage";
+import AdminWaitingListPage from "@/pages/admin/AdminWaitingListPage";
+import AdminAnonymousPage from "@/pages/admin/AdminAnonymousPage";
+import AdminCasesReviewPage from "@/pages/admin/AdminCasesReviewPage";
+import AdminProposalsReviewPage from "@/pages/admin/AdminProposalsReviewPage";
 import HelpCenter from "./pages/HelpCenter";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
@@ -99,11 +111,24 @@ function AppContent() {
             <LawyerDashboard />
           </ProtectedRoute>
         } />
-        <Route path="/admin/*" element={
+        <Route path="/admin" element={
           <ProtectedRoute requiredRole="admin">
-            <AdminDashboard />
+            <AdminLayout />
           </ProtectedRoute>
-        } />
+        }>
+          <Route index element={<AdminHomePage />} />
+          <Route path="clients" element={<AdminClientsPage />} />
+          <Route path="lawyers" element={<AdminLawyersPage />} />
+          <Route path="lawyers/requests" element={<AdminLawyerRequestsPage />} />
+          <Route path="support" element={<AdminSupportPage />} />
+          <Route path="intakes/ai" element={<AdminAIIntakesPage />} />
+          <Route path="analytics" element={<AdminAnalyticsPage />} />
+          <Route path="lawyers/pro-bono" element={<AdminProBonoPage />} />
+          <Route path="lawyers/waiting-list" element={<AdminWaitingListPage />} />
+          <Route path="anonymous" element={<AdminAnonymousPage />} />
+          <Route path="cases/review" element={<AdminCasesReviewPage />} />
+          <Route path="proposals/review" element={<AdminProposalsReviewPage />} />
+        </Route>
         <Route path="/client-dashboard" element={<Navigate to="/client" replace />} />
         <Route path="/payment" element={
           <ProtectedRoute requiredRole="client">
