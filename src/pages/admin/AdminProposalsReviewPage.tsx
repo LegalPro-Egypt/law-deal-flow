@@ -192,17 +192,17 @@ export default function AdminProposalsReviewPage() {
   const filteredProposals = proposals.filter(proposal => {
     const searchLower = searchTerm.toLowerCase();
     return (
-      proposal.proposal_title.toLowerCase().includes(searchLower) ||
-      proposal.cases.title.toLowerCase().includes(searchLower) ||
-      proposal.cases.client_name.toLowerCase().includes(searchLower) ||
-      proposal.lawyer.first_name.toLowerCase().includes(searchLower) ||
-      proposal.lawyer.last_name.toLowerCase().includes(searchLower) ||
-      proposal.status.toLowerCase().includes(searchLower)
+      proposal.proposal_title?.toLowerCase().includes(searchLower) ||
+      proposal.cases?.title?.toLowerCase().includes(searchLower) ||
+      proposal.cases?.client_name?.toLowerCase().includes(searchLower) ||
+      proposal.lawyer?.first_name?.toLowerCase().includes(searchLower) ||
+      proposal.lawyer?.last_name?.toLowerCase().includes(searchLower) ||
+      proposal.status?.toLowerCase().includes(searchLower)
     );
   });
 
   const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
+    switch (status?.toLowerCase()) {
       case 'pending':
         return 'default';
       case 'approved':
