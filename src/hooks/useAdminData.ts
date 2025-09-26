@@ -7,6 +7,7 @@ interface AdminStats {
   activeCases: number;
   pendingIntakes: number;
   totalLawyers: number;
+  totalClients: number;
   pendingReviews: number;
   pendingVerifications: number;
 }
@@ -48,6 +49,7 @@ export const useAdminData = () => {
     activeCases: 0,
     pendingIntakes: 0,
     totalLawyers: 0,
+    totalClients: 0,
     pendingReviews: 0,
     pendingVerifications: 0
   });
@@ -91,6 +93,13 @@ export const useAdminData = () => {
         .eq('role', 'lawyer')
         .eq('is_active', true);
 
+      // Get total clients from profiles
+      const { count: totalClients } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('role', 'client')
+        .eq('is_active', true);
+
       // Get pending verifications (lawyers with pending_complete status)
       const { count: pendingVerifications } = await supabase
         .from('profiles')
@@ -103,6 +112,7 @@ export const useAdminData = () => {
         activeCases: activeCases || 0,
         pendingIntakes: pendingIntakes || 0,
         totalLawyers: totalLawyers || 0,
+        totalClients: totalClients || 0,
         pendingReviews: pendingReviews || 0,
         pendingVerifications: pendingVerifications || 0
       });
