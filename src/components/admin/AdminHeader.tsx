@@ -1,7 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
-import { Search, LogOut, Command } from "lucide-react";
+import { LogOut, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -30,35 +29,20 @@ export function AdminHeader() {
   return (
     <header className="h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
       <div className="flex items-center justify-between px-4 h-full">
-        {/* Left side: Sidebar trigger + Logo */}
-        <div className="flex items-center gap-4">
+        {/* Left side: Sidebar trigger */}
+        <div className="flex items-center">
           <SidebarTrigger className="h-8 w-8" />
+        </div>
+
+        {/* Center: Logo */}
+        <div className="flex items-center">
           <button
             onClick={handleLogoClick}
             className="flex items-center gap-2 font-bold text-xl hover:opacity-80 transition-opacity"
           >
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">L</span>
-            </div>
-            LegalAI Admin
+            <Scale className="h-8 w-8 text-primary" />
+            <span>LegalPro</span>
           </button>
-        </div>
-
-        {/* Center: Search with Command K */}
-        <div className="relative flex-1 max-w-md mx-4">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search... (⌘K)"
-            className="pl-10 pr-10"
-            onClick={() => {
-              // TODO: Implement command palette
-              console.log("Command palette not implemented yet");
-            }}
-          />
-          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-1 text-xs text-muted-foreground">
-            <Command className="h-3 w-3" />
-            <span>K</span>
-          </div>
         </div>
 
         {/* Right side: Notifications + User menu */}
