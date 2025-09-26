@@ -606,8 +606,8 @@ const AdminDashboard = () => {
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Stats Overview */}
         <div className="space-y-4 mb-8">
-          {/* First 5 cards - 2 per row on mobile, 5 on desktop */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4">
+          {/* All 6 cards - 2 per row on mobile, 6 on desktop */}
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-3 md:gap-4">
             <Card className="bg-gradient-card shadow-card">
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center justify-between">
@@ -667,23 +667,22 @@ const AdminDashboard = () => {
                 </div>
               </CardContent>
             </Card>
-          </div>
 
-          {/* 6th card - full width */}
-          <Card className="bg-gradient-card shadow-card border-primary">
-            <CardContent className="p-4 md:p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs md:text-sm font-medium text-muted-foreground">Pending Reviews</p>
-                  <p className="text-xl md:text-3xl font-bold text-primary">{stats.pendingReviews + stats.pendingVerifications}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {stats.pendingReviews} cases • {stats.pendingVerifications} verifications
-                  </p>
+            <Card className="bg-gradient-card shadow-card border-primary">
+              <CardContent className="p-4 md:p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs md:text-sm font-medium text-muted-foreground">Pending Reviews</p>
+                    <p className="text-xl md:text-3xl font-bold text-primary">{stats.pendingReviews + stats.pendingVerifications}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {stats.pendingReviews} cases • {stats.pendingVerifications} verifications
+                    </p>
+                  </div>
+                  <AlertCircle className="h-6 w-6 md:h-8 md:w-8 text-primary" />
                 </div>
-                <AlertCircle className="h-6 w-6 md:h-8 md:w-8 text-primary" />
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         {/* Main Content Tabs */}
