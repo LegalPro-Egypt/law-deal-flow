@@ -296,7 +296,7 @@ export default function AdminCasesReviewPage() {
             setShowAssignLawyerDialog(false);
             setCaseToAssign(null);
           }}
-          onSuccess={() => {
+          onAssign={() => {
             setShowAssignLawyerDialog(false);
             setCaseToAssign(null);
             refreshData();

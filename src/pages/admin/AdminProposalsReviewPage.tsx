@@ -378,14 +378,16 @@ export default function AdminProposalsReviewPage() {
           proposal={selectedProposal}
           caseDetails={proposalCaseDetails}
           lawyerDetails={proposalLawyerDetails}
-          isOpen={showProposalReview}
-          onCloseDialog={() => {
-            setShowProposalReview(false);
-            setSelectedProposal(null);
-            setProposalCaseDetails(null);
-            setProposalLawyerDetails(null);
+          open={showProposalReview}
+          onOpenChange={(open) => {
+            setShowProposalReview(open);
+            if (!open) {
+              setSelectedProposal(null);
+              setProposalCaseDetails(null);
+              setProposalLawyerDetails(null);
+            }
           }}
-          onUpdate={handleProposalUpdate}
+          onProposalUpdate={handleProposalUpdate}
         />
       )}
     </div>
