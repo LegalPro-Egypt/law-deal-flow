@@ -16,7 +16,8 @@ import {
   DollarSign,
   CreditCard,
   FolderOpen,
-  ChevronDown
+  ChevronDown,
+  BarChart3
 } from "lucide-react";
 
 import {
@@ -338,6 +339,32 @@ export function AdminSidebar() {
                             )}
                           </>
                         )}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </CollapsibleContent>
+          </SidebarGroup>
+        </Collapsible>
+
+        {/* Reports Group */}
+        <Collapsible open={openGroups.reports} onOpenChange={() => toggleGroup('reports')}>
+          <SidebarGroup>
+            <CollapsibleTrigger asChild>
+              <SidebarGroupLabel className="flex items-center justify-between cursor-pointer hover:bg-muted/50 rounded-md px-2 py-1">
+                <span>Reports</span>
+                {showLabels && <ChevronDown className={`h-4 w-4 transition-transform ${openGroups.reports ? 'rotate-180' : ''}`} />}
+              </SidebarGroupLabel>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild data-active={isActive("/admin/reports")}>
+                      <Link to="/admin/reports" onClick={handleNavClick}>
+                        <BarChart3 className="h-4 w-4" />
+                        {showLabels && <span>Reports Dashboard</span>}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
