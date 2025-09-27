@@ -47,7 +47,13 @@ import Payment from "./pages/Payment";
 import NotFound from "./pages/NotFound";
 import { useState } from "react";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+    },
+  },
+});
 
 import { useAuth } from "@/hooks/useAuth";
 
