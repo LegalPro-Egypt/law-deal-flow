@@ -86,19 +86,21 @@ export const FormFieldConfiguration = ({
   return (
     <Card className={`transition-all duration-200 ${configuration.is_enabled ? '' : 'opacity-60'}`}>
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-lg">{configuration.label_override || getFieldDisplayName(configuration.field_name)}</span>
-            <Badge variant={configuration.is_required ? 'default' : 'secondary'}>
-              {configuration.is_required ? 'Required' : 'Optional'}
-            </Badge>
-            {hasPresets && (
-              <Badge variant="outline" className="text-xs">
-                {fieldPresets.length} options
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center min-w-0">
+            <span className="text-base font-semibold truncate">{configuration.label_override || getFieldDisplayName(configuration.field_name)}</span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Badge variant={configuration.is_required ? 'default' : 'secondary'} className="text-xs">
+                {configuration.is_required ? 'Required' : 'Optional'}
               </Badge>
-            )}
+              {hasPresets && (
+                <Badge variant="outline" className="text-xs">
+                  {fieldPresets.length} options
+                </Badge>
+              )}
+            </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <Button
               variant="ghost"
               size="sm"
@@ -112,12 +114,12 @@ export const FormFieldConfiguration = ({
               disabled={isSaving}
             />
           </div>
-        </CardTitle>
+        </div>
       </CardHeader>
       
       {isExpanded && (
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Field Status</Label>
               <div className="flex items-center space-x-2">
@@ -139,6 +141,7 @@ export const FormFieldConfiguration = ({
                 onChange={(e) => handleUpdateLabelOverride(e.target.value)}
                 placeholder={getFieldDisplayName(configuration.field_name)}
                 disabled={isSaving}
+                className="w-full"
               />
             </div>
           </div>
@@ -160,37 +163,43 @@ export const FormFieldConfiguration = ({
               <Label>Available Options</Label>
               <div className="space-y-2">
                 {fieldPresets.map((preset) => (
-                  <div key={preset.id} className="flex items-center justify-between p-2 bg-muted rounded-lg">
-                    <span className="flex-1">{preset.option_label}</span>
-                    <span className="text-sm text-muted-foreground mr-2">({preset.option_value})</span>
+                  <div key={preset.id} className="flex items-center justify-between p-2 bg-muted rounded-lg min-w-0">
+                    <div className="flex-1 min-w-0">
+                      <span className="block truncate">{preset.option_label}</span>
+                      <span className="text-xs text-muted-foreground">({preset.option_value})</span>
+                    </div>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => onDeletePreset(preset.id, configuration.field_name)}
                       disabled={isSaving}
+                      className="flex-shrink-0 ml-2"
                     >
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
                 ))}
                 
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Input
-                    placeholder="Option value (e.g. family_law)"
+                    placeholder="Value (e.g. family_law)"
                     value={newOptionValue}
                     onChange={(e) => setNewOptionValue(e.target.value)}
                     disabled={isSaving}
+                    className="flex-1"
                   />
                   <Input
-                    placeholder="Display label (e.g. Family Law)"
+                    placeholder="Label (e.g. Family Law)"
                     value={newOptionLabel}
                     onChange={(e) => setNewOptionLabel(e.target.value)}
                     disabled={isSaving}
+                    className="flex-1"
                   />
                   <Button
                     onClick={handleAddPreset}
                     disabled={!newOptionValue.trim() || !newOptionLabel.trim() || isSaving}
                     size="sm"
+                    className="flex-shrink-0"
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
