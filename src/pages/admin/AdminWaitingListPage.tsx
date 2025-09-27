@@ -116,127 +116,132 @@ export default function AdminWaitingListPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="p-3 md:p-6 space-y-4 md:space-y-6 max-w-full overflow-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Email Waiting List</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl md:text-2xl font-bold">Email Waiting List</h1>
+          <p className="text-sm text-muted-foreground">
             Manage users who signed up for early access notifications
           </p>
         </div>
-        <Button onClick={fetchEmailSignups} variant="outline">
+        <Button onClick={fetchEmailSignups} variant="outline" className="w-fit">
           Refresh Data
         </Button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-3 gap-2 md:gap-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Signups</CardTitle>
-            <Mail className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 md:px-6">
+            <CardTitle className="text-xs md:text-sm font-medium">Total Signups</CardTitle>
+            <Mail className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
+          <CardContent className="px-3 md:px-6">
+            <div className="text-lg md:text-2xl font-bold">{stats.total}</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Notifications</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 md:px-6">
+            <CardTitle className="text-xs md:text-sm font-medium">Pending Notifications</CardTitle>
+            <Clock className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.pending}</div>
+          <CardContent className="px-3 md:px-6">
+            <div className="text-lg md:text-2xl font-bold">{stats.pending}</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Notified</CardTitle>
-            <Badge variant="secondary">{stats.notified}</Badge>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 md:px-6">
+            <CardTitle className="text-xs md:text-sm font-medium">Notified</CardTitle>
+            <Badge variant="secondary" className="text-xs">{stats.notified}</Badge>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.notified}</div>
+          <CardContent className="px-3 md:px-6">
+            <div className="text-lg md:text-2xl font-bold">{stats.notified}</div>
           </CardContent>
         </Card>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 md:gap-4 w-full">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search by email or source..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-10 w-full"
           />
         </div>
-        <Badge variant="secondary">
+        <Badge variant="secondary" className="w-fit">
           {filteredSignups.length} signup{filteredSignups.length !== 1 ? 's' : ''}
         </Badge>
       </div>
 
-      {filteredSignups.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Mail className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Email Signups</h3>
-            <p className="text-muted-foreground text-center">
-              {searchTerm ? "No signups match your search criteria." : "No users have signed up for the waiting list yet."}
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-4">
-          {filteredSignups.map((signup) => (
-            <Card key={signup.id} className="hover:shadow-md transition-shadow">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <CardTitle className="text-lg">{signup.email}</CardTitle>
-                    <Badge variant={signup.notified ? "secondary" : "destructive"}>
-                      {signup.notified ? "Notified" : "Pending"}
-                    </Badge>
-                    <Badge variant="outline">{signup.source}</Badge>
-                  </div>
-                  {!signup.notified && (
-                    <Button
-                      size="sm"
-                      onClick={() => markAsNotified(signup.id)}
-                    >
-                      Mark as Notified
-                    </Button>
-                  )}
-                </div>
-                <CardDescription>
-                  Signed up: {new Date(signup.created_at).toLocaleString()}
-                </CardDescription>
-              </CardHeader>
-              {(signup.user_agent || signup.ip_address || Object.keys(signup.metadata || {}).length > 0) && (
-                <CardContent>
-                  <div className="space-y-2 text-sm text-muted-foreground">
-                    {signup.ip_address && (
-                      <div className="flex items-center gap-2">
-                        <Globe className="h-4 w-4" />
-                        <span>IP: {signup.ip_address}</span>
-                      </div>
-                    )}
-                    {signup.user_agent && (
-                      <div className="text-xs">
-                        <span className="font-medium">User Agent:</span> {signup.user_agent}
-                      </div>
-                    )}
-                    {signup.metadata && Object.keys(signup.metadata).length > 0 && (
-                      <div className="text-xs">
-                        <span className="font-medium">Metadata:</span> {JSON.stringify(signup.metadata)}
-                      </div>
+      <div className="w-full overflow-hidden">
+        {filteredSignups.length === 0 ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <Mail className="h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No Email Signups</h3>
+              <p className="text-muted-foreground text-center">
+                {searchTerm ? "No signups match your search criteria." : "No users have signed up for the waiting list yet."}
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-4">
+            {filteredSignups.map((signup) => (
+              <Card key={signup.id} className="hover:shadow-md transition-shadow">
+                <CardHeader>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <CardTitle className="text-base md:text-lg break-all">{signup.email}</CardTitle>
+                      <Badge variant={signup.notified ? "secondary" : "destructive"}>
+                        {signup.notified ? "Notified" : "Pending"}
+                      </Badge>
+                      <Badge variant="outline">{signup.source}</Badge>
+                    </div>
+                    {!signup.notified && (
+                      <Button
+                        size="sm"
+                        onClick={() => markAsNotified(signup.id)}
+                        className="w-full sm:w-auto"
+                      >
+                        Mark as Notified
+                      </Button>
                     )}
                   </div>
-                </CardContent>
-              )}
-            </Card>
-          ))}
-        </div>
-      )}
+                  <CardDescription>
+                    Signed up: {new Date(signup.created_at).toLocaleString()}
+                  </CardDescription>
+                </CardHeader>
+                {(signup.user_agent || signup.ip_address || Object.keys(signup.metadata || {}).length > 0) && (
+                  <CardContent>
+                    <div className="space-y-2 text-sm text-muted-foreground">
+                      {signup.ip_address && (
+                        <div className="flex items-center gap-2">
+                          <Globe className="h-4 w-4" />
+                          <span className="break-all">IP: {signup.ip_address}</span>
+                        </div>
+                      )}
+                      {signup.user_agent && (
+                        <div className="text-xs">
+                          <span className="font-medium">User Agent:</span> 
+                          <span className="break-all ml-1">{signup.user_agent}</span>
+                        </div>
+                      )}
+                      {signup.metadata && Object.keys(signup.metadata).length > 0 && (
+                        <div className="text-xs">
+                          <span className="font-medium">Metadata:</span> 
+                          <span className="break-all ml-1">{JSON.stringify(signup.metadata)}</span>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                )}
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
