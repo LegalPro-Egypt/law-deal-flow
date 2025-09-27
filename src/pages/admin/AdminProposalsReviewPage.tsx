@@ -218,7 +218,7 @@ export default function AdminProposalsReviewPage() {
 
   if (loading) {
     return (
-      <div className="p-6 space-y-6">
+      <div className="p-2 sm:p-4 lg:p-6 space-y-4 sm:space-y-6 max-w-full overflow-hidden">
         <div className="flex items-center justify-between">
           <div>
             <Skeleton className="h-8 w-48 mb-2" />
@@ -243,30 +243,30 @@ export default function AdminProposalsReviewPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Proposals for Review</h1>
-          <p className="text-muted-foreground">
+    <div className="p-2 sm:p-4 lg:p-6 space-y-4 sm:space-y-6 max-w-full overflow-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold truncate">Proposals for Review</h1>
+          <p className="text-sm text-muted-foreground">
             Review and manage lawyer proposals submitted to clients
           </p>
         </div>
-        <Button onClick={fetchAllProposals} variant="outline">
+        <Button onClick={fetchAllProposals} variant="outline" size="sm" className="self-start sm:self-auto">
           Refresh Data
         </Button>
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+        <div className="relative flex-1 max-w-full sm:max-w-sm">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search proposals..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-10 text-sm"
           />
         </div>
-        <Badge variant="secondary">
+        <Badge variant="secondary" className="self-start sm:self-auto">
           {filteredProposals.length} proposal{filteredProposals.length !== 1 ? 's' : ''}
         </Badge>
       </div>
@@ -285,81 +285,85 @@ export default function AdminProposalsReviewPage() {
         <div className="grid gap-4">
           {filteredProposals.map((proposal) => (
             <Card key={proposal.id} className="hover:shadow-md transition-shadow">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <CardTitle className="text-lg">{proposal.proposal_title}</CardTitle>
-                    <Badge variant={getStatusColor(proposal.status)}>
-                      {proposal.status}
-                    </Badge>
-                    <Badge variant="outline">{proposal.cases.category}</Badge>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleViewProposal(proposal)}
-                    >
-                      <Eye className="h-4 w-4 mr-1" />
-                      Review
-                    </Button>
-                    <AlertDialog open={showProposalDeleteConfirm && proposalToDelete === proposal.id} onOpenChange={setShowProposalDeleteConfirm}>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleDeleteProposal(proposal.id)}
-                        >
-                          <Trash2 className="h-4 w-4 mr-1" />
-                          Delete
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete Proposal</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Are you sure you want to permanently delete this proposal? This will revert the case status and cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <Button variant="destructive" onClick={confirmDeleteProposal}>
+              <CardHeader className="pb-3">
+                <div className="flex flex-col gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-0">
+                    <div className="flex flex-wrap items-center gap-2 min-w-0">
+                      <CardTitle className="text-base sm:text-lg truncate">{proposal.proposal_title}</CardTitle>
+                      <Badge variant={getStatusColor(proposal.status)} className="text-xs">
+                        {proposal.status}
+                      </Badge>
+                      <Badge variant="outline" className="text-xs">{proposal.cases.category}</Badge>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleViewProposal(proposal)}
+                        className="text-xs px-2 py-1"
+                      >
+                        <Eye className="h-3 w-3 mr-1" />
+                        Review
+                      </Button>
+                      <AlertDialog open={showProposalDeleteConfirm && proposalToDelete === proposal.id} onOpenChange={setShowProposalDeleteConfirm}>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDeleteProposal(proposal.id)}
+                            className="text-xs px-2 py-1"
+                          >
+                            <Trash2 className="h-3 w-3 mr-1" />
                             Delete
                           </Button>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Proposal</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to permanently delete this proposal? This will revert the case status and cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <Button variant="destructive" onClick={confirmDeleteProposal}>
+                              Delete
+                            </Button>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   </div>
                 </div>
-                <CardDescription>
-                  <div className="flex items-center gap-4 text-sm">
-                    <span>Case: {proposal.cases.title}</span>
-                    <span>Client: {proposal.cases.client_name}</span>
-                    <span>Lawyer: {proposal.lawyer.first_name} {proposal.lawyer.last_name}</span>
-                    <span>Created: {new Date(proposal.created_at).toLocaleDateString()}</span>
+                <CardDescription className="space-y-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-1 text-xs">
+                    <span className="truncate">Case: {proposal.cases.title}</span>
+                    <span className="truncate">Client: {proposal.cases.client_name}</span>
+                    <span className="truncate">Lawyer: {proposal.lawyer.first_name} {proposal.lawyer.last_name}</span>
+                    <span className="truncate">Created: {new Date(proposal.created_at).toLocaleDateString()}</span>
                   </div>
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
+              <CardContent className="pt-0">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                     <div className="flex items-center gap-1">
-                      <DollarSign className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">
+                      <DollarSign className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-xs sm:text-sm">
                         Consultation: ${proposal.consultation_fee}
                       </span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <DollarSign className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-medium">
+                      <DollarSign className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-xs sm:text-sm font-medium">
                         Total: ${proposal.total_fee}
                       </span>
                     </div>
-                    <Badge variant="outline">
+                    <Badge variant="outline" className="text-xs self-start">
                       {proposal.estimated_timeline}
                     </Badge>
                   </div>
-                  <div className="text-sm text-muted-foreground">
+                  <div className="text-xs text-muted-foreground">
                     {proposal.lawyer.law_firm && (
                       <span>{proposal.lawyer.law_firm} • </span>
                     )}
