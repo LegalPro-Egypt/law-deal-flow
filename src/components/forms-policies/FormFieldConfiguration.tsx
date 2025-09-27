@@ -86,28 +86,28 @@ export const FormFieldConfiguration = ({
   return (
     <Card className={`transition-all duration-200 ${configuration.is_enabled ? '' : 'opacity-60'}`}>
       <CardContent className="p-3">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0 flex-1">
-            <span className="font-medium truncate">{configuration.label_override || getFieldDisplayName(configuration.field_name)}</span>
-            <div className="flex items-center gap-2">
-              <Badge variant={configuration.is_required ? 'default' : 'secondary'} className="text-xs px-2 py-0">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex flex-col xs:flex-row xs:items-center gap-2 min-w-0 flex-1">
+            <span className="font-medium truncate text-sm">{configuration.label_override || getFieldDisplayName(configuration.field_name)}</span>
+            <div className="flex items-center gap-1 flex-wrap">
+              <Badge variant={configuration.is_required ? 'default' : 'secondary'} className="text-xs px-1.5 py-0 whitespace-nowrap">
                 {configuration.is_required ? 'Required' : 'Optional'}
               </Badge>
               {hasPresets && (
-                <Badge variant="outline" className="text-xs px-2 py-0">
-                  {fieldPresets.length} options
+                <Badge variant="outline" className="text-xs px-1.5 py-0 whitespace-nowrap">
+                  {fieldPresets.length}
                 </Badge>
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-2 flex-shrink-0 self-start sm:self-center">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setIsExpanded(!isExpanded)}
-              className="h-8 w-8 p-0"
+              className="h-7 w-7 p-0"
             >
-              <Settings2 className="h-4 w-4" />
+              <Settings2 className="h-3.5 w-3.5" />
             </Button>
             <Switch
               checked={configuration.is_enabled}
@@ -164,46 +164,48 @@ export const FormFieldConfiguration = ({
                 <Label className="text-xs">Available Options</Label>
                 <div className="space-y-1">
                   {fieldPresets.map((preset) => (
-                    <div key={preset.id} className="flex items-center justify-between p-2 bg-muted rounded text-sm min-w-0">
-                      <div className="flex-1 min-w-0">
-                        <span className="block truncate font-medium">{preset.option_label}</span>
-                        <span className="text-xs text-muted-foreground">({preset.option_value})</span>
+                    <div key={preset.id} className="flex items-center justify-between p-2 bg-muted rounded text-xs min-w-0">
+                      <div className="flex-1 min-w-0 pr-1">
+                        <span className="block truncate font-medium text-xs">{preset.option_label}</span>
+                        <span className="text-xs text-muted-foreground truncate">({preset.option_value})</span>
                       </div>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => onDeletePreset(preset.id, configuration.field_name)}
                         disabled={isSaving}
-                        className="h-6 w-6 p-0 ml-2 flex-shrink-0"
+                        className="h-5 w-5 p-0 flex-shrink-0"
                       >
                         <X className="h-3 w-3" />
                       </Button>
                     </div>
                   ))}
                   
-                  <div className="flex flex-col sm:flex-row gap-1">
-                    <Input
-                      placeholder="Value (e.g. family_law)"
-                      value={newOptionValue}
-                      onChange={(e) => setNewOptionValue(e.target.value)}
-                      disabled={isSaving}
-                      className="flex-1 h-8 text-sm"
-                    />
-                    <Input
-                      placeholder="Label (e.g. Family Law)"
-                      value={newOptionLabel}
-                      onChange={(e) => setNewOptionLabel(e.target.value)}
-                      disabled={isSaving}
-                      className="flex-1 h-8 text-sm"
-                    />
-                    <Button
-                      onClick={handleAddPreset}
-                      disabled={!newOptionValue.trim() || !newOptionLabel.trim() || isSaving}
-                      size="sm"
-                      className="h-8 px-3 flex-shrink-0"
-                    >
-                      <Plus className="h-3 w-3" />
-                    </Button>
+                  <div className="flex flex-col gap-1">
+                    <div className="flex gap-1">
+                      <Input
+                        placeholder="Value"
+                        value={newOptionValue}
+                        onChange={(e) => setNewOptionValue(e.target.value)}
+                        disabled={isSaving}
+                        className="flex-1 h-7 text-xs min-w-0"
+                      />
+                      <Input
+                        placeholder="Label"
+                        value={newOptionLabel}
+                        onChange={(e) => setNewOptionLabel(e.target.value)}
+                        disabled={isSaving}
+                        className="flex-1 h-7 text-xs min-w-0"
+                      />
+                      <Button
+                        onClick={handleAddPreset}
+                        disabled={!newOptionValue.trim() || !newOptionLabel.trim() || isSaving}
+                        size="sm"
+                        className="h-7 w-7 p-0 flex-shrink-0"
+                      >
+                        <Plus className="h-3 w-3" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
