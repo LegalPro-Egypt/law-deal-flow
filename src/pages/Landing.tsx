@@ -10,6 +10,7 @@ import { ProBonoSection } from "@/components/ProBonoSection";
 import { PromotionalPopup } from "@/components/PromotionalPopup";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useLanguage } from "@/hooks/useLanguage";
+import FlipFeatureCard from "@/components/FlipFeatureCard";
 
 
 const Landing = () => {
@@ -170,7 +171,13 @@ const Landing = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {/* Mobile: FlipFeatureCard */}
+          <div className="block md:hidden flex justify-center">
+            <FlipFeatureCard />
+          </div>
+
+          {/* Desktop: Grid of cards */}
+          <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               {
                 icon: <Shield className="h-8 w-8" />,
