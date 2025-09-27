@@ -3,10 +3,11 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { User, Phone, Mail, Globe, MapPin } from 'lucide-react';
 
 const personalDetailsSchema = z.object({
@@ -18,6 +19,9 @@ const personalDetailsSchema = z.object({
   }),
   address: z.string().optional(),
   alternateContact: z.string().optional(),
+  termsAcceptance: z.boolean().refine(val => val === true, {
+    message: "You must accept the Terms of Service and Privacy Policy"
+  }),
 });
 
 export type PersonalDetailsData = z.infer<typeof personalDetailsSchema>;
@@ -44,6 +48,7 @@ export const PersonalDetailsForm: React.FC<PersonalDetailsFormProps> = ({
       preferredLanguage: initialData?.preferredLanguage || 'en',
       address: initialData?.address || '',
       alternateContact: initialData?.alternateContact || '',
+      termsAcceptance: false,
     },
   });
 
@@ -205,6 +210,48 @@ export const PersonalDetailsForm: React.FC<PersonalDetailsFormProps> = ({
               )}
             />
 
+            {/* Terms Acceptance */}
+            <FormField
+              control={form.control}
+              name="termsAcceptance"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel className="text-sm font-medium">
+                      Terms and Privacy Agreement *
+                    </FormLabel>
+                    <div className="text-sm text-muted-foreground">
+                      I agree to the{" "}
+                      <a 
+                        href="/terms-of-service" 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-primary underline hover:no-underline"
+                      >
+                        Terms of Service
+                      </a>
+                      {" "}and{" "}
+                      <a 
+                        href="/privacy-policy" 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-primary underline hover:no-underline"
+                      >
+                        Privacy Policy
+                      </a>
+                    </div>
+                    <FormMessage />
+                  </div>
+                </FormItem>
+              )}
+            />
+
             {/* Form Actions */}
             <div className="flex justify-between pt-6">
               <Button 
@@ -223,15 +270,6 @@ export const PersonalDetailsForm: React.FC<PersonalDetailsFormProps> = ({
             </div>
           </form>
         </Form>
-
-        {/* Privacy Notice */}
-        <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-          <div className="text-sm text-muted-foreground">
-            <strong className="text-foreground">Privacy Notice:</strong> Your personal information is 
-            securely stored and will only be shared with your assigned lawyer. We follow strict 
-            confidentiality protocols to protect your privacy and legal communications.
-          </div>
-        </div>
       </CardContent>
     </Card>
   );

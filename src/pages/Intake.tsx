@@ -60,10 +60,11 @@ const Intake = () => {
     setPersonalData(data);
     setShowPersonalForm(false);
     
-    // Save personal data to case columns
+    // Save personal data to case columns and create/update profile
     if (caseId && user) {
       try {
-        const { error } = await supabase
+        // Update case with personal details
+        const { error: caseError } = await supabase
           .from('cases')
           .update({
             client_name: data.fullName,
@@ -73,7 +74,27 @@ const Intake = () => {
           })
           .eq('id', caseId);
           
-        if (error) throw error;
+        if (caseError) throw caseError;
+
+        // Update or create user profile with terms acceptance
+        const profileData = {
+          user_id: user.id,
+          first_name: data.fullName.split(' ')[0],
+          last_name: data.fullName.split(' ').slice(1).join(' '),
+          phone: data.phone,
+          email: data.email,
+          preferred_language: data.preferredLanguage,
+          address: data.address,
+          alternate_contact: data.alternateContact,
+          terms_accepted_at: new Date().toISOString(),
+          terms_version: '1.0'
+        };
+
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert(profileData, { onConflict: 'user_id' });
+
+        if (profileError) throw profileError;
         
         toast({
           title: "Personal Details Saved",
