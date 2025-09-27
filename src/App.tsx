@@ -29,7 +29,6 @@ import AdminWaitingListPage from "@/pages/admin/AdminWaitingListPage";
 import AdminAnonymousPage from "@/pages/admin/AdminAnonymousPage";
 import AdminCasesReviewPage from "@/pages/admin/AdminCasesReviewPage";
 import AdminProposalsReviewPage from "@/pages/admin/AdminProposalsReviewPage";
-import AdminReportsPage from "@/pages/admin/AdminReportsPage";
 import HelpCenter from "./pages/HelpCenter";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
@@ -129,7 +128,6 @@ function AppContent() {
           <Route path="anonymous" element={<AdminAnonymousPage />} />
           <Route path="cases/review" element={<AdminCasesReviewPage />} />
           <Route path="proposals/review" element={<AdminProposalsReviewPage />} />
-          <Route path="reports" element={<AdminReportsPage />} />
         </Route>
         <Route path="/client-dashboard" element={<Navigate to="/client" replace />} />
         <Route path="/payment" element={
