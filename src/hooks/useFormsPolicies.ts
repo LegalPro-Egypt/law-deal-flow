@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-export type FormPolicyType = 'lawyer_forms' | 'client_forms' | 'client_policies' | 'lawyer_policies';
+export type FormPolicyType = 'lawyer_forms' | 'client_forms' | 'client_policies' | 'lawyer_policies' | 'terms_privacy' | 'lawyer_contracts';
 export type FormPolicyStatus = 'draft' | 'published';
 
 export interface FormPolicy {

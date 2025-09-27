@@ -387,18 +387,18 @@ export function AdminSidebar() {
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
-                    <SidebarMenuButton asChild data-active={isActive("/admin/forms-policies/client-policies")}>
-                      <Link to="/admin/forms-policies/client-policies" onClick={handleNavClick}>
+                    <SidebarMenuButton asChild data-active={isActive("/admin/forms-policies/terms-privacy")}>
+                      <Link to="/admin/forms-policies/terms-privacy" onClick={handleNavClick}>
                         <Shield className="h-4 w-4" />
-                        {showLabels && <span>Client ToS & Privacy</span>}
+                        {showLabels && <span>Terms & Privacy</span>}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
-                    <SidebarMenuButton asChild data-active={isActive("/admin/forms-policies/lawyer-policies")}>
-                      <Link to="/admin/forms-policies/lawyer-policies" onClick={handleNavClick}>
+                    <SidebarMenuButton asChild data-active={isActive("/admin/forms-policies/lawyer-contracts")}>
+                      <Link to="/admin/forms-policies/lawyer-contracts" onClick={handleNavClick}>
                         <ShieldCheck className="h-4 w-4" />
-                        {showLabels && <span>Lawyer ToS & Privacy</span>}
+                        {showLabels && <span>Lawyer Partner Contracts</span>}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

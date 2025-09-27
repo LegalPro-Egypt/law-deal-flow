@@ -37,8 +37,8 @@ import ProposalsReportPage from "@/pages/admin/reports/ProposalsReportPage";
 import ConsultationsReportPage from "@/pages/admin/reports/ConsultationsReportPage";
 import LawyerFormsPage from "@/pages/admin/forms-policies/LawyerFormsPage";
 import ClientFormsPage from "@/pages/admin/forms-policies/ClientFormsPage";
-import ClientPoliciesPage from "@/pages/admin/forms-policies/ClientPoliciesPage";
-import LawyerPoliciesPage from "@/pages/admin/forms-policies/LawyerPoliciesPage";
+import TermsPrivacyPage from "@/pages/admin/forms-policies/TermsPrivacyPage";
+import LawyerContractsPage from "@/pages/admin/forms-policies/LawyerContractsPage";
 import HelpCenter from "./pages/HelpCenter";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
@@ -152,8 +152,8 @@ function AppContent() {
           <Route path="reports/consultations" element={<ConsultationsReportPage />} />
           <Route path="forms-policies/lawyer-forms" element={<LawyerFormsPage />} />
           <Route path="forms-policies/client-forms" element={<ClientFormsPage />} />
-          <Route path="forms-policies/client-policies" element={<ClientPoliciesPage />} />
-          <Route path="forms-policies/lawyer-policies" element={<LawyerPoliciesPage />} />
+          <Route path="forms-policies/terms-privacy" element={<TermsPrivacyPage />} />
+          <Route path="forms-policies/lawyer-contracts" element={<LawyerContractsPage />} />
         </Route>
         <Route path="/client-dashboard" element={<Navigate to="/client" replace />} />
         <Route path="/payment" element={
