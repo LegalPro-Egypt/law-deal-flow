@@ -193,56 +193,56 @@ export function ClientsTab() {
               {searchTerm ? 'No clients found matching your search' : 'No clients found'}
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-2">
               {filteredClients.map((client) => (
                 <div
                   key={client.id}
-                  className="p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                  className="p-3 border rounded-lg hover:bg-muted/50 transition-colors"
                 >
-                  <div className="flex items-start gap-4">
-                    <Avatar className="w-12 h-12">
+                  <div className="flex items-start gap-3">
+                    <Avatar className="w-10 h-10 flex-shrink-0">
                       <AvatarImage src={client.profile_picture_url} />
-                      <AvatarFallback>
+                      <AvatarFallback className="text-xs">
                         {getInitials(client.first_name, client.last_name)}
                       </AvatarFallback>
                     </Avatar>
 
-                    <div className="flex-1 space-y-2">
+                    <div className="flex-1 min-w-0 space-y-1">
                       {/* Header Row */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-medium">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <h3 className="font-medium text-sm truncate">
                             {client.first_name && client.last_name
                               ? `${client.first_name} ${client.last_name}`
                               : client.email}
                           </h3>
                           {getStatusBadge(client.is_active)}
                           {(client.case_count || 0) > 0 && (
-                            <Badge variant="outline" className="flex items-center gap-1">
+                            <Badge variant="outline" className="flex items-center gap-1 text-xs px-2 py-0.5">
                               <FileText className="w-3 h-3" />
-                              {client.case_count} cases
+                              {client.case_count}
                             </Badge>
                           )}
                         </div>
-                        <div className="text-sm text-muted-foreground">
+                        <div className="text-xs text-muted-foreground whitespace-nowrap">
                           Joined {formatDate(client.created_at)}
                         </div>
                       </div>
 
                       {/* Contact Info */}
-                      <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Mail className="w-4 h-4" />
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1 min-w-0 flex-1">
+                          <Mail className="w-3 h-3 flex-shrink-0" />
                           <a 
                             href={`mailto:${client.email}`}
-                            className="hover:text-primary hover:underline"
+                            className="hover:text-primary hover:underline truncate"
                           >
                             {client.email}
                           </a>
                         </div>
                         {client.phone && (
-                          <div className="flex items-center gap-1">
-                            <Phone className="w-4 h-4" />
+                          <div className="flex items-center gap-1 whitespace-nowrap">
+                            <Phone className="w-3 h-3" />
                             <a 
                               href={`tel:${client.phone}`}
                               className="hover:text-primary hover:underline"
@@ -255,18 +255,16 @@ export function ClientsTab() {
 
                       {/* Additional Info */}
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <div className="flex items-center gap-4">
-                          <span className="flex items-center gap-1">
-                            <User className="w-3 h-3" />
-                            ID: {client.user_id.substring(0, 8)}...
+                        <span className="flex items-center gap-1">
+                          <User className="w-3 h-3" />
+                          ID: {client.user_id.substring(0, 8)}...
+                        </span>
+                        {client.last_login && (
+                          <span className="flex items-center gap-1 whitespace-nowrap">
+                            <Calendar className="w-3 h-3" />
+                            Last: {formatDate(client.last_login)}
                           </span>
-                          {client.last_login && (
-                            <span className="flex items-center gap-1">
-                              <Calendar className="w-3 h-3" />
-                              Last login: {formatDate(client.last_login)}
-                            </span>
-                          )}
-                        </div>
+                        )}
                       </div>
                     </div>
                   </div>
