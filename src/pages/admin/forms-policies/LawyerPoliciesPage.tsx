@@ -1,8 +1,8 @@
-import { FormsPoliciesLayout } from '@/components/forms-policies/FormsPoliciesLayout';
+import { RealFormsPoliciesLayout } from '@/components/forms-policies/RealFormsPoliciesLayout';
 
 export default function LawyerPoliciesPage() {
   return (
-    <FormsPoliciesLayout
+    <RealFormsPoliciesLayout
       type="lawyer_policies"
       title="Lawyer Terms & Privacy"
       description="Manage lawyer-specific Terms of Service and Privacy Policy documents with professional guidelines and compliance requirements."

@@ -1,8 +1,8 @@
-import { FormsPoliciesLayout } from '@/components/forms-policies/FormsPoliciesLayout';
+import { RealFormsPoliciesLayout } from '@/components/forms-policies/RealFormsPoliciesLayout';
 
 export default function ClientFormsPage() {
   return (
-    <FormsPoliciesLayout
+    <RealFormsPoliciesLayout
       type="client_forms"
       title="Client Forms"
       description="Manage client registration and personal information forms including step-by-step intake processes and data collection."
