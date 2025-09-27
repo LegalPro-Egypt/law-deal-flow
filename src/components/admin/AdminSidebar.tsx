@@ -16,7 +16,13 @@ import {
   DollarSign,
   CreditCard,
   FolderOpen,
-  ChevronDown
+  ChevronDown,
+  BarChart3,
+  TrendingUp,
+  PieChart,
+  FileBarChart,
+  UserCheck,
+  Calendar
 } from "lucide-react";
 
 import {
@@ -338,6 +344,72 @@ export function AdminSidebar() {
                             )}
                           </>
                         )}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </CollapsibleContent>
+          </SidebarGroup>
+        </Collapsible>
+
+        {/* Reports Group */}
+        <Collapsible open={openGroups.reports} onOpenChange={() => toggleGroup('reports')}>
+          <SidebarGroup>
+            <CollapsibleTrigger asChild>
+            <SidebarGroupLabel className="flex items-center justify-between cursor-pointer hover:bg-muted/50 rounded-md px-2 py-1">
+              <span>Reports</span>
+              {showLabels && <ChevronDown className={`h-4 w-4 transition-transform ${openGroups.reports ? 'rotate-180' : ''}`} />}
+            </SidebarGroupLabel>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild data-active={isActive("/admin/reports/payments")}>
+                      <Link to="/admin/reports/payments" onClick={handleNavClick}>
+                        <DollarSign className="h-4 w-4" />
+                        {showLabels && <span>Payments Report</span>}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild data-active={isActive("/admin/reports/revenue")}>
+                      <Link to="/admin/reports/revenue" onClick={handleNavClick}>
+                        <TrendingUp className="h-4 w-4" />
+                        {showLabels && <span>Revenue by Case</span>}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild data-active={isActive("/admin/reports/case-status")}>
+                      <Link to="/admin/reports/case-status" onClick={handleNavClick}>
+                        <PieChart className="h-4 w-4" />
+                        {showLabels && <span>Case Status Report</span>}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild data-active={isActive("/admin/reports/case-type")}>
+                      <Link to="/admin/reports/case-type" onClick={handleNavClick}>
+                        <FileBarChart className="h-4 w-4" />
+                        {showLabels && <span>Case Type Report</span>}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild data-active={isActive("/admin/reports/proposals")}>
+                      <Link to="/admin/reports/proposals" onClick={handleNavClick}>
+                        <UserCheck className="h-4 w-4" />
+                        {showLabels && <span>Proposals Report</span>}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild data-active={isActive("/admin/reports/consultations")}>
+                      <Link to="/admin/reports/consultations" onClick={handleNavClick}>
+                        <Calendar className="h-4 w-4" />
+                        {showLabels && <span>Consultation Report</span>}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

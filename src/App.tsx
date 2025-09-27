@@ -29,6 +29,12 @@ import AdminWaitingListPage from "@/pages/admin/AdminWaitingListPage";
 import AdminAnonymousPage from "@/pages/admin/AdminAnonymousPage";
 import AdminCasesReviewPage from "@/pages/admin/AdminCasesReviewPage";
 import AdminProposalsReviewPage from "@/pages/admin/AdminProposalsReviewPage";
+import PaymentsReportPage from "@/pages/admin/reports/PaymentsReportPage";
+import RevenueReportPage from "@/pages/admin/reports/RevenueReportPage";
+import CaseStatusReportPage from "@/pages/admin/reports/CaseStatusReportPage";
+import CaseTypeReportPage from "@/pages/admin/reports/CaseTypeReportPage";
+import ProposalsReportPage from "@/pages/admin/reports/ProposalsReportPage";
+import ConsultationsReportPage from "@/pages/admin/reports/ConsultationsReportPage";
 import HelpCenter from "./pages/HelpCenter";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
@@ -128,6 +134,12 @@ function AppContent() {
           <Route path="anonymous" element={<AdminAnonymousPage />} />
           <Route path="cases/review" element={<AdminCasesReviewPage />} />
           <Route path="proposals/review" element={<AdminProposalsReviewPage />} />
+          <Route path="reports/payments" element={<PaymentsReportPage />} />
+          <Route path="reports/revenue" element={<RevenueReportPage />} />
+          <Route path="reports/case-status" element={<CaseStatusReportPage />} />
+          <Route path="reports/case-type" element={<CaseTypeReportPage />} />
+          <Route path="reports/proposals" element={<ProposalsReportPage />} />
+          <Route path="reports/consultations" element={<ConsultationsReportPage />} />
         </Route>
         <Route path="/client-dashboard" element={<Navigate to="/client" replace />} />
         <Route path="/payment" element={
