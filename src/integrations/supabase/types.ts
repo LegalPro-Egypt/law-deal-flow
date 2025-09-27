@@ -840,6 +840,48 @@ export type Database = {
         }
         Relationships: []
       }
+      form_policies: {
+        Row: {
+          change_note: string | null
+          content: string
+          created_at: string
+          id: string
+          schema: Json | null
+          status: string
+          title: string
+          type: string
+          updated_at: string
+          updated_by: string | null
+          version: number
+        }
+        Insert: {
+          change_note?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          schema?: Json | null
+          status?: string
+          title: string
+          type: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Update: {
+          change_note?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          schema?: Json | null
+          status?: string
+          title?: string
+          type?: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Relationships: []
+      }
       lawyer_availability: {
         Row: {
           case_id: string | null

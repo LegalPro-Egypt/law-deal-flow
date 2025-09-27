@@ -35,6 +35,10 @@ import CaseStatusReportPage from "@/pages/admin/reports/CaseStatusReportPage";
 import CaseTypeReportPage from "@/pages/admin/reports/CaseTypeReportPage";
 import ProposalsReportPage from "@/pages/admin/reports/ProposalsReportPage";
 import ConsultationsReportPage from "@/pages/admin/reports/ConsultationsReportPage";
+import LawyerFormsPage from "@/pages/admin/forms-policies/LawyerFormsPage";
+import ClientFormsPage from "@/pages/admin/forms-policies/ClientFormsPage";
+import ClientPoliciesPage from "@/pages/admin/forms-policies/ClientPoliciesPage";
+import LawyerPoliciesPage from "@/pages/admin/forms-policies/LawyerPoliciesPage";
 import HelpCenter from "./pages/HelpCenter";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
@@ -140,6 +144,10 @@ function AppContent() {
           <Route path="reports/case-type" element={<CaseTypeReportPage />} />
           <Route path="reports/proposals" element={<ProposalsReportPage />} />
           <Route path="reports/consultations" element={<ConsultationsReportPage />} />
+          <Route path="forms-policies/lawyer-forms" element={<LawyerFormsPage />} />
+          <Route path="forms-policies/client-forms" element={<ClientFormsPage />} />
+          <Route path="forms-policies/client-policies" element={<ClientPoliciesPage />} />
+          <Route path="forms-policies/lawyer-policies" element={<LawyerPoliciesPage />} />
         </Route>
         <Route path="/client-dashboard" element={<Navigate to="/client" replace />} />
         <Route path="/payment" element={

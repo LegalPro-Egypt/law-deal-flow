@@ -22,7 +22,11 @@ import {
   PieChart,
   FileBarChart,
   UserCheck,
-  Calendar
+  Calendar,
+  Settings,
+  Shield,
+  ShieldCheck,
+  User
 } from "lucide-react";
 
 import {
@@ -74,6 +78,7 @@ export function AdminSidebar() {
     users: true,
     community: true,
     reviews: true,
+    "forms-policies": true,
     reports: true,
   });
 
@@ -344,6 +349,56 @@ export function AdminSidebar() {
                             )}
                           </>
                         )}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </CollapsibleContent>
+          </SidebarGroup>
+        </Collapsible>
+
+        {/* Forms & Policies Group */}
+        <Collapsible open={openGroups["forms-policies"]} onOpenChange={() => toggleGroup("forms-policies")}>
+          <SidebarGroup>
+            <CollapsibleTrigger asChild>
+            <SidebarGroupLabel className="flex items-center justify-between cursor-pointer hover:bg-muted/50 rounded-md px-2 py-1">
+              <span>Forms & Policies</span>
+              {showLabels && <ChevronDown className={`h-4 w-4 transition-transform ${openGroups["forms-policies"] ? 'rotate-180' : ''}`} />}
+            </SidebarGroupLabel>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild data-active={isActive("/admin/forms-policies/lawyer-forms")}>
+                      <Link to="/admin/forms-policies/lawyer-forms" onClick={handleNavClick}>
+                        <Users className="h-4 w-4" />
+                        {showLabels && <span>Lawyer Forms</span>}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild data-active={isActive("/admin/forms-policies/client-forms")}>
+                      <Link to="/admin/forms-policies/client-forms" onClick={handleNavClick}>
+                        <User className="h-4 w-4" />
+                        {showLabels && <span>Client Forms</span>}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild data-active={isActive("/admin/forms-policies/client-policies")}>
+                      <Link to="/admin/forms-policies/client-policies" onClick={handleNavClick}>
+                        <Shield className="h-4 w-4" />
+                        {showLabels && <span>Client ToS & Privacy</span>}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild data-active={isActive("/admin/forms-policies/lawyer-policies")}>
+                      <Link to="/admin/forms-policies/lawyer-policies" onClick={handleNavClick}>
+                        <ShieldCheck className="h-4 w-4" />
+                        {showLabels && <span>Lawyer ToS & Privacy</span>}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
