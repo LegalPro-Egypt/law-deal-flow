@@ -347,7 +347,7 @@ const AnonymousQAManager = () => {
       </Card>
 
       {/* Stats Cards */}
-      <div className="grid md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         <Card className="bg-gradient-card shadow-card">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
