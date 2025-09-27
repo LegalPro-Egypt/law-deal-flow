@@ -840,6 +840,84 @@ export type Database = {
         }
         Relationships: []
       }
+      form_configurations: {
+        Row: {
+          created_at: string
+          field_name: string
+          field_options: Json | null
+          field_order: number
+          form_type: string
+          help_text: string | null
+          id: string
+          is_enabled: boolean
+          is_required: boolean
+          label_override: string | null
+          updated_at: string
+          validation_rules: Json | null
+        }
+        Insert: {
+          created_at?: string
+          field_name: string
+          field_options?: Json | null
+          field_order?: number
+          form_type: string
+          help_text?: string | null
+          id?: string
+          is_enabled?: boolean
+          is_required?: boolean
+          label_override?: string | null
+          updated_at?: string
+          validation_rules?: Json | null
+        }
+        Update: {
+          created_at?: string
+          field_name?: string
+          field_options?: Json | null
+          field_order?: number
+          form_type?: string
+          help_text?: string | null
+          id?: string
+          is_enabled?: boolean
+          is_required?: boolean
+          label_override?: string | null
+          updated_at?: string
+          validation_rules?: Json | null
+        }
+        Relationships: []
+      }
+      form_field_presets: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          is_active: boolean
+          option_label: string
+          option_value: string
+          preset_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          option_label: string
+          option_value: string
+          preset_type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          option_label?: string
+          option_value?: string
+          preset_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       form_policies: {
         Row: {
           change_note: string | null
