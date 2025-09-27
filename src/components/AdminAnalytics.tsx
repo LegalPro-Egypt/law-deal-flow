@@ -146,86 +146,89 @@ export const AdminAnalytics = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold">Visitor Analytics</h2>
-          <p className="text-muted-foreground">
-            Track your website visitors and their behavior ({getDateRangeLabel(selectedRange)} - {botFilter})
-          </p>
+    <div className="space-y-4 md:space-y-6">
+      <div className="space-y-3">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+          <div>
+            <h2 className="text-xl md:text-2xl font-bold">Visitor Analytics</h2>
+            <p className="text-sm text-muted-foreground">
+              Track visitors ({getDateRangeLabel(selectedRange)} - {botFilter})
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+            <Select value={botFilter} onValueChange={(value: 'all' | 'humans' | 'bots') => setBotFilter(value)}>
+              <SelectTrigger className="w-full sm:w-36">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="humans">
+                  <div className="flex items-center gap-2">
+                    <UserCheck className="h-4 w-4" />
+                    Humans Only
+                  </div>
+                </SelectItem>
+                <SelectItem value="bots">
+                  <div className="flex items-center gap-2">
+                    <Bot className="h-4 w-4" />
+                    Bots Only
+                  </div>
+                </SelectItem>
+                <SelectItem value="all">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    All Traffic
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            <Button 
+              onClick={handleRefresh} 
+              variant="outline" 
+              size="sm"
+              disabled={isFetching}
+              className="w-full sm:w-auto"
+            >
+              {isFetching ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Refreshing...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Refresh
+                </>
+              )}
+            </Button>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Select value={botFilter} onValueChange={(value: 'all' | 'humans' | 'bots') => setBotFilter(value)}>
-            <SelectTrigger className="w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="humans">
-                <div className="flex items-center gap-2">
-                  <UserCheck className="h-4 w-4" />
-                  Humans Only
-                </div>
-              </SelectItem>
-              <SelectItem value="bots">
-                <div className="flex items-center gap-2">
-                  <Bot className="h-4 w-4" />
-                  Bots Only
-                </div>
-              </SelectItem>
-              <SelectItem value="all">
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  All Traffic
-                </div>
-              </SelectItem>
-            </SelectContent>
-          </Select>
-          <Button 
-            onClick={handleRefresh} 
-            variant="outline" 
-            size="sm"
-            disabled={isFetching}
-          >
-            {isFetching ? (
-              <>
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                Refreshing...
-              </>
-            ) : (
-              <>
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh
-              </>
-            )}
-          </Button>
-        </div>
-      </div>
 
-      {/* Date Range Filters */}
-      <div className="flex flex-wrap gap-2 p-1 bg-muted rounded-lg w-fit">
-        {([
-          { key: 'today', label: 'Today' },
-          { key: '7days', label: 'Last 7 Days' },
-          { key: '30days', label: 'Last 30 Days' },
-          { key: 'alltime', label: 'All Time' }
-        ] as const).map(({ key, label }) => (
-          <Button
-            key={key}
-            variant={selectedRange === key ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setSelectedRange(key)}
-            className={cn(
-              "transition-all",
-              selectedRange === key && "shadow-sm"
-            )}
-          >
-            {label}
-          </Button>
-        ))}
+        {/* Date Range Filters */}
+        <div className="flex flex-wrap gap-1 p-1 bg-muted rounded-lg w-full sm:w-fit">
+          {([
+            { key: 'today', label: 'Today' },
+            { key: '7days', label: '7 Days' },
+            { key: '30days', label: '30 Days' },
+            { key: 'alltime', label: 'All Time' }
+          ] as const).map(({ key, label }) => (
+            <Button
+              key={key}
+              variant={selectedRange === key ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setSelectedRange(key)}
+              className={cn(
+                "transition-all flex-1 sm:flex-initial text-xs sm:text-sm",
+                selectedRange === key && "shadow-sm"
+              )}
+            >
+              {label}
+            </Button>
+          ))}
+        </div>
       </div>
 
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Visitors</CardTitle>
