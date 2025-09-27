@@ -39,16 +39,18 @@ export const FormPreviewDialog = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+        <DialogHeader className="pb-3">
+          <DialogTitle className="text-lg">
             Form Preview: {formType === 'lawyer_profile' ? 'Lawyer Registration' : 'Personal Details'}
-            <Badge variant="outline">{enabledFields.length} fields enabled</Badge>
-            <Badge variant="default">{requiredFields.length} required</Badge>
           </DialogTitle>
+          <div className="flex items-center gap-2 mt-2">
+            <Badge variant="outline" className="text-xs">{enabledFields.length} enabled</Badge>
+            <Badge variant="default" className="text-xs">{requiredFields.length} required</Badge>
+          </div>
         </DialogHeader>
         
-        <ScrollArea className="h-[calc(90vh-120px)]">
-          <div className="p-4">
+        <ScrollArea className="h-[calc(90vh-140px)]">
+          <div className="p-3">
             {formType === 'lawyer_profile' ? (
               <LawyerProfileForm
                 onComplete={handleLawyerFormComplete}

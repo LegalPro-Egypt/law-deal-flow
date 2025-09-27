@@ -92,12 +92,12 @@ export const RealFormsPoliciesLayout = ({ type, title, description }: RealFormsP
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
-          <p className="text-muted-foreground">{description}</p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
+          <p className="text-sm text-muted-foreground">{description}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {isSaving && (
             <Badge variant="secondary" className="flex items-center gap-1">
               <Save className="h-3 w-3" />
@@ -110,7 +110,7 @@ export const RealFormsPoliciesLayout = ({ type, title, description }: RealFormsP
             onClick={() => setShowPreview(true)}
           >
             <Eye className="h-4 w-4 mr-2" />
-            Preview Form
+            Preview
           </Button>
           <Button
             variant="outline"
@@ -123,43 +123,41 @@ export const RealFormsPoliciesLayout = ({ type, title, description }: RealFormsP
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-2xl font-bold">{configurations.length}</p>
-                <p className="text-sm text-muted-foreground">Total Fields</p>
+      <Card>
+        <CardContent className="p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 divide-y sm:divide-y-0 sm:divide-x">
+            <div className="flex items-center gap-3 py-2 sm:py-0 sm:pr-4">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <FileText className="h-4 w-4 text-primary" />
               </div>
-              <FileText className="h-8 w-8 text-muted-foreground" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold">{enabledFields.length}</p>
-                <p className="text-sm text-muted-foreground">Enabled Fields</p>
+                <p className="text-xl font-bold">{configurations.length}</p>
+                <p className="text-xs text-muted-foreground">Total Fields</p>
               </div>
-              <Users className="h-8 w-8 text-muted-foreground" />
             </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
+            
+            <div className="flex items-center gap-3 py-2 sm:py-0 sm:px-4">
+              <div className="p-2 bg-green-500/10 rounded-lg">
+                <Users className="h-4 w-4 text-green-600" />
+              </div>
               <div>
-                <p className="text-2xl font-bold">{requiredFields.length}</p>
-                <p className="text-sm text-muted-foreground">Required Fields</p>
+                <p className="text-xl font-bold">{enabledFields.length}</p>
+                <p className="text-xs text-muted-foreground">Enabled</p>
               </div>
-              <Shield className="h-8 w-8 text-muted-foreground" />
             </div>
-          </CardContent>
-        </Card>
-      </div>
+            
+            <div className="flex items-center gap-3 py-2 sm:py-0 sm:pl-4">
+              <div className="p-2 bg-orange-500/10 rounded-lg">
+                <Shield className="h-4 w-4 text-orange-600" />
+              </div>
+              <div>
+                <p className="text-xl font-bold">{requiredFields.length}</p>
+                <p className="text-xs text-muted-foreground">Required</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-2">
@@ -173,27 +171,28 @@ export const RealFormsPoliciesLayout = ({ type, title, description }: RealFormsP
           </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="configuration" className="space-y-4 mt-6">
+        <TabsContent value="configuration" className="space-y-4 mt-4">
           <Card>
-            <CardHeader>
-              <CardTitle>Form Field Settings</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Configure which fields are shown to users and their validation rules. 
-                Changes are saved automatically.
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Form Field Settings</CardTitle>
+              <p className="text-xs text-muted-foreground">
+                Configure field visibility and validation. Changes save automatically.
               </p>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {configurations.map((config) => (
-                <FormFieldConfiguration
-                  key={config.id}
-                  configuration={config}
-                  presets={presets}
-                  onUpdate={updateConfiguration}
-                  onCreatePreset={createPreset}
-                  onDeletePreset={deletePreset}
-                  isSaving={isSaving}
-                />
-              ))}
+            <CardContent className="max-h-[600px] overflow-y-auto">
+              <div className="space-y-3">
+                {configurations.map((config) => (
+                  <FormFieldConfiguration
+                    key={config.id}
+                    configuration={config}
+                    presets={presets}
+                    onUpdate={updateConfiguration}
+                    onCreatePreset={createPreset}
+                    onDeletePreset={deletePreset}
+                    isSaving={isSaving}
+                  />
+                ))}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
