@@ -38,6 +38,7 @@ const lawyerProfileSchema = z.object({
   bio: z.string().min(50, "Bio must be at least 50 characters"),
   yearsExperience: z.coerce.number().min(1, "Years of experience must be at least 1"),
   licenseNumber: z.string().min(5, "License number is required"),
+  termsAcceptance: z.boolean().refine(val => val === true, "You must accept the Terms of Service and Privacy Policy"),
 });
 
 type LawyerProfileData = z.infer<typeof lawyerProfileSchema>;
@@ -105,6 +106,7 @@ export function LawyerProfileForm({ onComplete, initialData }: LawyerProfileForm
       bio: initialData?.bio || "",
       yearsExperience: initialData?.yearsExperience || 1,
       licenseNumber: initialData?.licenseNumber || "",
+      termsAcceptance: false,
     },
   });
 
@@ -206,6 +208,15 @@ export function LawyerProfileForm({ onComplete, initialData }: LawyerProfileForm
       return;
     }
 
+    if (!form.getValues("termsAcceptance")) {
+      toast({
+        title: "Terms Acceptance Required",
+        description: "You must accept the Terms of Service and Privacy Policy to continue.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Validate birth date (must be 21+ years old)
     const birthDate = new Date(data.birthDate);
     const today = new Date();
@@ -266,6 +277,8 @@ export function LawyerProfileForm({ onComplete, initialData }: LawyerProfileForm
         profile_picture_url: profilePictureUrl,
         credentials_documents: credentialsUrls,
         is_active: false, // Requires admin approval
+        terms_accepted_at: new Date().toISOString(),
+        terms_version: '1.0',
       };
 
       const { error } = await supabase
@@ -606,6 +619,49 @@ export function LawyerProfileForm({ onComplete, initialData }: LawyerProfileForm
                     {credentialsFiles.length} file(s) selected
                   </p>
                 )}
+              </div>
+            </div>
+          </div>
+
+          {/* Terms and Privacy Policy Acceptance */}
+          <div className="space-y-4 pt-6 border-t">
+            <h3 className="text-lg font-semibold">Terms & Conditions</h3>
+            <div className="flex items-start space-x-3">
+              <Checkbox
+                id="terms"
+                checked={form.watch("termsAcceptance")}
+                onCheckedChange={(checked) => form.setValue("termsAcceptance", checked as boolean)}
+                className="mt-1"
+                disabled={isSubmitting}
+              />
+              <div className="flex-1">
+                <Label
+                  htmlFor="terms"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  I accept the{' '}
+                  <a
+                    href="/terms-of-service"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    Terms of Service
+                  </a>{' '}
+                  and{' '}
+                  <a
+                    href="/privacy-policy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    Privacy Policy
+                  </a>{' '}
+                  <span className="text-destructive">*</span>
+                </Label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  You must accept the Terms of Service and Privacy Policy to continue
+                </p>
               </div>
             </div>
           </div>

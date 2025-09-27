@@ -1351,6 +1351,8 @@ export type Database = {
           specializations: string[] | null
           team_breakdown: Json | null
           team_size: number | null
+          terms_accepted_at: string | null
+          terms_version: string | null
           updated_at: string
           user_id: string
           verification_status:
@@ -1392,6 +1394,8 @@ export type Database = {
           specializations?: string[] | null
           team_breakdown?: Json | null
           team_size?: number | null
+          terms_accepted_at?: string | null
+          terms_version?: string | null
           updated_at?: string
           user_id: string
           verification_status?:
@@ -1433,6 +1437,8 @@ export type Database = {
           specializations?: string[] | null
           team_breakdown?: Json | null
           team_size?: number | null
+          terms_accepted_at?: string | null
+          terms_version?: string | null
           updated_at?: string
           user_id?: string
           verification_status?:
