@@ -3,10 +3,15 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Save, Eye, Clock, AlertCircle } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Edit, Save, Eye, Clock, AlertCircle, Plus } from 'lucide-react';
 import { FormsPoliciesEditor } from './FormsPoliciesEditor';
 import { VersionHistory } from './VersionHistory';
 import { FormPolicy, useFormsPolicies } from '@/hooks/useFormsPolicies';
+import { useToast } from '@/hooks/use-toast';
 
 interface FormsPoliciesLayoutProps {
   type: 'lawyer_forms' | 'client_forms' | 'client_policies' | 'lawyer_policies';
@@ -20,7 +25,10 @@ export const FormsPoliciesLayout = ({ type, title, description }: FormsPoliciesL
   const [showVersionHistory, setShowVersionHistory] = useState(false);
   const [activeTab, setActiveTab] = useState('published');
   const [draftContent, setDraftContent] = useState('');
+  const [showNewPolicyDialog, setShowNewPolicyDialog] = useState(false);
+  const [newPolicyTitle, setNewPolicyTitle] = useState('');
   const autosaveIntervalRef = useRef<NodeJS.Timeout>();
+  const { toast } = useToast();
   
   const {
     items,
@@ -33,17 +41,17 @@ export const FormsPoliciesLayout = ({ type, title, description }: FormsPoliciesL
     saveDraft,
     publishItem,
     setCurrentItem,
+    createItem,
   } = useFormsPolicies(type);
 
-  // Get the main item (first published or latest)
-  const mainItem = items.find(item => item.status === 'published') || items[0];
-
+  // Auto-select first item when items load
   useEffect(() => {
-    if (mainItem && !selectedItemId) {
-      setSelectedItemId(mainItem.id);
-      fetchItem(mainItem.id);
+    if (items.length > 0 && !selectedItemId) {
+      const firstItem = items[0];
+      setSelectedItemId(firstItem.id);
+      fetchItem(firstItem.id);
     }
-  }, [mainItem, selectedItemId, fetchItem]);
+  }, [items, selectedItemId, fetchItem]);
 
   useEffect(() => {
     if (currentItem) {
@@ -69,6 +77,38 @@ export const FormsPoliciesLayout = ({ type, title, description }: FormsPoliciesL
       }
     };
   }, [isEditing, hasUnsavedChanges, currentItem]);
+
+  const handleItemSelect = async (itemId: string) => {
+    setSelectedItemId(itemId);
+    await fetchItem(itemId);
+    setIsEditing(false);
+    setActiveTab('published');
+  };
+
+  const handleCreateNewPolicy = async () => {
+    if (!newPolicyTitle.trim()) return;
+    
+    try {
+      await createItem({
+        type,
+        title: newPolicyTitle.trim(),
+        content: `# ${newPolicyTitle}\n\nEnter your policy content here...`
+      });
+      setNewPolicyTitle('');
+      setShowNewPolicyDialog(false);
+      toast({
+        title: "Policy Created",
+        description: `${newPolicyTitle} has been created as a draft.`
+      });
+    } catch (error) {
+      console.error('Error creating policy:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create policy",
+        variant: "destructive"
+      });
+    }
+  };
 
   const handleSaveDraft = async () => {
     if (!currentItem || !hasUnsavedChanges) return;
@@ -123,44 +163,76 @@ export const FormsPoliciesLayout = ({ type, title, description }: FormsPoliciesL
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
           <p className="text-muted-foreground">{description}</p>
         </div>
-        <div className="flex items-center gap-2">
-          {hasUnsavedChanges && (
-            <Badge variant="secondary" className="flex items-center gap-1">
-              <AlertCircle className="h-3 w-3" />
-              Unsaved changes
-            </Badge>
-          )}
-          {isSaving && (
-            <Badge variant="outline" className="flex items-center gap-1">
-              <Clock className="h-3 w-3 animate-spin" />
-              Saving...
-            </Badge>
+        
+        {/* Policy Selector */}
+        <div className="flex items-center gap-3">
+          {items.length > 0 && (
+            <div className="flex items-center gap-2">
+              <Label htmlFor="policy-select">Policy:</Label>
+              <Select value={selectedItemId || ''} onValueChange={handleItemSelect}>
+                <SelectTrigger id="policy-select" className="w-[200px] bg-background">
+                  <SelectValue placeholder="Select a policy..." />
+                </SelectTrigger>
+                <SelectContent className="bg-background border shadow-lg z-50">
+                  {items.map((item) => (
+                    <SelectItem key={item.id} value={item.id} className="hover:bg-muted">
+                      {item.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           )}
           <Button
-            variant="outline"
+            onClick={() => setShowNewPolicyDialog(true)}
             size="sm"
-            onClick={() => setShowVersionHistory(true)}
+            variant="outline"
           >
-            <Clock className="h-4 w-4 mr-2" />
-            Version History
+            <Plus className="h-4 w-4 mr-2" />
+            New Policy
           </Button>
-          {!isEditing ? (
-            <Button onClick={() => setIsEditing(true)}>
-              <Edit className="h-4 w-4 mr-2" />
-              Edit
-            </Button>
-          ) : (
-            <Button onClick={() => setIsEditing(false)} variant="outline">
-              <Eye className="h-4 w-4 mr-2" />
-              View
-            </Button>
-          )}
         </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex items-center justify-end gap-2">
+        {hasUnsavedChanges && (
+          <Badge variant="secondary" className="flex items-center gap-1">
+            <AlertCircle className="h-3 w-3" />
+            Unsaved changes
+          </Badge>
+        )}
+        {isSaving && (
+          <Badge variant="outline" className="flex items-center gap-1">
+            <Clock className="h-3 w-3 animate-spin" />
+            Saving...
+          </Badge>
+        )}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowVersionHistory(true)}
+        >
+          <Clock className="h-4 w-4 mr-2" />
+          Version History
+        </Button>
+        {!isEditing ? (
+          <Button onClick={() => setIsEditing(true)}>
+            <Edit className="h-4 w-4 mr-2" />
+            Edit
+          </Button>
+        ) : (
+          <Button onClick={() => setIsEditing(false)} variant="outline">
+            <Eye className="h-4 w-4 mr-2" />
+            View
+          </Button>
+        )}
       </div>
 
       <Card>
@@ -212,6 +284,44 @@ export const FormsPoliciesLayout = ({ type, title, description }: FormsPoliciesL
         type={type}
         currentItem={currentItem}
       />
+
+      {/* New Policy Dialog */}
+      <Dialog open={showNewPolicyDialog} onOpenChange={setShowNewPolicyDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Policy</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="policy-title">Policy Title *</Label>
+              <Input
+                id="policy-title"
+                value={newPolicyTitle}
+                onChange={(e) => setNewPolicyTitle(e.target.value)}
+                placeholder="e.g., Cookie Policy"
+                className="mt-1"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowNewPolicyDialog(false);
+                setNewPolicyTitle('');
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleCreateNewPolicy}
+              disabled={!newPolicyTitle.trim()}
+            >
+              Create Policy
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
