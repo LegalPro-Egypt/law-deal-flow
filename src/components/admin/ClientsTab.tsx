@@ -124,18 +124,18 @@ export function ClientsTab() {
     );
   }
 
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Clients</h2>
-          <p className="text-muted-foreground">Manage all client accounts</p>
-        </div>
-        <Button onClick={fetchClients} disabled={loading}>
-          Refresh
-        </Button>
-      </div>
+   return (
+     <div className="space-y-6 max-w-full overflow-hidden px-1 sm:px-0">
+       {/* Header */}
+       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+         <div className="min-w-0">
+           <h2 className="text-xl sm:text-2xl font-bold truncate">Clients</h2>
+           <p className="text-sm text-muted-foreground">Manage all client accounts</p>
+         </div>
+         <Button onClick={fetchClients} disabled={loading} size="sm" className="self-start sm:self-auto">
+           Refresh
+         </Button>
+       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -168,16 +168,16 @@ export function ClientsTab() {
         </Card>
       </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search clients by name, email, or phone..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10"
-        />
-      </div>
+       {/* Search */}
+       <div className="relative px-0">
+         <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+         <Input
+           placeholder="Search clients..."
+           value={searchTerm}
+           onChange={(e) => setSearchTerm(e.target.value)}
+           className="pl-10 text-sm"
+         />
+       </div>
 
       {/* Clients List */}
       <Card>
@@ -195,79 +195,86 @@ export function ClientsTab() {
           ) : (
             <div className="space-y-2">
               {filteredClients.map((client) => (
-                <div
-                  key={client.id}
-                  className="p-3 border rounded-lg hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-start gap-3">
-                    <Avatar className="w-10 h-10 flex-shrink-0">
-                      <AvatarImage src={client.profile_picture_url} />
-                      <AvatarFallback className="text-xs">
-                        {getInitials(client.first_name, client.last_name)}
-                      </AvatarFallback>
-                    </Avatar>
+                 <div
+                   key={client.id}
+                   className="p-2 sm:p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                 >
+                   <div className="flex items-start gap-2 sm:gap-3">
+                     <Avatar className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0">
+                       <AvatarImage src={client.profile_picture_url} />
+                       <AvatarFallback className="text-xs">
+                         {getInitials(client.first_name, client.last_name)}
+                       </AvatarFallback>
+                     </Avatar>
 
-                    <div className="flex-1 min-w-0 space-y-1">
-                      {/* Header Row */}
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2 min-w-0 flex-1">
-                          <h3 className="font-medium text-sm truncate">
-                            {client.first_name && client.last_name
-                              ? `${client.first_name} ${client.last_name}`
-                              : client.email}
-                          </h3>
-                          {getStatusBadge(client.is_active)}
-                          {(client.case_count || 0) > 0 && (
-                            <Badge variant="outline" className="flex items-center gap-1 text-xs px-2 py-0.5">
-                              <FileText className="w-3 h-3" />
-                              {client.case_count}
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="text-xs text-muted-foreground whitespace-nowrap">
-                          Joined {formatDate(client.created_at)}
-                        </div>
-                      </div>
+                     <div className="flex-1 min-w-0 space-y-1">
+                       {/* Header Row - Mobile Friendly */}
+                       <div className="space-y-1">
+                         <div className="flex items-center gap-2 min-w-0">
+                           <h3 className="font-medium text-sm truncate flex-1">
+                             {client.first_name && client.last_name
+                               ? `${client.first_name} ${client.last_name}`
+                               : client.email}
+                           </h3>
+                           <div className="flex items-center gap-1 flex-shrink-0">
+                             {getStatusBadge(client.is_active)}
+                             {(client.case_count || 0) > 0 && (
+                               <Badge variant="outline" className="flex items-center gap-1 text-xs px-1.5 py-0.5">
+                                 <FileText className="w-3 h-3" />
+                                 {client.case_count}
+                               </Badge>
+                             )}
+                           </div>
+                         </div>
+                         
+                         {/* Date - Mobile: below name, Desktop: separate line */}
+                         <div className="text-xs text-muted-foreground">
+                           <span className="flex items-center gap-1">
+                             <Calendar className="w-3 h-3" />
+                             Joined {formatDate(client.created_at)}
+                           </span>
+                         </div>
+                       </div>
 
-                      {/* Contact Info */}
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                        <div className="flex items-center gap-1 min-w-0 flex-1">
-                          <Mail className="w-3 h-3 flex-shrink-0" />
-                          <a 
-                            href={`mailto:${client.email}`}
-                            className="hover:text-primary hover:underline truncate"
-                          >
-                            {client.email}
-                          </a>
-                        </div>
-                        {client.phone && (
-                          <div className="flex items-center gap-1 whitespace-nowrap">
-                            <Phone className="w-3 h-3" />
-                            <a 
-                              href={`tel:${client.phone}`}
-                              className="hover:text-primary hover:underline"
-                            >
-                              {client.phone}
-                            </a>
-                          </div>
-                        )}
-                      </div>
+                       {/* Contact Info - Stack on mobile */}
+                       <div className="space-y-1 sm:space-y-0 sm:flex sm:items-center sm:gap-4 text-xs text-muted-foreground">
+                         <div className="flex items-center gap-1 min-w-0">
+                           <Mail className="w-3 h-3 flex-shrink-0" />
+                           <a 
+                             href={`mailto:${client.email}`}
+                             className="hover:text-primary hover:underline truncate"
+                           >
+                             {client.email}
+                           </a>
+                         </div>
+                         {client.phone && (
+                           <div className="flex items-center gap-1">
+                             <Phone className="w-3 h-3 flex-shrink-0" />
+                             <a 
+                               href={`tel:${client.phone}`}
+                               className="hover:text-primary hover:underline"
+                             >
+                               {client.phone}
+                             </a>
+                           </div>
+                         )}
+                       </div>
 
-                      {/* Additional Info */}
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <User className="w-3 h-3" />
-                          ID: {client.user_id.substring(0, 8)}...
-                        </span>
-                        {client.last_login && (
-                          <span className="flex items-center gap-1 whitespace-nowrap">
-                            <Calendar className="w-3 h-3" />
-                            Last: {formatDate(client.last_login)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                       {/* Additional Info - Stack on mobile */}
+                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2 text-xs text-muted-foreground">
+                         <span className="flex items-center gap-1 truncate">
+                           <User className="w-3 h-3 flex-shrink-0" />
+                           <span className="truncate">ID: {client.user_id.substring(0, 8)}...</span>
+                         </span>
+                         {client.last_login && (
+                           <span className="flex items-center gap-1">
+                             <Calendar className="w-3 h-3 flex-shrink-0" />
+                             <span>Last: {formatDate(client.last_login)}</span>
+                           </span>
+                         )}
+                       </div>
+                     </div>
+                   </div>
                 </div>
               ))}
             </div>
