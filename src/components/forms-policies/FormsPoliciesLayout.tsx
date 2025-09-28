@@ -168,19 +168,19 @@ export const FormsPoliciesLayout = ({ type, title, description }: FormsPoliciesL
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-        <div>
+      <div className="flex flex-col space-y-4 sm:flex-row sm:items-start sm:justify-between sm:space-y-0">
+        <div className="min-w-0 flex-1">
           <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
           <p className="text-muted-foreground">{description}</p>
         </div>
         
         {/* Policy Selector */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 flex-shrink-0">
           {items.length > 0 && (
-            <div className="flex items-center gap-2">
-              <Label htmlFor="policy-select">Policy:</Label>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Label htmlFor="policy-select" className="flex-shrink-0">Policy:</Label>
               <Select value={selectedItemId || ''} onValueChange={handleItemSelect}>
-                <SelectTrigger id="policy-select" className="w-[200px] bg-background">
+                <SelectTrigger id="policy-select" className="w-full sm:w-[200px] bg-background">
                   <SelectValue placeholder="Select a policy..." />
                 </SelectTrigger>
                 <SelectContent className="bg-background border shadow-lg z-50">
@@ -197,6 +197,7 @@ export const FormsPoliciesLayout = ({ type, title, description }: FormsPoliciesL
             onClick={() => setShowNewPolicyDialog(true)}
             size="sm"
             variant="outline"
+            className="w-full sm:w-auto flex-shrink-0"
           >
             <Plus className="h-4 w-4 mr-2" />
             New Policy
@@ -205,7 +206,7 @@ export const FormsPoliciesLayout = ({ type, title, description }: FormsPoliciesL
       </div>
 
       {/* Action Buttons */}
-      <div className="flex items-center justify-end gap-2">
+      <div className="flex flex-wrap items-center justify-end gap-2">
         {hasUnsavedChanges && (
           <Badge variant="secondary" className="flex items-center gap-1">
             <AlertCircle className="h-3 w-3" />
@@ -252,7 +253,7 @@ export const FormsPoliciesLayout = ({ type, title, description }: FormsPoliciesL
         </CardHeader>
         <CardContent>
           {!isEditing ? (
-            <div className="prose max-w-none">
+            <div className="prose max-w-none overflow-hidden">
               <div dangerouslySetInnerHTML={{ __html: publishedContent || 'No content available' }} />
             </div>
           ) : (
@@ -273,7 +274,7 @@ export const FormsPoliciesLayout = ({ type, title, description }: FormsPoliciesL
               </TabsContent>
               
               <TabsContent value="published" className="mt-4">
-                <div className="prose max-w-none p-4 bg-muted/50 rounded-lg">
+                <div className="prose max-w-none p-4 bg-muted/50 rounded-lg overflow-hidden">
                   <div dangerouslySetInnerHTML={{ __html: (currentItem?.status === 'published' ? currentItem.content : publishedContent) || 'No published content' }} />
                 </div>
               </TabsContent>
