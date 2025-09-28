@@ -123,15 +123,21 @@ export const useFormsPolicies = (type: FormPolicyType) => {
     try {
       setIsSaving(true);
       
-      // Get current item to increment version
-      const current = items.find(item => item.id === id);
-      if (!current) throw new Error('Item not found');
+      // Fetch the latest version of the item from database
+      const { data: currentData, error: fetchError } = await supabase
+        .from('form_policies')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (fetchError) throw fetchError;
+      if (!currentData) throw new Error('Item not found');
 
       const { data, error } = await supabase
         .from('form_policies')
         .update({
           status: 'published',
-          version: current.version + 1,
+          version: currentData.version + 1,
           change_note: changeNote,
           updated_at: new Date().toISOString(),
         })
@@ -144,8 +150,8 @@ export const useFormsPolicies = (type: FormPolicyType) => {
       setCurrentItem(data as FormPolicy);
       setHasUnsavedChanges(false);
       
-      // Update the item in the list
-      setItems(prev => prev.map(item => item.id === id ? data as FormPolicy : item));
+      // Refresh the entire items list to ensure consistency
+      await fetchItems();
       
       toast({
         title: "Success",
@@ -164,12 +170,24 @@ export const useFormsPolicies = (type: FormPolicyType) => {
     } finally {
       setIsSaving(false);
     }
-  }, [items, toast]);
+  }, [toast, fetchItems]);
 
   // Create new item
   const createItem = useCallback(async (itemData: FormPolicyDraft & { type: FormPolicyType }) => {
     try {
       setIsSaving(true);
+      
+      // Check for existing item with same title and type to avoid duplicates
+      const { data: existingItems } = await supabase
+        .from('form_policies')
+        .select('id, title')
+        .eq('type', itemData.type)
+        .eq('title', itemData.title);
+
+      if (existingItems && existingItems.length > 0) {
+        throw new Error(`An item with title "${itemData.title}" already exists for this type`);
+      }
+
       const { data, error } = await supabase
         .from('form_policies')
         .insert([{
@@ -194,7 +212,7 @@ export const useFormsPolicies = (type: FormPolicyType) => {
       console.error('Error creating item:', error);
       toast({
         title: "Error",
-        description: "Failed to create item",
+        description: error.message || "Failed to create item",
         variant: "destructive",
       });
       throw error;

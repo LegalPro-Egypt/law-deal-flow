@@ -37,6 +37,7 @@ export const FormsPoliciesLayout = ({ type, title, description }: FormsPoliciesL
     isSaving,
     hasUnsavedChanges,
     setHasUnsavedChanges,
+    fetchItems,
     fetchItem,
     saveDraft,
     publishItem,
@@ -143,6 +144,9 @@ export const FormsPoliciesLayout = ({ type, title, description }: FormsPoliciesL
       // Then publish it
       await publishItem(currentItem.id, changeNote);
       setIsEditing(false);
+      
+      // Refresh items to show updated status
+      await fetchItems();
     } catch (error) {
       console.error('Publish failed:', error);
     }
@@ -270,7 +274,7 @@ export const FormsPoliciesLayout = ({ type, title, description }: FormsPoliciesL
               
               <TabsContent value="published" className="mt-4">
                 <div className="prose max-w-none p-4 bg-muted/50 rounded-lg">
-                  <div dangerouslySetInnerHTML={{ __html: publishedContent || 'No published content' }} />
+                  <div dangerouslySetInnerHTML={{ __html: (currentItem?.status === 'published' ? currentItem.content : publishedContent) || 'No published content' }} />
                 </div>
               </TabsContent>
             </Tabs>
