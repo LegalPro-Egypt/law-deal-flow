@@ -65,7 +65,7 @@ export const FormsPoliciesEditor = ({
         </div>
         <Button 
           onClick={() => setShowPublishDialog(true)}
-          disabled={isLoading}
+          disabled={isLoading || !hasUnsavedChanges}
           size="sm"
         >
           <Upload className="h-4 w-4 mr-2" />
