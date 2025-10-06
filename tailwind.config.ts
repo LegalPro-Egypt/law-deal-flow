@@ -13,11 +13,12 @@ export default {
       },
     },
       extend: {
-        fontFamily: {
-          'futura': ['Space Grotesk', 'sans-serif'],
-          'modern': ['Inter', 'sans-serif'],
-          'roboto': ['Roboto', 'sans-serif'],
-        },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Arial', 'sans-serif'],
+        'futura': ['Space Grotesk', 'sans-serif'],
+        'modern': ['Inter', 'sans-serif'],
+        'roboto': ['Roboto', 'sans-serif'],
+      },
         colors: {
           /* Core Layout Colors */
           border: "hsl(var(--border))",
