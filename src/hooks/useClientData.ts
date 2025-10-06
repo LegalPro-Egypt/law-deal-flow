@@ -48,6 +48,7 @@ interface ClientMessage {
 interface ClientDocument {
   id: string;
   file_name: string;
+  display_name?: string;
   file_size: number;
   file_type: string;
   file_url: string;
@@ -157,7 +158,7 @@ export const useClientData = () => {
     try {
       const { data, error } = await supabase
         .from('documents')
-        .select('id, file_name, file_size, file_type, file_url, document_category, uploaded_by, created_at, case_id')
+        .select('id, file_name, display_name, file_size, file_type, file_url, document_category, uploaded_by, created_at, case_id')
         .eq('case_id', caseId)
         .order('created_at', { ascending: false });
 
@@ -165,6 +166,50 @@ export const useClientData = () => {
       setDocuments(data || []);
     } catch (error) {
       console.error('Error fetching documents:', error);
+    }
+  };
+
+  const renameDocument = async (documentId: string, newDisplayName: string) => {
+    if (!newDisplayName.trim()) {
+      toast({
+        title: "Invalid Name",
+        description: "Document name cannot be empty",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('documents')
+        .update({ display_name: newDisplayName.trim() })
+        .eq('id', documentId);
+
+      if (error) throw error;
+
+      // Optimistic update
+      setDocuments(prev => 
+        prev.map(doc => 
+          doc.id === documentId 
+            ? { ...doc, display_name: newDisplayName.trim() }
+            : doc
+        )
+      );
+
+      toast({
+        title: "Document Renamed",
+        description: "The document name has been updated successfully"
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error renaming document:', error);
+      toast({
+        title: "Rename Failed",
+        description: "Failed to rename document. Please try again.",
+        variant: "destructive"
+      });
+      return false;
     }
   };
 
@@ -312,6 +357,7 @@ export const useClientData = () => {
     fetchingCases,
     setActiveCase,
     sendMessage,
+    renameDocument,
     refreshData
   };
 };

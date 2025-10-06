@@ -749,6 +749,7 @@ export type Database = {
           case_id: string
           conversation_id: string | null
           created_at: string
+          display_name: string | null
           document_category: string | null
           extracted_data: Json | null
           file_name: string
@@ -764,6 +765,7 @@ export type Database = {
           case_id: string
           conversation_id?: string | null
           created_at?: string
+          display_name?: string | null
           document_category?: string | null
           extracted_data?: Json | null
           file_name: string
@@ -779,6 +781,7 @@ export type Database = {
           case_id?: string
           conversation_id?: string | null
           created_at?: string
+          display_name?: string | null
           document_category?: string | null
           extracted_data?: Json | null
           file_name?: string

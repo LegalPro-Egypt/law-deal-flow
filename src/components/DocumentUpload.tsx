@@ -3,14 +3,17 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Upload, File, X, CheckCircle, AlertCircle } from 'lucide-react';
+import { Upload, File, X, CheckCircle, AlertCircle, Pencil, Check } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import MobileFileInput from './MobileFileInput';
 
 interface UploadedFile {
+  id?: string;
   name: string;
+  display_name?: string;
   size: number;
   url: string;
   category: string;
@@ -32,6 +35,7 @@ interface DocumentUploadProps {
   existingDocuments?: Array<{
     id: string;
     file_name: string;
+    display_name?: string;
     file_size: number;
     file_url: string;
     document_category?: string;
@@ -49,6 +53,8 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
   const [isUploading, setIsUploading] = useState<Record<string, boolean>>({});
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState<string>('');
   const isMobile = useIsMobile();
 
   // Show loading state or case not ready message
@@ -226,6 +232,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
           .insert({
             case_id: caseId,
             file_name: file.name,
+            display_name: file.name.replace(/^\d+_/, ''), // Remove timestamp prefix for cleaner display
             file_url: publicUrl,
             file_type: file.type,
             file_size: file.size,
@@ -304,6 +311,59 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
     setUploadedFiles(prev => prev.filter(file => file.url !== fileToRemove.url));
   };
 
+  const handleRename = async (file: UploadedFile, newName: string) => {
+    if (!newName.trim() || !file.id) return;
+
+    try {
+      const { error } = await supabase
+        .from('documents')
+        .update({ display_name: newName.trim() })
+        .eq('id', file.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setUploadedFiles(prev => 
+        prev.map(f => 
+          f.id === file.id 
+            ? { ...f, display_name: newName.trim() }
+            : f
+        )
+      );
+
+      toast({
+        title: "Document Renamed",
+        description: "The document name has been updated successfully"
+      });
+
+      setEditingId(null);
+      setEditingName('');
+    } catch (error) {
+      console.error('Error renaming document:', error);
+      toast({
+        title: "Rename Failed",
+        description: "Failed to rename document. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const startEditing = (file: UploadedFile) => {
+    setEditingId(file.id || null);
+    setEditingName(file.display_name || file.name.replace(/^\d+_/, ''));
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditingName('');
+  };
+
+  const getDisplayName = (file: UploadedFile) => {
+    if (file.display_name) return file.display_name;
+    // Remove timestamp prefix from filename
+    return file.name.replace(/^\d+_/, '');
+  };
+
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -320,7 +380,9 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
   useEffect(() => {
     if (existingDocuments.length > 0) {
       const formattedExisting = existingDocuments.map(doc => ({
+        id: doc.id,
         name: doc.file_name,
+        display_name: doc.display_name,
         size: doc.file_size,
         url: doc.file_url,
         category: doc.document_category || 'case'
@@ -428,22 +490,74 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
 
                 {/* Uploaded Files */}
                 {categoryFiles.map((file, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 bg-muted rounded">
+                  <div key={index} className="flex items-center justify-between p-2 bg-muted rounded gap-2">
                     <div className="flex items-center space-x-2 flex-1 min-w-0">
                       <File className="h-4 w-4 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{file.name}</p>
-                        <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
+                        {editingId === file.id ? (
+                          <div className="flex items-center gap-2">
+                            <Input
+                              value={editingName}
+                              onChange={(e) => setEditingName(e.target.value)}
+                              className="h-7 text-sm"
+                              autoFocus
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  handleRename(file, editingName);
+                                } else if (e.key === 'Escape') {
+                                  cancelEditing();
+                                }
+                              }}
+                            />
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRename(file, editingName)}
+                              className="h-7 w-7 p-0"
+                            >
+                              <Check className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={cancelEditing}
+                              className="h-7 w-7 p-0"
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <>
+                            <p className="text-sm font-medium truncate">{getDisplayName(file)}</p>
+                            <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
+                          </>
+                        )}
                       </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeFile(file)}
-                      className="flex-shrink-0"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
+                    {editingId !== file.id && (
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        {file.id && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => startEditing(file)}
+                            className="h-7 w-7 p-0"
+                            title="Rename document"
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeFile(file)}
+                          className="h-7 w-7 p-0"
+                          title="Remove document"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

@@ -27,7 +27,10 @@ import {
   UserCircle,
   Bot,
   HelpCircle,
-  Calendar as CalendarIcon
+  Calendar as CalendarIcon,
+  Pencil,
+  Check,
+  X
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import jsPDF from 'jspdf';
@@ -57,6 +60,8 @@ const ClientDashboard = () => {
   const [newMessage, setNewMessage] = useState("");
   const [paymentHistoryOpen, setPaymentHistoryOpen] = useState(false);
   const [intakeConversationOpen, setIntakeConversationOpen] = useState(false);
+  const [editingDocId, setEditingDocId] = useState<string | null>(null);
+  const [editingDocName, setEditingDocName] = useState<string>("");
   const [collapsedCards, setCollapsedCards] = useState({
     timeline: true,
     progress: true,
@@ -77,6 +82,7 @@ const ClientDashboard = () => {
     fetchingCases,
     setActiveCase, 
     sendMessage,
+    renameDocument,
     refreshData
   } = useClientData();
   
@@ -206,7 +212,8 @@ const ClientDashboard = () => {
         let yPos = 30;
         
         documents.forEach((doc, index) => {
-          pdf.text(`${index + 1}. ${doc.file_name} (${doc.file_type})`, 20, yPos);
+          const displayName = doc.display_name || doc.file_name.replace(/^\d+_/, '');
+          pdf.text(`${index + 1}. ${displayName} (${doc.file_type})`, 20, yPos);
           pdf.text(`   Uploaded: ${formatDate(doc.created_at)}`, 20, yPos + 5);
           yPos += 15;
         });
@@ -787,30 +794,98 @@ const ClientDashboard = () => {
                   <div className="mb-6">
                     <h4 className="font-medium mb-4">Uploaded Documents</h4>
                     <div className="grid gap-4">
-                      {documents.map((doc, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                          <div className="flex items-center space-x-3">
-                            <FileText className="h-5 w-5 text-muted-foreground" />
-                            <div>
-                              <p className="font-medium">{doc.file_name}</p>
-                              <p className="text-sm text-muted-foreground">
-                                {Math.round(doc.file_size / 1024)} KB • Uploaded {formatDate(doc.created_at)}
-                                {doc.document_category && ` • ${doc.document_category}`}
-                              </p>
+                      {documents.map((doc, index) => {
+                        const displayName = doc.display_name || doc.file_name.replace(/^\d+_/, '');
+                        const isEditing = editingDocId === doc.id;
+                        
+                        return (
+                          <div key={index} className="flex items-center justify-between p-3 border rounded-lg gap-3">
+                            <div className="flex items-center space-x-3 flex-1 min-w-0">
+                              <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                {isEditing ? (
+                                  <div className="flex items-center gap-2">
+                                    <Input
+                                      value={editingDocName}
+                                      onChange={(e) => setEditingDocName(e.target.value)}
+                                      className="h-8 text-sm"
+                                      autoFocus
+                                      onKeyDown={async (e) => {
+                                        if (e.key === 'Enter') {
+                                          const success = await renameDocument(doc.id, editingDocName);
+                                          if (success) {
+                                            setEditingDocId(null);
+                                            setEditingDocName('');
+                                          }
+                                        } else if (e.key === 'Escape') {
+                                          setEditingDocId(null);
+                                          setEditingDocName('');
+                                        }
+                                      }}
+                                    />
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={async () => {
+                                        const success = await renameDocument(doc.id, editingDocName);
+                                        if (success) {
+                                          setEditingDocId(null);
+                                          setEditingDocName('');
+                                        }
+                                      }}
+                                      className="h-8 w-8 p-0"
+                                    >
+                                      <Check className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => {
+                                        setEditingDocId(null);
+                                        setEditingDocName('');
+                                      }}
+                                      className="h-8 w-8 p-0"
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <p className="font-medium truncate">{displayName}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                      {Math.round(doc.file_size / 1024)} KB • Uploaded {formatDate(doc.created_at)}
+                                      {doc.document_category && ` • ${doc.document_category}`}
+                                    </p>
+                                  </>
+                                )}
+                              </div>
                             </div>
+                            {!isEditing && (
+                              <div className="flex items-center space-x-2 flex-shrink-0">
+                                <Badge variant="secondary">
+                                  {doc.file_type}
+                                </Badge>
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost"
+                                  onClick={() => {
+                                    setEditingDocId(doc.id);
+                                    setEditingDocName(displayName);
+                                  }}
+                                  title="Rename document"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button size="sm" variant="ghost" asChild>
+                                  <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
+                                    <Download className="h-4 w-4" />
+                                  </a>
+                                </Button>
+                              </div>
+                            )}
                           </div>
-                          <div className="flex items-center space-x-2">
-                            <Badge variant="secondary">
-                              {doc.file_type}
-                            </Badge>
-                            <Button size="sm" variant="ghost" asChild>
-                              <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
-                                <Download className="h-4 w-4" />
-                              </a>
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}

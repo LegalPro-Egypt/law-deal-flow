@@ -114,6 +114,7 @@ export const useChatFileUpload = () => {
         .insert({
           case_id: caseId,
           file_name: file.name,
+          display_name: file.name.replace(/^\d+_/, ''), // Remove timestamp prefix for cleaner display
           file_url: signedUrlData.signedUrl,
           file_type: file.type,
           file_size: file.size,
