@@ -34,17 +34,23 @@ export const DocumentThumbnail: React.FC<DocumentThumbnailProps> = ({
   // Get optimized image URL with transformations
   const getOptimizedImageUrl = (url: string) => {
     if (!isImage) return url;
-    
+
     // Signed URLs (private buckets) don't support transformations
     if (url.includes('?token=')) {
       return url;
     }
-    
-    // For public URLs, add transformation parameters
+
     const sizeMap = { small: 80, medium: 200, large: 320 };
     const dimension = sizeMap[size];
-    
-    // Check if URL already has query parameters
+
+    // For public images, use Supabase render endpoint to resize
+    if (url.includes('/storage/v1/object/public/')) {
+      const renderUrl = url.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/');
+      const separator = renderUrl.includes('?') ? '&' : '?';
+      return `${renderUrl}${separator}width=${dimension}&height=${dimension}&quality=80`;
+    }
+
+    // Fallback: try appending params, or return original
     const separator = url.includes('?') ? '&' : '?';
     return `${url}${separator}width=${dimension}&height=${dimension}&quality=80`;
   };
@@ -76,8 +82,15 @@ export const DocumentThumbnail: React.FC<DocumentThumbnailProps> = ({
           className="w-full h-full object-cover"
           loading="lazy"
           onError={(e) => {
-            e.currentTarget.style.display = 'none';
-            e.currentTarget.nextElementSibling?.classList.remove('hidden');
+            const imgEl = e.currentTarget as HTMLImageElement;
+            // If optimized URL failed, try original URL once
+            if (!imgEl.dataset.fallbackTried) {
+              imgEl.dataset.fallbackTried = 'true';
+              imgEl.src = fileUrl;
+              return;
+            }
+            imgEl.style.display = 'none';
+            imgEl.nextElementSibling?.classList.remove('hidden');
           }}
         />
       ) : (
