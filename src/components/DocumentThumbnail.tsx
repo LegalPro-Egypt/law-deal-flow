@@ -68,6 +68,21 @@ export const DocumentThumbnail: React.FC<DocumentThumbnailProps> = ({
     return `${url}${separator}width=${dimension}&height=${dimension}&quality=80`;
   };
 
+  // Helper to extract bucket and path from Supabase Storage URLs
+  const extractBucketPath = (url: string) => {
+    try {
+      const u = new URL(url);
+      const parts = u.pathname.split('/');
+      const idx = parts.findIndex((p) => p === 'object');
+      if (idx >= 0 && parts.length > idx + 3) {
+        const bucket = parts[idx + 2];
+        const path = decodeURIComponent(parts.slice(idx + 3).join('/'));
+        return { bucket, path } as const;
+      }
+    } catch {}
+    return null;
+  };
+
   // Resolve fresh signed URL for private images; optimize public ones
   useEffect(() => {
     if (!isImage) {
@@ -75,39 +90,25 @@ export const DocumentThumbnail: React.FC<DocumentThumbnailProps> = ({
       return;
     }
 
+    const bp = extractBucketPath(fileUrl);
+    const bucketName = bp?.bucket;
+
     const isSigned = fileUrl.includes('?token=') || fileUrl.includes('/storage/v1/object/sign/');
+    const shouldResign = isSigned || bucketName === 'case-documents';
 
-    if (isSigned) {
-      const extractBucketPath = (url: string) => {
-        try {
-          const u = new URL(url);
-          const parts = u.pathname.split('/');
-          const idx = parts.findIndex((p) => p === 'object');
-          if (idx >= 0 && parts.length > idx + 3) {
-            const bucket = parts[idx + 2];
-            const path = decodeURIComponent(parts.slice(idx + 3).join('/'));
-            return { bucket, path } as const;
-          }
-        } catch {}
-        return null;
-      };
-
+    if (shouldResign && bp) {
       (async () => {
         try {
-          const bp = extractBucketPath(fileUrl);
-          if (bp) {
-            const { data } = await supabase.storage
-              .from(bp.bucket)
-              .createSignedUrl(bp.path, 3600);
-            if (data?.signedUrl) {
-              setResolvedSrc(data.signedUrl);
-              return;
-            }
+          const { data } = await supabase.storage
+            .from(bp.bucket)
+            .createSignedUrl(bp.path, 3600);
+          if (data?.signedUrl) {
+            setResolvedSrc(data.signedUrl);
+            return;
           }
         } catch {}
         setResolvedSrc(fileUrl);
       })();
-
       return;
     }
 
@@ -147,18 +148,53 @@ export const DocumentThumbnail: React.FC<DocumentThumbnailProps> = ({
               failedUrl: imgEl.src,
               originalUrl: fileUrl,
             });
+
+            const bp = extractBucketPath(fileUrl);
+
+            // Try to re-sign once (useful if bucket is private like "case-documents")
+            if (!imgEl.dataset.signRetryTried && bp) {
+              imgEl.dataset.signRetryTried = 'true';
+              supabase.storage
+                .from(bp.bucket)
+                .createSignedUrl(bp.path, 3600)
+                .then(({ data }) => {
+                  if (data?.signedUrl) {
+                    imgEl.src = data.signedUrl;
+                  } else {
+                    if (!imgEl.dataset.fallbackTried) {
+                      imgEl.dataset.fallbackTried = 'true';
+                      imgEl.src = fileUrl;
+                    } else {
+                      imgEl.style.display = 'none';
+                      const fallback = imgEl.nextElementSibling as HTMLElement;
+                      if (fallback) fallback.style.display = 'flex';
+                    }
+                  }
+                })
+                .catch(() => {
+                  if (!imgEl.dataset.fallbackTried) {
+                    imgEl.dataset.fallbackTried = 'true';
+                    imgEl.src = fileUrl;
+                  } else {
+                    imgEl.style.display = 'none';
+                    const fallback = imgEl.nextElementSibling as HTMLElement;
+                    if (fallback) fallback.style.display = 'flex';
+                  }
+                });
+              return;
+            }
+
             // If optimized/signed URL failed, try original URL once
             if (!imgEl.dataset.fallbackTried) {
               imgEl.dataset.fallbackTried = 'true';
               imgEl.src = fileUrl;
               return;
             }
+
             // Hide the image and show the fallback icon
             imgEl.style.display = 'none';
             const fallback = imgEl.nextElementSibling as HTMLElement;
-            if (fallback) {
-              fallback.style.display = 'flex';
-            }
+            if (fallback) fallback.style.display = 'flex';
           }}
         />
       ) : (
