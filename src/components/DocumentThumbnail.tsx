@@ -34,9 +34,19 @@ export const DocumentThumbnail: React.FC<DocumentThumbnailProps> = ({
   // Get optimized image URL with transformations
   const getOptimizedImageUrl = (url: string) => {
     if (!isImage) return url;
+    
+    // Signed URLs (private buckets) don't support transformations
+    if (url.includes('?token=')) {
+      return url;
+    }
+    
+    // For public URLs, add transformation parameters
     const sizeMap = { small: 80, medium: 200, large: 320 };
     const dimension = sizeMap[size];
-    return `${url}?width=${dimension}&height=${dimension}&quality=80`;
+    
+    // Check if URL already has query parameters
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}width=${dimension}&height=${dimension}&quality=80`;
   };
 
   const getFileIcon = () => {
@@ -64,6 +74,7 @@ export const DocumentThumbnail: React.FC<DocumentThumbnailProps> = ({
           src={getOptimizedImageUrl(fileUrl)}
           alt={fileName}
           className="w-full h-full object-cover"
+          loading="lazy"
           onError={(e) => {
             e.currentTarget.style.display = 'none';
             e.currentTarget.nextElementSibling?.classList.remove('hidden');
