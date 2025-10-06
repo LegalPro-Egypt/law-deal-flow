@@ -30,7 +30,10 @@ import {
   Calendar as CalendarIcon,
   Pencil,
   Check,
-  X
+  X,
+  LayoutGrid,
+  LayoutList,
+  Eye
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import jsPDF from 'jspdf';
@@ -55,6 +58,8 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
 import { downloadPDF, getUserFriendlyDownloadMessage } from "@/utils/pdfDownload";
+import { DocumentThumbnail } from "@/components/DocumentThumbnail";
+import { DocumentPreview } from "@/components/DocumentPreview";
 
 const ClientDashboard = () => {
   const [newMessage, setNewMessage] = useState("");
@@ -62,6 +67,14 @@ const ClientDashboard = () => {
   const [intakeConversationOpen, setIntakeConversationOpen] = useState(false);
   const [editingDocId, setEditingDocId] = useState<string | null>(null);
   const [editingDocName, setEditingDocName] = useState<string>("");
+  const [documentViewMode, setDocumentViewMode] = useState<'list' | 'grid'>(() => {
+    return (localStorage.getItem('documentsViewMode') as 'list' | 'grid') || 'list';
+  });
+  const [previewDocument, setPreviewDocument] = useState<{
+    file_name: string;
+    file_type: string;
+    file_url: string;
+  } | null>(null);
   const [collapsedCards, setCollapsedCards] = useState({
     timeline: true,
     progress: true,
@@ -101,6 +114,12 @@ const ClientDashboard = () => {
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
+  };
+
+  const toggleViewMode = () => {
+    const newMode = documentViewMode === 'list' ? 'grid' : 'list';
+    setDocumentViewMode(newMode);
+    localStorage.setItem('documentsViewMode', newMode);
   };
 
   const getStatusColor = (status: string) => {
@@ -774,35 +793,63 @@ const ClientDashboard = () => {
               <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>Case Documents</CardTitle>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="h-5 w-5" />
+                      Case Documents
+                    </CardTitle>
                     <CardDescription>
                       Upload and manage all case-related documents
                     </CardDescription>
                   </div>
-                  {collapsedCards.documents ? (
-                    <ChevronRight className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
-                  )}
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleViewMode();
+                      }}
+                      title={`Switch to ${documentViewMode === 'list' ? 'grid' : 'list'} view`}
+                    >
+                      {documentViewMode === 'list' ? (
+                        <LayoutGrid className="h-4 w-4" />
+                      ) : (
+                        <LayoutList className="h-4 w-4" />
+                      )}
+                    </Button>
+                    {collapsedCards.documents ? (
+                      <ChevronRight className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
+                  </div>
                 </div>
               </CardHeader>
             </CollapsibleTrigger>
             <CollapsibleContent>
               <CardContent>
-                {/* Uploaded Documents List */}
+                {/* Uploaded Documents */}
                 {documents.length > 0 && (
                   <div className="mb-6">
                     <h4 className="font-medium mb-4">Uploaded Documents</h4>
-                    <div className="grid gap-4">
-                      {documents.map((doc, index) => {
-                        const displayName = doc.display_name || doc.file_name.replace(/^\d+_/, '');
-                        const isEditing = editingDocId === doc.id;
-                        
-                        return (
-                          <div key={index} className="flex items-center justify-between p-3 border rounded-lg gap-3">
-                            <div className="flex items-center space-x-3 flex-1 min-w-0">
-                              <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                              <div className="flex-1 min-w-0">
+                    
+                    {documentViewMode === 'list' ? (
+                      <div className="grid gap-4">
+                        {documents.map((doc, index) => {
+                          const displayName = doc.display_name || doc.file_name.replace(/^\d+_/, '');
+                          const isEditing = editingDocId === doc.id;
+                          
+                          return (
+                            <div key={index} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
+                              <div className="flex items-center space-x-3 flex-1 min-w-0">
+                                <DocumentThumbnail
+                                  fileUrl={doc.file_url}
+                                  fileName={doc.file_name}
+                                  fileType={doc.file_type}
+                                  size="small"
+                                  onClick={() => setPreviewDocument(doc)}
+                                />
+                                <div className="flex-1 min-w-0">
                                 {isEditing ? (
                                   <div className="flex items-center gap-2">
                                     <Input
@@ -860,33 +907,154 @@ const ClientDashboard = () => {
                                 )}
                               </div>
                             </div>
-                            {!isEditing && (
-                              <div className="flex items-center space-x-2 flex-shrink-0">
-                                <Badge variant="secondary">
-                                  {doc.file_type}
-                                </Badge>
-                                <Button 
-                                  size="sm" 
-                                  variant="ghost"
-                                  onClick={() => {
-                                    setEditingDocId(doc.id);
-                                    setEditingDocName(displayName);
-                                  }}
-                                  title="Rename document"
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                </Button>
-                                <Button size="sm" variant="ghost" asChild>
-                                  <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
-                                    <Download className="h-4 w-4" />
-                                  </a>
-                                </Button>
+                              {!isEditing && (
+                                <div className="flex items-center space-x-2 flex-shrink-0">
+                                  <Badge variant="secondary" className="hidden sm:inline-flex">
+                                    {doc.file_type.split('/')[1] || 'file'}
+                                  </Badge>
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost"
+                                    onClick={() => setPreviewDocument(doc)}
+                                    title="Preview document"
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost"
+                                    onClick={() => {
+                                      setEditingDocId(doc.id);
+                                      setEditingDocName(displayName);
+                                    }}
+                                    title="Rename document"
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                  <Button size="sm" variant="ghost" asChild>
+                                    <a href={doc.file_url} target="_blank" rel="noopener noreferrer" download>
+                                      <Download className="h-4 w-4" />
+                                    </a>
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {documents.map((doc, index) => {
+                          const displayName = doc.display_name || doc.file_name.replace(/^\d+_/, '');
+                          const isEditing = editingDocId === doc.id;
+                          
+                          return (
+                            <div key={index} className="border rounded-lg p-3 hover:bg-muted/50 transition-colors group">
+                              <div className="flex flex-col items-center space-y-2">
+                                <DocumentThumbnail
+                                  fileUrl={doc.file_url}
+                                  fileName={doc.file_name}
+                                  fileType={doc.file_type}
+                                  size="medium"
+                                  onClick={() => setPreviewDocument(doc)}
+                                />
+                                {isEditing ? (
+                                  <div className="w-full space-y-2">
+                                    <Input
+                                      value={editingDocName}
+                                      onChange={(e) => setEditingDocName(e.target.value)}
+                                      className="h-8 text-sm"
+                                      autoFocus
+                                      onKeyDown={async (e) => {
+                                        if (e.key === 'Enter') {
+                                          const success = await renameDocument(doc.id, editingDocName);
+                                          if (success) {
+                                            setEditingDocId(null);
+                                            setEditingDocName('');
+                                          }
+                                        } else if (e.key === 'Escape') {
+                                          setEditingDocId(null);
+                                          setEditingDocName('');
+                                        }
+                                      }}
+                                    />
+                                    <div className="flex justify-center gap-1">
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={async () => {
+                                          const success = await renameDocument(doc.id, editingDocName);
+                                          if (success) {
+                                            setEditingDocId(null);
+                                            setEditingDocName('');
+                                          }
+                                        }}
+                                        className="h-7 w-7 p-0"
+                                      >
+                                        <Check className="h-3 w-3" />
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => {
+                                          setEditingDocId(null);
+                                          setEditingDocName('');
+                                        }}
+                                        className="h-7 w-7 p-0"
+                                      >
+                                        <X className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <p className="text-sm font-medium text-center truncate w-full px-1" title={displayName}>
+                                      {displayName}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {Math.round(doc.file_size / 1024)} KB
+                                    </p>
+                                    <div className="flex justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                      <Button 
+                                        size="sm" 
+                                        variant="ghost"
+                                        onClick={() => setPreviewDocument(doc)}
+                                        className="h-7 w-7 p-0"
+                                        title="Preview"
+                                      >
+                                        <Eye className="h-3 w-3" />
+                                      </Button>
+                                      <Button 
+                                        size="sm" 
+                                        variant="ghost"
+                                        onClick={() => {
+                                          setEditingDocId(doc.id);
+                                          setEditingDocName(displayName);
+                                        }}
+                                        className="h-7 w-7 p-0"
+                                        title="Rename"
+                                      >
+                                        <Pencil className="h-3 w-3" />
+                                      </Button>
+                                      <Button 
+                                        size="sm" 
+                                        variant="ghost" 
+                                        asChild
+                                        className="h-7 w-7 p-0"
+                                      >
+                                        <a href={doc.file_url} target="_blank" rel="noopener noreferrer" download title="Download">
+                                          <Download className="h-3 w-3" />
+                                        </a>
+                                      </Button>
+                                    </div>
+                                  </>
+                                )}
                               </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -992,6 +1160,13 @@ const ClientDashboard = () => {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Document Preview Dialog */}
+        <DocumentPreview
+          isOpen={!!previewDocument}
+          onClose={() => setPreviewDocument(null)}
+          document={previewDocument}
+        />
       </div>
     </div>
   );

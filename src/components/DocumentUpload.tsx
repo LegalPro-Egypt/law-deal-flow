@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Upload, File, X, CheckCircle, AlertCircle, Pencil, Check } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import MobileFileInput from './MobileFileInput';
+import { DocumentThumbnail } from '@/components/DocumentThumbnail';
 
 interface UploadedFile {
   id?: string;
@@ -16,6 +17,7 @@ interface UploadedFile {
   display_name?: string;
   size: number;
   url: string;
+  type: string;
   category: string;
 }
 
@@ -38,6 +40,7 @@ interface DocumentUploadProps {
     display_name?: string;
     file_size: number;
     file_url: string;
+    file_type: string;
     document_category?: string;
   }>;
   onRefreshRequested?: () => void;
@@ -221,6 +224,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
         name: file.name,
         size: file.size,
         url: publicUrl,
+        type: file.type,
         category
       };
 
@@ -385,6 +389,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
         display_name: doc.display_name,
         size: doc.file_size,
         url: doc.file_url,
+        type: doc.file_type,
         category: doc.document_category || 'case'
       }));
       setUploadedFiles(formattedExisting);
@@ -492,7 +497,12 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
                 {categoryFiles.map((file, index) => (
                   <div key={index} className="flex items-center justify-between p-2 bg-muted rounded gap-2">
                     <div className="flex items-center space-x-2 flex-1 min-w-0">
-                      <File className="h-4 w-4 flex-shrink-0" />
+                      <DocumentThumbnail
+                        fileUrl={file.url || ''}
+                        fileName={file.name}
+                        fileType={file.type}
+                        size="small"
+                      />
                       <div className="flex-1 min-w-0">
                         {editingId === file.id ? (
                           <div className="flex items-center gap-2">
