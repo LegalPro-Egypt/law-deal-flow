@@ -4,7 +4,7 @@ import { FileText, File, FileSpreadsheet, FileImage } from 'lucide-react';
 interface DocumentThumbnailProps {
   fileUrl: string;
   fileName: string;
-  fileType: string;
+  fileType?: string;
   size?: 'small' | 'medium' | 'large';
   onClick?: () => void;
 }
@@ -16,7 +16,7 @@ export const DocumentThumbnail: React.FC<DocumentThumbnailProps> = ({
   size = 'medium',
   onClick,
 }) => {
-  const isImage = fileType.startsWith('image/');
+  const isImage = fileType?.startsWith('image/') || false;
   const isPDF = fileType === 'application/pdf';
   
   const sizeClasses = {
@@ -59,10 +59,10 @@ export const DocumentThumbnail: React.FC<DocumentThumbnailProps> = ({
     if (isPDF) {
       return <FileText className={`${iconSizes[size]} text-red-500`} />;
     }
-    if (fileType.includes('spreadsheet') || fileType.includes('excel')) {
+    if (fileType?.includes('spreadsheet') || fileType?.includes('excel')) {
       return <FileSpreadsheet className={`${iconSizes[size]} text-green-500`} />;
     }
-    if (fileType.includes('word') || fileType.includes('document')) {
+    if (fileType?.includes('word') || fileType?.includes('document')) {
       return <FileText className={`${iconSizes[size]} text-blue-500`} />;
     }
     return <File className={`${iconSizes[size]} text-muted-foreground`} />;
@@ -89,8 +89,12 @@ export const DocumentThumbnail: React.FC<DocumentThumbnailProps> = ({
               imgEl.src = fileUrl;
               return;
             }
+            // Hide the image and show the fallback icon
             imgEl.style.display = 'none';
-            imgEl.nextElementSibling?.classList.remove('hidden');
+            const fallback = imgEl.nextElementSibling as HTMLElement;
+            if (fallback) {
+              fallback.style.display = 'flex';
+            }
           }}
         />
       ) : (
@@ -99,7 +103,7 @@ export const DocumentThumbnail: React.FC<DocumentThumbnailProps> = ({
         </div>
       )}
       {isImage && (
-        <div className="hidden flex items-center justify-center w-full h-full">
+        <div className="hidden items-center justify-center w-full h-full">
           <FileImage className={`${iconSizes[size]} text-muted-foreground`} />
         </div>
       )}
