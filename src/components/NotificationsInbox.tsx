@@ -136,7 +136,7 @@ export const NotificationsInbox = ({ activeCaseId }: NotificationsInboxProps) =>
                     </div>
                     
                     <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                      {notification.action_required && notification.type === 'proposal_received' && (
+                      {(notification.type === 'proposal_received' || (notification.type === 'general' && (notification as any).metadata?.proposal_id)) && (
                         <Button
                           size="sm"
                           className="w-full sm:w-auto"

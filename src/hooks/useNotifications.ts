@@ -234,8 +234,10 @@ export const useNotifications = () => {
   }, [user]);
 
   const needsPayment = (proposal: Proposal & { case: any }) => {
-    // Check if consultation payment is needed
-    if (proposal.status === 'accepted' && proposal.case && !proposal.case.consultation_paid) {
+    // Check if consultation payment is needed (either by proposal status or case status)
+    if ((proposal.status === 'accepted' || proposal.case?.status === 'proposal_accepted') && 
+        proposal.case && 
+        !proposal.case.consultation_paid) {
       return true;
     }
     
