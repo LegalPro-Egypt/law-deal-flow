@@ -295,13 +295,13 @@ export const ProposalReviewDialog = ({
               
               <div className="text-center p-3 sm:p-4 bg-accent/5 rounded-lg border-2 border-primary/20 min-w-0">
                 <div className="font-semibold text-lg sm:text-xl text-primary break-words">
-                  ${((proposal.consultation_fee || 0) + (proposal.final_total_fee || proposal.remaining_fee || 0) + (proposal.total_additional_fees || 0)).toLocaleString()}
+                  ${((proposal.consultation_fee || 0) + (proposal.final_total_fee || proposal.remaining_fee || 0)).toLocaleString()}
                 </div>
                 <div className="text-xs sm:text-sm text-muted-foreground break-words">
                   {currentLanguage === 'ar' ? 'المجموع النهائي (شامل رسوم الاستشارة)' : 'Final Total (Including Consultation Fee)'}
                 </div>
                 <div className="text-xs text-muted-foreground mt-1">
-                  Consultation: ${proposal.consultation_fee?.toLocaleString() || '0'} + Remaining: ${(proposal.remaining_fee || 0).toLocaleString()} + Additional Fees: ${(proposal.total_additional_fees || 0).toFixed(2)}
+                  Consultation: ${proposal.consultation_fee?.toLocaleString() || '0'} + Remaining: ${(proposal.remaining_fee || 0).toLocaleString()} + Platform Fee: ${(proposal.platform_fee_amount || 0).toFixed(2)}
                 </div>
               </div>
             </CardContent>

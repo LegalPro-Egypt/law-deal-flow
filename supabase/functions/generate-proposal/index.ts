@@ -34,14 +34,14 @@ serve(async (req) => {
       });
     }
 
-    // Calculate platform fee (6% includes everything)
+    // Calculate platform fee (6% on both consultation and remaining fees)
     const platformFeePercentage = 6.0;
     
+    const consultationFee = proposalInput.consultation_fee || 0;
     const remainingFee = proposalInput.remaining_fee || 0;
-    const platformFeeAmount = remainingFee * (platformFeePercentage / 100);
+    const baseTotalFee = consultationFee + remainingFee;
+    const platformFeeAmount = baseTotalFee * (platformFeePercentage / 100);
     const totalAdditionalFees = platformFeeAmount;
-    
-    const baseTotalFee = (proposalInput.consultation_fee || 0) + remainingFee;
     const finalTotalFee = baseTotalFee + totalAdditionalFees;
 
     if (!openAIApiKey) {
