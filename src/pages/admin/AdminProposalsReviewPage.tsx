@@ -160,12 +160,13 @@ export default function AdminProposalsReviewPage() {
 
       if (caseError) throw caseError;
 
-      // Clean up any related notifications
+      // Clean up notifications for this specific proposal (using metadata->proposal_id)
       const { error: notificationError } = await supabase
         .from('notifications')
         .delete()
         .eq('case_id', proposal.case_id)
-        .in('type', ['proposal_sent', 'proposal_received', 'proposal_approved', 'proposal_rejected']);
+        .in('type', ['proposal_sent', 'proposal_received', 'proposal_approved', 'proposal_rejected'])
+        .filter('metadata->>proposal_id', 'eq', proposalToDelete);
 
       if (notificationError) {
         console.warn('Failed to clean up notifications:', notificationError);
