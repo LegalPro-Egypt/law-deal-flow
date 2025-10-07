@@ -107,7 +107,7 @@ export const NotificationsInbox = ({ activeCaseId }: NotificationsInboxProps) =>
           {filteredNotifications.map((notification) => (
             <div
               key={notification.id}
-              className={`p-4 rounded-lg border ${
+              className={`p-4 rounded-lg border overflow-hidden ${
                 !notification.is_read 
                   ? 'bg-primary/5 border-primary/20' 
                   : 'bg-background'
