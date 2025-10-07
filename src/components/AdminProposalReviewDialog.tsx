@@ -255,12 +255,11 @@ export const AdminProposalReviewDialog = ({
 
       if (caseError) throw caseError;
 
-      // Clean up any related notifications
+      // Clean up ANY notifications referencing this proposal (using metadata->proposal_id)
       const { error: notificationError } = await supabase
         .from('notifications')
         .delete()
-        .eq('case_id', proposal.case_id)
-        .in('type', ['proposal_received', 'proposal_approved', 'proposal_rejected']);
+        .or(`metadata->>proposal_id.eq.${proposal.id},and(case_id.eq.${proposal.case_id},type.in.(proposal_received,proposal_approved,proposal_rejected,proposal_sent,general))`);
 
       if (notificationError) {
         console.warn('Failed to clean up notifications:', notificationError);
