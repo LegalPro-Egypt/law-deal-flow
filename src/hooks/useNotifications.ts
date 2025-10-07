@@ -79,7 +79,7 @@ export const useNotifications = () => {
         .from('proposals')
         .select(`
           *,
-          case:cases(case_number, title)
+          case:cases(id, case_number, title, status, consultation_paid, payment_status, grace_period_expires_at, remaining_fee, assigned_lawyer_id)
         `)
         .eq('client_id', user.id)
         .in('status', ['approved', 'sent', 'viewed', 'accepted', 'rejected'])
@@ -234,18 +234,24 @@ export const useNotifications = () => {
   }, [user]);
 
   const needsPayment = (proposal: Proposal & { case: any }) => {
-    // Check if consultation payment is needed (either by proposal status or case status)
-    if ((proposal.status === 'accepted' || proposal.case?.status === 'proposal_accepted') && 
-        proposal.case && 
-        !proposal.case.consultation_paid) {
+    if (!proposal.case) return false;
+    
+    // Check if consultation payment is needed
+    // Use case status as primary check since it's more reliable
+    if (proposal.case.status === 'proposal_accepted' && !proposal.case.consultation_paid) {
+      return true;
+    }
+    
+    // Also check proposal status as fallback
+    if (proposal.status === 'accepted' && !proposal.case.consultation_paid) {
       return true;
     }
     
     // Check if remaining payment is needed after consultation completion
-    if (proposal.case?.status === 'consultation_completed' && 
-        proposal.case?.grace_period_expires_at &&
+    if (proposal.case.status === 'consultation_completed' && 
+        proposal.case.grace_period_expires_at &&
         new Date(proposal.case.grace_period_expires_at) > new Date() &&
-        proposal.case?.remaining_fee > 0) {
+        proposal.case.remaining_fee > 0) {
       return true;
     }
     

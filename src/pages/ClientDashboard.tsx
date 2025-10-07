@@ -477,6 +477,32 @@ const ClientDashboard = () => {
                     <Receipt className="h-4 w-4 mr-2" />
                     Payment History
                   </DropdownMenuItem>
+                  {activeCase.status === 'proposal_accepted' && !activeCase.consultation_paid && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        onClick={() => {
+                          navigate('/payment', {
+                            state: {
+                              paymentData: {
+                                caseId: activeCase.id,
+                                consultationFee: activeCase.consultation_fee || 0,
+                                remainingFee: activeCase.remaining_fee || 0,
+                                totalFee: activeCase.total_fee || 0,
+                                lawyerName: 'Your Lawyer',
+                                caseTitle: activeCase.title,
+                                type: 'consultation'
+                              }
+                            }
+                          });
+                        }}
+                        className="text-primary font-medium"
+                      >
+                        <Receipt className="h-4 w-4 mr-2" />
+                        Complete Payment
+                      </DropdownMenuItem>
+                    </>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut} className="text-destructive hover:text-destructive">
                     <LogOut className="h-4 w-4 mr-2" />
@@ -490,6 +516,68 @@ const ClientDashboard = () => {
       </header>
 
       <div className="container mx-auto px-4 py-8 max-w-6xl space-y-4">
+        {/* Payment Required Card */}
+        {activeCase.status === 'proposal_accepted' && !activeCase.consultation_paid && (
+          <Card className="bg-gradient-to-r from-primary/10 via-primary/5 to-background border-2 border-primary shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center text-primary">
+                <AlertCircle className="h-6 w-6 mr-2" />
+                Payment Required
+              </CardTitle>
+              <CardDescription>
+                Your proposal has been accepted. Complete your payment to proceed with legal services.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="p-4 bg-background/50 rounded-lg border">
+                    <div className="text-sm text-muted-foreground mb-1">Consultation Fee</div>
+                    <div className="text-2xl font-bold text-primary">
+                      ${activeCase.consultation_fee?.toLocaleString() || '0'}
+                    </div>
+                  </div>
+                  <div className="p-4 bg-background/50 rounded-lg border">
+                    <div className="text-sm text-muted-foreground mb-1">Remaining Fee</div>
+                    <div className="text-2xl font-bold">
+                      ${activeCase.remaining_fee?.toLocaleString() || '0'}
+                    </div>
+                  </div>
+                  <div className="p-4 bg-primary/10 rounded-lg border-2 border-primary">
+                    <div className="text-sm text-muted-foreground mb-1">Total Amount</div>
+                    <div className="text-2xl font-bold text-primary">
+                      ${activeCase.total_fee?.toLocaleString() || '0'}
+                    </div>
+                  </div>
+                </div>
+                
+                <Button 
+                  size="lg" 
+                  className="w-full sm:w-auto"
+                  onClick={() => {
+                    navigate('/payment', {
+                      state: {
+                        paymentData: {
+                          caseId: activeCase.id,
+                          consultationFee: activeCase.consultation_fee || 0,
+                          remainingFee: activeCase.remaining_fee || 0,
+                          totalFee: activeCase.total_fee || 0,
+                          lawyerName: 'Your Lawyer',
+                          caseTitle: activeCase.title,
+                          type: 'consultation'
+                        }
+                      }
+                    });
+                  }}
+                >
+                  <Receipt className="h-5 w-5 mr-2" />
+                  Proceed to Payment
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Case Timeline Card */}
         <Collapsible open={!collapsedCards.timeline} onOpenChange={() => toggleCard('timeline')}>
           <Card className="bg-gradient-card shadow-card border-2 border-primary/20 hover:border-primary/40 transition-colors">
