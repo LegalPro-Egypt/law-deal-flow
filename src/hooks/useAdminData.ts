@@ -113,7 +113,7 @@ export const useAdminData = () => {
       const { count: pendingProposals } = await supabase
         .from('proposals')
         .select('*', { count: 'exact', head: true })
-        .in('status', ['pending_admin_review', 'sent']);
+        .eq('status', 'pending_admin_review');
 
       setStats({
         totalCases: totalCases || 0,
@@ -831,7 +831,7 @@ export const useAdminData = () => {
               email
             )
           `)
-          .in('status', ['pending_admin_review', 'sent'])
+          .eq('status', 'pending_admin_review')
       ]);
 
       const reviewItems = [];

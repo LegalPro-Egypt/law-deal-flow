@@ -211,7 +211,7 @@ export default function AdminProposalsReviewPage() {
       case 'rejected':
         return 'destructive';
       case 'sent':
-        return 'secondary';
+        return 'default';
       default:
         return 'outline';
     }
@@ -292,7 +292,7 @@ export default function AdminProposalsReviewPage() {
                     <div className="flex flex-wrap items-center gap-2 min-w-0">
                       <CardTitle className="text-base sm:text-lg truncate">{proposal.proposal_title}</CardTitle>
                       <Badge variant={getStatusColor(proposal.status)} className="text-xs">
-                        {proposal.status}
+                        {proposal.status === 'sent' ? 'approved' : proposal.status}
                       </Badge>
                       <Badge variant="outline" className="text-xs">{proposal.cases.category}</Badge>
                     </div>
