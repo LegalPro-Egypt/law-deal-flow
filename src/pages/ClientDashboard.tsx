@@ -525,7 +525,7 @@ const ClientDashboard = () => {
                 Payment Required
               </CardTitle>
               <CardDescription>
-                Your proposal has been accepted. Complete your payment to proceed with legal services.
+                Complete your payment to proceed with legal services.
               </CardDescription>
             </CardHeader>
             <CardContent>
