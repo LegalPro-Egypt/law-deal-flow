@@ -56,7 +56,10 @@ import { LawyerChatHistoryDialog } from "@/components/LawyerChatHistoryDialog";
 import AnonymousQAManager from "@/components/AnonymousQAManager";
 import { ProBonoApplicationsManager } from "@/components/ProBonoApplicationsManager";
 import { AdminProposalReviewDialog } from "@/components/AdminProposalReviewDialog";
+import { AdminContractReviewDialog } from "@/components/AdminContractReviewDialog";
+import { PhysicalContractConfirmation } from "@/components/PhysicalContractConfirmation";
 import { formatCaseStatus, getCaseCompletionStatus } from "@/utils/caseUtils";
+import { useContracts } from "@/hooks/useContracts";
 // Import modal components
 import { CaseListModal } from "@/components/admin/CaseListModal";
 import { IntakeListModal } from "@/components/admin/IntakeListModal";
@@ -119,6 +122,15 @@ const AdminDashboard = () => {
   const [proposalToDelete, setProposalToDelete] = useState<string | null>(null);
   const [showProposalDeleteConfirm, setShowProposalDeleteConfirm] = useState(false);
   const [emailSignups, setEmailSignups] = useState<any[]>([]);
+  
+  // Contract states
+  const [allContracts, setAllContracts] = useState<any[]>([]);
+  const [selectedContract, setSelectedContract] = useState<any>(null);
+  const [showContractReview, setShowContractReview] = useState(false);
+  const [contractCaseDetails, setContractCaseDetails] = useState<any>(null);
+  const [contractLawyerDetails, setContractLawyerDetails] = useState<any>(null);
+  const [showPhysicalConfirmDialog, setShowPhysicalConfirmDialog] = useState(false);
+  const [contractToConfirm, setContractToConfirm] = useState<string | null>(null);
   
   // Modal states for detailed views
   const [showAllCasesModal, setShowAllCasesModal] = useState(false);
@@ -206,6 +218,7 @@ const AdminDashboard = () => {
     fetchAllLawyers();
     fetchAllProposals();
     fetchEmailSignups();
+    fetchAllContracts();
   }, []);
 
   const fetchAllLawyers = async () => {
@@ -352,6 +365,44 @@ const AdminDashboard = () => {
     }
   };
 
+  const fetchAllContracts = async () => {
+    try {
+      const { data: contracts, error } = await supabase
+        .from('contracts')
+        .select('*')
+        .order('created_at', { ascending: false});
+
+      if (error) throw error;
+
+      // Fetch case and lawyer details for each contract
+      const contractsWithDetails = await Promise.all(
+        (contracts || []).map(async (contract) => {
+          const { data: caseData } = await supabase
+            .from('cases')
+            .select('id, title, category, client_name, case_number, client_email')
+            .eq('id', contract.case_id)
+            .single();
+
+          const { data: lawyer } = await supabase
+            .from('profiles')
+            .select('first_name, last_name, law_firm, years_experience, email')
+            .eq('user_id', contract.lawyer_id)
+            .single();
+
+          return {
+            ...contract,
+            cases: caseData || {},
+            lawyer: lawyer || {}
+          };
+        })
+      );
+
+      setAllContracts(contractsWithDetails);
+    } catch (error: any) {
+      console.error('Error fetching contracts:', error);
+    }
+  };
+
   const handleViewProposal = async (proposal: any) => {
     setSelectedProposal(proposal);
     setProposalCaseDetails(proposal.cases);
@@ -359,8 +410,21 @@ const AdminDashboard = () => {
     setShowProposalReview(true);
   };
 
+  const handleViewContract = async (contract: any) => {
+    setSelectedContract(contract);
+    setContractCaseDetails(contract.cases);
+    setContractLawyerDetails(contract.lawyer);
+    setShowContractReview(true);
+  };
+
+  const handleConfirmPhysicalReceipt = (contractId: string) => {
+    setContractToConfirm(contractId);
+    setShowPhysicalConfirmDialog(true);
+  };
+
   const handleProposalUpdate = () => {
     fetchAllProposals();
+    fetchAllContracts();
     refreshData();
   };
 

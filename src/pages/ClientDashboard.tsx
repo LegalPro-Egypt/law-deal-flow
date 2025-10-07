@@ -60,6 +60,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { downloadPDF, getUserFriendlyDownloadMessage } from "@/utils/pdfDownload";
 import { DocumentThumbnail } from "@/components/DocumentThumbnail";
 import { DocumentPreview } from "@/components/DocumentPreview";
+import { ContractReviewDialog } from "@/components/ContractReviewDialog";
+import { useContracts } from "@/hooks/useContracts";
 
 const ClientDashboard = () => {
   const [newMessage, setNewMessage] = useState("");
@@ -101,6 +103,9 @@ const ClientDashboard = () => {
   
   const { unreadCount } = useNotifications();
   const { totalUnreadCount } = useChatNotifications();
+  const { contracts, isLoading: contractsLoading } = useContracts(activeCase?.id, user?.id);
+  const [selectedContract, setSelectedContract] = useState<any>(null);
+  const [showContractReview, setShowContractReview] = useState(false);
 
 
   const handleSendMessage = async () => {
@@ -750,6 +755,61 @@ const ClientDashboard = () => {
           </Card>
         </Collapsible>
 
+        {/* Contracts Card */}
+        {contracts && contracts.length > 0 && (
+          <Card className="bg-gradient-card shadow-card border-2 border-primary/20 hover:border-primary/40 transition-colors">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <FileText className="h-5 w-5 mr-2" />
+                Contracts
+              </CardTitle>
+              <CardDescription>
+                View and manage your legal contracts
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {contracts.map((contract) => (
+                  <div
+                    key={contract.id}
+                    className="p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                    onClick={() => {
+                      setSelectedContract(contract);
+                      setShowContractReview(true);
+                    }}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">Contract #{contract.id.slice(0, 8)}</span>
+                      </div>
+                      <Badge className={
+                        contract.status === 'sent' ? 'bg-blue-500' :
+                        contract.status === 'viewed' ? 'bg-purple-500' :
+                        contract.status === 'downloaded' ? 'bg-green-500' :
+                        contract.status === 'sent_for_signature' ? 'bg-orange-500' :
+                        contract.status === 'physically_signed' ? 'bg-emerald-500' :
+                        contract.status === 'active' ? 'bg-green-600' :
+                        'bg-gray-500'
+                      }>
+                        {contract.status.replace(/_/g, ' ').toUpperCase()}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Created: {new Date(contract.created_at).toLocaleDateString()}
+                    </p>
+                    {contract.dhl_tracking_number && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        DHL Tracking: {contract.dhl_tracking_number}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Calendar Card */}
         <Collapsible open={!collapsedCards.calendar} onOpenChange={() => toggleCard('calendar')}>
           <Card className="bg-gradient-card shadow-card border-2 border-info/20 hover:border-info/40 transition-colors">
@@ -1169,6 +1229,24 @@ const ClientDashboard = () => {
           onClose={() => setPreviewDocument(null)}
           document={previewDocument}
         />
+
+        {/* Contract Review Dialog */}
+        {selectedContract && (
+          <ContractReviewDialog
+            isOpen={showContractReview}
+            onClose={() => {
+              setShowContractReview(false);
+              setSelectedContract(null);
+            }}
+            contract={selectedContract}
+            caseInfo={{
+              case_number: activeCase?.case_number || '',
+              title: activeCase?.title || '',
+              client_name: activeCase?.client_name || ''
+            }}
+            lawyerName="Lawyer"
+          />
+        )}
       </div>
     </div>
   );

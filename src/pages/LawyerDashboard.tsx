@@ -54,6 +54,8 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { VerificationStatusBadge } from "@/components/VerificationStatusBadge";
 import { IncomingCallNotification } from "@/components/IncomingCallNotification";
+import { ContractCreationDialog } from "@/components/ContractCreationDialog";
+import { useContracts } from "@/hooks/useContracts";
 
 
 interface LawyerStats {
@@ -105,12 +107,16 @@ const LawyerDashboard = () => {
   const [incomingCalls, setIncomingCalls] = useState<TwilioSession[]>([]);
   const { sessions, createAccessToken } = useTwilioSession();
   const { isCaseEligibleForMoneyRequest } = useMoneyRequests();
+  
+  // Get the currently selected case or default to the first case
+  const currentCase = cases.find(c => c.id === selectedCaseId) || cases[0];
+  
+  const [showContractDialog, setShowContractDialog] = useState(false);
+  const [contractProposalId, setContractProposalId] = useState<string>("");
+  const { contracts } = useContracts(currentCase?.id, user?.id);
 
   // Check if any cases are eligible for money requests
   const hasEligibleCases = cases.some(c => isCaseEligibleForMoneyRequest(c));
-
-  // Get the currently selected case or default to the first case
-  const currentCase = cases.find(c => c.id === selectedCaseId) || cases[0];
   
   // Debug current case data
   useEffect(() => {
@@ -745,7 +751,7 @@ const LawyerDashboard = () => {
                 >
                   {t('dashboard.cases.viewDetails')}
                 </Button>
-                <Button 
+                  <Button 
                   size="sm" 
                   className="bg-primary hover:bg-primary/90 flex-shrink-0"
                   onClick={() => {
@@ -757,6 +763,22 @@ const LawyerDashboard = () => {
                   <FileText className={`h-4 w-4 mr-2`} />
                   {currentCase.proposal ? t('dashboard.cases.editProposal') : t('dashboard.cases.createProposal')}
                 </Button>
+                
+                {/* Create Contract Button - Only show if proposal is accepted and no contract exists */}
+                {currentCase.proposal?.status === 'accepted' && (
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    className="flex-shrink-0 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                    onClick={() => {
+                      setContractProposalId(currentCase.proposal.id);
+                      setShowContractDialog(true);
+                    }}
+                  >
+                    <FileText className={`h-4 w-4 mr-2`} />
+                    Create Contract
+                  </Button>
+                )}
               </CardFooter>
             </Card>
             
@@ -839,6 +861,37 @@ const LawyerDashboard = () => {
         cases={cases}
       />
 
+      {/* Contract Creation Dialog */}
+      {contractProposalId && currentCase && (
+        <ContractCreationDialog
+          isOpen={showContractDialog}
+          onClose={() => {
+            setShowContractDialog(false);
+            setContractProposalId("");
+          }}
+          proposalId={contractProposalId}
+          caseId={currentCase.id}
+          lawyerId={user?.id || ''}
+          clientId={currentCase.user_id}
+          onContractCreated={() => {
+            fetchDashboardData();
+            toast({
+              title: "Contract Created",
+              description: "Contract has been submitted for admin review"
+            });
+          }}
+        />
+      )}
+
+      {/* Incoming Call Notifications */}
+      {incomingCalls.map((call) => (
+        <IncomingCallNotification
+          key={call.id}
+          session={call}
+          onAccept={handleAcceptCall}
+          onDecline={handleDeclineCall}
+        />
+      ))}
     </div>
   );
 };
