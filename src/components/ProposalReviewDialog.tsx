@@ -24,11 +24,7 @@ interface Proposal {
   remaining_fee: number;
   total_fee: number;
   platform_fee_percentage?: number;
-  payment_processing_fee_percentage?: number;
-  client_protection_fee_percentage?: number;
   platform_fee_amount?: number;
-  payment_processing_fee_amount?: number;
-  client_protection_fee_amount?: number;
   base_total_fee?: number;
   total_additional_fees?: number;
   final_total_fee?: number;
@@ -136,8 +132,6 @@ export const ProposalReviewDialog = ({
               lawyerName: 'المحامي المختص', // This could be fetched from proposal data
               type: 'consultation',
               platformFeeAmount: proposal.platform_fee_amount || 0,
-              paymentProcessingFeeAmount: proposal.payment_processing_fee_amount || 0,
-              clientProtectionFeeAmount: proposal.client_protection_fee_amount || 0,
               totalAdditionalFees: proposal.total_additional_fees || 0,
               finalTotalFee: proposal.final_total_fee || 0
             }
@@ -289,20 +283,12 @@ export const ProposalReviewDialog = ({
               {/* Additional Fees Breakdown */}
               <div className="mt-4 p-3 bg-muted/50 rounded-lg">
                 <h5 className="font-medium text-sm mb-2">
-                  {currentLanguage === 'ar' ? 'الرسوم الإضافية (تطبق على المبلغ المتبقي فقط)' : 'Additional Fees (Applied to remaining payment only)'}
+                  {currentLanguage === 'ar' ? 'الرسوم الإضافية' : 'Additional Fees'}
                 </h5>
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
-                    <span>{currentLanguage === 'ar' ? 'رسوم المنصة (5%)' : 'Platform Fee (5%)'}</span>
+                    <span>{currentLanguage === 'ar' ? 'رسوم المنصة (6%)' : 'Platform Fee (6% - includes all processing)'}</span>
                     <span>${(proposal.platform_fee_amount || 0).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>{currentLanguage === 'ar' ? 'رسوم المعالجة (3%)' : 'Payment Processing Fee (3%)'}</span>
-                    <span>${(proposal.payment_processing_fee_amount || 0).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>{currentLanguage === 'ar' ? 'رسوم الحماية (3%)' : 'Client Protection Fee (3%)'}</span>
-                    <span>${(proposal.client_protection_fee_amount || 0).toFixed(2)}</span>
                   </div>
                 </div>
               </div>

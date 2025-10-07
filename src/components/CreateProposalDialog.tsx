@@ -82,26 +82,20 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
     }
   }, [isEditMode, existingProposal]);
 
-  // Calculate additional fees in real-time
-  const platformFeePercentage = 5.0;
-  const paymentProcessingFeePercentage = 3.0;
-  const clientProtectionFeePercentage = 3.0;
+  // Calculate platform fee (6% includes everything)
+  const platformFeePercentage = 6.0;
   
   const calculateFees = () => {
     if (formData.payment_structure === 'contingency') {
       // For contingency, platform fees only apply to consultation fee
       const baseFee = formData.consultation_fee;
       const platformFeeAmount = baseFee * (platformFeePercentage / 100);
-      const paymentProcessingFeeAmount = baseFee * (paymentProcessingFeePercentage / 100);
-      const clientProtectionFeeAmount = baseFee * (clientProtectionFeePercentage / 100);
-      const totalAdditionalFees = platformFeeAmount + paymentProcessingFeeAmount + clientProtectionFeeAmount;
+      const totalAdditionalFees = platformFeeAmount;
       const baseTotalFee = formData.consultation_fee;
       const finalTotalFee = baseTotalFee + totalAdditionalFees;
       
       return {
         platformFeeAmount,
-        paymentProcessingFeeAmount,
-        clientProtectionFeeAmount,
         totalAdditionalFees,
         baseTotalFee,
         finalTotalFee
@@ -112,35 +106,27 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
       // For hybrid, platform fees apply to consultation fee + hybrid_fixed_fee
       const baseFee = formData.consultation_fee + (formData.hybrid_fixed_fee || 0);
       const platformFeeAmount = baseFee * (platformFeePercentage / 100);
-      const paymentProcessingFeeAmount = baseFee * (paymentProcessingFeePercentage / 100);
-      const clientProtectionFeeAmount = baseFee * (clientProtectionFeePercentage / 100);
-      const totalAdditionalFees = platformFeeAmount + paymentProcessingFeeAmount + clientProtectionFeeAmount;
+      const totalAdditionalFees = platformFeeAmount;
       const baseTotalFee = baseFee;
       const finalTotalFee = baseTotalFee + totalAdditionalFees;
       
       return {
         platformFeeAmount,
-        paymentProcessingFeeAmount,
-        clientProtectionFeeAmount,
         totalAdditionalFees,
         baseTotalFee,
         finalTotalFee
       };
     }
     
-    // Fixed fee calculation - now includes consultation fee in platform fee calculation
+    // Fixed fee calculation - includes consultation fee in platform fee calculation
     const baseFee = formData.consultation_fee + (formData.remaining_fee || 0);
     const platformFeeAmount = baseFee * (platformFeePercentage / 100);
-    const paymentProcessingFeeAmount = baseFee * (paymentProcessingFeePercentage / 100);
-    const clientProtectionFeeAmount = baseFee * (clientProtectionFeePercentage / 100);
-    const totalAdditionalFees = platformFeeAmount + paymentProcessingFeeAmount + clientProtectionFeeAmount;
+    const totalAdditionalFees = platformFeeAmount;
     const baseTotalFee = baseFee;
     const finalTotalFee = baseTotalFee + totalAdditionalFees;
     
     return {
       platformFeeAmount,
-      paymentProcessingFeeAmount,
-      clientProtectionFeeAmount,
       totalAdditionalFees,
       baseTotalFee,
       finalTotalFee
@@ -383,8 +369,6 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
               ? formData.consultation_fee + (formData.hybrid_fixed_fee || 0)
               : formData.consultation_fee,
             platform_fee_amount: calculatedFees.platformFeeAmount,
-            payment_processing_fee_amount: calculatedFees.paymentProcessingFeeAmount,
-            client_protection_fee_amount: calculatedFees.clientProtectionFeeAmount,
             base_total_fee: calculatedFees.baseTotalFee,
             total_additional_fees: calculatedFees.totalAdditionalFees,
             final_total_fee: calculatedFees.finalTotalFee,
@@ -419,11 +403,7 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
               ? formData.consultation_fee + (formData.hybrid_fixed_fee || 0)
               : formData.consultation_fee,
             platform_fee_percentage: platformFeePercentage,
-            payment_processing_fee_percentage: paymentProcessingFeePercentage,
-            client_protection_fee_percentage: clientProtectionFeePercentage,
             platform_fee_amount: calculatedFees.platformFeeAmount,
-            payment_processing_fee_amount: calculatedFees.paymentProcessingFeeAmount,
-            client_protection_fee_amount: calculatedFees.clientProtectionFeeAmount,
             base_total_fee: calculatedFees.baseTotalFee,
             total_additional_fees: calculatedFees.totalAdditionalFees,
             final_total_fee: calculatedFees.finalTotalFee,
@@ -680,46 +660,30 @@ export const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
                   
                   <Separator />
                   
-                   {/* Additional Fees Section - Only for fixed fee and hybrid */}
-                   {(formData.payment_structure === 'fixed_fee' || formData.payment_structure === 'hybrid') && (
-                     <>
-                       <div className="space-y-2 text-sm">
-                         <div className="flex justify-between text-muted-foreground">
-                           <span>Platform Fee (5%):</span>
-                           <span>${calculatedFees.platformFeeAmount.toFixed(2)}</span>
-                         </div>
-                         <div className="flex justify-between text-muted-foreground">
-                           <span>Payment Processing Fee (3%):</span>
-                           <span>${calculatedFees.paymentProcessingFeeAmount.toFixed(2)}</span>
-                         </div>
-                         <div className="flex justify-between text-muted-foreground">
-                           <span>Client Protection Fee (3%):</span>
-                           <span>${calculatedFees.clientProtectionFeeAmount.toFixed(2)}</span>
-                         </div>
-                       </div>
-                       <Separator />
-                     </>
-                   )}
-                   
-                   {formData.payment_structure === 'contingency' && (
-                     <>
-                       <div className="space-y-2 text-sm">
-                         <div className="flex justify-between text-muted-foreground">
-                           <span>Platform Fee (5%):</span>
-                           <span>${calculatedFees.platformFeeAmount.toFixed(2)}</span>
-                         </div>
-                         <div className="flex justify-between text-muted-foreground">
-                           <span>Payment Processing Fee (3%):</span>
-                           <span>${calculatedFees.paymentProcessingFeeAmount.toFixed(2)}</span>
-                         </div>
-                         <div className="flex justify-between text-muted-foreground">
-                           <span>Client Protection Fee (3%):</span>
-                           <span>${calculatedFees.clientProtectionFeeAmount.toFixed(2)}</span>
-                         </div>
-                       </div>
-                       <Separator />
-                     </>
-                   )}
+                    {/* Additional Fees Section - Only for fixed fee and hybrid */}
+                    {(formData.payment_structure === 'fixed_fee' || formData.payment_structure === 'hybrid') && (
+                      <>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between text-muted-foreground">
+                            <span>Platform Fee (6% - includes all processing):</span>
+                            <span>${calculatedFees.platformFeeAmount.toFixed(2)}</span>
+                          </div>
+                        </div>
+                        <Separator />
+                      </>
+                    )}
+                    
+                    {formData.payment_structure === 'contingency' && (
+                      <>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between text-muted-foreground">
+                            <span>Platform Fee (6% - includes all processing):</span>
+                            <span>${calculatedFees.platformFeeAmount.toFixed(2)}</span>
+                          </div>
+                        </div>
+                        <Separator />
+                      </>
+                    )}
                   
                    <div className="flex justify-between items-center font-semibold">
                      <span>{t('proposal.feeStructure.total')}:</span>

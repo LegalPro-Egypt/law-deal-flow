@@ -34,16 +34,12 @@ serve(async (req) => {
       });
     }
 
-    // Calculate additional fees (platform, payment processing, client protection)
-    const platformFeePercentage = 5.0;
-    const paymentProcessingFeePercentage = 3.0;
-    const clientProtectionFeePercentage = 3.0;
+    // Calculate platform fee (6% includes everything)
+    const platformFeePercentage = 6.0;
     
     const remainingFee = proposalInput.remaining_fee || 0;
     const platformFeeAmount = remainingFee * (platformFeePercentage / 100);
-    const paymentProcessingFeeAmount = remainingFee * (paymentProcessingFeePercentage / 100);
-    const clientProtectionFeeAmount = remainingFee * (clientProtectionFeePercentage / 100);
-    const totalAdditionalFees = platformFeeAmount + paymentProcessingFeeAmount + clientProtectionFeeAmount;
+    const totalAdditionalFees = platformFeeAmount;
     
     const baseTotalFee = (proposalInput.consultation_fee || 0) + remainingFee;
     const finalTotalFee = baseTotalFee + totalAdditionalFees;
@@ -166,10 +162,7 @@ Messages: ${caseContext.messages?.length || 0} exchanges
 Fees: 
 - Consultation Fee: $${proposalInput.consultation_fee} (payable upfront)
 - Remaining Fee: $${proposalInput.remaining_fee}
-- Platform Fee (5%): $${platformFeeAmount.toFixed(2)}
-- Payment Processing Fee (3%): $${paymentProcessingFeeAmount.toFixed(2)}
-- Client Protection Fee (3%): $${clientProtectionFeeAmount.toFixed(2)}
-- Total Additional Fees: $${totalAdditionalFees.toFixed(2)}
+- Platform Fee (6%): $${platformFeeAmount.toFixed(2)} (includes all processing and protection fees)
 - Final Total: $${finalTotalFee.toFixed(2)}
 
 Timeline: ${proposalInput.timeline}
@@ -251,11 +244,7 @@ Strategy: ${proposalInput.strategy}`;
         consultation_fee: proposalInput.consultation_fee || 0,
         remaining_fee: remainingFee,
         platform_fee_percentage: platformFeePercentage,
-        payment_processing_fee_percentage: paymentProcessingFeePercentage,
-        client_protection_fee_percentage: clientProtectionFeePercentage,
         platform_fee_amount: platformFeeAmount,
-        payment_processing_fee_amount: paymentProcessingFeeAmount,
-        client_protection_fee_amount: clientProtectionFeeAmount,
         base_total_fee: baseTotalFee,
         total_additional_fees: totalAdditionalFees,
         final_total_fee: finalTotalFee
