@@ -918,6 +918,29 @@ export const useAdminData = () => {
     ]).finally(() => setLoading(false));
   }, []);
 
+  // Real-time subscription for proposal status changes
+  useEffect(() => {
+    const channel = supabase
+      .channel('admin-proposals-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'proposals'
+        },
+        () => {
+          // Refresh stats when any proposal changes
+          fetchAdminStats();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   return {
     stats,
     pendingIntakes,
