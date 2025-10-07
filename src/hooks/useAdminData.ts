@@ -10,6 +10,7 @@ interface AdminStats {
   totalClients: number;
   pendingReviews: number;
   pendingVerifications: number;
+  pendingProposals: number;
 }
 
 interface IntakeConversation {
@@ -51,7 +52,8 @@ export const useAdminData = () => {
     totalLawyers: 0,
     totalClients: 0,
     pendingReviews: 0,
-    pendingVerifications: 0
+    pendingVerifications: 0,
+    pendingProposals: 0
   });
   const [pendingIntakes, setPendingIntakes] = useState<IntakeConversation[]>([]);
   const [cases, setCases] = useState<CaseItem[]>([]);
@@ -107,6 +109,12 @@ export const useAdminData = () => {
         .eq('role', 'lawyer')
         .eq('verification_status', 'pending_complete');
 
+      // Get pending proposals (proposals with pending_admin_review or sent status)
+      const { count: pendingProposals } = await supabase
+        .from('proposals')
+        .select('*', { count: 'exact', head: true })
+        .in('status', ['pending_admin_review', 'sent']);
+
       setStats({
         totalCases: totalCases || 0,
         activeCases: activeCases || 0,
@@ -114,7 +122,8 @@ export const useAdminData = () => {
         totalLawyers: totalLawyers || 0,
         totalClients: totalClients || 0,
         pendingReviews: pendingReviews || 0,
-        pendingVerifications: pendingVerifications || 0
+        pendingVerifications: pendingVerifications || 0,
+        pendingProposals: pendingProposals || 0
       });
     } catch (error: any) {
       console.error('Error fetching admin stats:', error);
@@ -768,7 +777,7 @@ export const useAdminData = () => {
 
   const fetchPendingReviewsDetailed = async () => {
     try {
-      const [casesResponse, lawyersResponse] = await Promise.all([
+      const [casesResponse, lawyersResponse, proposalsResponse] = await Promise.all([
         // Get cases that need review
         supabase
           .from('cases')
@@ -797,7 +806,32 @@ export const useAdminData = () => {
             profile_picture_url
           `)
           .eq('role', 'lawyer')
-          .in('verification_status', ['pending_basic', 'pending_complete'])
+          .in('verification_status', ['pending_basic', 'pending_complete']),
+        
+        // Get proposals that need review
+        supabase
+          .from('proposals')
+          .select(`
+            id,
+            status,
+            created_at,
+            consultation_fee,
+            remaining_fee,
+            total_fee,
+            cases:case_id (
+              id,
+              title,
+              case_number,
+              client_name
+            ),
+            lawyer:lawyer_id (
+              id,
+              first_name,
+              last_name,
+              email
+            )
+          `)
+          .in('status', ['pending_admin_review', 'sent'])
       ]);
 
       const reviewItems = [];
@@ -832,6 +866,31 @@ export const useAdminData = () => {
             lawyer_email: lawyer.email,
             verification_status: lawyer.verification_status,
             profile_picture_url: lawyer.profile_picture_url
+          });
+        });
+      }
+
+      // Add proposal reviews
+      if (proposalsResponse.data) {
+        proposalsResponse.data.forEach((proposal: any) => {
+          const lawyerName = proposal.lawyer 
+            ? `${proposal.lawyer.first_name || ''} ${proposal.lawyer.last_name || ''}`.trim() 
+            : 'Unknown Lawyer';
+          const caseTitle = proposal.cases?.title || 'Unknown Case';
+          
+          reviewItems.push({
+            id: proposal.id,
+            type: 'proposal' as const,
+            title: `Proposal for ${caseTitle}`,
+            description: `${lawyerName} submitted a proposal`,
+            status: proposal.status,
+            created_at: proposal.created_at,
+            case_number: proposal.cases?.case_number,
+            lawyer_name: lawyerName,
+            lawyer_email: proposal.lawyer?.email,
+            client_name: proposal.cases?.client_name,
+            consultation_fee: proposal.consultation_fee,
+            total_fee: proposal.total_fee
           });
         });
       }

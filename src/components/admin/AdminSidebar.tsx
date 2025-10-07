@@ -112,7 +112,7 @@ export function AdminSidebar() {
       case 'cases-review':
         return stats.pendingReviews;
       case 'proposals-review':
-        return 0; // This would need to be fetched separately
+        return stats.pendingProposals;
       default:
         return 0;
     }

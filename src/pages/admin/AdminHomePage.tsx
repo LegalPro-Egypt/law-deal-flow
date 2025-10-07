@@ -203,9 +203,9 @@ export default function AdminHomePage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs md:text-sm font-medium text-muted-foreground">Pending Reviews</p>
-                <p className="text-xl md:text-3xl font-bold text-primary">{stats.pendingReviews + stats.pendingVerifications}</p>
+                <p className="text-xl md:text-3xl font-bold text-primary">{stats.pendingReviews + stats.pendingVerifications + stats.pendingProposals}</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {stats.pendingReviews} cases • {stats.pendingVerifications} verifications
+                  {stats.pendingReviews} cases • {stats.pendingVerifications} verifications • {stats.pendingProposals} proposals
                 </p>
               </div>
               <AlertCircle className="h-6 w-6 md:h-8 md:w-8 text-primary" />

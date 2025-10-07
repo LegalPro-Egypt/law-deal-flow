@@ -13,13 +13,14 @@ import {
   FileText,
   Shield,
   CheckCircle,
-  XCircle
+  XCircle,
+  FileSearch
 } from "lucide-react";
 import { formatDate } from "@/utils/dateUtils";
 
 interface ReviewItem {
   id: string;
-  type: 'case' | 'verification';
+  type: 'case' | 'verification' | 'proposal';
   title: string;
   description?: string;
   status: string;
@@ -34,6 +35,9 @@ interface ReviewItem {
   lawyer_email?: string;
   verification_status?: string;
   profile_picture_url?: string;
+  // Proposal specific
+  consultation_fee?: number;
+  total_fee?: number;
 }
 
 interface ReviewsListModalProps {
@@ -42,13 +46,15 @@ interface ReviewsListModalProps {
   reviews: ReviewItem[];
   isLoading: boolean;
   onRefresh: () => void;
-  onViewItem: (id: string, type: 'case' | 'verification') => void;
-  onApprove?: (id: string, type: 'case' | 'verification') => void;
-  onReject?: (id: string, type: 'case' | 'verification') => void;
+  onViewItem: (id: string, type: 'case' | 'verification' | 'proposal') => void;
+  onApprove?: (id: string, type: 'case' | 'verification' | 'proposal') => void;
+  onReject?: (id: string, type: 'case' | 'verification' | 'proposal') => void;
 }
 
 const getTypeColor = (type: string) => {
-  return type === 'case' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800';
+  if (type === 'case') return 'bg-blue-100 text-blue-800';
+  if (type === 'verification') return 'bg-purple-100 text-purple-800';
+  return 'bg-green-100 text-green-800'; // proposal
 };
 
 const getUrgencyColor = (urgency?: string) => {
@@ -132,8 +138,10 @@ export function ReviewsListModal({
                       <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
                         {review.type === 'case' ? (
                           <FileText className="h-6 w-6 text-muted-foreground" />
-                        ) : (
+                        ) : review.type === 'verification' ? (
                           <Shield className="h-6 w-6 text-muted-foreground" />
+                        ) : (
+                          <FileSearch className="h-6 w-6 text-muted-foreground" />
                         )}
                       </div>
                     )}
@@ -142,7 +150,7 @@ export function ReviewsListModal({
                       <div className="flex items-center gap-2">
                         <h3 className="font-semibold">{review.title}</h3>
                         <Badge className={getTypeColor(review.type)}>
-                          {review.type === 'case' ? 'Case Review' : 'Lawyer Verification'}
+                          {review.type === 'case' ? 'Case Review' : review.type === 'verification' ? 'Lawyer Verification' : 'Proposal Review'}
                         </Badge>
                         {review.case_number && (
                           <Badge variant="outline" className="text-xs">
@@ -198,6 +206,23 @@ export function ReviewsListModal({
                               <div className="flex items-center gap-1">
                                 <Shield className="h-3 w-3" />
                                 <span>{review.verification_status.replace('_', ' ')}</span>
+                              </div>
+                            )}
+                          </>
+                        )}
+                        
+                        {review.type === 'proposal' && (
+                          <>
+                            {review.lawyer_name && (
+                              <div className="flex items-center gap-1">
+                                <User className="h-3 w-3" />
+                                <span>{review.lawyer_name}</span>
+                              </div>
+                            )}
+                            {review.total_fee && (
+                              <div className="flex items-center gap-1">
+                                <FileText className="h-3 w-3" />
+                                <span>EGP {review.total_fee}</span>
                               </div>
                             )}
                           </>
