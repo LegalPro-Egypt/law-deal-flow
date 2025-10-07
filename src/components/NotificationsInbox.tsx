@@ -48,28 +48,23 @@ export const NotificationsInbox = ({ activeCaseId }: NotificationsInboxProps) =>
   const handleCompletePayment = (proposalId: string) => {
     const proposalWithCase = proposalsWithCases.find(p => p.id === proposalId);
     if (proposalWithCase && proposalWithCase.case) {
-      // Determine payment type and amount based on case status
+      // Determine payment type based on case status - consultation first, then remaining
       const isGracePeriodPayment = proposalWithCase.case.status === 'consultation_completed';
       
-      // Calculate remaining payment with additional fees
       const remainingFee = proposalWithCase.remaining_fee || 0;
-      const additionalFees = proposalWithCase.total_additional_fees || (remainingFee * 0.11); // 5% + 3% + 3%
-      
       const paymentType = isGracePeriodPayment ? 'remaining' : 'consultation';
-      const amount = isGracePeriodPayment ? remainingFee + additionalFees : proposalWithCase.consultation_fee;
       
       navigate('/payment', {
         state: {
           paymentData: {
+            type: paymentType,
             caseId: proposalWithCase.case.id,
             proposalId: proposalWithCase.id,
             consultationFee: proposalWithCase.consultation_fee,
             remainingFee: remainingFee,
             totalFee: proposalWithCase.final_total_fee || proposalWithCase.total_fee,
-            additionalFees: additionalFees,
             lawyerName: proposalWithCase.case.assigned_lawyer_name || 'Your Lawyer',
-            caseTitle: proposalWithCase.case.title,
-            isRemainingPayment: isGracePeriodPayment
+            caseTitle: proposalWithCase.case.title
           }
         }
       });
