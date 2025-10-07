@@ -80,13 +80,14 @@ serve(async (req) => {
     let response;
     switch (action) {
       case 'start':
-        // Start recording for the room
+        // Start recording using Compositions API (track-level recording)
         if (!session.twilio_room_sid) {
           return new Response('Room not active', { status: 400, headers: corsHeaders });
         }
 
+        // Enable recording rules for the room using Room API
         response = await fetch(
-          `https://video.twilio.com/v1/Rooms/${session.twilio_room_sid}/Recordings`,
+          `https://video.twilio.com/v1/Rooms/${session.twilio_room_sid}`,
           {
             method: 'POST',
             headers: {
@@ -94,6 +95,7 @@ serve(async (req) => {
               'Content-Type': 'application/x-www-form-urlencoded',
             },
             body: new URLSearchParams({
+              'RecordParticipantsOnConnect': 'true',
               'StatusCallback': `${Deno.env.get('SUPABASE_URL')}/functions/v1/twilio-webhooks`,
               'StatusCallbackMethod': 'POST'
             })
@@ -102,12 +104,12 @@ serve(async (req) => {
 
         if (!response.ok) {
           const error = await response.text();
-          console.error('Failed to start recording:', error);
-          return new Response('Failed to start recording', { status: 500, headers: corsHeaders });
+          console.error('Failed to enable recording:', error);
+          return new Response('Failed to enable recording', { status: 500, headers: corsHeaders });
         }
 
-        const recordingData = await response.json();
-        console.log('Recording started:', recordingData);
+        const roomData = await response.json();
+        console.log('Recording enabled for room:', roomData);
 
         // Update session to indicate recording is enabled
         await supabaseClient
@@ -117,53 +119,19 @@ serve(async (req) => {
 
         return new Response(JSON.stringify({
           success: true,
-          recordingSid: recordingData.sid,
-          message: 'Recording started'
+          message: 'Recording enabled for room'
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
 
       case 'stop':
-        // Stop all recordings for the room
+        // Disable recording for the room
         if (!session.twilio_room_sid) {
           return new Response('Room not active', { status: 400, headers: corsHeaders });
         }
 
-        // Get active recordings for this room
-        const recordingsResponse = await fetch(
-          `https://video.twilio.com/v1/Rooms/${session.twilio_room_sid}/Recordings?Status=processing`,
-          {
-            headers: {
-              'Authorization': `Basic ${authHeader}`,
-            }
-          }
-        );
-
-        if (!recordingsResponse.ok) {
-          console.error('Failed to get recordings');
-          return new Response('Failed to get recordings', { status: 500, headers: corsHeaders });
-        }
-
-        const recordings = await recordingsResponse.json();
-        
-        // Stop each active recording
-        for (const recording of recordings.recordings || []) {
-          await fetch(
-            `https://video.twilio.com/v1/Rooms/${session.twilio_room_sid}/Recordings/${recording.sid}`,
-            {
-              method: 'POST',
-              headers: {
-                'Authorization': `Basic ${authHeader}`,
-                'Content-Type': 'application/x-www-form-urlencoded',
-              },
-              body: new URLSearchParams({
-                'Status': 'stopped'
-              })
-            }
-          );
-        }
-
-        // Update session
+        // Note: Once recordings are started, they continue until room ends
+        // We just update our database to reflect recording is stopped
         await supabaseClient
           .from('communication_sessions')
           .update({ recording_enabled: false })
@@ -171,7 +139,7 @@ serve(async (req) => {
 
         return new Response(JSON.stringify({
           success: true,
-          message: 'Recording stopped'
+          message: 'Recording status updated'
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });

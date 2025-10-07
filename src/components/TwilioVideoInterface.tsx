@@ -2,93 +2,74 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Video, VideoOff, Mic, MicOff, Phone, PhoneOff, Monitor, Users } from 'lucide-react';
+import { Video, VideoOff, Mic, MicOff, PhoneOff, Monitor, Users } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { TwilioAccessToken } from '@/hooks/useTwilioSession';
+import * as TwilioVideo from 'twilio-video';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TwilioVideoInterfaceProps {
   accessToken: TwilioAccessToken;
   onDisconnect: () => void;
 }
 
-// Mock Twilio Video SDK types (in production, install @twilio/video)
-interface MockRoom {
-  disconnect: () => void;
-  localParticipant: {
-    videoTracks: Map<string, any>;
-    audioTracks: Map<string, any>;
-  };
-  participants: Map<string, any>;
-  on: (event: string, callback: (participant?: any) => void) => void;
-}
-
 export const TwilioVideoInterface: React.FC<TwilioVideoInterfaceProps> = ({
   accessToken,
   onDisconnect
 }) => {
-  const [room, setRoom] = useState<MockRoom | null>(null);
+  const [room, setRoom] = useState<TwilioVideo.Room | null>(null);
   const [connected, setConnected] = useState(false);
-  const [participants, setParticipants] = useState<string[]>([]);
+  const [participants, setParticipants] = useState<TwilioVideo.RemoteParticipant[]>([]);
   const [videoEnabled, setVideoEnabled] = useState(true);
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [screenSharing, setScreenSharing] = useState(false);
   
   const localVideoRef = useRef<HTMLVideoElement>(null);
-  const remoteVideoRef = useRef<HTMLVideoElement>(null);
+  const remoteVideosRef = useRef<Map<string, HTMLVideoElement>>(new Map());
 
   useEffect(() => {
-    // In production, this would use the actual Twilio Video SDK
-    // For now, we'll mock the connection
     const connectToRoom = async () => {
       try {
         console.log('Connecting to Twilio room:', accessToken.roomName);
         
-        // Mock connection
-        const mockRoom: MockRoom = {
-          disconnect: () => {
-            setConnected(false);
-            setRoom(null);
-            toast({
-              title: 'Disconnected',
-              description: 'Left the video session',
-            });
-          },
-          localParticipant: {
-            videoTracks: new Map(),
-            audioTracks: new Map()
-          },
-          participants: new Map(),
-          on: (event: string, callback: (participant?: any) => void) => {
-            // Mock event handlers
-            if (event === 'participantConnected') {
-              setTimeout(() => {
-                callback({ identity: 'remote-participant' });
-                setParticipants(prev => [...prev, 'remote-participant']);
-              }, 2000);
-            }
-          }
-        };
+        const twilioRoom = await TwilioVideo.connect(accessToken.accessToken, {
+          name: accessToken.roomName,
+          audio: true,
+          video: { width: 640, height: 480 },
+          networkQuality: { local: 1, remote: 1 }
+        });
 
-        setRoom(mockRoom);
+        console.log('Successfully connected to Twilio room:', twilioRoom.name);
+        setRoom(twilioRoom);
         setConnected(true);
-        
-        // Mock local video stream
+
+        // Update session status to active
+        await supabase
+          .from('communication_sessions')
+          .update({ 
+            status: 'active',
+            started_at: new Date().toISOString()
+          })
+          .eq('id', accessToken.sessionId);
+
+        // Attach local video track
         if (localVideoRef.current) {
-          try {
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-              video: videoEnabled, 
-              audio: audioEnabled 
-            });
-            localVideoRef.current.srcObject = stream;
-          } catch (error) {
-            console.error('Error accessing media devices:', error);
-            toast({
-              title: 'Camera Error',
-              description: 'Unable to access camera or microphone',
-              variant: 'destructive',
-            });
-          }
+          twilioRoom.localParticipant.videoTracks.forEach(publication => {
+            if (publication.track) {
+              localVideoRef.current?.appendChild(publication.track.attach());
+            }
+          });
         }
+
+        // Handle existing participants
+        twilioRoom.participants.forEach(participant => {
+          console.log('Existing participant:', participant.identity);
+          handleParticipantConnected(participant);
+        });
+
+        // Listen for new participants
+        twilioRoom.on('participantConnected', handleParticipantConnected);
+        twilioRoom.on('participantDisconnected', handleParticipantDisconnected);
 
         toast({
           title: 'Connected',
@@ -97,11 +78,75 @@ export const TwilioVideoInterface: React.FC<TwilioVideoInterfaceProps> = ({
 
       } catch (error) {
         console.error('Error connecting to room:', error);
+        
+        // Update session status to failed
+        await supabase
+          .from('communication_sessions')
+          .update({ 
+            status: 'failed',
+            ended_at: new Date().toISOString()
+          })
+          .eq('id', accessToken.sessionId);
+
         toast({
           title: 'Connection Error',
           description: 'Failed to join video session',
           variant: 'destructive',
         });
+      }
+    };
+
+    const handleParticipantConnected = (participant: TwilioVideo.RemoteParticipant) => {
+      console.log('Participant connected:', participant.identity);
+      setParticipants(prev => [...prev, participant]);
+
+      // Attach existing tracks
+      participant.tracks.forEach(publication => {
+        if (publication.isSubscribed && publication.track) {
+          const track = publication.track;
+          if (track.kind === 'video' || track.kind === 'audio') {
+            attachTrack(track as TwilioVideo.RemoteVideoTrack | TwilioVideo.RemoteAudioTrack, participant.sid);
+          }
+        }
+      });
+
+      // Handle new tracks
+      participant.on('trackSubscribed', (track) => {
+        if (track.kind === 'video' || track.kind === 'audio') {
+          attachTrack(track as TwilioVideo.RemoteVideoTrack | TwilioVideo.RemoteAudioTrack, participant.sid);
+        }
+      });
+
+      participant.on('trackUnsubscribed', (track) => {
+        if (track.kind === 'video' || track.kind === 'audio') {
+          (track as TwilioVideo.RemoteVideoTrack | TwilioVideo.RemoteAudioTrack).detach().forEach(element => element.remove());
+        }
+      });
+    };
+
+    const handleParticipantDisconnected = (participant: TwilioVideo.RemoteParticipant) => {
+      console.log('Participant disconnected:', participant.identity);
+      setParticipants(prev => prev.filter(p => p.sid !== participant.sid));
+      
+      // Remove video element
+      const videoElement = remoteVideosRef.current.get(participant.sid);
+      if (videoElement) {
+        videoElement.remove();
+        remoteVideosRef.current.delete(participant.sid);
+      }
+    };
+
+    const attachTrack = (track: TwilioVideo.RemoteVideoTrack | TwilioVideo.RemoteAudioTrack, participantSid: string) => {
+      if (track.kind === 'video') {
+        const remoteVideoContainer = document.getElementById('remote-videos');
+        if (remoteVideoContainer) {
+          const videoElement = (track as TwilioVideo.RemoteVideoTrack).attach();
+          videoElement.classList.add('w-full', 'h-full', 'object-cover');
+          remoteVideoContainer.appendChild(videoElement);
+          remoteVideosRef.current.set(participantSid, videoElement as HTMLVideoElement);
+        }
+      } else if (track.kind === 'audio') {
+        (track as TwilioVideo.RemoteAudioTrack).attach();
       }
     };
 
@@ -140,42 +185,100 @@ export const TwilioVideoInterface: React.FC<TwilioVideoInterfaceProps> = ({
   }, [accessToken, videoEnabled, audioEnabled, onDisconnect, room, connected]);
 
   const toggleVideo = () => {
-    setVideoEnabled(!videoEnabled);
-    // In production, this would toggle the actual video track
-    toast({
-      title: videoEnabled ? 'Video Off' : 'Video On',
-      description: `Camera ${videoEnabled ? 'disabled' : 'enabled'}`,
-    });
+    if (room) {
+      room.localParticipant.videoTracks.forEach(publication => {
+        if (publication.track) {
+          if (videoEnabled) {
+            publication.track.disable();
+          } else {
+            publication.track.enable();
+          }
+        }
+      });
+      setVideoEnabled(!videoEnabled);
+      toast({
+        title: videoEnabled ? 'Video Off' : 'Video On',
+        description: `Camera ${videoEnabled ? 'disabled' : 'enabled'}`,
+      });
+    }
   };
 
   const toggleAudio = () => {
-    setAudioEnabled(!audioEnabled);
-    // In production, this would toggle the actual audio track
-    toast({
-      title: audioEnabled ? 'Muted' : 'Unmuted',
-      description: `Microphone ${audioEnabled ? 'disabled' : 'enabled'}`,
-    });
+    if (room) {
+      room.localParticipant.audioTracks.forEach(publication => {
+        if (publication.track) {
+          if (audioEnabled) {
+            publication.track.disable();
+          } else {
+            publication.track.enable();
+          }
+        }
+      });
+      setAudioEnabled(!audioEnabled);
+      toast({
+        title: audioEnabled ? 'Muted' : 'Unmuted',
+        description: `Microphone ${audioEnabled ? 'disabled' : 'enabled'}`,
+      });
+    }
   };
 
   const toggleScreenShare = async () => {
     try {
-      if (!screenSharing) {
-        // In production, this would start screen sharing
+      if (!screenSharing && room) {
         const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+        const screenTrack = stream.getVideoTracks()[0];
+        
+        // Replace camera track with screen track
+        room.localParticipant.videoTracks.forEach(publication => {
+          publication.track?.stop();
+          publication.unpublish();
+        });
+
+        await room.localParticipant.publishTrack(screenTrack);
+        
+        // Update local video
         if (localVideoRef.current) {
-          localVideoRef.current.srcObject = stream;
+          const existingTracks = localVideoRef.current.querySelectorAll('video');
+          existingTracks.forEach(track => track.remove());
+          const videoElement = document.createElement('video');
+          videoElement.srcObject = stream;
+          videoElement.autoplay = true;
+          videoElement.muted = true;
+          videoElement.className = 'w-full h-full object-cover';
+          localVideoRef.current.appendChild(videoElement);
         }
+
         setScreenSharing(true);
         toast({
           title: 'Screen Share Started',
           description: 'Sharing your screen with participants',
         });
-      } else {
+
+        // Handle when screen sharing stops
+        screenTrack.onended = () => toggleScreenShare();
+      } else if (screenSharing && room) {
         // Stop screen sharing and return to camera
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: audioEnabled });
+        room.localParticipant.videoTracks.forEach(publication => {
+          publication.track?.stop();
+          publication.unpublish();
+        });
+
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const cameraTrack = stream.getVideoTracks()[0];
+        await room.localParticipant.publishTrack(cameraTrack);
+
+        // Update local video
         if (localVideoRef.current) {
-          localVideoRef.current.srcObject = stream;
+          const existingTracks = localVideoRef.current.querySelectorAll('video');
+          existingTracks.forEach(track => track.remove());
+          const videoElement = document.createElement('video');
+          videoElement.srcObject = stream;
+          videoElement.autoplay = true;
+          videoElement.muted = true;
+          videoElement.className = 'w-full h-full object-cover';
+          localVideoRef.current.appendChild(videoElement);
         }
+
         setScreenSharing(false);
         toast({
           title: 'Screen Share Stopped',
@@ -287,13 +390,7 @@ export const TwilioVideoInterface: React.FC<TwilioVideoInterfaceProps> = ({
           </div>
 
           {/* Remote Video */}
-          <div className="relative bg-muted rounded-lg overflow-hidden">
-            <video
-              ref={remoteVideoRef}
-              autoPlay
-              playsInline
-              className="w-full h-full object-cover"
-            />
+          <div id="remote-videos" className="relative bg-muted rounded-lg overflow-hidden">
             <div className="absolute bottom-2 left-2">
               <Badge variant="secondary">
                 {participants.length > 0 ? 'Remote Participant' : 'Waiting...'}
