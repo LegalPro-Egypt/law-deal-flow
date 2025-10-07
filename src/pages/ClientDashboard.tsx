@@ -943,13 +943,13 @@ const ClientDashboard = () => {
                         })}
                       </div>
                     ) : (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         {documents.map((doc, index) => {
                           const displayName = doc.display_name || doc.file_name.replace(/^\d+_/, '');
                           const isEditing = editingDocId === doc.id;
                           
                           return (
-                            <div key={index} className="border rounded-lg p-3 hover:bg-muted/50 transition-colors group">
+                            <div key={index} className="border rounded-lg p-3 hover:bg-muted/50 transition-colors group overflow-hidden">
                               <div className="flex flex-col items-center space-y-2">
                                 <DocumentThumbnail
                                   fileUrl={doc.file_url}
@@ -1008,14 +1008,16 @@ const ClientDashboard = () => {
                                   </div>
                                 ) : (
                                   <>
-                                    <p className="text-sm font-medium text-center truncate w-full px-1" title={displayName}>
-                                      {displayName}
-                                    </p>
+                                    <div className="w-full overflow-hidden px-1">
+                                      <p className="text-sm font-medium text-center truncate" title={displayName}>
+                                        {displayName}
+                                      </p>
+                                    </div>
                                     <p className="text-xs text-muted-foreground">
                                       {Math.round(doc.file_size / 1024)} KB
                                     </p>
-                                    <div className="flex justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                      <Button 
+                                    <div className="flex justify-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                                      <Button
                                         size="sm" 
                                         variant="ghost"
                                         onClick={() => setPreviewDocument(doc)}
