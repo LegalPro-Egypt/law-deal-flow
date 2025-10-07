@@ -406,35 +406,32 @@ const Payment: React.FC = () => {
                 {/* Fee Breakdown */}
                 <div className="space-y-2">
                   {paymentData.type === 'consultation' ? (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">{language === 'ar' ? 'رسوم الاستشارة' : 'Consultation Fee'}</span>
-                      <span>{formatCurrency(paymentData.consultationFee)}</span>
-                    </div>
-                  ) : (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">{language === 'ar' ? 'رسوم الاستشارة' : 'Consultation Fee'}</span>
+                        <span>{formatCurrency(paymentData.consultationFee)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">{language === 'ar' ? 'رسوم المنصة (6%)' : 'Platform Fee (6%)'}</span>
+                        <span className="text-sm">{formatCurrency(paymentData.consultationFee * 0.06)}</span>
+                      </div>
+                    </>
+                  ) : paymentData.type === 'remaining' ? (
                     <>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">{language === 'ar' ? 'الرسوم المتبقية' : 'Remaining Fee'}</span>
                         <span>{formatCurrency(paymentData.remainingFee)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">{language === 'ar' ? 'رسوم المنصة (5%)' : 'Platform Fee (5%)'}</span>
-                        <span className="text-sm">{formatCurrency(paymentData.platformFeeAmount || paymentData.remainingFee * 0.05)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">{language === 'ar' ? 'رسوم المعالجة (3%)' : 'Payment Processing Fee (3%)'}</span>
-                        <span className="text-sm">{formatCurrency(paymentData.paymentProcessingFeeAmount || paymentData.remainingFee * 0.03)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">{language === 'ar' ? 'رسوم الحماية (3%)' : 'Client Protection Fee (3%)'}</span>
-                        <span className="text-sm">{formatCurrency(paymentData.clientProtectionFeeAmount || paymentData.remainingFee * 0.03)}</span>
-                      </div>
-                      <div className="border-t pt-2">
-                        <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">{language === 'ar' ? 'الرسوم الإضافية' : 'Additional Fees'}</span>
-                          <span className="text-sm">{formatCurrency(paymentData.totalAdditionalFees || paymentData.remainingFee * 0.11)}</span>
-                        </div>
+                        <span className="text-sm text-muted-foreground">{language === 'ar' ? 'رسوم المنصة (6%)' : 'Platform Fee (6%)'}</span>
+                        <span className="text-sm">{formatCurrency(paymentData.remainingFee * 0.06)}</span>
                       </div>
                     </>
+                  ) : (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">{language === 'ar' ? 'المبلغ' : 'Amount'}</span>
+                      <span>{formatCurrency(paymentData.amount || 0)}</span>
+                    </div>
                   )}
                 </div>
 
@@ -446,8 +443,8 @@ const Payment: React.FC = () => {
                     {paymentData.type === 'money_request'
                       ? formatCurrency(getPaymentAmount())
                       : paymentData.type === 'consultation' 
-                        ? formatCurrency(paymentData.consultationFee)
-                        : formatCurrency(paymentData.finalTotalFee || paymentData.remainingFee + (paymentData.totalAdditionalFees || paymentData.remainingFee * 0.11))
+                        ? formatCurrency(paymentData.consultationFee * 1.06)
+                        : formatCurrency(paymentData.remainingFee * 1.06)
                     }
                   </span>
                 </div>
@@ -471,8 +468,8 @@ const Payment: React.FC = () => {
                         paymentData.type === 'money_request'
                           ? formatCurrency(getPaymentAmount())
                           : paymentData.type === 'consultation' 
-                            ? formatCurrency(paymentData.consultationFee)
-                            : formatCurrency(paymentData.finalTotalFee || paymentData.remainingFee + (paymentData.totalAdditionalFees || paymentData.remainingFee * 0.11))
+                            ? formatCurrency(paymentData.consultationFee * 1.06)
+                            : formatCurrency(paymentData.remainingFee * 1.06)
                       }
                     </div>
                   )}
