@@ -569,6 +569,7 @@ export type Database = {
         Row: {
           case_id: string
           client_id: string
+          consultation_notes: string | null
           created_at: string
           duration_seconds: number | null
           ended_at: string | null
@@ -576,6 +577,8 @@ export type Database = {
           initiated_by: string | null
           lawyer_id: string | null
           metadata: Json | null
+          notes_added_at: string | null
+          notes_added_by: string | null
           recording_consent_client: boolean | null
           recording_consent_lawyer: boolean | null
           recording_enabled: boolean
@@ -591,6 +594,7 @@ export type Database = {
         Insert: {
           case_id: string
           client_id: string
+          consultation_notes?: string | null
           created_at?: string
           duration_seconds?: number | null
           ended_at?: string | null
@@ -598,6 +602,8 @@ export type Database = {
           initiated_by?: string | null
           lawyer_id?: string | null
           metadata?: Json | null
+          notes_added_at?: string | null
+          notes_added_by?: string | null
           recording_consent_client?: boolean | null
           recording_consent_lawyer?: boolean | null
           recording_enabled?: boolean
@@ -613,6 +619,7 @@ export type Database = {
         Update: {
           case_id?: string
           client_id?: string
+          consultation_notes?: string | null
           created_at?: string
           duration_seconds?: number | null
           ended_at?: string | null
@@ -620,6 +627,8 @@ export type Database = {
           initiated_by?: string | null
           lawyer_id?: string | null
           metadata?: Json | null
+          notes_added_at?: string | null
+          notes_added_by?: string | null
           recording_consent_client?: boolean | null
           recording_consent_lawyer?: boolean | null
           recording_enabled?: boolean
@@ -677,6 +686,130 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      contracts: {
+        Row: {
+          admin_notes: string | null
+          admin_reviewed_at: string | null
+          admin_reviewed_by: string | null
+          case_id: string
+          change_notes: string | null
+          change_source: string | null
+          client_change_request: string | null
+          client_id: string
+          consultation_notes: string | null
+          content_ar: string | null
+          content_en: string | null
+          created_at: string | null
+          dhl_tracking_number: string | null
+          downloaded_at: string | null
+          expected_delivery_date: string | null
+          id: string
+          lawyer_id: string
+          metadata: Json | null
+          pdf_downloaded: boolean | null
+          physically_received_at: string | null
+          previous_version_id: string | null
+          proposal_id: string
+          received_by: string | null
+          sent_at: string | null
+          sent_for_signature_at: string | null
+          shipment_notes: string | null
+          signed_at: string | null
+          status: string
+          updated_at: string | null
+          version: number | null
+          viewed_at: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          admin_reviewed_at?: string | null
+          admin_reviewed_by?: string | null
+          case_id: string
+          change_notes?: string | null
+          change_source?: string | null
+          client_change_request?: string | null
+          client_id: string
+          consultation_notes?: string | null
+          content_ar?: string | null
+          content_en?: string | null
+          created_at?: string | null
+          dhl_tracking_number?: string | null
+          downloaded_at?: string | null
+          expected_delivery_date?: string | null
+          id?: string
+          lawyer_id: string
+          metadata?: Json | null
+          pdf_downloaded?: boolean | null
+          physically_received_at?: string | null
+          previous_version_id?: string | null
+          proposal_id: string
+          received_by?: string | null
+          sent_at?: string | null
+          sent_for_signature_at?: string | null
+          shipment_notes?: string | null
+          signed_at?: string | null
+          status?: string
+          updated_at?: string | null
+          version?: number | null
+          viewed_at?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          admin_reviewed_at?: string | null
+          admin_reviewed_by?: string | null
+          case_id?: string
+          change_notes?: string | null
+          change_source?: string | null
+          client_change_request?: string | null
+          client_id?: string
+          consultation_notes?: string | null
+          content_ar?: string | null
+          content_en?: string | null
+          created_at?: string | null
+          dhl_tracking_number?: string | null
+          downloaded_at?: string | null
+          expected_delivery_date?: string | null
+          id?: string
+          lawyer_id?: string
+          metadata?: Json | null
+          pdf_downloaded?: boolean | null
+          physically_received_at?: string | null
+          previous_version_id?: string | null
+          proposal_id?: string
+          received_by?: string | null
+          sent_at?: string | null
+          sent_for_signature_at?: string | null
+          shipment_notes?: string | null
+          signed_at?: string | null
+          status?: string
+          updated_at?: string | null
+          version?: number | null
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contracts_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_previous_version_id_fkey"
+            columns: ["previous_version_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       conversations: {
         Row: {
@@ -1459,9 +1592,12 @@ export type Database = {
           client_protection_fee_amount: number | null
           client_protection_fee_percentage: number | null
           consultation_fee: number | null
+          content_ar: string | null
+          content_en: string | null
           contingency_disclaimer_accepted: boolean | null
           contingency_percentage: number | null
           created_at: string
+          default_language: string | null
           final_total_fee: number | null
           generated_content: string
           hybrid_contingency_percentage: number | null
@@ -1493,9 +1629,12 @@ export type Database = {
           client_protection_fee_amount?: number | null
           client_protection_fee_percentage?: number | null
           consultation_fee?: number | null
+          content_ar?: string | null
+          content_en?: string | null
           contingency_disclaimer_accepted?: boolean | null
           contingency_percentage?: number | null
           created_at?: string
+          default_language?: string | null
           final_total_fee?: number | null
           generated_content: string
           hybrid_contingency_percentage?: number | null
@@ -1527,9 +1666,12 @@ export type Database = {
           client_protection_fee_amount?: number | null
           client_protection_fee_percentage?: number | null
           consultation_fee?: number | null
+          content_ar?: string | null
+          content_en?: string | null
           contingency_disclaimer_accepted?: boolean | null
           contingency_percentage?: number | null
           created_at?: string
+          default_language?: string | null
           final_total_fee?: number | null
           generated_content?: string
           hybrid_contingency_percentage?: number | null
