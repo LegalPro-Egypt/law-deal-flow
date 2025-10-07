@@ -204,6 +204,7 @@ export const useNotifications = () => {
     }
   }, [user]);
 
+  // Real-time subscription for notifications (INSERT, UPDATE, DELETE)
   useEffect(() => {
     if (!user) return;
 
@@ -222,12 +223,91 @@ export const useNotifications = () => {
           setNotifications(prev => [newNotification, ...prev]);
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          const updatedNotification = payload.new as Notification;
+          setNotifications(prev => 
+            prev.map(n => n.id === updatedNotification.id ? updatedNotification : n)
+          );
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          const deletedId = payload.old.id;
+          setNotifications(prev => prev.filter(n => n.id !== deletedId));
+        }
+      )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
   }, [user]);
+
+  // Real-time subscription for proposal deletions
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('proposals-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'proposals',
+          filter: `client_id=eq.${user.id}`
+        },
+        (payload) => {
+          const deletedProposalId = payload.old.id;
+          // Remove the deleted proposal from state
+          setProposals(prev => prev.filter(p => p.id !== deletedProposalId));
+          setProposalsWithCases(prev => prev.filter(p => p.id !== deletedProposalId));
+          // Remove any notifications referencing this proposal
+          setNotifications(prev => 
+            prev.filter(n => n.metadata?.proposal_id !== deletedProposalId)
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
+  // Filter out orphaned notifications (notifications referencing deleted proposals)
+  useEffect(() => {
+    if (proposals.length === 0 || notifications.length === 0) return;
+
+    const proposalIds = new Set(proposals.map(p => p.id));
+    
+    setNotifications(prev => 
+      prev.filter(n => {
+        // If notification has a proposal_id in metadata, check if it still exists
+        const proposalId = n.metadata?.proposal_id;
+        if (proposalId && !proposalIds.has(proposalId)) {
+          // This notification references a deleted proposal, filter it out
+          return false;
+        }
+        return true;
+      })
+    );
+  }, [proposals.length]);
 
   const needsPayment = (proposal: Proposal & { case: any }) => {
     if (!proposal.case) return false;
@@ -260,6 +340,12 @@ export const useNotifications = () => {
     return remainingFee + additionalFees;
   };
 
+  const refreshData = async () => {
+    setLoading(true);
+    await Promise.all([fetchNotifications(), fetchProposals()]);
+    setLoading(false);
+  };
+
   return {
     notifications,
     newNotifications,
@@ -272,6 +358,7 @@ export const useNotifications = () => {
     handleViewProposal,
     fetchNotifications,
     fetchProposals,
+    refreshData,
     needsPayment,
     calculateRemainingPayment
   };

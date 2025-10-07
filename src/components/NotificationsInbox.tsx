@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, MessageSquare, CheckCircle, Clock, CreditCard } from "lucide-react";
+import { FileText, MessageSquare, CheckCircle, Clock, CreditCard, RefreshCw } from "lucide-react";
 import { ProposalReviewDialog } from "@/components/ProposalReviewDialog";
 import { useNotifications, type Notification, type Proposal } from "@/hooks/useNotifications";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -24,6 +24,7 @@ export const NotificationsInbox = ({ activeCaseId }: NotificationsInboxProps) =>
     unreadCount,
     markAsRead, 
     handleViewProposal: updateProposalStatus,
+    refreshData,
     needsPayment
   } = useNotifications();
 
@@ -98,6 +99,18 @@ export const NotificationsInbox = ({ activeCaseId }: NotificationsInboxProps) =>
 
   return (
     <>
+      <div className="flex justify-end mb-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={refreshData}
+          disabled={loading}
+        >
+          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+          {currentLanguage === 'ar' ? 'تحديث' : 'Refresh'}
+        </Button>
+      </div>
+      
       {filteredNotifications.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
           {currentLanguage === 'ar' ? 'لا توجد عروض قانونية بعد' : 'No legal proposals yet'}
