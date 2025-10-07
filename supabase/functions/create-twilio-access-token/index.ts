@@ -123,8 +123,8 @@ serve(async (req) => {
 
     // Generate Twilio Access Token
     const twilioAccountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
-    const twilioApiKey = Deno.env.get('TWILIO_API_KEY_SID');
-    const twilioApiSecret = Deno.env.get('TWILIO_API_KEY_SECRET');
+    const twilioApiKey = Deno.env.get('TWILIO_API_KEY');
+    const twilioApiSecret = Deno.env.get('TWILIO_API_SECRET');
 
     console.log('Twilio credentials check:', {
       hasAccountSid: !!twilioAccountSid,
