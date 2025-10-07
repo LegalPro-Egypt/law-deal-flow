@@ -113,13 +113,7 @@ export const NotificationsInbox = ({ activeCaseId }: NotificationsInboxProps) =>
                   : 'bg-background'
               }`}
             >
-              <div className="flex items-start gap-3 overflow-hidden min-w-0">
-                <div className={`p-2 rounded-full flex-shrink-0 ${
-                  !notification.is_read ? 'bg-primary/20' : 'bg-muted'
-                }`}>
-                  {getNotificationIcon(notification.type)}
-                </div>
-                
+              <div className="flex items-start overflow-hidden min-w-0">
                 <div className="flex-1 min-w-0 overflow-hidden">
                   <div className="mb-1">
                     <h4 className="font-medium truncate">{notification.title}</h4>
