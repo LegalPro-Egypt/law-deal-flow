@@ -415,14 +415,14 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
           
           return (
             <Card key={category.id} className={`p-4 w-full overflow-hidden ${hasFiles && category.required ? 'border-green-500 bg-green-50/50' : category.required ? 'border-orange-400 bg-orange-50/20' : ''}`}>
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2 min-w-0">
-                  <h4 className="font-medium">{category.title}</h4>
+              <div className="flex items-center flex-wrap gap-3 mb-3">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <h4 className="font-medium truncate">{category.title}</h4>
                   {hasFiles && category.required && (
-                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
                   )}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-shrink-0">
                   <Badge variant={hasFiles && category.required ? "default" : category.required ? "destructive" : "secondary"}>
                     {category.required 
                       ? (hasFiles ? "Completed" : "Required") 
