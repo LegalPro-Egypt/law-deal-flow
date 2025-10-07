@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ToastAction } from '@/components/ui/toast';
 import { Video, Phone, MessageCircle, Calendar, Clock, Users } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useTwilioSession, TwilioSession } from '@/hooks/useTwilioSession';
@@ -151,9 +152,9 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
     };
   }, [activeSession]);
 
-  // Listen for session updates to know when lawyer accepts the call
+  // Listen for session updates to handle call acceptance and incoming calls
   useEffect(() => {
-    if (!caseId) return;
+    if (!caseId || !user?.id) return;
 
     const channel = supabase
       .channel(`case-${caseId}-sessions`)
@@ -171,35 +172,52 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
             sessionId: updatedSession.id,
             status: updatedSession.status,
             sessionType: updatedSession.session_type,
+            startedAt: updatedSession.started_at,
+            initiatedBy: updatedSession.initiated_by,
+            currentUser: user.id,
             waitingForResponse,
             waitingMode,
             pendingSessionId
           });
           
-          if (updatedSession.status === 'active' && waitingForResponse) {
-            // Lawyer accepted the call, get a fresh access token for the correct session
-            console.log('🚀 Session became active:', updatedSession);
-            console.log('🔧 Getting fresh access token for session:', updatedSession.id);
+          // Only process 'active' sessions with a started_at timestamp
+          if (updatedSession.status === 'active' && updatedSession.started_at) {
+            const isInitiator = updatedSession.initiated_by === user.id;
             
-            // Get a fresh access token for the active session ID
-            createAccessToken(caseId, updatedSession.session_type, updatedSession.id)
-              .then(token => {
-                if (token) {
-                  console.log('✅ Got fresh token for session:', token.sessionId);
-                  setAccessToken(token);
-                  setCommunicationMode(updatedSession.session_type);
-                  setWaitingForResponse(false);
-                  setWaitingMode(null);
-                  setPendingSessionId(null);
-                  const startTime = new Date();
-                  setSessionStartTime(startTime);
-                  sessionStartTimeRef.current = startTime;
-                  toast({
-                    title: 'Call Accepted',
-                    description: 'Lawyer has joined the call',
-                  });
-                } else {
-                  console.error('❌ Failed to get fresh access token');
+            if (isInitiator && waitingForResponse) {
+              // We initiated the call and it was accepted - connect to Twilio
+              console.log('🚀 Our call was accepted, connecting to Twilio...');
+              
+              createAccessToken(caseId, updatedSession.session_type, updatedSession.id)
+                .then(token => {
+                  if (token) {
+                    console.log('✅ Got access token, joining room:', token.sessionId);
+                    setAccessToken(token);
+                    setCommunicationMode(updatedSession.session_type);
+                    setWaitingForResponse(false);
+                    setWaitingMode(null);
+                    setPendingSessionId(null);
+                    const startTime = new Date();
+                    setSessionStartTime(startTime);
+                    sessionStartTimeRef.current = startTime;
+                    toast({
+                      title: 'Call Accepted',
+                      description: 'The other party has joined the call',
+                    });
+                  } else {
+                    console.error('❌ Failed to get access token');
+                    toast({
+                      title: 'Connection Error',
+                      description: 'Failed to join the call',
+                      variant: 'destructive',
+                    });
+                    setWaitingForResponse(false);
+                    setWaitingMode(null);
+                    setPendingSessionId(null);
+                  }
+                })
+                .catch(error => {
+                  console.error('❌ Error getting access token:', error);
                   toast({
                     title: 'Connection Error',
                     description: 'Failed to join the call',
@@ -208,19 +226,61 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
                   setWaitingForResponse(false);
                   setWaitingMode(null);
                   setPendingSessionId(null);
-                }
-              })
-              .catch(error => {
-                console.error('❌ Error getting fresh access token:', error);
-                toast({
-                  title: 'Connection Error',
-                  description: 'Failed to join the call',
-                  variant: 'destructive',
                 });
-                setWaitingForResponse(false);
-                setWaitingMode(null);
-                setPendingSessionId(null);
+            } else if (!isInitiator && !waitingForResponse) {
+              // Incoming call - someone else initiated and we're not already waiting
+              console.log('📞 Incoming call detected');
+              
+              const modeLabel = updatedSession.session_type === 'video' ? 'Video' : 'Voice';
+              const initiatorRole = isCurrentUserClient === false ? 'Client' : 'Lawyer';
+              
+              // Handle the incoming call join action
+              const handleJoinCall = async () => {
+                console.log('🎯 Accepting incoming call and updating session to active...');
+                try {
+                  // First, update the session status to 'active' with started_at
+                  // This will trigger the UPDATE event for both parties
+                  const { error: updateError } = await supabase
+                    .from('communication_sessions')
+                    .update({
+                      status: 'active',
+                      started_at: new Date().toISOString()
+                    })
+                    .eq('id', updatedSession.id);
+                  
+                  if (updateError) {
+                    console.error('❌ Error updating session to active:', updateError);
+                    toast({
+                      title: 'Connection Error',
+                      description: 'Failed to accept the call',
+                      variant: 'destructive',
+                    });
+                    return;
+                  }
+                  
+                  console.log('✅ Session updated to active, waiting for token...');
+                  // The session UPDATE event will trigger token creation and connection for both parties
+                } catch (error) {
+                  console.error('❌ Error accepting call:', error);
+                  toast({
+                    title: 'Connection Error',
+                    description: 'Failed to accept the call',
+                    variant: 'destructive',
+                  });
+                }
+              };
+              
+              toast({
+                title: `Incoming ${modeLabel} Call`,
+                description: `${initiatorRole} is calling you`,
+                action: (
+                  <ToastAction altText="Join call" onClick={handleJoinCall}>
+                    Join
+                  </ToastAction>
+                ),
+                duration: 30000, // 30 seconds to accept
               });
+            }
           } else if (updatedSession.status === 'failed' && waitingForResponse) {
             // Call failed or was declined
             setWaitingForResponse(false);
@@ -249,7 +309,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [caseId, waitingForResponse, toast, createAccessToken]);
+  }, [caseId, user?.id, waitingForResponse, isCurrentUserClient, toast, createAccessToken]);
 
   const handleStartCommunication = async (mode: 'video' | 'voice' | 'chat') => {
     console.log('📞 Starting communication with mode:', mode);
@@ -269,23 +329,18 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
       return;
     }
 
-    // For video and voice, use the session-based approach
+    // For video and voice, create session but DON'T connect until status is 'active'
     try {
-      console.log('🚀 handleStartCommunication - Creating access token for:', mode);
+      console.log('🚀 handleStartCommunication - Creating session for:', mode);
       const token = await createAccessToken(caseId, mode);
       console.log('🚀 handleStartCommunication - Got token:', token?.sessionId);
       
       if (token) {
-        // Set communication mode and access token immediately so initiator connects to Twilio
-        setCommunicationMode(mode);
-        setAccessToken(token);
+        // DO NOT set accessToken or communicationMode yet - only set waiting state
+        // The initiator will connect when the session becomes 'active'
         setPendingSessionId(token.sessionId);
         setWaitingForResponse(true);
         setWaitingMode(mode);
-        
-        const startTime = new Date();
-        setSessionStartTime(startTime);
-        sessionStartTimeRef.current = startTime;
         
         const modeLabel = mode === 'video' ? 'video' : 'voice';
         const desc = isCurrentUserClient === false
