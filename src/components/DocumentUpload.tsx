@@ -408,15 +408,15 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
   return (
     <div className="space-y-6">
       {/* Document Categories */}
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid md:grid-cols-2 gap-4 max-w-full overflow-x-hidden">
         {categories.map((category) => {
           const categoryFiles = getCategoryFiles(category.id);
           const hasFiles = categoryFiles.length > 0;
           
           return (
-            <Card key={category.id} className={`p-4 ${hasFiles && category.required ? 'border-green-500 bg-green-50/50' : category.required ? 'border-orange-400 bg-orange-50/20' : ''}`}>
+            <Card key={category.id} className={`p-4 w-full overflow-hidden ${hasFiles && category.required ? 'border-green-500 bg-green-50/50' : category.required ? 'border-orange-400 bg-orange-50/20' : ''}`}>
               <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 min-w-0">
                   <h4 className="font-medium">{category.title}</h4>
                   {hasFiles && category.required && (
                     <CheckCircle className="h-4 w-4 text-green-600" />
@@ -439,7 +439,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
               
               <div className="space-y-3">
                 {/* Examples */}
-                <div className="text-sm text-muted-foreground">
+                <div className="text-sm text-muted-foreground break-words">
                   <p className="font-medium mb-1">Examples:</p>
                   <p>{category.examples.join(', ')}</p>
                 </div>

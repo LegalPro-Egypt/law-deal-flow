@@ -113,7 +113,7 @@ export const NotificationsInbox = ({ activeCaseId }: NotificationsInboxProps) =>
                   : 'bg-background'
               }`}
             >
-              <div className="flex items-start gap-3 overflow-hidden">
+              <div className="flex items-start gap-3 overflow-hidden min-w-0">
                 <div className={`p-2 rounded-full flex-shrink-0 ${
                   !notification.is_read ? 'bg-primary/20' : 'bg-muted'
                 }`}>
