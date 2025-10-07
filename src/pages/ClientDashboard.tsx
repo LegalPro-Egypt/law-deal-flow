@@ -840,8 +840,8 @@ const ClientDashboard = () => {
                           const isEditing = editingDocId === doc.id;
                           
                           return (
-                            <div key={index} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
-                              <div className="flex items-center space-x-3 flex-1 min-w-0">
+                            <div key={index} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 overflow-hidden">
+                              <div className="flex items-center space-x-3 flex-1 min-w-0 overflow-hidden">
                                 <DocumentThumbnail
                                   fileUrl={doc.file_url}
                                   fileName={doc.file_name}
@@ -849,7 +849,7 @@ const ClientDashboard = () => {
                                   size="small"
                                   onClick={() => setPreviewDocument(doc)}
                                 />
-                                <div className="flex-1 min-w-0">
+                                <div className="flex-1 min-w-0 overflow-hidden">
                                 {isEditing ? (
                                   <div className="flex items-center gap-2">
                                     <Input
@@ -898,8 +898,8 @@ const ClientDashboard = () => {
                                   </div>
                                 ) : (
                                   <>
-                                    <p className="font-medium truncate">{displayName}</p>
-                                    <p className="text-sm text-muted-foreground">
+                                    <p className="font-medium truncate w-full">{displayName}</p>
+                                    <p className="text-sm text-muted-foreground truncate w-full">
                                       {Math.round(doc.file_size / 1024)} KB • Uploaded {formatDate(doc.created_at)}
                                       {doc.document_category && ` • ${doc.document_category}`}
                                     </p>
