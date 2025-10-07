@@ -89,66 +89,35 @@ serve(async (req) => {
 
       sessionData = existing;
       roomName = existing.room_name || `case-${caseId}-${sessionType}-${Date.now()}`;
-
-      if (!existing.room_name) {
-        const { error: updateErr } = await supabaseClient
-          .from('communication_sessions')
-          .update({
-            room_name: roomName,
-            twilio_conversation_sid: conversationSid,
-          })
-          .eq('id', existing.id);
-        if (updateErr) console.error('Failed to set room_name on existing session:', updateErr);
-      }
     } else {
-      // Try to reuse the latest scheduled session for this case
-      const { data: existing, error: findErr } = await supabaseClient
+      // Create a new active session immediately (no scheduled status)
+      roomName = `case-${caseId}-${sessionType}-${Date.now()}`;
+      const now = new Date().toISOString();
+      
+      const { data: created, error: createErr } = await supabaseClient
         .from('communication_sessions')
-        .select('*')
-        .eq('case_id', caseId)
-        .eq('status', 'scheduled')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .insert({
+          case_id: caseId,
+          client_id: caseData.user_id,
+          lawyer_id: caseData.assigned_lawyer_id,
+          session_type: sessionType,
+          room_name: roomName,
+          twilio_conversation_sid: conversationSid,
+          status: 'active',
+          started_at: now,
+          recording_enabled: true,
+          recording_consent_client: true,
+          recording_consent_lawyer: true,
+          initiated_by: user.id,
+        })
+        .select()
+        .single();
 
-      if (existing) {
-        sessionData = existing;
-        roomName = existing.room_name || `case-${caseId}-${sessionType}-${Date.now()}`;
-        if (!existing.room_name) {
-          const { error: updateErr } = await supabaseClient
-            .from('communication_sessions')
-            .update({ room_name: roomName, twilio_conversation_sid: conversationSid })
-            .eq('id', existing.id);
-          if (updateErr) console.error('Failed to set room_name on reused session:', updateErr);
-        }
-      } else {
-        // Create a fresh session
-        roomName = `case-${caseId}-${sessionType}-${Date.now()}`;
-        const { data: created, error: createErr } = await supabaseClient
-          .from('communication_sessions')
-          .insert({
-            case_id: caseId,
-            client_id: caseData.user_id,
-            lawyer_id: caseData.assigned_lawyer_id,
-            session_type: sessionType,
-            room_name: roomName,
-            twilio_conversation_sid: conversationSid,
-            status: 'scheduled',
-            scheduled_at: new Date().toISOString(),
-            recording_enabled: true,
-            recording_consent_client: true,
-            recording_consent_lawyer: true,
-            initiated_by: user.id,
-          })
-          .select()
-          .single();
-
-        if (createErr) {
-          console.error('Session creation error:', createErr);
-          return new Response('Failed to create session', { status: 500, headers: corsHeaders });
-        }
-        sessionData = created;
+      if (createErr) {
+        console.error('Session creation error:', createErr);
+        return new Response('Failed to create session', { status: 500, headers: corsHeaders });
       }
+      sessionData = created;
     }
 
     // Generate Twilio Access Token

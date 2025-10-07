@@ -160,7 +160,7 @@ const LawyerDashboard = () => {
         (payload) => {
           const newSession = payload.new as TwilioSession;
           // Only show as incoming call if lawyer didn't initiate it
-          if (newSession.status === 'scheduled' && newSession.initiated_by !== user.id) {
+          if (newSession.status === 'active' && newSession.initiated_by !== user.id) {
             setIncomingCalls(prev => [...prev, newSession]);
             
             // Play notification sound or show system notification
@@ -186,7 +186,7 @@ const LawyerDashboard = () => {
           console.log('Communication session updated:', payload);
           const updatedSession = payload.new as TwilioSession;
           console.log('Updated session status:', updatedSession.status, 'Session ID:', updatedSession.id);
-          if (updatedSession.status !== 'scheduled') {
+          if (updatedSession.status !== 'active') {
             console.log('Removing session from incoming calls:', updatedSession.id);
             setIncomingCalls(prev => {
               const filtered = prev.filter(call => call.id !== updatedSession.id);

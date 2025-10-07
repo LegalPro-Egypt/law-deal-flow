@@ -56,10 +56,6 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
   const [communicationMode, setCommunicationMode] = useState<'video' | 'voice' | 'chat' | null>(null);
   const [showRecordings, setShowRecordings] = useState(false);
   const [showDirectChat, setShowDirectChat] = useState(false);
-  const [waitingForResponse, setWaitingForResponse] = useState(false);
-  console.log('✅ waitingForResponse state initialized:', waitingForResponse);
-  const [waitingMode, setWaitingMode] = useState<'video' | 'voice' | null>(null);
-  const [pendingSessionId, setPendingSessionId] = useState<string | null>(null);
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
   const sessionStartTimeRef = useRef<Date | null>(null);
   const browserCleanupRef = useRef<(() => void) | null>(null);
@@ -103,26 +99,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
   }, [showDirectChat, storageKey]);
 
   const caseSessions = sessions.filter(session => session.case_id === caseId);
-  // Only consider a session truly active if it has started_at (participants joined)
-  const activeCaseSession = caseSessions.find(session => 
-    session.status === 'active' && session.started_at
-  );
-  const pendingSession = pendingSessionId
-    ? sessions.find(session => session.id === pendingSessionId && session.status === 'scheduled') ||
-      caseSessions.find(session => session.status === 'scheduled' && session.id === pendingSessionId)
-    : caseSessions.find(session => session.status === 'scheduled' && (
-        (!waitingMode || session.session_type === waitingMode) &&
-        (!user?.id || session.initiated_by === user.id)
-      )) || null;
-
-  console.log('🔍 Debug - State check:', {
-    waitingForResponse,
-    waitingMode,
-    pendingSessionId,
-    pendingSession: pendingSession?.id,
-    sessionsCount: sessions.length,
-    caseSessionsCount: caseSessions.length
-  });
+  const activeCaseSession = caseSessions.find(session => session.status === 'active');
 
   // Setup browser cleanup and session validation when session becomes active
   useEffect(() => {
@@ -152,12 +129,94 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
     };
   }, [activeSession]);
 
-  // Listen for session updates to handle call acceptance and incoming calls
+  // Listen for incoming calls (INSERT events for active sessions)
   useEffect(() => {
     if (!caseId || !user?.id) return;
 
     const channel = supabase
       .channel(`case-${caseId}-sessions`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'communication_sessions',
+          filter: `case_id=eq.${caseId}`
+        },
+        async (payload) => {
+          const newSession = payload.new as TwilioSession;
+          console.log('📞 New session detected:', newSession);
+          
+          // Check if this is an incoming call (not initiated by us)
+          if (newSession.initiated_by !== user.id && newSession.status === 'active') {
+            console.log('📲 Incoming call from another user');
+            
+            const modeLabel = newSession.session_type === 'video' ? 'Video' : 'Voice';
+            const initiatorRole = isCurrentUserClient === false ? 'Client' : 'Lawyer';
+            
+            const handleJoinCall = async () => {
+              console.log('🎯 Joining incoming call...');
+              try {
+                const token = await createAccessToken(caseId, newSession.session_type, newSession.id);
+                if (token) {
+                  setAccessToken(token);
+                  setCommunicationMode(newSession.session_type);
+                  const startTime = new Date();
+                  setSessionStartTime(startTime);
+                  sessionStartTimeRef.current = startTime;
+                  toast({
+                    title: 'Joined Call',
+                    description: 'Connected to the call',
+                  });
+                }
+              } catch (error) {
+                console.error('❌ Error joining call:', error);
+                toast({
+                  title: 'Connection Error',
+                  description: 'Failed to join the call',
+                  variant: 'destructive',
+                });
+              }
+            };
+            
+            const handleDeclineCall = async () => {
+              console.log('🔴 Declining incoming call...');
+              try {
+                await supabase
+                  .from('communication_sessions')
+                  .update({
+                    status: 'declined',
+                    ended_at: new Date().toISOString()
+                  })
+                  .eq('id', newSession.id);
+                
+                toast({
+                  title: 'Call Declined',
+                  description: 'The call has been declined',
+                });
+              } catch (error) {
+                console.error('❌ Error declining call:', error);
+              }
+            };
+            
+            toast({
+              title: `Incoming ${modeLabel} Call`,
+              description: `${initiatorRole} is calling you`,
+              action: (
+                <div className="flex gap-2">
+                  <ToastAction altText="Decline" onClick={handleDeclineCall}>
+                    Decline
+                  </ToastAction>
+                  <ToastAction altText="Answer" onClick={handleJoinCall}>
+                    Answer
+                  </ToastAction>
+                </div>
+              ),
+              duration: 30000,
+            });
+          }
+        }
+      )
       .on(
         'postgres_changes',
         {
@@ -168,139 +227,22 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
         },
         (payload) => {
           const updatedSession = payload.new as TwilioSession;
-          console.log('🔥 Session update received:', {
-            sessionId: updatedSession.id,
-            status: updatedSession.status,
-            sessionType: updatedSession.session_type,
-            startedAt: updatedSession.started_at,
-            initiatedBy: updatedSession.initiated_by,
-            currentUser: user.id,
-            waitingForResponse,
-            waitingMode,
-            pendingSessionId
-          });
           
-          // Only process 'active' sessions with a started_at timestamp
-          if (updatedSession.status === 'active' && updatedSession.started_at) {
-            const isInitiator = updatedSession.initiated_by === user.id;
-            
-            if (isInitiator && waitingForResponse) {
-              // We initiated the call and it was accepted - connect to Twilio
-              console.log('🚀 Our call was accepted, connecting to Twilio...');
-              
-              createAccessToken(caseId, updatedSession.session_type, updatedSession.id)
-                .then(token => {
-                  if (token) {
-                    console.log('✅ Got access token, joining room:', token.sessionId);
-                    setAccessToken(token);
-                    setCommunicationMode(updatedSession.session_type);
-                    setWaitingForResponse(false);
-                    setWaitingMode(null);
-                    setPendingSessionId(null);
-                    const startTime = new Date();
-                    setSessionStartTime(startTime);
-                    sessionStartTimeRef.current = startTime;
-                    toast({
-                      title: 'Call Accepted',
-                      description: 'The other party has joined the call',
-                    });
-                  } else {
-                    console.error('❌ Failed to get access token');
-                    toast({
-                      title: 'Connection Error',
-                      description: 'Failed to join the call',
-                      variant: 'destructive',
-                    });
-                    setWaitingForResponse(false);
-                    setWaitingMode(null);
-                    setPendingSessionId(null);
-                  }
-                })
-                .catch(error => {
-                  console.error('❌ Error getting access token:', error);
-                  toast({
-                    title: 'Connection Error',
-                    description: 'Failed to join the call',
-                    variant: 'destructive',
-                  });
-                  setWaitingForResponse(false);
-                  setWaitingMode(null);
-                  setPendingSessionId(null);
-                });
-            } else if (!isInitiator && !waitingForResponse) {
-              // Incoming call - someone else initiated and we're not already waiting
-              console.log('📞 Incoming call detected');
-              
-              const modeLabel = updatedSession.session_type === 'video' ? 'Video' : 'Voice';
-              const initiatorRole = isCurrentUserClient === false ? 'Client' : 'Lawyer';
-              
-              // Handle the incoming call join action
-              const handleJoinCall = async () => {
-                console.log('🎯 Accepting incoming call and updating session to active...');
-                try {
-                  // First, update the session status to 'active' with started_at
-                  // This will trigger the UPDATE event for both parties
-                  const { error: updateError } = await supabase
-                    .from('communication_sessions')
-                    .update({
-                      status: 'active',
-                      started_at: new Date().toISOString()
-                    })
-                    .eq('id', updatedSession.id);
-                  
-                  if (updateError) {
-                    console.error('❌ Error updating session to active:', updateError);
-                    toast({
-                      title: 'Connection Error',
-                      description: 'Failed to accept the call',
-                      variant: 'destructive',
-                    });
-                    return;
-                  }
-                  
-                  console.log('✅ Session updated to active, waiting for token...');
-                  // The session UPDATE event will trigger token creation and connection for both parties
-                } catch (error) {
-                  console.error('❌ Error accepting call:', error);
-                  toast({
-                    title: 'Connection Error',
-                    description: 'Failed to accept the call',
-                    variant: 'destructive',
-                  });
-                }
-              };
-              
-              toast({
-                title: `Incoming ${modeLabel} Call`,
-                description: `${initiatorRole} is calling you`,
-                action: (
-                  <ToastAction altText="Join call" onClick={handleJoinCall}>
-                    Join
-                  </ToastAction>
-                ),
-                duration: 30000, // 30 seconds to accept
-              });
-            }
-          } else if (updatedSession.status === 'failed' && waitingForResponse) {
-            // Call failed or was declined
-            setWaitingForResponse(false);
-            setWaitingMode(null);
-            setPendingSessionId(null);
-            toast({
-              title: 'Call Failed',
-              description: 'The call could not be completed or was declined',
-              variant: 'destructive',
-            });
-          } else if (updatedSession.status === 'ended') {
-            // Session ended, cleanup local state
+          // Handle session end
+          if (updatedSession.status === 'ended' || updatedSession.status === 'declined') {
             setCommunicationMode(null);
             setAccessToken(null);
             setActiveSession(null);
-            setWaitingForResponse(false);
-            setWaitingMode(null);
-            setPendingSessionId(null);
             setSessionStartTime(null);
             sessionStartTimeRef.current = null;
+            
+            if (updatedSession.status === 'declined') {
+              toast({
+                title: 'Call Declined',
+                description: 'The other party declined the call',
+                variant: 'destructive',
+              });
+            }
           }
         }
       )
@@ -309,7 +251,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [caseId, user?.id, waitingForResponse, isCurrentUserClient, toast, createAccessToken]);
+  }, [caseId, user?.id, isCurrentUserClient, createAccessToken]);
 
   const handleStartCommunication = async (mode: 'video' | 'voice' | 'chat') => {
     console.log('📞 Starting communication with mode:', mode);
@@ -329,35 +271,27 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
       return;
     }
 
-    // For video and voice, create session but DON'T connect until status is 'active'
+    // For video and voice, create active session and connect immediately
     try {
-      console.log('🚀 handleStartCommunication - Creating session for:', mode);
+      console.log('🚀 Creating active session and connecting to:', mode);
       const token = await createAccessToken(caseId, mode);
-      console.log('🚀 handleStartCommunication - Got token:', token?.sessionId);
       
       if (token) {
-        // DO NOT set accessToken or communicationMode yet - only set waiting state
-        // The initiator will connect when the session becomes 'active'
-        setPendingSessionId(token.sessionId);
-        setWaitingForResponse(true);
-        setWaitingMode(mode);
+        // Connect initiator to Twilio immediately
+        setAccessToken(token);
+        setCommunicationMode(mode);
+        const startTime = new Date();
+        setSessionStartTime(startTime);
+        sessionStartTimeRef.current = startTime;
         
         const modeLabel = mode === 'video' ? 'video' : 'voice';
-        const desc = isCurrentUserClient === false
-          ? `Calling client for a ${modeLabel} call...`
-          : (isCurrentUserClient === true
-              ? `Waiting for lawyer to accept your ${modeLabel} call...`
-              : `Starting a ${modeLabel} call...`);
         toast({
-          title: 'Call Request Sent',
-          description: desc,
+          title: 'Calling...',
+          description: `Waiting for the other party to join the ${modeLabel} call`,
         });
       }
     } catch (error) {
       console.error('Error starting communication:', error);
-      setWaitingForResponse(false);
-      setWaitingMode(null);
-      setPendingSessionId(null);
       toast({
         title: 'Connection Error',
         description: 'Failed to start communication session',
@@ -385,9 +319,6 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
       setCommunicationMode(null);
       setAccessToken(null);
       setActiveSession(null);
-      setWaitingForResponse(false);
-      setWaitingMode(null);
-      setPendingSessionId(null);
       setSessionStartTime(null);
       sessionStartTimeRef.current = null;
       
@@ -412,9 +343,6 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
       setCommunicationMode(null);
       setAccessToken(null);
       setActiveSession(null);
-      setWaitingForResponse(false);
-      setWaitingMode(null);
-      setPendingSessionId(null);
       setSessionStartTime(null);
       sessionStartTimeRef.current = null;
       
@@ -437,27 +365,19 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
   };
 
   const handleCancelCall = async () => {
-    console.log('🔴 handleCancelCall - Current state:', {
-      pendingSession: pendingSession?.id,
-      waitingForResponse,
-      waitingMode,
-      pendingSessionId
-    });
+    console.log('🔴 Cancelling call...');
 
-    const idToCancel = pendingSession?.id || pendingSessionId;
-
-    if (idToCancel) {
+    if (activeSession) {
       try {
-        console.log('Cancelling call for session:', idToCancel);
+        console.log('Cancelling call for session:', activeSession.id);
         // Update session status to cancelled
         const { error } = await supabase
           .from('communication_sessions')
           .update({ 
-            status: 'failed',
+            status: 'ended',
             ended_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
           })
-          .eq('id', idToCancel);
+          .eq('id', activeSession.id);
 
         if (error) {
           console.error('Error updating session:', error);
@@ -477,12 +397,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
           variant: 'destructive',
         });
       }
-    } else {
-      console.log('No session id available yet; cancelling local waiting state only.');
     }
-    setWaitingForResponse(false);
-    setWaitingMode(null);
-    setPendingSessionId(null);
   };
 
   const formatDuration = (seconds?: number): string => {
@@ -576,23 +491,23 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <Button
                 onClick={() => handleStartCommunication('video')}
-                disabled={!communicationModes.video || connecting || !!activeCaseSession || waitingForResponse}
+                disabled={!communicationModes.video || connecting || !!activeCaseSession}
                 className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''} ${!communicationModes.video ? 'opacity-50' : ''}`}
                 title={!communicationModes.video ? 'Video calls are currently disabled' : ''}
               >
                 <Video className="w-4 h-4" />
-                {waitingMode === 'video' ? 'Waiting...' : 'Video Call'}
+                Video Call
               </Button>
               
               <Button
                 variant="outline"
                 onClick={() => handleStartCommunication('voice')}
-                disabled={!communicationModes.voice || connecting || !!activeCaseSession || waitingForResponse}
+                disabled={!communicationModes.voice || connecting || !!activeCaseSession}
                 className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''} ${!communicationModes.voice ? 'opacity-50' : ''}`}
                 title={!communicationModes.voice ? 'Voice calls are currently disabled' : ''}
               >
                 <Phone className="w-4 h-4" />
-                {waitingMode === 'voice' ? 'Waiting...' : 'Voice Call'}
+                Voice Call
               </Button>
 
               <Button
@@ -623,38 +538,6 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
                   <SessionRecordingsPlayer caseId={caseId} />
                 </DialogContent>
               </Dialog>
-            </div>
-          )}
-
-          {waitingForResponse && (
-            <div className="p-3 bg-warning/10 rounded-lg border border-warning/20">
-              <div className={`${isRTL() ? 'flex-row-reverse' : ''} flex items-center justify-between`}>
-                <div className={`${isRTL() ? 'flex-row-reverse' : ''} flex items-center gap-2`}>
-                  <Badge variant="outline" className="animate-pulse">
-                    📞 Calling...
-                  </Badge>
-                  <span className="text-sm">
-                    {(() => {
-                      const type = waitingMode || 'voice';
-                      const label = type === 'video' ? 'video' : 'voice';
-                      if (isCurrentUserClient === true) {
-                        return `Waiting for lawyer to accept a ${label} call...`;
-                      }
-                      if (isCurrentUserClient === false) {
-                        return `Calling client for a ${label} call...`;
-                      }
-                      return `Starting a ${label} call...`;
-                    })()}
-                  </span>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCancelCall}
-                >
-                  Cancel
-                </Button>
-              </div>
             </div>
           )}
 

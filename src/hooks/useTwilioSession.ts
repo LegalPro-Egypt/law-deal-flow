@@ -9,7 +9,7 @@ export interface TwilioSession {
   client_id: string;
   lawyer_id?: string;
   session_type: 'video' | 'voice' | 'chat';
-  status: 'scheduled' | 'active' | 'ended' | 'failed';
+  status: 'active' | 'ended' | 'declined' | 'failed' | 'missed';
   twilio_room_sid?: string;
   room_name?: string;
   recording_enabled: boolean;
@@ -87,7 +87,6 @@ export const useTwilioSession = () => {
           sessionType,
           participantRole,
           sessionId,
-          status: 'scheduled',
           recording_enabled: true  // Always enable recording automatically
         }
       });
