@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import Twilio from "npm:twilio@5.3.4";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -122,95 +123,99 @@ serve(async (req) => {
 
     // Generate Twilio Access Token
     const twilioAccountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
-    const twilioApiKey = Deno.env.get('TWILIO_API_KEY');
-    const twilioApiSecret = Deno.env.get('TWILIO_API_SECRET');
+    const twilioApiKey = Deno.env.get('TWILIO_API_KEY_SID');
+    const twilioApiSecret = Deno.env.get('TWILIO_API_KEY_SECRET');
+
+    console.log('Twilio credentials check:', {
+      hasAccountSid: !!twilioAccountSid,
+      hasApiKey: !!twilioApiKey,
+      hasApiSecret: !!twilioApiSecret,
+      accountSidPrefix: twilioAccountSid?.substring(0, 4),
+      apiKeyPrefix: twilioApiKey?.substring(0, 4)
+    });
 
     if (!twilioAccountSid || !twilioApiKey || !twilioApiSecret) {
-      console.error('Missing Twilio credentials');
-      return new Response('Twilio configuration error', { status: 500, headers: corsHeaders });
+      console.error('Missing Twilio credentials:', {
+        hasAccountSid: !!twilioAccountSid,
+        hasApiKey: !!twilioApiKey,
+        hasApiSecret: !!twilioApiSecret
+      });
+      return new Response(JSON.stringify({ 
+        error: 'Twilio configuration error',
+        details: 'Missing required Twilio credentials. Please check TWILIO_ACCOUNT_SID, TWILIO_API_KEY_SID, and TWILIO_API_KEY_SECRET environment variables.'
+      }), { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
-    // Create JWT token for Twilio access
+    // Create Twilio Access Token using official SDK
     const identity = `${participantRole}-${user.id}`;
-    const header = {
-      "typ": "JWT",
-      "alg": "HS256"
-    };
+    
+    try {
+      const AccessToken = Twilio.jwt.AccessToken;
+      const VideoGrant = AccessToken.VideoGrant;
 
-    const now = Math.floor(Date.now() / 1000);
-    const grants: any = {
-      "identity": identity
-    };
+      const token = new AccessToken(
+        twilioAccountSid,
+        twilioApiKey,
+        twilioApiSecret,
+        { identity: identity }
+      );
 
-    // Add appropriate grants based on session type
-    if (sessionType === 'video' || sessionType === 'voice') {
-      grants.video = {
-        "room": roomName
-      };
-    } else if (sessionType === 'chat') {
-      grants.chat = {
-        "service_sid": conversationSid
-      };
+      // Add appropriate grants based on session type
+      if (sessionType === 'video' || sessionType === 'voice') {
+        const videoGrant = new VideoGrant({
+          room: roomName
+        });
+        token.addGrant(videoGrant);
+        console.log('Added video grant for room:', roomName);
+      } else if (sessionType === 'chat') {
+        const ChatGrant = AccessToken.ChatGrant;
+        const chatGrant = new ChatGrant({
+          serviceSid: conversationSid
+        });
+        token.addGrant(chatGrant);
+        console.log('Added chat grant for conversation:', conversationSid);
+      }
+
+      const accessToken = token.toJwt();
+      console.log('Successfully generated access token for identity:', identity);
+
+      // Update session with Twilio room details
+      await supabaseClient
+        .from('communication_sessions')
+        .update({
+          twilio_room_sid: roomName
+        })
+        .eq('id', sessionData.id);
+
+      return new Response(JSON.stringify({
+        accessToken,
+        roomName,
+        sessionId: sessionData.id,
+        identity
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+
+    } catch (tokenError) {
+      console.error('Error generating Twilio token:', tokenError);
+      return new Response(JSON.stringify({ 
+        error: 'Failed to generate access token',
+        details: tokenError.message 
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
-
-    const payload = {
-      "iss": twilioApiKey,
-      "sub": twilioAccountSid,
-      "nbf": now,
-      "exp": now + 3600, // 1 hour
-      "jti": `${twilioApiKey}-${now}`,
-      "grants": grants
-    };
-
-    // Simple JWT creation (in production, use a proper JWT library)
-    const base64UrlEncode = (obj: any) => {
-      return btoa(JSON.stringify(obj))
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=/g, '');
-    };
-
-    const headerEncoded = base64UrlEncode(header);
-    const payloadEncoded = base64UrlEncode(payload);
-    const signature = await crypto.subtle.sign(
-      'HMAC',
-      await crypto.subtle.importKey(
-        'raw',
-        new TextEncoder().encode(twilioApiSecret),
-        { name: 'HMAC', hash: 'SHA-256' },
-        false,
-        ['sign']
-      ),
-      new TextEncoder().encode(`${headerEncoded}.${payloadEncoded}`)
-    );
-
-    const signatureEncoded = btoa(String.fromCharCode(...new Uint8Array(signature)))
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=/g, '');
-
-    const accessToken = `${headerEncoded}.${payloadEncoded}.${signatureEncoded}`;
-
-    // Update session with Twilio room details (don't start recording here)
-    await supabaseClient
-      .from('communication_sessions')
-      .update({
-        twilio_room_sid: roomName // Recording will be managed separately when room is active
-      })
-      .eq('id', sessionData.id);
-
-    return new Response(JSON.stringify({
-      accessToken,
-      roomName,
-      sessionId: sessionData.id,
-      identity
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
 
   } catch (error) {
     console.error('Error creating access token:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ 
+      error: 'Internal server error',
+      details: error.message 
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

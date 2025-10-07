@@ -81,30 +81,57 @@ export const useTwilioSession = () => {
 
       const participantRole = caseData?.user_id === user.id ? 'client' : 'lawyer';
 
+      console.log('Creating access token with params:', {
+        caseId,
+        sessionType,
+        participantRole,
+        sessionId: sessionId || 'new session'
+      });
+
       const { data, error } = await supabase.functions.invoke('create-twilio-access-token', {
         body: {
           caseId,
           sessionType,
           participantRole,
           sessionId,
-          recording_enabled: true  // Always enable recording automatically
+          recording_enabled: true
         }
       });
 
-      if (error) throw error;
+      console.log('Access token response:', { 
+        success: !error, 
+        hasData: !!data,
+        error: error?.message 
+      });
+
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw new Error(error.message || 'Failed to invoke token function');
+      }
+
+      if (!data || !data.accessToken) {
+        console.error('Invalid response from token function:', data);
+        throw new Error('No access token received from server');
+      }
       
       setAccessToken(data);
+      console.log('Access token created successfully for session:', data.sessionId);
+      
       toast({
-        title: 'Access Token Created',
-        description: `Ready to join ${sessionType} session`,
+        title: 'Connected',
+        description: `Joining ${sessionType} session`,
       });
       
       return data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating access token:', error);
+      
+      const errorMessage = error?.message || 'Failed to create session access token';
+      const errorDetails = error?.details || error?.error || '';
+      
       toast({
         title: 'Connection Error',
-        description: 'Failed to create session access token',
+        description: errorDetails ? `${errorMessage}: ${errorDetails}` : errorMessage,
         variant: 'destructive',
       });
       return null;
