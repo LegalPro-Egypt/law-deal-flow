@@ -255,16 +255,6 @@ export const CommunicationInbox: React.FC<CommunicationInboxProps> = ({
                     <div className={`text-sm text-muted-foreground ${isRTL() ? 'text-right' : ''}`}>
                       {disabledInfo.description}
                     </div>
-                    <div className={`flex items-center gap-2 mt-2 ${isRTL() ? 'flex-row-reverse justify-end' : ''}`}>
-                      <Badge variant="outline" className="text-xs">
-                        {t('communication.labels.status')} {t(`dashboard.cases.status.${caseStatus}`, caseStatus)}
-                      </Badge>
-                      {!consultationPaid && userRole === 'client' && (
-                        <Badge variant="outline" className="text-xs">
-                          {t('communication.labels.payment')} {paymentStatus.replace(/\b\w/g, l => l.toUpperCase())}
-                        </Badge>
-                      )}
-                    </div>
                   </AlertDescription>
                 </Alert>
               )}
