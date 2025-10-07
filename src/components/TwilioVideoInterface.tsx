@@ -29,9 +29,25 @@ export const TwilioVideoInterface: React.FC<TwilioVideoInterfaceProps> = ({
 
   useEffect(() => {
     const connectToRoom = async () => {
+      if (!accessToken || room) return;
+
       try {
-        console.log('Connecting to Twilio room:', accessToken.roomName);
-        
+        console.log('Attempting to connect to Twilio room:', accessToken.roomName);
+
+        // Preflight check: ensure we can get media devices
+        try {
+          await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+          console.log('Media devices access granted');
+        } catch (mediaError: any) {
+          console.error('Media access error:', mediaError);
+          toast({
+            title: 'Media Access Error',
+            description: 'Please allow camera and microphone access to join the call',
+            variant: 'destructive',
+          });
+          return;
+        }
+
         const twilioRoom = await TwilioVideo.connect(accessToken.accessToken, {
           name: accessToken.roomName,
           audio: true,
@@ -83,21 +99,36 @@ export const TwilioVideoInterface: React.FC<TwilioVideoInterfaceProps> = ({
       } catch (error) {
         console.error('Error connecting to room:', error);
         
-        // Update session status to failed
-        await supabase
-          .from('communication_sessions')
-          .update({ 
-            status: 'failed',
-            ended_at: new Date().toISOString()
-          })
-          .eq('id', accessToken.sessionId);
-
         const err: any = error;
-        console.error('Error connecting to room:', err?.code, err?.message || err);
+        console.error('Twilio connection error details:', {
+          code: err?.code,
+          message: err?.message || err,
+          name: err?.name,
+          details: err
+        });
+
+        // Only mark as failed for hard errors, not transient network issues
+        const isHardError = err?.code === 20102 || err?.code === 53000 || err?.code === 53001;
+        
+        if (isHardError) {
+          await supabase
+            .from('communication_sessions')
+            .update({ 
+              status: 'failed',
+              ended_at: new Date().toISOString()
+            })
+            .eq('id', accessToken.sessionId);
+        }
+
+        const errorMessage = err?.code === 20102 
+          ? 'Invalid access token - please try again'
+          : err?.code === 53000
+          ? 'Room not found or already ended'
+          : err?.message || 'Failed to join video session';
 
         toast({
           title: 'Connection Error',
-          description: err?.message ? `Failed to join: ${err.message}` : 'Failed to join video session',
+          description: errorMessage,
           variant: 'destructive',
         });
       }

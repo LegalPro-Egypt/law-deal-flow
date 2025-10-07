@@ -56,6 +56,8 @@ import { VerificationStatusBadge } from "@/components/VerificationStatusBadge";
 import { IncomingCallNotification } from "@/components/IncomingCallNotification";
 import { ContractCreationDialog } from "@/components/ContractCreationDialog";
 import { useContracts } from "@/hooks/useContracts";
+import { TwilioVideoInterface } from "@/components/TwilioVideoInterface";
+import { TwilioVoiceInterface } from "@/components/TwilioVoiceInterface";
 
 
 interface LawyerStats {
@@ -106,6 +108,11 @@ const LawyerDashboard = () => {
   const [moneyRequestDialogOpen, setMoneyRequestDialogOpen] = useState(false);
   const [incomingCalls, setIncomingCalls] = useState<TwilioSession[]>([]);
   const { sessions, createAccessToken } = useTwilioSession();
+  
+  // State for active call rendering
+  const [activeCallSession, setActiveCallSession] = useState<TwilioSession | null>(null);
+  const [callAccessToken, setCallAccessToken] = useState<any>(null);
+  const [callMode, setCallMode] = useState<'video' | 'voice' | null>(null);
   const { isCaseEligibleForMoneyRequest } = useMoneyRequests();
   
   // Get the currently selected case or default to the first case
@@ -343,14 +350,17 @@ const LawyerDashboard = () => {
 
   const handleAcceptCall = async (session: TwilioSession) => {
     try {
-      // Create access token and redirect to communication interface
+      // Create access token and join the communication interface
       const token = await createAccessToken(session.case_id, session.session_type, session.id);
       if (token) {
         // Remove from incoming calls
         setIncomingCalls(prev => prev.filter(call => call.id !== session.id));
         
-        // Navigate to communication interface or open it in a dialog
-        // For now, we'll show a success message
+        // Set up active call state to render video/voice interface
+        setActiveCallSession(session);
+        setCallAccessToken(token);
+        setCallMode(session.session_type === 'chat' ? null : session.session_type);
+        
         toast({
           title: 'Call Accepted',
           description: 'Joining the communication session...',
@@ -366,8 +376,25 @@ const LawyerDashboard = () => {
     }
   };
 
-  const handleDeclineCall = (session: TwilioSession) => {
+  const handleEndCall = () => {
+    setActiveCallSession(null);
+    setCallAccessToken(null);
+    setCallMode(null);
+  };
+
+  const handleDeclineCall = async (session: TwilioSession) => {
     setIncomingCalls(prev => prev.filter(call => call.id !== session.id));
+    
+    // Update session status to failed
+    try {
+      await supabase
+        .from('communication_sessions')
+        .update({ status: 'failed' })
+        .eq('id', session.id);
+    } catch (error) {
+      console.error('Error declining call:', error);
+    }
+    
     toast({
       title: 'Call Declined',
       description: 'Communication request has been declined',
@@ -892,6 +919,25 @@ const LawyerDashboard = () => {
           onDecline={handleDeclineCall}
         />
       ))}
+
+      {/* Active Call Interfaces */}
+      {callMode === 'video' && callAccessToken && (
+        <div className="fixed inset-0 z-50 bg-background">
+          <TwilioVideoInterface
+            accessToken={callAccessToken}
+            onDisconnect={handleEndCall}
+          />
+        </div>
+      )}
+      
+      {callMode === 'voice' && callAccessToken && (
+        <div className="fixed inset-0 z-50 bg-background/95 flex items-center justify-center">
+          <TwilioVoiceInterface
+            accessToken={callAccessToken}
+            onDisconnect={handleEndCall}
+          />
+        </div>
+      )}
     </div>
   );
 };

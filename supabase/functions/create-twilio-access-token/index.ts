@@ -222,27 +222,13 @@ serve(async (req) => {
 
     const accessToken = `${headerEncoded}.${payloadEncoded}.${signatureEncoded}`;
 
-    // Update session with Twilio room details
+    // Update session with Twilio room details (don't start recording here)
     await supabaseClient
       .from('communication_sessions')
       .update({
-        twilio_room_sid: roomName // Status will be updated by webhook when participants join
+        twilio_room_sid: roomName // Recording will be managed separately when room is active
       })
       .eq('id', sessionData.id);
-
-    // Start recording automatically when session is created
-    try {
-      await supabaseClient.functions.invoke('manage-twilio-recording', {
-        body: {
-          sessionId: sessionData.id,
-          action: 'start'
-        }
-      });
-      console.log('Auto-started recording for session:', sessionData.id);
-    } catch (recordingError) {
-      console.error('Failed to auto-start recording:', recordingError);
-      // Continue even if recording fails to start
-    }
 
     return new Response(JSON.stringify({
       accessToken,

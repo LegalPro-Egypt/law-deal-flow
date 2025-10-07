@@ -192,13 +192,13 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
               description: 'Lawyer has joined the call',
             });
           } else if (updatedSession.status === 'failed' && waitingForResponse) {
-            // Lawyer declined the call
+            // Call failed or was declined
             setWaitingForResponse(false);
             setWaitingMode(null);
             setPendingSessionId(null);
             toast({
-              title: 'Call Declined',
-              description: 'The lawyer declined your call request',
+              title: 'Call Failed',
+              description: 'The call could not be completed or was declined',
               variant: 'destructive',
             });
           } else if (updatedSession.status === 'ended') {
