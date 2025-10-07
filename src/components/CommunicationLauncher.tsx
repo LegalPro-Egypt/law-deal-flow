@@ -177,20 +177,50 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
           });
           
           if (updatedSession.status === 'active' && waitingForResponse) {
-            // Lawyer accepted the call, join the session
+            // Lawyer accepted the call, get a fresh access token for the correct session
             console.log('🚀 Session became active:', updatedSession);
-            console.log('🔧 Setting communication mode to:', updatedSession.session_type);
-            setCommunicationMode(updatedSession.session_type);
-            setWaitingForResponse(false);
-            setWaitingMode(null);
-            setPendingSessionId(null);
-            const startTime = new Date();
-            setSessionStartTime(startTime);
-            sessionStartTimeRef.current = startTime;
-            toast({
-              title: 'Call Accepted',
-              description: 'Lawyer has joined the call',
-            });
+            console.log('🔧 Getting fresh access token for session:', updatedSession.id);
+            
+            // Get a fresh access token for the active session ID
+            createAccessToken(caseId, updatedSession.session_type, updatedSession.id)
+              .then(token => {
+                if (token) {
+                  console.log('✅ Got fresh token for session:', token.sessionId);
+                  setAccessToken(token);
+                  setCommunicationMode(updatedSession.session_type);
+                  setWaitingForResponse(false);
+                  setWaitingMode(null);
+                  setPendingSessionId(null);
+                  const startTime = new Date();
+                  setSessionStartTime(startTime);
+                  sessionStartTimeRef.current = startTime;
+                  toast({
+                    title: 'Call Accepted',
+                    description: 'Lawyer has joined the call',
+                  });
+                } else {
+                  console.error('❌ Failed to get fresh access token');
+                  toast({
+                    title: 'Connection Error',
+                    description: 'Failed to join the call',
+                    variant: 'destructive',
+                  });
+                  setWaitingForResponse(false);
+                  setWaitingMode(null);
+                  setPendingSessionId(null);
+                }
+              })
+              .catch(error => {
+                console.error('❌ Error getting fresh access token:', error);
+                toast({
+                  title: 'Connection Error',
+                  description: 'Failed to join the call',
+                  variant: 'destructive',
+                });
+                setWaitingForResponse(false);
+                setWaitingMode(null);
+                setPendingSessionId(null);
+              });
           } else if (updatedSession.status === 'failed' && waitingForResponse) {
             // Call failed or was declined
             setWaitingForResponse(false);
@@ -219,7 +249,7 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [caseId, waitingForResponse, toast]);
+  }, [caseId, waitingForResponse, toast, createAccessToken]);
 
   const handleStartCommunication = async (mode: 'video' | 'voice' | 'chat') => {
     console.log('📞 Starting communication with mode:', mode);
