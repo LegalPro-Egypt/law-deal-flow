@@ -164,7 +164,6 @@ serve(async (req) => {
     // Create JWT token for Twilio access
     const identity = `${participantRole}-${user.id}`;
     const header = {
-      "cty": "twilio-fpa;v=1",
       "typ": "JWT",
       "alg": "HS256"
     };

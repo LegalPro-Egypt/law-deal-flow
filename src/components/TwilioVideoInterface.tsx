@@ -24,7 +24,7 @@ export const TwilioVideoInterface: React.FC<TwilioVideoInterfaceProps> = ({
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [screenSharing, setScreenSharing] = useState(false);
   
-  const localVideoRef = useRef<HTMLVideoElement>(null);
+  const localVideoRef = useRef<HTMLDivElement>(null);
   const remoteVideosRef = useRef<Map<string, HTMLVideoElement>>(new Map());
 
   useEffect(() => {
@@ -36,7 +36,8 @@ export const TwilioVideoInterface: React.FC<TwilioVideoInterfaceProps> = ({
           name: accessToken.roomName,
           audio: true,
           video: { width: 640, height: 480 },
-          networkQuality: { local: 1, remote: 1 }
+          networkQuality: { local: 1, remote: 1 },
+          dominantSpeaker: true
         });
 
         console.log('Successfully connected to Twilio room:', twilioRoom.name);
@@ -52,8 +53,11 @@ export const TwilioVideoInterface: React.FC<TwilioVideoInterfaceProps> = ({
           })
           .eq('id', accessToken.sessionId);
 
-        // Attach local video track
         if (localVideoRef.current) {
+          // Clear any existing attached elements
+          const existing = localVideoRef.current.querySelectorAll('video, audio');
+          existing.forEach(el => el.remove());
+
           twilioRoom.localParticipant.videoTracks.forEach(publication => {
             if (publication.track) {
               localVideoRef.current?.appendChild(publication.track.attach());
@@ -88,9 +92,12 @@ export const TwilioVideoInterface: React.FC<TwilioVideoInterfaceProps> = ({
           })
           .eq('id', accessToken.sessionId);
 
+        const err: any = error;
+        console.error('Error connecting to room:', err?.code, err?.message || err);
+
         toast({
           title: 'Connection Error',
-          description: 'Failed to join video session',
+          description: err?.message ? `Failed to join: ${err.message}` : 'Failed to join video session',
           variant: 'destructive',
         });
       }
@@ -182,7 +189,7 @@ export const TwilioVideoInterface: React.FC<TwilioVideoInterfaceProps> = ({
         room.disconnect();
       }
     };
-  }, [accessToken, videoEnabled, audioEnabled, onDisconnect, room, connected]);
+  }, [accessToken]);
 
   const toggleVideo = () => {
     if (room) {
@@ -372,12 +379,9 @@ export const TwilioVideoInterface: React.FC<TwilioVideoInterfaceProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-96">
           {/* Local Video */}
           <div className="relative bg-muted rounded-lg overflow-hidden">
-            <video
+            <div
               ref={localVideoRef}
-              autoPlay
-              muted
-              playsInline
-              className="w-full h-full object-cover"
+              className="w-full h-full"
             />
             <div className="absolute bottom-2 left-2">
               <Badge variant="secondary">You</Badge>
