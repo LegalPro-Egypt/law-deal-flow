@@ -870,6 +870,13 @@ const AdminDashboard = () => {
                     </Badge>
                   )}
                 </TabsTrigger>
+                <TabsTrigger value="contracts" className="whitespace-nowrap flex-shrink-0">
+                  Contracts {allContracts.filter(c => c.status === 'pending_admin_review').length > 0 && (
+                    <Badge variant="destructive" className="ml-1 text-xs">
+                      {allContracts.filter(c => c.status === 'pending_admin_review').length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
                 <TabsTrigger value="lawyers" className="whitespace-nowrap flex-shrink-0">
                   Lawyers {stats.pendingVerifications > 0 && (
                     <Badge variant="destructive" className="ml-1 text-xs">
@@ -1263,6 +1270,190 @@ const AdminDashboard = () => {
                       </div>
                     </CardContent>
                   </Card>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Contracts Tab */}
+          <TabsContent value="contracts" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">Contracts</h2>
+              <Badge variant="outline" className="text-sm">
+                {allContracts.length} total contracts
+              </Badge>
+            </div>
+
+            {allContracts.length === 0 ? (
+              <Card className="bg-gradient-card shadow-card">
+                <CardContent className="p-8 text-center">
+                  <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No contracts</h3>
+                  <p className="text-muted-foreground">Lawyer contracts will appear here</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4">
+                {allContracts.map((contract) => {
+                  const getContractStatusBadge = (status: string) => {
+                    switch (status) {
+                      case 'pending_admin_review':
+                        return (
+                          <Badge className="bg-orange-500 text-white">
+                            <AlertCircle className="h-3 w-3 mr-1" />
+                            Needs Admin Review
+                          </Badge>
+                        );
+                      case 'approved_by_admin':
+                        return (
+                          <Badge className="bg-green-500 text-white">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Approved
+                          </Badge>
+                        );
+                      case 'changes_requested':
+                        return (
+                          <Badge className="bg-yellow-500 text-white">
+                            <AlertCircle className="h-3 w-3 mr-1" />
+                            Changes Requested
+                          </Badge>
+                        );
+                      case 'sent':
+                        return (
+                          <Badge className="bg-blue-500 text-white">
+                            <Clock className="h-3 w-3 mr-1" />
+                            Sent to Client
+                          </Badge>
+                        );
+                      case 'viewed':
+                        return (
+                          <Badge className="bg-purple-500 text-white">
+                            <Eye className="h-3 w-3 mr-1" />
+                            Viewed by Client
+                          </Badge>
+                        );
+                      case 'downloaded':
+                        return (
+                          <Badge className="bg-green-600 text-white">
+                            <FileText className="h-3 w-3 mr-1" />
+                            Downloaded
+                          </Badge>
+                        );
+                      case 'sent_for_signature':
+                        return (
+                          <Badge className="bg-orange-600 text-white">
+                            <Clock className="h-3 w-3 mr-1" />
+                            Awaiting Physical Signature
+                          </Badge>
+                        );
+                      case 'physically_signed':
+                        return (
+                          <Badge className="bg-emerald-500 text-white">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Physically Signed
+                          </Badge>
+                        );
+                      case 'active':
+                        return (
+                          <Badge className="bg-green-700 text-white">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Active Contract
+                          </Badge>
+                        );
+                      default:
+                        return (
+                          <Badge variant="outline">
+                            {status}
+                          </Badge>
+                        );
+                    }
+                  };
+
+                  return (
+                    <Card key={contract.id} className="bg-gradient-card shadow-card">
+                      <CardContent className="p-6">
+                        <div className="mb-4">
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <h3 className="font-semibold text-lg">{contract.cases?.title || 'Unknown Case'}</h3>
+                                {getContractStatusBadge(contract.status)}
+                              </div>
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <Badge variant="outline" className="font-mono text-xs">
+                                  {contract.cases?.case_number || 'N/A'}
+                                </Badge>
+                                <span>•</span>
+                                <span>{contract.cases?.category || 'N/A'}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid md:grid-cols-3 gap-4 mb-4">
+                          {/* Client Info */}
+                          <div>
+                            <h4 className="font-medium mb-2 text-sm">Client</h4>
+                            <div className="text-xs space-y-1">
+                              <p className="font-medium">{contract.cases?.client_name || 'Unknown'}</p>
+                              <p className="text-muted-foreground">{contract.cases?.client_email || 'No email'}</p>
+                            </div>
+                          </div>
+
+                          {/* Lawyer Info */}
+                          <div>
+                            <h4 className="font-medium mb-2 text-sm">Lawyer</h4>
+                            <div className="text-xs space-y-1">
+                              <p className="font-medium">
+                                {contract.lawyer?.first_name && contract.lawyer?.last_name
+                                  ? `${contract.lawyer.first_name} ${contract.lawyer.last_name}`
+                                  : contract.lawyer?.email || 'Unknown'}
+                              </p>
+                              {contract.lawyer?.law_firm && (
+                                <p className="text-muted-foreground">{contract.lawyer.law_firm}</p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Contract Details */}
+                          <div>
+                            <h4 className="font-medium mb-2 text-sm">Contract Details</h4>
+                            <div className="space-y-1 text-xs">
+                              <p><span className="font-medium">Version:</span> {contract.version || 1}</p>
+                              <p><span className="font-medium">Created:</span> {new Date(contract.created_at).toLocaleDateString()}</p>
+                              {contract.dhl_tracking_number && (
+                                <p><span className="font-medium">DHL:</span> {contract.dhl_tracking_number}</p>
+                              )}
+                              {contract.physically_received_at && (
+                                <p><span className="font-medium">Received:</span> {new Date(contract.physically_received_at).toLocaleDateString()}</p>
+                              )}
+                            </div>
+                            
+                            <div className="flex gap-2 mt-3">
+                              <Button 
+                                size="sm" 
+                                className="flex-1 bg-primary hover:bg-primary/90"
+                                onClick={() => handleViewContract(contract)}
+                              >
+                                <Eye className="h-4 w-4 mr-2" />
+                                {contract.status === 'pending_admin_review' ? 'Review' : 'View'}
+                              </Button>
+                              {contract.status === 'sent_for_signature' && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="border-success text-success hover:bg-success hover:text-success-foreground"
+                                  onClick={() => handleConfirmPhysicalReceipt(contract.id)}
+                                >
+                                  <CheckCircle className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
                   );
                 })}
               </div>
@@ -2176,6 +2367,32 @@ const AdminDashboard = () => {
            caseDetails={proposalCaseDetails}
            lawyerDetails={proposalLawyerDetails}
            onProposalUpdate={handleProposalUpdate}
+         />
+
+         <AdminContractReviewDialog
+           isOpen={showContractReview}
+           onClose={() => {
+             setShowContractReview(false);
+             setSelectedContract(null);
+           }}
+           contract={selectedContract}
+           onUpdate={() => {
+             fetchAllContracts();
+             refreshData();
+           }}
+         />
+
+         <PhysicalContractConfirmation
+           isOpen={showPhysicalConfirmDialog}
+           onClose={() => {
+             setShowPhysicalConfirmDialog(false);
+             setContractToConfirm(null);
+           }}
+           contractId={contractToConfirm || ''}
+           onConfirmed={() => {
+             fetchAllContracts();
+             refreshData();
+           }}
          />
 
          {/* Proposal Delete Confirmation Dialog */}
