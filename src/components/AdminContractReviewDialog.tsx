@@ -21,6 +21,7 @@ interface AdminContractReviewDialogProps {
     category: string;
   };
   lawyerName?: string;
+  onUpdate?: () => void;
 }
 
 export function AdminContractReviewDialog({
@@ -28,7 +29,8 @@ export function AdminContractReviewDialog({
   onClose,
   contract,
   caseInfo,
-  lawyerName
+  lawyerName,
+  onUpdate
 }: AdminContractReviewDialogProps) {
   const { toast } = useToast();
   const { user } = useAuth();
@@ -59,6 +61,7 @@ export function AdminContractReviewDialog({
         description: "Contract approved and sent to client"
       });
 
+      onUpdate?.();
       onClose();
     } catch (error: any) {
       toast({
@@ -98,6 +101,8 @@ export function AdminContractReviewDialog({
         title: "Success",
         description: "Change request sent to lawyer"
       });
+
+      onUpdate?.();
 
       onClose();
     } catch (error: any) {
