@@ -241,12 +241,22 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
 
     // For video and voice, use the session-based approach
     try {
-      console.log('🚀 handleStartCommunication - Setting waiting state for:', mode);
-      setWaitingForResponse(true);
-      setWaitingMode(mode);
+      console.log('🚀 handleStartCommunication - Creating access token for:', mode);
       const token = await createAccessToken(caseId, mode);
       console.log('🚀 handleStartCommunication - Got token:', token?.sessionId);
-      if (token) { setPendingSessionId(token.sessionId);
+      
+      if (token) {
+        // Set communication mode and access token immediately so initiator connects to Twilio
+        setCommunicationMode(mode);
+        setAccessToken(token);
+        setPendingSessionId(token.sessionId);
+        setWaitingForResponse(true);
+        setWaitingMode(mode);
+        
+        const startTime = new Date();
+        setSessionStartTime(startTime);
+        sessionStartTimeRef.current = startTime;
+        
         const modeLabel = mode === 'video' ? 'video' : 'voice';
         const desc = isCurrentUserClient === false
           ? `Calling client for a ${modeLabel} call...`
