@@ -495,15 +495,15 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
 
                 {/* Uploaded Files */}
                 {categoryFiles.map((file, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 bg-muted rounded gap-2">
-                    <div className="flex items-center space-x-2 flex-1 min-w-0">
+                  <div key={index} className="flex items-center justify-between p-2 bg-muted rounded gap-2 overflow-hidden">
+                    <div className="flex items-center space-x-2 flex-1 min-w-0 overflow-hidden">
                       <DocumentThumbnail
                         fileUrl={file.url || ''}
                         fileName={file.name}
                         fileType={file.type}
                         size="small"
                       />
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1 min-w-0 overflow-hidden">
                         {editingId === file.id ? (
                           <div className="flex items-center gap-2">
                             <Input
@@ -537,10 +537,10 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
                             </Button>
                           </div>
                         ) : (
-                          <>
+                          <div className="w-full overflow-hidden">
                             <p className="text-sm font-medium truncate">{getDisplayName(file)}</p>
                             <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
-                          </>
+                          </div>
                         )}
                       </div>
                     </div>
