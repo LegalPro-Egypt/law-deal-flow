@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MessageSquare, Lock, CreditCard, Clock } from 'lucide-react';
 import { CommunicationLauncher } from '@/components/CommunicationLauncher';
-import { RecentSessions } from '@/components/RecentSessions';
+// RecentSessions removed - Twilio integration removed
 import { useLanguage } from '@/hooks/useLanguage';
 import { NotificationBadge } from '@/components/ui/notification-badge';
 import { Button } from '@/components/ui/button';
@@ -193,80 +193,66 @@ export const CommunicationInbox: React.FC<CommunicationInboxProps> = ({
             </AlertDescription>
           </Alert>
         ) : (
-          <Tabs defaultValue="communication" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="communication">Communication</TabsTrigger>
-              <TabsTrigger value="sessions">Recent Sessions</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="communication" className="space-y-4 mt-4">
-              {canCommunicate ? (
-                <div className="space-y-4">
-                  <div className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse justify-end' : ''}`}>
-                    <Badge variant="secondary" className="bg-success/10 text-success">
-                      {t('communication.status.active')}
+          <div className="space-y-4">
+            {canCommunicate ? (
+              <div className="space-y-4">
+                <div className={`flex items-center gap-2 ${isRTL() ? 'flex-row-reverse justify-end' : ''}`}>
+                  <Badge variant="secondary" className="bg-success/10 text-success">
+                    {t('communication.status.active')}
+                  </Badge>
+                  {consultationPaid && paymentStatus === 'paid' && (
+                    <Badge variant="outline" className="text-xs">
+                      {t('communication.status.paidConsultation')}
                     </Badge>
-                    {consultationPaid && paymentStatus === 'paid' && (
-                      <Badge variant="outline" className="text-xs">
-                        {t('communication.status.paidConsultation')}
-                      </Badge>
-                    )}
-                    {selectedCase?.consultation_completed_at && (
-                      <Badge variant="outline" className="text-xs bg-warning/10 text-warning">
-                        Consultation Completed
-                      </Badge>
-                    )}
-                  </div>
-
-                  {/* Consultation Completed Button for Lawyers */}
-                  {canCompleteConsultation() && (
-                    <div className="p-3 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-lg border border-primary/20">
-                      <div className={`flex items-center justify-between ${isRTL() ? 'flex-row-reverse' : ''}`}>
-                        <div>
-                          <h4 className="font-medium text-sm">Ready to complete consultation?</h4>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Mark the consultation as completed. Client will have 24 hours to pay remaining fees.
-                          </p>
-                        </div>
-                        <Button
-                          onClick={handleCompleteConsultation}
-                          disabled={completing}
-                          className="ml-4 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90"
-                        >
-                          <CheckCircle className="w-4 h-4 mr-2" />
-                          {completing ? 'Completing...' : 'Complete Consultation'}
-                        </Button>
-                      </div>
-                    </div>
                   )}
-
-                  <CommunicationLauncher 
-                    caseId={caseId}
-                    caseTitle={caseTitle}
-                    lawyerAssigned={lawyerAssigned}
-                    communicationModes={selectedCase?.communication_modes}
-                  />
+                  {selectedCase?.consultation_completed_at && (
+                    <Badge variant="outline" className="text-xs bg-warning/10 text-warning">
+                      Consultation Completed
+                    </Badge>
+                  )}
                 </div>
-              ) : (
-                <Alert className={isRTL() ? 'text-right' : ''}>
-                  <disabledInfo.icon className="h-4 w-4" />
-                  <AlertDescription className="space-y-2">
-                    <div className={`font-medium ${isRTL() ? 'text-right' : ''}`}>{disabledInfo.title}</div>
-                    <div className={`text-sm text-muted-foreground ${isRTL() ? 'text-right' : ''}`}>
-                      {disabledInfo.description}
+
+                {/* Consultation Completed Button for Lawyers */}
+                {canCompleteConsultation() && (
+                  <div className="p-3 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-lg border border-primary/20">
+                    <div className={`flex items-center justify-between ${isRTL() ? 'flex-row-reverse' : ''}`}>
+                      <div>
+                        <h4 className="font-medium text-sm">Ready to complete consultation?</h4>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Mark the consultation as completed. Client will have 24 hours to pay remaining fees.
+                        </p>
+                      </div>
+                      <Button
+                        onClick={handleCompleteConsultation}
+                        disabled={completing}
+                        className="ml-4 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90"
+                      >
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        {completing ? 'Completing...' : 'Complete Consultation'}
+                      </Button>
                     </div>
-                  </AlertDescription>
-                </Alert>
-              )}
-            </TabsContent>
-            
-            <TabsContent value="sessions" className="mt-4">
-              <RecentSessions 
-                caseId={caseId}
-                caseTitle={caseTitle}
-              />
-            </TabsContent>
-          </Tabs>
+                  </div>
+                )}
+
+                <CommunicationLauncher 
+                  caseId={caseId}
+                  caseTitle={caseTitle}
+                  lawyerAssigned={lawyerAssigned}
+                  communicationModes={selectedCase?.communication_modes}
+                />
+              </div>
+            ) : (
+              <Alert className={isRTL() ? 'text-right' : ''}>
+                <disabledInfo.icon className="h-4 w-4" />
+                <AlertDescription className="space-y-2">
+                  <div className={`font-medium ${isRTL() ? 'text-right' : ''}`}>{disabledInfo.title}</div>
+                  <div className={`text-sm text-muted-foreground ${isRTL() ? 'text-right' : ''}`}>
+                    {disabledInfo.description}
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
       )}
     </div>
   );

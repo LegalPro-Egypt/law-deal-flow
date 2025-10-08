@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useTwilioSession, TwilioSession } from "@/hooks/useTwilioSession";
 import { useLawyerChatNotifications } from "@/hooks/useLawyerChatNotifications";
 import { useToast } from "@/hooks/use-toast";
 import { useMoneyRequests } from "@/hooks/useMoneyRequests";
@@ -53,11 +52,8 @@ import { getClientNameForRole } from "@/utils/clientPrivacy";
 import { useLanguage } from "@/hooks/useLanguage";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { VerificationStatusBadge } from "@/components/VerificationStatusBadge";
-import { IncomingCallNotification } from "@/components/IncomingCallNotification";
 import { ContractCreationDialog } from "@/components/ContractCreationDialog";
 import { useContracts } from "@/hooks/useContracts";
-import { TwilioVideoInterface } from "@/components/TwilioVideoInterface";
-import { TwilioVoiceInterface } from "@/components/TwilioVoiceInterface";
 
 
 interface LawyerStats {
@@ -106,13 +102,6 @@ const LawyerDashboard = () => {
   const [caseDetailsOpen, setCaseDetailsOpen] = useState(false);
   const [selectedCaseForProposal, setSelectedCaseForProposal] = useState<Case | null>(null);
   const [moneyRequestDialogOpen, setMoneyRequestDialogOpen] = useState(false);
-  const [incomingCalls, setIncomingCalls] = useState<TwilioSession[]>([]);
-  const { sessions, createAccessToken } = useTwilioSession();
-  
-  // State for active call rendering
-  const [activeCallSession, setActiveCallSession] = useState<TwilioSession | null>(null);
-  const [callAccessToken, setCallAccessToken] = useState<any>(null);
-  const [callMode, setCallMode] = useState<'video' | 'voice' | null>(null);
   const { isCaseEligibleForMoneyRequest } = useMoneyRequests();
   
   // Get the currently selected case or default to the first case
@@ -142,66 +131,6 @@ const LawyerDashboard = () => {
       fetchDashboardData();
     }
   }, [user, authLoading]);
-
-  // Listen for incoming communication sessions
-  useEffect(() => {
-    if (!user) return;
-
-    const channel = supabase
-      .channel('incoming-calls')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'communication_sessions',
-          filter: `lawyer_id=eq.${user.id}`
-        },
-        (payload) => {
-          const newSession = payload.new as TwilioSession;
-          // Only show as incoming call if lawyer didn't initiate it
-          if (newSession.status === 'active' && newSession.initiated_by !== user.id) {
-            setIncomingCalls(prev => [...prev, newSession]);
-            
-            // Play notification sound or show system notification
-            const fromText = !newSession.initiated_by
-              ? 'client'
-              : (newSession.initiated_by === newSession.client_id ? 'client' : 'lawyer');
-            toast({
-              title: 'Incoming Call',
-              description: `${newSession.session_type} call from ${fromText}`,
-            });
-          }
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'communication_sessions',
-          filter: `lawyer_id=eq.${user.id}`
-        },
-        (payload) => {
-          console.log('Communication session updated:', payload);
-          const updatedSession = payload.new as TwilioSession;
-          console.log('Updated session status:', updatedSession.status, 'Session ID:', updatedSession.id);
-          if (updatedSession.status !== 'active') {
-            console.log('Removing session from incoming calls:', updatedSession.id);
-            setIncomingCalls(prev => {
-              const filtered = prev.filter(call => call.id !== updatedSession.id);
-              console.log('Remaining incoming calls:', filtered.length);
-              return filtered;
-            });
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, toast]);
 
   const fetchDashboardData = async () => {
     if (!user) return;
@@ -245,19 +174,7 @@ const LawyerDashboard = () => {
       console.log('fetchDashboardData: Cases with proposals:', casesWithProposals);
       setCases(casesWithProposals);
 
-      // Fetch existing scheduled communication sessions (only those not initiated by current lawyer)
-      const { data: scheduledSessions, error: sessionsError } = await supabase
-        .from('communication_sessions')
-        .select('*')
-        .eq('lawyer_id', user.id)
-        .eq('status', 'scheduled')
-        .neq('initiated_by', user.id); // Only show calls not initiated by this lawyer
-
-      if (sessionsError) {
-        console.error('Error fetching scheduled sessions:', sessionsError);
-      } else {
-        setIncomingCalls((scheduledSessions as TwilioSession[]) || []);
-      }
+      // Twilio sessions removed
 
       // Calculate stats with proper status mapping
       const pendingCases = casesWithProposals?.filter(c => 
@@ -348,58 +265,7 @@ const LawyerDashboard = () => {
     return new Date(dateString).toLocaleDateString();
   };
 
-  const handleAcceptCall = async (session: TwilioSession) => {
-    try {
-      // Create access token and join the communication interface
-      const token = await createAccessToken(session.case_id, session.session_type, session.id);
-      if (token) {
-        // Remove from incoming calls
-        setIncomingCalls(prev => prev.filter(call => call.id !== session.id));
-        
-        // Set up active call state to render video/voice interface
-        setActiveCallSession(session);
-        setCallAccessToken(token);
-        setCallMode(session.session_type === 'chat' ? null : session.session_type);
-        
-        toast({
-          title: 'Call Accepted',
-          description: 'Joining the communication session...',
-        });
-      }
-    } catch (error) {
-      console.error('Error accepting call:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to join the communication session',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleEndCall = () => {
-    setActiveCallSession(null);
-    setCallAccessToken(null);
-    setCallMode(null);
-  };
-
-  const handleDeclineCall = async (session: TwilioSession) => {
-    setIncomingCalls(prev => prev.filter(call => call.id !== session.id));
-    
-    // Update session status to failed
-    try {
-      await supabase
-        .from('communication_sessions')
-        .update({ status: 'failed' })
-        .eq('id', session.id);
-    } catch (error) {
-      console.error('Error declining call:', error);
-    }
-    
-    toast({
-      title: 'Call Declined',
-      description: 'Communication request has been declined',
-    });
-  };
+  // Twilio call handling removed
 
   if (authLoading || loading) {
     return (
@@ -707,25 +573,8 @@ const LawyerDashboard = () => {
           </Card>
         </div>
 
-        {/* Incoming Call Notifications */}
-        {incomingCalls.length > 0 && (
-          <div className="space-y-4 mb-8">
-            <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-              <PhoneCall className="h-5 w-5 text-primary" />
-              Incoming Calls ({incomingCalls.length})
-            </h2>
-            {incomingCalls.map((call) => (
-              <IncomingCallNotification
-                key={call.id}
-                session={call}
-                onAccept={handleAcceptCall}
-                onDecline={handleDeclineCall}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Current Selected Case */}
+        {/* Communication Section */}
+        <div className="mt-8">
         {cases.length === 0 ? (
           <Card className="bg-gradient-card shadow-card">
             <CardContent className="text-center py-8">
@@ -909,35 +758,7 @@ const LawyerDashboard = () => {
           }}
         />
       )}
-
-      {/* Incoming Call Notifications */}
-      {incomingCalls.map((call) => (
-        <IncomingCallNotification
-          key={call.id}
-          session={call}
-          onAccept={handleAcceptCall}
-          onDecline={handleDeclineCall}
-        />
-      ))}
-
-      {/* Active Call Interfaces */}
-      {callMode === 'video' && callAccessToken && (
-        <div className="fixed inset-0 z-50 bg-background">
-          <TwilioVideoInterface
-            accessToken={callAccessToken}
-            onDisconnect={handleEndCall}
-          />
-        </div>
-      )}
-      
-      {callMode === 'voice' && callAccessToken && (
-        <div className="fixed inset-0 z-50 bg-background/95 flex items-center justify-center">
-          <TwilioVoiceInterface
-            accessToken={callAccessToken}
-            onDisconnect={handleEndCall}
-          />
-        </div>
-      )}
+      </div>
     </div>
   );
 };

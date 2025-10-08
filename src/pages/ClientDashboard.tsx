@@ -62,10 +62,6 @@ import { DocumentThumbnail } from "@/components/DocumentThumbnail";
 import { DocumentPreview } from "@/components/DocumentPreview";
 import { ContractReviewDialog } from "@/components/ContractReviewDialog";
 import { useContracts } from "@/hooks/useContracts";
-import { IncomingCallNotification } from "@/components/IncomingCallNotification";
-import { useTwilioSession, TwilioSession } from "@/hooks/useTwilioSession";
-import { TwilioVideoInterface } from "@/components/TwilioVideoInterface";
-import { TwilioVoiceInterface } from "@/components/TwilioVoiceInterface";
 
 const ClientDashboard = () => {
   const [newMessage, setNewMessage] = useState("");
@@ -110,13 +106,6 @@ const ClientDashboard = () => {
   const { contracts, isLoading: contractsLoading } = useContracts(activeCase?.id, user?.id);
   const [selectedContract, setSelectedContract] = useState<any>(null);
   const [showContractReview, setShowContractReview] = useState(false);
-
-  // Incoming call handling
-  const [incomingSessions, setIncomingSessions] = useState<TwilioSession[]>([]);
-  const [activeCallSession, setActiveCallSession] = useState<TwilioSession | null>(null);
-  const { createAccessToken, endSession } = useTwilioSession();
-  const [callAccessToken, setCallAccessToken] = useState<any>(null);
-  const [callMode, setCallMode] = useState<'video' | 'voice' | null>(null);
 
 
   const handleSendMessage = async () => {
@@ -332,95 +321,7 @@ const ClientDashboard = () => {
     }
   };
 
-  // Subscribe to incoming communication sessions
-  useEffect(() => {
-    if (!user?.id || !activeCase?.id) return;
-
-    const channel = supabase
-      .channel(`incoming-calls-${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'communication_sessions',
-          filter: `client_id=eq.${user.id},status=eq.scheduled`
-        },
-        (payload) => {
-          const newSession = payload.new as TwilioSession;
-          console.log('📞 Incoming call notification:', newSession);
-          
-          // Only show notification if not initiated by current user
-          if (newSession.initiated_by !== user.id && newSession.case_id === activeCase.id) {
-            setIncomingSessions(prev => [...prev, newSession]);
-            toast({
-              title: 'Incoming Call',
-              description: `You have an incoming ${newSession.session_type} call`,
-            });
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user?.id, activeCase?.id, toast]);
-
-  const handleAcceptCall = async (session: TwilioSession) => {
-    try {
-      console.log('Accepting call for session:', session.id);
-      
-      // Create access token for this session
-      const token = await createAccessToken(session.case_id, session.session_type, session.id);
-      
-      if (token) {
-        setActiveCallSession(session);
-        setCallAccessToken(token);
-        setCallMode(session.session_type as 'video' | 'voice');
-        
-        // Remove from incoming sessions
-        setIncomingSessions(prev => prev.filter(s => s.id !== session.id));
-      }
-    } catch (error) {
-      console.error('Error accepting call:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to join the call',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleDeclineCall = (session: TwilioSession) => {
-    console.log('Declining call for session:', session.id);
-    // Remove from incoming sessions
-    setIncomingSessions(prev => prev.filter(s => s.id !== session.id));
-  };
-
-  const handleEndCall = async () => {
-    try {
-      if (activeCallSession) {
-        await endSession(activeCallSession.id);
-      }
-      
-      setActiveCallSession(null);
-      setCallAccessToken(null);
-      setCallMode(null);
-      
-      toast({
-        title: 'Call Ended',
-        description: 'The communication session has ended',
-      });
-    } catch (error) {
-      console.error('Error ending call:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to end the call properly',
-        variant: 'destructive',
-      });
-    }
-  };
+  // Twilio code removed
 
   if (loading) {
     return (
@@ -506,40 +407,8 @@ const ClientDashboard = () => {
     );
   }
 
-  // If in an active call, show the call interface
-  if (callMode && callAccessToken) {
-    return (
-      <div className="min-h-screen bg-background p-4">
-        {callMode === 'video' ? (
-          <TwilioVideoInterface
-            accessToken={callAccessToken}
-            onDisconnect={handleEndCall}
-          />
-        ) : (
-          <TwilioVoiceInterface
-            accessToken={callAccessToken}
-            onDisconnect={handleEndCall}
-          />
-        )}
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
-      {/* Incoming Call Notifications - Fixed Position */}
-      {incomingSessions.length > 0 && (
-        <div className="fixed top-20 right-4 z-50 space-y-2 max-w-md">
-          {incomingSessions.map(session => (
-            <IncomingCallNotification
-              key={session.id}
-              session={session}
-              onAccept={handleAcceptCall}
-              onDecline={handleDeclineCall}
-            />
-          ))}
-        </div>
-      )}
 
       {/* Header */}
       <header className="backdrop-blur-md bg-background/80 border-b border-border/50 sticky top-0 z-50">
