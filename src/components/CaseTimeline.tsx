@@ -38,7 +38,7 @@ export const CaseTimeline: React.FC<CaseTimelineProps> = ({ caseId, caseData, us
     }> = [];
 
     // Proposal accepted milestone
-    if (caseData.status === 'proposal_approved' || caseData.status === 'consultation_completed' || caseData.status === 'work_in_progress') {
+    if (caseData.status === 'proposal_approved' || (caseData.status === 'active' && caseData.consultation_completed_at) || caseData.status === 'work_in_progress') {
       milestones.push({
         id: 'proposal-accepted',
         type: 'system',

@@ -79,7 +79,7 @@ serve(async (req) => {
     const { error: updateError } = await supabase
       .from('cases')
       .update({
-        status: 'consultation_completed',
+        status: 'active',
         consultation_completed_at: now.toISOString(),
         grace_period_expires_at: gracePeriodExpires.toISOString(),
         communication_modes: {

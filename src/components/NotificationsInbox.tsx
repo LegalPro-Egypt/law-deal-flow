@@ -49,7 +49,7 @@ export const NotificationsInbox = ({ activeCaseId }: NotificationsInboxProps) =>
     const proposalWithCase = proposalsWithCases.find(p => p.id === proposalId);
     if (proposalWithCase && proposalWithCase.case) {
       // Determine payment type based on case status - consultation first, then remaining
-      const isGracePeriodPayment = proposalWithCase.case.status === 'consultation_completed';
+      const isGracePeriodPayment = proposalWithCase.case.status === 'active' && proposalWithCase.case.consultation_completed_at;
       
       const remainingFee = proposalWithCase.remaining_fee || 0;
       const paymentType = isGracePeriodPayment ? 'remaining' : 'consultation';
@@ -159,7 +159,7 @@ export const NotificationsInbox = ({ activeCaseId }: NotificationsInboxProps) =>
                         const proposalWithCase = filteredProposalsWithCases.find(p => p.id === proposalId);
                         if (!proposalWithCase || !needsPayment(proposalWithCase)) return null;
                         
-                        const isGracePeriodPayment = proposalWithCase.case?.status === 'consultation_completed';
+                        const isGracePeriodPayment = proposalWithCase.case?.status === 'active' && proposalWithCase.case?.consultation_completed_at;
                         const remainingFee = proposalWithCase.remaining_fee || 0;
                         const additionalFees = proposalWithCase.total_additional_fees || (remainingFee * 0.11);
                         const amount = isGracePeriodPayment ? 

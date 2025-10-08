@@ -324,7 +324,8 @@ export const useNotifications = () => {
     }
     
     // Check if remaining payment is needed after consultation completion
-    if (proposal.case.status === 'consultation_completed' && 
+    if (proposal.case.status === 'active' && 
+        proposal.case.consultation_completed_at &&
         proposal.case.grace_period_expires_at &&
         new Date(proposal.case.grace_period_expires_at) > new Date() &&
         proposal.case.remaining_fee > 0) {
