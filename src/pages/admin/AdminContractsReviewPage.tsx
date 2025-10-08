@@ -216,11 +216,11 @@ export default function AdminContractsReviewPage() {
       ) : (
         <div className="grid gap-4">
           {filteredContracts.map((contract) => (
-            <Card key={contract.id} className="hover:shadow-md transition-shadow">
+            <Card key={contract.id} className="hover:shadow-md transition-shadow overflow-hidden">
               <CardHeader className="pb-3">
-                <div className="flex flex-col gap-3">
-                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-0">
-                    <div className="flex flex-wrap items-center gap-2 min-w-0">
+                <div className="flex flex-col gap-3 min-w-0">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-0 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 min-w-0 flex-1">
                       <FileSignature className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                       <CardTitle className="text-base sm:text-lg truncate">Contract for {contract.cases.title}</CardTitle>
                       <Badge variant={getStatusColor(contract.status)} className="text-xs">
@@ -249,8 +249,8 @@ export default function AdminContractsReviewPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 min-w-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 min-w-0 flex-1">
                     {contract.payment_structure && (
                       <Badge variant="outline" className="text-xs self-start">
                         {contract.payment_structure.replace('_', ' ')}
