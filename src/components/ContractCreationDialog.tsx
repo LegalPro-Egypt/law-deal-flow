@@ -97,6 +97,17 @@ export function ContractCreationDialog({
     }
 
     setIsGenerating(true);
+    const startTime = Date.now();
+    
+    // Show progress toast for long operations
+    const progressToast = toast({
+      title: "Generating Contract",
+      description: language === 'both' 
+        ? "Generating contracts in both languages... This may take 30-60 seconds."
+        : "Generating contract... Please wait.",
+      duration: 60000 // Keep visible for up to 60 seconds
+    });
+
     try {
       const { data, error } = await supabase.functions.invoke('generate-contract', {
         headers: {
@@ -119,10 +130,13 @@ export function ContractCreationDialog({
       if (error) {
         // Handle specific error codes
         if (error.message?.includes('429')) {
-          throw new Error('Rate limit exceeded. Please try again later.');
+          throw new Error('Rate limit exceeded. Please try again in a few minutes.');
         }
         if (error.message?.includes('402')) {
           throw new Error('Payment required. Please add credits to continue.');
+        }
+        if (error.message?.includes('timed out') || error.message?.includes('timeout')) {
+          throw new Error('Contract generation timed out. Please try again or select a single language for faster generation.');
         }
         if (error.message?.includes('Proposal not found')) {
           throw new Error('Unable to access proposal. Please try refreshing the page.');
@@ -133,16 +147,22 @@ export function ContractCreationDialog({
       if (data.content_en) setContentEn(data.content_en);
       if (data.content_ar) setContentAr(data.content_ar);
 
+      const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(1);
+      progressToast.dismiss();
+      
       toast({
         title: "Success",
-        description: "Contract generated successfully"
+        description: `Contract generated successfully in ${elapsedTime}s`
       });
     } catch (error: any) {
       console.error('Contract generation error:', error);
+      progressToast.dismiss();
+      
       toast({
-        title: "Error",
-        description: error.message || "Failed to generate contract",
-        variant: "destructive"
+        title: "Generation Failed",
+        description: error.message || "Failed to generate contract. Please try again.",
+        variant: "destructive",
+        duration: 7000
       });
     } finally {
       setIsGenerating(false);

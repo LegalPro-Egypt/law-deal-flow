@@ -242,54 +242,91 @@ Lawyer Signature: _________________________  Date: ____________
 Generate a complete, professional contract following this exact structure. Be detailed in sections 2 and 3. Use formal legal language appropriate for Egyptian law.`;
 
     const generateContent = async (lang: 'en' | 'ar') => {
+      const startTime = Date.now();
+      console.log(`Starting contract generation for ${lang}...`);
+      
       const languageInstruction = lang === 'ar' 
         ? 'Write the contract in formal Arabic (العربية الفصحى) appropriate for legal documents in Egypt.'
         : 'Write the contract in formal English appropriate for legal documents.';
 
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openAIApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [
-            { role: 'system', content: systemPrompt + '\n\n' + languageInstruction },
-            {
-              role: 'user',
-              content: `Generate a legal contract for:
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 second timeout
+
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openAIApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [
+              { role: 'system', content: systemPrompt + '\n\n' + languageInstruction },
+              {
+                role: 'user',
+                content: `Generate a legal contract for:
 Case: ${proposal.cases.title}
 Category: ${proposal.cases.category}
 Description: ${proposal.cases.description || 'Not provided'}
 Documents: ${documents?.map(d => d.file_name).join(', ') || 'None'}
 
 Ensure all contract terms are clear, specific, and legally binding under Egyptian law.`
-            }
-          ],
-          temperature: 0.7,
-          max_tokens: 3000
-        }),
-      });
+              }
+            ],
+            temperature: 0.7,
+            max_tokens: 3000
+          }),
+          signal: controller.signal
+        });
 
-      if (!response.ok) {
-        const error = await response.text();
-        console.error(`OpenAI API error (${lang}):`, error);
-        throw new Error(`Failed to generate contract in ${lang}: ${response.statusText}`);
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          const error = await response.text();
+          console.error(`OpenAI API error (${lang}):`, error);
+          throw new Error(`Failed to generate contract in ${lang}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(2);
+        console.log(`Contract generation for ${lang} completed in ${elapsedTime}s`);
+        
+        return data.choices[0].message.content;
+      } catch (error) {
+        const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(2);
+        console.error(`Contract generation for ${lang} failed after ${elapsedTime}s:`, error);
+        
+        if (error.name === 'AbortError') {
+          throw new Error(`Contract generation timed out after 90 seconds for ${lang}`);
+        }
+        throw error;
       }
-
-      const data = await response.json();
-      return data.choices[0].message.content;
     };
 
+    console.log('Starting contract generation with language:', language);
+    const generationStartTime = Date.now();
+    
     let contentEn = null;
     let contentAr = null;
 
-    if (language === 'both' || language === 'en') {
+    // Use parallel generation for "both" to cut time in half
+    if (language === 'both') {
+      console.log('Generating both languages in parallel...');
+      try {
+        [contentEn, contentAr] = await Promise.all([
+          generateContent('en'),
+          generateContent('ar')
+        ]);
+        const totalTime = ((Date.now() - generationStartTime) / 1000).toFixed(2);
+        console.log(`Parallel generation completed in ${totalTime}s`);
+      } catch (error) {
+        console.error('Parallel generation failed:', error);
+        throw error;
+      }
+    } else if (language === 'en') {
       contentEn = await generateContent('en');
-    }
-
-    if (language === 'both' || language === 'ar') {
+    } else if (language === 'ar') {
       contentAr = await generateContent('ar');
     }
 
