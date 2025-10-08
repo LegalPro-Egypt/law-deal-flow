@@ -32,7 +32,7 @@ export function ContractReviewDialog({
   lawyerName
 }: ContractReviewDialogProps) {
   const { toast } = useToast();
-  const { updateContractStatus, markContractViewed, markContractDownloaded } = useContracts();
+  const { updateContractStatus, markContractViewed, markContractDownloaded, acceptContract } = useContracts();
   const [currentLanguage, setCurrentLanguage] = useState<'en' | 'ar'>('en');
   const [changeRequest, setChangeRequest] = useState("");
   const [isRequestingChanges, setIsRequestingChanges] = useState(false);
@@ -117,10 +117,23 @@ export function ContractReviewDialog({
     }
   });
 
+  const handleAcceptContract = async () => {
+    try {
+      await acceptContract.mutateAsync(contract.id);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to accept contract",
+        variant: "destructive"
+      });
+    }
+  };
+
   const getStatusBadge = () => {
     const statusColors: Record<string, string> = {
       'sent': 'bg-blue-500',
       'viewed': 'bg-purple-500',
+      'client_accepted': 'bg-teal-500',
       'downloaded': 'bg-green-500',
       'sent_for_signature': 'bg-orange-500',
       'physically_signed': 'bg-emerald-500',
@@ -153,10 +166,12 @@ export function ContractReviewDialog({
                 contentEn={contract.content_en}
                 contentAr={contract.content_ar}
               />
-              <Button onClick={handleDownloadPdf} variant="outline" size="sm">
-                <Download className="w-4 h-4 mr-2" />
-                Download PDF
-              </Button>
+              {contract.status === 'client_accepted' && (
+                <Button onClick={handleDownloadPdf} variant="outline" size="sm">
+                  <Download className="w-4 h-4 mr-2" />
+                  Download PDF
+                </Button>
+              )}
             </div>
 
             {contract.dhl_tracking_number && (
@@ -182,28 +197,46 @@ export function ContractReviewDialog({
               </pre>
             </div>
 
-            <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 p-3 rounded-lg">
-              <div className="flex gap-2">
-                <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-                <div className="text-sm">
-                  <p className="font-medium text-blue-900 dark:text-blue-100">Physical Signature Required</p>
-                  <p className="text-blue-700 dark:text-blue-300">
-                    After reviewing, download and print this contract, sign it, and ship it via DHL.
-                  </p>
+            {(contract.status === 'viewed' || contract.status === 'sent') && (
+              <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 p-3 rounded-lg">
+                <div className="flex gap-2">
+                  <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm">
+                    <p className="font-medium text-blue-900 dark:text-blue-100">Review Required</p>
+                    <p className="text-blue-700 dark:text-blue-300">
+                      Please review the contract carefully. You can accept it or request changes.
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
-            <div>
-              <Label htmlFor="change-request">Request Changes</Label>
-              <Textarea
-                id="change-request"
-                value={changeRequest}
-                onChange={(e) => setChangeRequest(e.target.value)}
-                placeholder="Describe any changes you'd like to request..."
-                rows={3}
-              />
-            </div>
+            {(contract.status === 'client_accepted' || contract.status === 'downloaded') && (
+              <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 p-3 rounded-lg">
+                <div className="flex gap-2">
+                  <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm">
+                    <p className="font-medium text-blue-900 dark:text-blue-100">Physical Signature Required</p>
+                    <p className="text-blue-700 dark:text-blue-300">
+                      Download and print this contract, sign it, and ship it via DHL.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {(contract.status === 'viewed' || contract.status === 'sent') && (
+              <div>
+                <Label htmlFor="change-request">Request Changes (Optional)</Label>
+                <Textarea
+                  id="change-request"
+                  value={changeRequest}
+                  onChange={(e) => setChangeRequest(e.target.value)}
+                  placeholder="Describe any changes you'd like to request..."
+                  rows={3}
+                />
+              </div>
+            )}
 
             <div className="flex gap-2 justify-between">
               <Button variant="outline" onClick={() => setShowHistory(true)}>
@@ -214,14 +247,23 @@ export function ContractReviewDialog({
                 <Button variant="outline" onClick={onClose}>
                   Close
                 </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleRequestChanges}
-                  disabled={isRequestingChanges || !changeRequest.trim()}
-                >
-                  <Send className="w-4 h-4 mr-2" />
-                  Request Changes
-                </Button>
+                
+                {(contract.status === 'viewed' || contract.status === 'sent') && (
+                  <>
+                    <Button
+                      variant="outline"
+                      onClick={handleRequestChanges}
+                      disabled={isRequestingChanges || !changeRequest.trim()}
+                    >
+                      <Send className="w-4 h-4 mr-2" />
+                      Request Changes
+                    </Button>
+                    <Button onClick={handleAcceptContract}>
+                      Accept Contract
+                    </Button>
+                  </>
+                )}
+                
                 {contract.status === 'downloaded' && (
                   <Button onClick={() => setShowDhlDialog(true)}>
                     <Package className="w-4 h-4 mr-2" />

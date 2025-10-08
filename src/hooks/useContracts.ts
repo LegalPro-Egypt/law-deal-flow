@@ -29,6 +29,7 @@ export interface Contract {
   sent_at: string | null;
   viewed_at: string | null;
   signed_at: string | null;
+  client_accepted_at: string | null;
   version: number;
   previous_version_id: string | null;
   change_notes: string | null;
@@ -182,12 +183,44 @@ export const useContracts = (caseId?: string, userId?: string) => {
     }
   });
 
+  const acceptContract = useMutation({
+    mutationFn: async (contractId: string) => {
+      const { data, error } = await supabase
+        .from('contracts')
+        .update({
+          status: 'client_accepted',
+          client_accepted_at: new Date().toISOString()
+        })
+        .eq('id', contractId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+      toast({
+        title: 'Contract Accepted',
+        description: 'You have successfully accepted the contract. You can now download the PDF.'
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive'
+      });
+    }
+  });
+
   return {
     contracts,
     isLoading,
     updateContractStatus,
     createContract,
     markContractViewed,
-    markContractDownloaded
+    markContractDownloaded,
+    acceptContract
   };
 };

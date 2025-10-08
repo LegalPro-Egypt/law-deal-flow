@@ -724,6 +724,7 @@ export type Database = {
           case_id: string
           change_notes: string | null
           change_source: string | null
+          client_accepted_at: string | null
           client_change_request: string | null
           client_id: string
           consultation_fee: number | null
@@ -765,6 +766,7 @@ export type Database = {
           case_id: string
           change_notes?: string | null
           change_source?: string | null
+          client_accepted_at?: string | null
           client_change_request?: string | null
           client_id: string
           consultation_fee?: number | null
@@ -806,6 +808,7 @@ export type Database = {
           case_id?: string
           change_notes?: string | null
           change_source?: string | null
+          client_accepted_at?: string | null
           client_change_request?: string | null
           client_id?: string
           consultation_fee?: number | null
