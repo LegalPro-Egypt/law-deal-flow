@@ -200,7 +200,7 @@ export const CommunicationInbox: React.FC<CommunicationInboxProps> = ({
                   <Badge variant="secondary" className="bg-success/10 text-success">
                     {t('communication.status.active')}
                   </Badge>
-                  {consultationPaid && paymentStatus === 'paid' && (
+                  {consultationPaid && paymentStatus === 'paid' && !selectedCase?.consultation_completed_at && (
                     <Badge variant="outline" className="text-xs">
                       {t('communication.status.paidConsultation')}
                     </Badge>
