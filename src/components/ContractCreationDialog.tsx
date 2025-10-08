@@ -9,6 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Sparkles } from "lucide-react";
 import { LanguageToggleButton } from "./LanguageToggleButton";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ContractCreationDialogProps {
   isOpen: boolean;
@@ -47,11 +49,14 @@ export function ContractCreationDialog({
   const [hybridContingencyPercentage, setHybridContingencyPercentage] = useState<number>();
   const [timeline, setTimeline] = useState("");
   const [strategy, setStrategy] = useState("");
+  const [isLoadingProposal, setIsLoadingProposal] = useState(true);
 
   // Fetch session token and pre-populate from existing proposal
   useEffect(() => {
     const initialize = async () => {
       if (!proposalId) return;
+      
+      setIsLoadingProposal(true);
       
       // Get current session token
       const { data: sessionData } = await supabase.auth.getSession();
@@ -61,12 +66,13 @@ export function ContractCreationDialog({
       
       const { data, error } = await supabase
         .from('proposals')
-        .select('*')
+        .select('timeline, strategy, remaining_fee, consultation_fee, payment_structure, contingency_percentage, hybrid_fixed_fee, hybrid_contingency_percentage')
         .eq('id', proposalId)
         .single();
       
       if (error) {
         console.error('Error fetching proposal:', error);
+        setIsLoadingProposal(false);
         return;
       }
 
@@ -79,6 +85,8 @@ export function ContractCreationDialog({
         setTimeline(data.timeline || '');
         setStrategy(data.strategy || '');
       }
+      
+      setIsLoadingProposal(false);
     };
     
     if (isOpen && proposalId) {
@@ -99,13 +107,11 @@ export function ContractCreationDialog({
     setIsGenerating(true);
     const startTime = Date.now();
     
-    // Show progress toast for long operations
+    // Show progress toast
     const progressToast = toast({
       title: "Generating Contract",
-      description: language === 'both' 
-        ? "Generating contracts in both languages... This may take 30-60 seconds."
-        : "Generating contract... Please wait.",
-      duration: 60000 // Keep visible for up to 60 seconds
+      description: "Generating scope and assembling contract...",
+      duration: 30000
     });
 
     try {
@@ -150,9 +156,10 @@ export function ContractCreationDialog({
       const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(1);
       progressToast.dismiss();
       
+      const usedFallback = data.used_fallback;
       toast({
         title: "Success",
-        description: `Contract generated successfully in ${elapsedTime}s`
+        description: `Contract generated in ${elapsedTime}s${usedFallback ? ' (using fallback scope)' : ''}`
       });
     } catch (error: any) {
       console.error('Contract generation error:', error);
@@ -231,9 +238,21 @@ export function ContractCreationDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Payment Structure Section */}
-          <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
-            <h3 className="font-semibold text-sm">Payment Structure</h3>
+          {isLoadingProposal ? (
+            <div className="space-y-4">
+              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-8 w-full" />
+            </div>
+          ) : (
+            <>
+              {/* Payment Structure Section */}
+              <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold text-sm">Payment Structure</h3>
+                  <Badge variant="outline" className="text-xs">From Proposal</Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">Pre-filled from proposal. You can edit if needed before generating.</p>
             
             <div>
               <Label htmlFor="payment-structure">Payment Structure</Label>
@@ -310,29 +329,39 @@ export function ContractCreationDialog({
             )}
           </div>
 
-          {/* Timeline and Strategy Section */}
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="timeline">Timeline</Label>
-              <Input
-                id="timeline"
-                value={timeline}
-                onChange={(e) => setTimeline(e.target.value)}
-                placeholder="e.g., 4-6 weeks"
-              />
-            </div>
+              {/* Timeline and Strategy Section */}
+              <div className="space-y-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Label htmlFor="timeline">Timeline</Label>
+                    {timeline && <Badge variant="outline" className="text-xs">From Proposal</Badge>}
+                  </div>
+                  <Input
+                    id="timeline"
+                    value={timeline}
+                    onChange={(e) => setTimeline(e.target.value)}
+                    placeholder="e.g., 4-6 weeks"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Editable reference for contract generation</p>
+                </div>
 
-            <div>
-              <Label htmlFor="strategy">Legal Strategy (Optional)</Label>
-              <Textarea
-                id="strategy"
-                value={strategy}
-                onChange={(e) => setStrategy(e.target.value)}
-                placeholder="Describe the legal strategy..."
-                rows={3}
-              />
-            </div>
-          </div>
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Label htmlFor="strategy">Legal Strategy</Label>
+                    {strategy && <Badge variant="outline" className="text-xs">From Proposal</Badge>}
+                  </div>
+                  <Textarea
+                    id="strategy"
+                    value={strategy}
+                    onChange={(e) => setStrategy(e.target.value)}
+                    placeholder="Describe the legal strategy for this case..."
+                    rows={3}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Editable reference for contract generation</p>
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Consultation Notes */}
           <div>
