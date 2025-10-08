@@ -1463,6 +1463,7 @@ export type Database = {
           lawyer_card_front_url: string | null
           lawyer_card_url: string | null
           license_number: string | null
+          national_id_passport: string | null
           notable_achievements: string | null
           office_address: string | null
           office_phone: string | null
@@ -1506,6 +1507,7 @@ export type Database = {
           lawyer_card_front_url?: string | null
           lawyer_card_url?: string | null
           license_number?: string | null
+          national_id_passport?: string | null
           notable_achievements?: string | null
           office_address?: string | null
           office_phone?: string | null
@@ -1549,6 +1551,7 @@ export type Database = {
           lawyer_card_front_url?: string | null
           lawyer_card_url?: string | null
           license_number?: string | null
+          national_id_passport?: string | null
           notable_achievements?: string | null
           office_address?: string | null
           office_phone?: string | null
