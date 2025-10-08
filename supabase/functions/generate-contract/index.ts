@@ -115,6 +115,19 @@ serve(async (req) => {
     const effectiveTimeline = timeline || proposal.timeline;
     const effectiveStrategy = strategy || proposal.strategy;
 
+    // Calculate base legal fee based on payment structure
+    let baseLegalFee = 0;
+    if (effectivePaymentStructure === 'fixed_fee') {
+      baseLegalFee = effectiveRemainingFee || 0;
+    } else if (effectivePaymentStructure === 'hybrid') {
+      baseLegalFee = effectiveHybridFixedFee || 0;
+    }
+    // For contingency, base fee is 0 (no upfront payment)
+
+    // Calculate 6% platform fee on base legal fees
+    const platformFeeAmount = Math.round(baseLegalFee * 0.06);
+    const totalPayable = baseLegalFee + platformFeeAmount;
+
     const paymentStructureText = 
       effectivePaymentStructure === 'fixed_fee'
         ? `Fixed Fee: ${effectiveRemainingFee} EGP`
@@ -153,10 +166,10 @@ ${consultationNotes ? `- Consultation Notes: ${consultationNotes}` : ''}
 
 PAYMENT STRUCTURE:
 - Base Legal Fees: ${paymentStructureText}
-- Platform Fee: ${proposal.platform_fee_amount || 0} EGP (${proposal.platform_fee_percentage || 5}%)
-- Payment Processing Fee: ${proposal.payment_processing_fee_amount || 0} EGP (${proposal.payment_processing_fee_percentage || 3}%)
-- Client Protection Fee: ${proposal.client_protection_fee_amount || 0} EGP (${proposal.client_protection_fee_percentage || 3}%)
-- TOTAL AMOUNT PAYABLE: ${proposal.final_total_fee || proposal.total_fee} EGP
+- Platform Fee: ${platformFeeAmount} EGP (6% of legal fees)
+- Payment Processing Fee: (included)
+- Client Protection Fee: (included)
+- TOTAL AMOUNT PAYABLE: ${effectivePaymentStructure === 'contingency' ? 'Contingency-based (applicable upon settlement)' : `${totalPayable} EGP`}
 
 REQUIRED CONTRACT STRUCTURE (EXACTLY 12 SECTIONS):
 
@@ -176,10 +189,10 @@ Include standard disclaimer: "The Lawyer is an independent practitioner register
 
 **3. Fees and Payment**
 - Total Agreed Legal Fees: ${paymentStructureText}
-- Platform Fee (LegalPro): ${proposal.platform_fee_amount || 0} EGP
-- Payment Processing Fee: ${proposal.payment_processing_fee_amount || 0} EGP
-- Client Protection Fee: ${proposal.client_protection_fee_amount || 0} EGP
-- Total Amount Payable by Client: ${proposal.final_total_fee || proposal.total_fee} EGP
+- Platform Fee (LegalPro): ${platformFeeAmount} EGP (6% of legal fees)
+- Payment Processing Fee: (included)
+- Client Protection Fee: (included)
+- Total Amount Payable by Client: ${effectivePaymentStructure === 'contingency' ? 'Contingency-based (applicable upon settlement)' : `${totalPayable} EGP`}
 
 Include all standard payment terms:
 - All payments through LegalPro's escrow system
