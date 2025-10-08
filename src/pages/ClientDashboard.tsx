@@ -64,7 +64,11 @@ import { DocumentPreview } from "@/components/DocumentPreview";
 import { ContractReviewDialog } from "@/components/ContractReviewDialog";
 import { useContracts } from "@/hooks/useContracts";
 
-const ClientDashboard = () => {
+interface ClientDashboardProps {
+  viewAsUserId?: string;
+}
+
+const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
   const [newMessage, setNewMessage] = useState("");
   const [paymentHistoryOpen, setPaymentHistoryOpen] = useState(false);
   const [intakeConversationOpen, setIntakeConversationOpen] = useState(false);
@@ -89,6 +93,11 @@ const ClientDashboard = () => {
   });
   const { signOut, user, role } = useAuth();
   const navigate = useNavigate();
+  const effectiveUserId = viewAsUserId || user?.id;
+  
+  // When viewing as another user, use custom data fetching
+  // Otherwise use the standard hook
+  const clientData = useClientData();
   const { 
     cases, 
     activeCase, 
@@ -100,11 +109,11 @@ const ClientDashboard = () => {
     sendMessage,
     renameDocument,
     refreshData
-  } = useClientData();
+  } = clientData;
   
   const { unreadCount } = useNotifications();
   const { totalUnreadCount } = useChatNotifications();
-  const { contracts, isLoading: contractsLoading } = useContracts(activeCase?.id, user?.id);
+  const { contracts, isLoading: contractsLoading } = useContracts(activeCase?.id, effectiveUserId);
   const [selectedContract, setSelectedContract] = useState<any>(null);
   const [showContractReview, setShowContractReview] = useState(false);
 

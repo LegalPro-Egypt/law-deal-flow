@@ -31,6 +31,10 @@ import AdminCasesReviewPage from "@/pages/admin/AdminCasesReviewPage";
 import AdminProposalsReviewPage from "@/pages/admin/AdminProposalsReviewPage";
 import AdminContractsReviewPage from "@/pages/admin/AdminContractsReviewPage";
 import AdminContractsPage from "@/pages/admin/AdminContractsPage";
+import AdminClientDashboardsPage from "@/pages/admin/AdminClientDashboardsPage";
+import AdminLawyerDashboardsPage from "@/pages/admin/AdminLawyerDashboardsPage";
+import AdminViewClientDashboard from "@/pages/admin/AdminViewClientDashboard";
+import AdminViewLawyerDashboard from "@/pages/admin/AdminViewLawyerDashboard";
 import PaymentsReportPage from "@/pages/admin/reports/PaymentsReportPage";
 import RevenueReportPage from "@/pages/admin/reports/RevenueReportPage";
 import CaseStatusReportPage from "@/pages/admin/reports/CaseStatusReportPage";
@@ -148,6 +152,10 @@ function AppContent() {
           <Route path="proposals/review" element={<AdminProposalsReviewPage />} />
           <Route path="contracts/review" element={<AdminContractsReviewPage />} />
           <Route path="contracts" element={<AdminContractsPage />} />
+          <Route path="dashboards/clients" element={<AdminClientDashboardsPage />} />
+          <Route path="dashboards/lawyers" element={<AdminLawyerDashboardsPage />} />
+          <Route path="dashboards/client/:userId" element={<AdminViewClientDashboard />} />
+          <Route path="dashboards/lawyer/:userId" element={<AdminViewLawyerDashboard />} />
           <Route path="reports/payments" element={<PaymentsReportPage />} />
           <Route path="reports/revenue" element={<RevenueReportPage />} />
           <Route path="reports/case-status" element={<CaseStatusReportPage />} />

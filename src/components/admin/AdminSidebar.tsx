@@ -26,7 +26,8 @@ import {
   Settings,
   Shield,
   ShieldCheck,
-  User
+  User,
+  Briefcase
 } from "lucide-react";
 
 import {
@@ -224,6 +225,31 @@ export function AdminSidebar() {
             </CollapsibleContent>
           </SidebarGroup>
         </Collapsible>
+
+        {/* User Dashboards Group */}
+        <SidebarGroup>
+          <SidebarGroupLabel>User Dashboards</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild data-active={isActive("/admin/dashboards/clients")}>
+                  <Link to="/admin/dashboards/clients" onClick={handleNavClick}>
+                    <User className="h-4 w-4" />
+                    {showLabels && <span>Clients</span>}
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild data-active={isActive("/admin/dashboards/lawyers")}>
+                  <Link to="/admin/dashboards/lawyers" onClick={handleNavClick}>
+                    <Briefcase className="h-4 w-4" />
+                    {showLabels && <span>Lawyers</span>}
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
         {/* Community Group */}
         <Collapsible open={openGroups.community} onOpenChange={() => toggleGroup('community')}>

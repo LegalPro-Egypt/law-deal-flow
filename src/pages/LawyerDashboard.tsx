@@ -85,10 +85,15 @@ interface Case {
   proposal?: any;
 }
 
-const LawyerDashboard = () => {
+interface LawyerDashboardProps {
+  viewAsUserId?: string;
+}
+
+const LawyerDashboard = ({ viewAsUserId }: LawyerDashboardProps = {}) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, profile, loading: authLoading, role } = useAuth();
+  const effectiveUserId = viewAsUserId || user?.id;
   const { t, isRTL } = useLanguage();
   const [stats, setStats] = useState<LawyerStats>({
     activeCases: 0,
@@ -127,22 +132,22 @@ const LawyerDashboard = () => {
   const { unreadCounts, getTotalUnreadCount } = useLawyerChatNotifications();
 
   useEffect(() => {
-    console.log('LawyerDashboard: User state changed', { user: user?.id, authLoading });
-    if (!authLoading && user) {
-      console.log('LawyerDashboard: Fetching dashboard data for user', user.id);
+    console.log('LawyerDashboard: User state changed', { user: effectiveUserId, authLoading });
+    if (!authLoading && effectiveUserId) {
+      console.log('LawyerDashboard: Fetching dashboard data for user', effectiveUserId);
       fetchDashboardData();
     }
-  }, [user, authLoading]);
+  }, [effectiveUserId, authLoading]);
 
   const fetchDashboardData = async () => {
-    if (!user) return;
+    if (!effectiveUserId) return;
 
     try {
       // Fetch assigned cases with payment information
       const { data: casesData, error: casesError } = await supabase
         .from('cases')
         .select('*, consultation_paid, payment_status')
-        .eq('assigned_lawyer_id', user.id)
+        .eq('assigned_lawyer_id', effectiveUserId)
         .order('created_at', { ascending: false });
 
       if (casesError) throw casesError;
@@ -158,7 +163,7 @@ const LawyerDashboard = () => {
             .from('proposals')
             .select('*')
             .eq('case_id', caseItem.id)
-            .eq('lawyer_id', user.id)
+            .eq('lawyer_id', effectiveUserId)
             .maybeSingle();
           
           console.log('fetchDashboardData: Proposal data for case', caseItem.id, ':', proposalData);
