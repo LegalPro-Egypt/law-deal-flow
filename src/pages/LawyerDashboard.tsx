@@ -6,6 +6,7 @@ import { useLawyerChatNotifications } from "@/hooks/useLawyerChatNotifications";
 import { useToast } from "@/hooks/use-toast";
 import { useMoneyRequests } from "@/hooks/useMoneyRequests";
 import { Button } from "@/components/ui/button";
+import { CallManager } from "@/components/calls/CallManager";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -393,6 +394,8 @@ const LawyerDashboard = () => {
 
   return (
     <div className={`min-h-screen bg-background rtl-safe-container ${isRTL() ? 'rtl' : 'ltr'}`}>
+      <CallManager />
+      
       {/* Header */}
       <header className="border-b bg-background/95 backdrop-blur sticky top-0 z-50">
         <div className="rtl-safe-container mx-auto px-4 sm:px-6 lg:px-8">

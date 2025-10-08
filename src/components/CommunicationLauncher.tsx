@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MessageCircle, Users } from 'lucide-react';
+import { MessageCircle, Users, Video, Phone } from 'lucide-react';
 import { DirectChatInterface } from './DirectChatInterface';
 import { NotificationBadge } from './ui/notification-badge';
 import { useChatNotifications } from '@/hooks/useChatNotifications';
 import { useLanguage } from '@/hooks/useLanguage';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { DailyVideoCall } from './calls/DailyVideoCall';
+import { DailyVoiceCall } from './calls/DailyVoiceCall';
 
 interface CommunicationLauncherProps {
   caseId: string;
@@ -25,7 +29,14 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
 }) => {
   const { isRTL } = useLanguage();
   const { unreadCounts } = useChatNotifications();
+  const { toast } = useToast();
   const [showDirectChat, setShowDirectChat] = useState(false);
+  const [activeCall, setActiveCall] = useState<{
+    type: 'video' | 'voice';
+    roomUrl: string;
+    sessionId: string;
+  } | null>(null);
+  const [isCreatingCall, setIsCreatingCall] = useState(false);
 
   // Persist chat modal open state
   const storageKey = `directChatOpen:${caseId}`;
@@ -46,6 +57,78 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
   }, [showDirectChat, storageKey]);
 
   const caseUnreadCount = unreadCounts[caseId] || 0;
+
+  const handleStartCall = async (callType: 'video' | 'voice') => {
+    setIsCreatingCall(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('daily-room', {
+        body: {
+          caseId,
+          sessionType: callType,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        setActiveCall({
+          type: callType,
+          roomUrl: data.roomUrl,
+          sessionId: data.sessionId,
+        });
+      } else {
+        throw new Error(data.error || 'Failed to create call');
+      }
+    } catch (error: any) {
+      console.error('Error starting call:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to start call',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsCreatingCall(false);
+    }
+  };
+
+  const handleEndCall = async () => {
+    if (activeCall) {
+      try {
+        await supabase
+          .from('communication_sessions')
+          .update({
+            status: 'ended',
+            ended_at: new Date().toISOString(),
+          })
+          .eq('id', activeCall.sessionId);
+      } catch (error) {
+        console.error('Error ending call:', error);
+      }
+    }
+    setActiveCall(null);
+  };
+
+  // Show active call if there is one
+  if (activeCall) {
+    if (activeCall.type === 'video') {
+      return (
+        <DailyVideoCall
+          roomUrl={activeCall.roomUrl}
+          sessionId={activeCall.sessionId}
+          onEnd={handleEndCall}
+        />
+      );
+    } else {
+      return (
+        <DailyVoiceCall
+          roomUrl={activeCall.roomUrl}
+          sessionId={activeCall.sessionId}
+          onEnd={handleEndCall}
+        />
+      );
+    }
+  }
 
   // Show direct chat interface if open
   if (showDirectChat) {
@@ -80,7 +163,33 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
+              {/* Call buttons in a row */}
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  onClick={() => handleStartCall('video')}
+                  disabled={isCreatingCall}
+                  className={`flex items-center justify-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}
+                  variant="secondary"
+                  size="lg"
+                >
+                  <Video className="w-5 h-5" />
+                  <span>Video Call</span>
+                </Button>
+
+                <Button
+                  onClick={() => handleStartCall('voice')}
+                  disabled={isCreatingCall}
+                  className={`flex items-center justify-center gap-2 ${isRTL() ? 'flex-row-reverse' : ''}`}
+                  variant="secondary"
+                  size="lg"
+                >
+                  <Phone className="w-5 h-5" />
+                  <span>Voice Call</span>
+                </Button>
+              </div>
+
+              {/* Direct chat button */}
               <div className="relative">
                 <Button
                   onClick={() => setShowDirectChat(true)}
@@ -96,8 +205,9 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
                   </div>
                 )}
               </div>
+
               <p className="text-xs text-muted-foreground text-center">
-                Send messages directly to your lawyer
+                Choose your preferred communication method
               </p>
             </div>
           )}

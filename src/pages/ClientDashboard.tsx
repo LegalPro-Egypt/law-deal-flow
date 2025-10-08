@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { formatCaseStatus } from "@/utils/caseUtils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { CallManager } from "@/components/calls/CallManager";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { 
@@ -409,6 +410,7 @@ const ClientDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
+      <CallManager />
 
       {/* Header */}
       <header className="backdrop-blur-md bg-background/80 border-b border-border/50 sticky top-0 z-50">
