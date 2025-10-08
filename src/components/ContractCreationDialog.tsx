@@ -50,6 +50,13 @@ export function ContractCreationDialog({
   const [timeline, setTimeline] = useState("");
   const [strategy, setStrategy] = useState("");
   const [isLoadingProposal, setIsLoadingProposal] = useState(true);
+  
+  // Party information fields
+  const [clientName, setClientName] = useState("");
+  const [clientIdPassport, setClientIdPassport] = useState("");
+  const [lawyerName, setLawyerName] = useState("");
+  const [lawyerBarNumber, setLawyerBarNumber] = useState("");
+  const [lawyerIdPassport, setLawyerIdPassport] = useState("");
 
   // Fetch session token and pre-populate from existing proposal
   useEffect(() => {
@@ -66,7 +73,18 @@ export function ContractCreationDialog({
       
       const { data, error } = await supabase
         .from('proposals')
-        .select('timeline, strategy, remaining_fee, consultation_fee, payment_structure, contingency_percentage, hybrid_fixed_fee, hybrid_contingency_percentage')
+        .select(`
+          timeline, 
+          strategy, 
+          remaining_fee, 
+          consultation_fee, 
+          payment_structure, 
+          contingency_percentage, 
+          hybrid_fixed_fee, 
+          hybrid_contingency_percentage,
+          lawyer_id,
+          client_id
+        `)
         .eq('id', proposalId)
         .single();
       
@@ -84,6 +102,30 @@ export function ContractCreationDialog({
         setHybridContingencyPercentage(data.hybrid_contingency_percentage);
         setTimeline(data.timeline || '');
         setStrategy(data.strategy || '');
+        
+        // Fetch client and lawyer profiles
+        const { data: clientProfile } = await supabase
+          .from('profiles')
+          .select('first_name, last_name, national_id_passport')
+          .eq('user_id', data.client_id)
+          .single();
+          
+        const { data: lawyerProfile } = await supabase
+          .from('profiles')
+          .select('first_name, last_name, license_number, national_id_passport')
+          .eq('user_id', data.lawyer_id)
+          .single();
+        
+        if (clientProfile) {
+          setClientName(`${clientProfile.first_name || ''} ${clientProfile.last_name || ''}`.trim());
+          setClientIdPassport(clientProfile.national_id_passport || '');
+        }
+        
+        if (lawyerProfile) {
+          setLawyerName(`${lawyerProfile.first_name || ''} ${lawyerProfile.last_name || ''}`.trim());
+          setLawyerBarNumber(lawyerProfile.license_number || '');
+          setLawyerIdPassport(lawyerProfile.national_id_passport || '');
+        }
       }
       
       setIsLoadingProposal(false);
@@ -129,7 +171,12 @@ export function ContractCreationDialog({
           hybridFixedFee,
           hybridContingencyPercentage,
           timeline,
-          strategy
+          strategy,
+          clientName,
+          clientIdPassport,
+          lawyerName,
+          lawyerBarNumber,
+          lawyerIdPassport
         }
       });
 
@@ -205,7 +252,14 @@ export function ContractCreationDialog({
           hybrid_contingency_percentage: hybridContingencyPercentage,
           timeline: timeline || null,
           strategy: strategy || null,
-          status: 'pending_admin_review'
+          status: 'pending_admin_review',
+          metadata: {
+            client_name: clientName,
+            client_id: clientIdPassport,
+            lawyer_name: lawyerName,
+            lawyer_bar_number: lawyerBarNumber,
+            lawyer_id: lawyerIdPassport
+          }
         });
 
       if (error) throw error;
@@ -246,6 +300,67 @@ export function ContractCreationDialog({
             </div>
           ) : (
             <>
+              {/* Parties Information Section */}
+              <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold text-sm">Parties Information</h3>
+                  <Badge variant="outline" className="text-xs">Required for Contract</Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">Pre-filled from profiles. Please review and edit if needed.</p>
+                
+                <div className="space-y-3">
+                  <div>
+                    <Label htmlFor="client-name">Client Name</Label>
+                    <Input
+                      id="client-name"
+                      value={clientName}
+                      onChange={(e) => setClientName(e.target.value)}
+                      placeholder="Client full name"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="client-id">Client ID/Passport No.</Label>
+                    <Input
+                      id="client-id"
+                      value={clientIdPassport}
+                      onChange={(e) => setClientIdPassport(e.target.value)}
+                      placeholder="National ID or Passport number"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="lawyer-name">Lawyer/Law Firm Name</Label>
+                    <Input
+                      id="lawyer-name"
+                      value={lawyerName}
+                      onChange={(e) => setLawyerName(e.target.value)}
+                      placeholder="Lawyer or law firm name"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="lawyer-bar">Bar Registration No.</Label>
+                    <Input
+                      id="lawyer-bar"
+                      value={lawyerBarNumber}
+                      onChange={(e) => setLawyerBarNumber(e.target.value)}
+                      placeholder="Bar association registration number"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="lawyer-id">Lawyer ID No.</Label>
+                    <Input
+                      id="lawyer-id"
+                      value={lawyerIdPassport}
+                      onChange={(e) => setLawyerIdPassport(e.target.value)}
+                      placeholder="National ID or Passport number"
+                    />
+                  </div>
+                </div>
+              </div>
+
               {/* Payment Structure Section */}
               <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
                 <div className="flex items-center gap-2">

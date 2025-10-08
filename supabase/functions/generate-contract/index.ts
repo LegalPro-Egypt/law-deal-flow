@@ -27,7 +27,12 @@ serve(async (req) => {
       hybridFixedFee,
       hybridContingencyPercentage,
       timeline,
-      strategy
+      strategy,
+      clientName,
+      clientIdPassport,
+      lawyerName,
+      lawyerBarNumber,
+      lawyerIdPassport
     } = await req.json();
 
     console.log('Received proposalId:', proposalId);
@@ -70,19 +75,6 @@ serve(async (req) => {
     
     console.log('Successfully fetched proposal:', proposal.id);
 
-    // Fetch lawyer and client profiles
-    const { data: lawyerProfile } = await supabaseClient
-      .from('profiles')
-      .select('first_name, last_name, license_number, national_id_passport, law_firm_name')
-      .eq('user_id', proposal.lawyer_id)
-      .single();
-    
-    const { data: clientProfile } = await supabaseClient
-      .from('profiles')
-      .select('first_name, last_name, national_id_passport')
-      .eq('user_id', proposal.client_id)
-      .single();
-    
     const { data: documents } = await supabaseClient
       .from('documents')
       .select('file_name, document_category')
@@ -114,12 +106,6 @@ serve(async (req) => {
     // Calculate 6% platform fee on base legal fees
     const platformFeeAmount = Math.round(baseLegalFee * 0.06);
     const totalPayable = baseLegalFee + platformFeeAmount;
-
-    const clientName = clientProfile ? `${clientProfile.first_name} ${clientProfile.last_name}` : 'Client';
-    const clientId = clientProfile?.national_id_passport || '[National ID/Passport No.]';
-    const lawyerName = lawyerProfile ? `${lawyerProfile.first_name} ${lawyerProfile.last_name}` : 'Lawyer';
-    const lawyerBarNo = lawyerProfile?.license_number || '[Bar Registration No.]';
-    const lawFirmName = lawyerProfile?.law_firm_name || lawyerName;
 
     // Generate scope using AI (only the dynamic part)
     const generateScope = async (lang: 'en' | 'ar') => {
@@ -246,80 +232,85 @@ Write in formal language appropriate for Egyptian legal contracts. Focus only on
           ? `Contingency Fee: ${effectiveContingencyPercentage}% of the outcome`
           : `Hybrid: ${effectiveHybridFixedFee} EGP fixed + ${effectiveHybridContingencyPercentage}% contingency`;
 
-      return `**Lawyer–Client Service Agreement (LegalPro)**
+      return `Lawyer–Client Service Agreement (LegalPro)
 
-**1. Parties and Background**
+1. Parties and Background
 
 This Agreement is entered into between:
-- **Client:** ${clientName}, National ID/Passport No. ${clientId}
-- **Lawyer/Law Firm:** ${lawFirmName}, Bar Registration No. ${lawyerBarNo}
+
+Client Name: ${clientName}
+ID/passport No.: ${clientIdPassport}
+
+Lawyer/Law Firm: ${lawyerName}
+Bar Registration No.: ${lawyerBarNumber}
+ID No.: ${lawyerIdPassport}
 
 The Lawyer is an independent practitioner registered with LegalPro, a platform that connects clients with verified lawyers. LegalPro is not a law firm and is not a party to this agreement. Its role is limited to facilitating communication and secure payments through escrow.
 
-**2. Scope of Services**
+2. Scope of Services
 
-**Case:** ${proposal.cases.title}
-**Category:** ${proposal.cases.category}
+Case: ${proposal.cases.title}
+Category: ${proposal.cases.category}
 
 ${scope}
 
 No additional or unrelated services are covered under this agreement without a separate contract.
 
-**3. Fees and Payment**
+3. Fees and Payment
 
-- **Total Agreed Legal Fees:** ${paymentStructureText}
-- **Platform Fee (LegalPro):** ${platformFeeAmount} EGP (6% of legal fees)
-- **Payment Processing Fee:** (included)
-- **Client Protection Fee:** (included)
-- **Total Amount Payable by Client:** ${effectivePaymentStructure === 'contingency' ? 'Contingency-based (applicable upon settlement)' : `${totalPayable} EGP`}
+- Total Agreed Legal Fees: ${paymentStructureText}
+- Platform Fee (LegalPro): ${platformFeeAmount} EGP (6% of legal fees)
+- Payment Processing Fee: (included)
+- Client Protection Fee: (included)
+- Total Amount Payable by Client: ${effectivePaymentStructure === 'contingency' ? 'Contingency-based (applicable upon settlement)' : `${totalPayable} EGP`}
 
 All payments shall be made through LegalPro's escrow system. Funds will be released per LegalPro's Terms of Service after service completion and mutual agreement. Fees are non-refundable except in cases of verified malpractice or misconduct. Direct or off-platform payments are strictly prohibited.
 
-**4. Confidentiality**
+4. Confidentiality
 
 Both parties agree to maintain the confidentiality of all information exchanged during the course of this engagement. LegalPro may access communications for case management, quality assurance, and dispute resolution purposes only.
 
-**5. Communication**
+5. Communication
 
 All communication between the Client and Lawyer must occur through LegalPro's secure platform. Off-platform communication voids client protection and may result in account suspension.
 
-**6. Lawyer's Duties**
+6. Lawyer's Duties
 
 The Lawyer confirms that they are duly licensed and in good standing with the relevant bar association. The Lawyer agrees to:
 - Provide services with professional care, diligence, and integrity
 - Comply with all applicable legal and ethical standards
 - Keep the Client informed of case progress
 
-**7. Client's Duties**
+7. Client's Duties
 
 The Client agrees to:
 - Provide accurate and complete information
 - Cooperate fully with the Lawyer
 - Acknowledge that LegalPro is not responsible for the Lawyer's work product or professional conduct
 
-**8. Limitation of Liability**
+8. Limitation of Liability
 
 The Lawyer is solely responsible for the quality and outcome of legal services. LegalPro is not responsible for any legal services, advice, or representation provided by the Lawyer. Refunds are limited to confirmed cases of malpractice or misconduct as determined by LegalPro's review process.
 
-**9. Dispute Resolution**
+9. Dispute Resolution
 
 Any disputes arising from this Agreement shall first be submitted to LegalPro's internal mediation process. If unresolved, disputes shall be subject to Egyptian jurisdiction under Egyptian law.
 
-**10. Termination**
+10. Termination
 
 Either party may terminate this Agreement with written notice. LegalPro will review the circumstances to ensure fair allocation of funds based on work completed.
 
-**11. Governing Law**
+11. Governing Law
 
 This Agreement is governed by the laws of the Arab Republic of Egypt.
 
-**12. Signatures (Ink Required)**
+12. Signatures (Ink Required)
 
 Both parties confirm their understanding and agreement to the terms outlined above. Physical signatures are required (scan/upload permitted).
 
-**Client Signature:** _________________________  **Date:** ____________
+Client Signature: _________________________  Date: ____________
 
-**Lawyer Signature:** _________________________  **Date:** ____________`;
+Lawyer Signature: _________________________  Date: ____________`;
     };
 
     const buildContractAr = (scope: string) => {
@@ -330,80 +321,85 @@ Both parties confirm their understanding and agreement to the terms outlined abo
           ? `رسوم طوارئ: ${effectiveContingencyPercentage}٪ من النتيجة`
           : `مختلط: ${effectiveHybridFixedFee} جنيه مصري ثابت + ${effectiveHybridContingencyPercentage}٪ طوارئ`;
 
-      return `**اتفاقية خدمات المحامي والعميل (ليجال برو)**
+      return `اتفاقية خدمات المحامي والعميل (ليجال برو)
 
-**1. الأطراف والخلفية**
+1. الأطراف والخلفية
 
 تم إبرام هذه الاتفاقية بين:
-- **العميل:** ${clientName}، رقم الهوية الوطنية/جواز السفر ${clientId}
-- **المحامي/مكتب المحاماة:** ${lawFirmName}، رقم التسجيل ${lawyerBarNo}
+
+اسم العميل: ${clientName}
+رقم الهوية/جواز السفر: ${clientIdPassport}
+
+المحامي/مكتب المحاماة: ${lawyerName}
+رقم التسجيل: ${lawyerBarNumber}
+رقم الهوية: ${lawyerIdPassport}
 
 المحامي هو ممارس مستقل مسجل لدى ليجال برو، وهي منصة تربط العملاء بمحامين موثقين. ليجال برو ليست مكتب محاماة وليست طرفًا في هذه الاتفاقية. دورها يقتصر على تسهيل التواصل والدفعات الآمنة من خلال نظام الضمان.
 
-**2. نطاق الخدمات**
+2. نطاق الخدمات
 
-**القضية:** ${proposal.cases.title}
-**الفئة:** ${proposal.cases.category}
+القضية: ${proposal.cases.title}
+الفئة: ${proposal.cases.category}
 
 ${scope}
 
 لا تغطي هذه الاتفاقية أي خدمات إضافية أو غير ذات صلة دون عقد منفصل.
 
-**3. الرسوم والدفع**
+3. الرسوم والدفع
 
-- **إجمالي الرسوم القانونية المتفق عليها:** ${paymentStructureText}
-- **رسوم المنصة (ليجال برو):** ${platformFeeAmount} جنيه مصري (6٪ من الرسوم القانونية)
-- **رسوم معالجة الدفع:** (مشمولة)
-- **رسوم حماية العميل:** (مشمولة)
-- **المبلغ الإجمالي المستحق على العميل:** ${effectivePaymentStructure === 'contingency' ? 'على أساس الطوارئ (تطبق عند التسوية)' : `${totalPayable} جنيه مصري`}
+- إجمالي الرسوم القانونية المتفق عليها: ${paymentStructureText}
+- رسوم المنصة (ليجال برو): ${platformFeeAmount} جنيه مصري (6٪ من الرسوم القانونية)
+- رسوم معالجة الدفع: (مشمولة)
+- رسوم حماية العميل: (مشمولة)
+- المبلغ الإجمالي المستحق على العميل: ${effectivePaymentStructure === 'contingency' ? 'على أساس الطوارئ (تطبق عند التسوية)' : `${totalPayable} جنيه مصري`}
 
 يجب أن تتم جميع المدفوعات من خلال نظام الضمان الخاص بليجال برو. سيتم إطلاق الأموال وفقًا لشروط خدمة ليجال برو بعد إتمام الخدمة والاتفاق المتبادل. الرسوم غير قابلة للاسترداد إلا في حالات سوء الممارسة أو السلوك غير المهني الموثق. الدفعات المباشرة أو خارج المنصة محظورة تمامًا.
 
-**4. السرية**
+4. السرية
 
 يوافق كلا الطرفين على الحفاظ على سرية جميع المعلومات المتبادلة خلال هذا العمل. قد تصل ليجال برو إلى الاتصالات لأغراض إدارة الحالة وضمان الجودة وحل النزاعات فقط.
 
-**5. التواصل**
+5. التواصل
 
 يجب أن يتم جميع التواصل بين العميل والمحامي من خلال منصة ليجال برو الآمنة. التواصل خارج المنصة يلغي حماية العميل وقد يؤدي إلى تعليق الحساب.
 
-**6. واجبات المحامي**
+6. واجبات المحامي
 
 يؤكد المحامي أنه مرخص حسب الأصول وبوضع جيد مع نقابة المحامين ذات الصلة. يوافق المحامي على:
 - تقديم الخدمات بعناية مهنية وحرص ونزاهة
 - الامتثال لجميع المعايير القانونية والأخلاقية المعمول بها
 - إبقاء العميل على اطلاع بتقدم القضية
 
-**7. واجبات العميل**
+7. واجبات العميل
 
 يوافق العميل على:
 - تقديم معلومات دقيقة وكاملة
 - التعاون الكامل مع المحامي
 - الإقرار بأن ليجال برو غير مسؤولة عن عمل المحامي أو سلوكه المهني
 
-**8. تحديد المسؤولية**
+8. تحديد المسؤولية
 
 المحامي هو المسؤول الوحيد عن جودة ونتيجة الخدمات القانونية. ليجال برو غير مسؤولة عن أي خدمات قانونية أو استشارات أو تمثيل يقدمه المحامي. تقتصر المبالغ المستردة على حالات سوء الممارسة أو السلوك غير المهني المؤكدة كما تحددها عملية المراجعة الخاصة بليجال برو.
 
-**9. حل النزاعات**
+9. حل النزاعات
 
 يجب أولاً تقديم أي نزاعات ناشئة عن هذه الاتفاقية إلى عملية الوساطة الداخلية لليجال برو. إذا لم يتم حلها، تخضع النزاعات للاختصاص المصري بموجب القانون المصري.
 
-**10. الإنهاء**
+10. الإنهاء
 
 يجوز لأي من الطرفين إنهاء هذه الاتفاقية بإشعار كتابي. ستراجع ليجال برو الظروف لضمان التخصيص العادل للأموال بناءً على العمل المنجز.
 
-**11. القانون الحاكم**
+11. القانون الحاكم
 
 تخضع هذه الاتفاقية لقوانين جمهورية مصر العربية.
 
-**12. التوقيعات (مطلوب بالحبر)**
+12. التوقيعات (مطلوب بالحبر)
 
 يؤكد كلا الطرفين فهمهما وموافقتهما على الشروط الموضحة أعلاه. التوقيعات الفعلية مطلوبة (يُسمح بالمسح الضوئي/التحميل).
 
-**توقيع العميل:** _________________________  **التاريخ:** ____________
+توقيع العميل: _________________________  التاريخ: ____________
 
-**توقيع المحامي:** _________________________  **التاريخ:** ____________`;
+توقيع المحامي: _________________________  التاريخ: ____________`;
     };
 
     // Build final contracts
