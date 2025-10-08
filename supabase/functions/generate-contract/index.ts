@@ -249,9 +249,6 @@ The Lawyer is an independent practitioner registered with LegalPro, a platform t
 
 2. Scope of Services
 
-Case: ${proposal.cases.title}
-Category: ${proposal.cases.category}
-
 ${scope}
 
 No additional or unrelated services are covered under this agreement without a separate contract.
@@ -337,9 +334,6 @@ Lawyer Signature: _________________________  Date: ____________`;
 المحامي هو ممارس مستقل مسجل لدى ليجال برو، وهي منصة تربط العملاء بمحامين موثقين. ليجال برو ليست مكتب محاماة وليست طرفًا في هذه الاتفاقية. دورها يقتصر على تسهيل التواصل والدفعات الآمنة من خلال نظام الضمان.
 
 2. نطاق الخدمات
-
-القضية: ${proposal.cases.title}
-الفئة: ${proposal.cases.category}
 
 ${scope}
 
