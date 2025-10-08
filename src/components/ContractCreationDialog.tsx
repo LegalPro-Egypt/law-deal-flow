@@ -37,6 +37,7 @@ export function ContractCreationDialog({
   const [currentDisplayLanguage, setCurrentDisplayLanguage] = useState<'en' | 'ar'>('en');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
   
   // Payment structure fields
   const [paymentStructure, setPaymentStructure] = useState<'fixed_fee' | 'contingency' | 'hybrid'>('fixed_fee');
@@ -47,10 +48,16 @@ export function ContractCreationDialog({
   const [timeline, setTimeline] = useState("");
   const [strategy, setStrategy] = useState("");
 
-  // Fetch and pre-populate from existing proposal
+  // Fetch session token and pre-populate from existing proposal
   useEffect(() => {
-    const fetchProposalData = async () => {
+    const initialize = async () => {
       if (!proposalId) return;
+      
+      // Get current session token
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (sessionData?.session?.access_token) {
+        setSessionToken(sessionData.session.access_token);
+      }
       
       const { data, error } = await supabase
         .from('proposals')
@@ -75,14 +82,26 @@ export function ContractCreationDialog({
     };
     
     if (isOpen && proposalId) {
-      fetchProposalData();
+      initialize();
     }
   }, [isOpen, proposalId]);
 
   const handleGenerate = async () => {
+    if (!sessionToken) {
+      toast({
+        title: "Authentication Error",
+        description: "Please wait for authentication to complete",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke('generate-contract', {
+        headers: {
+          Authorization: `Bearer ${sessionToken}`
+        },
         body: {
           proposalId,
           consultationNotes,
@@ -97,7 +116,19 @@ export function ContractCreationDialog({
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        // Handle specific error codes
+        if (error.message?.includes('429')) {
+          throw new Error('Rate limit exceeded. Please try again later.');
+        }
+        if (error.message?.includes('402')) {
+          throw new Error('Payment required. Please add credits to continue.');
+        }
+        if (error.message?.includes('Proposal not found')) {
+          throw new Error('Unable to access proposal. Please try refreshing the page.');
+        }
+        throw error;
+      }
 
       if (data.content_en) setContentEn(data.content_en);
       if (data.content_ar) setContentAr(data.content_ar);
@@ -107,6 +138,7 @@ export function ContractCreationDialog({
         description: "Contract generated successfully"
       });
     } catch (error: any) {
+      console.error('Contract generation error:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to generate contract",
@@ -314,7 +346,7 @@ export function ContractCreationDialog({
 
           <Button
             onClick={handleGenerate}
-            disabled={isGenerating}
+            disabled={isGenerating || !proposalId || !sessionToken}
             className="w-full"
           >
             {isGenerating ? (

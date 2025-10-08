@@ -13,6 +13,9 @@ serve(async (req) => {
   }
 
   try {
+    const authHeader = req.headers.get('Authorization');
+    console.log('Authorization header present:', !!authHeader);
+    
     const { 
       proposalId, 
       consultationNotes, 
@@ -27,6 +30,8 @@ serve(async (req) => {
       timeline,
       strategy
     } = await req.json();
+
+    console.log('Received proposalId:', proposalId);
 
     if (!proposalId) {
       throw new Error('proposalId is required');
@@ -64,9 +69,17 @@ serve(async (req) => {
       .eq('id', proposalId)
       .single();
 
-    if (proposalError || !proposal) {
+    if (proposalError) {
+      console.error('Proposal fetch error:', proposalError);
+      throw new Error(`Proposal not found: ${proposalError.message}`);
+    }
+    
+    if (!proposal) {
+      console.error('Proposal is null for ID:', proposalId);
       throw new Error('Proposal not found');
     }
+    
+    console.log('Successfully fetched proposal:', proposal.id);
 
     // Fetch case documents
     const { data: documents } = await supabaseClient
