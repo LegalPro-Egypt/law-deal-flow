@@ -5,11 +5,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useContracts, Contract } from "@/hooks/useContracts";
-import { CheckCircle, XCircle, Trash2, Loader2 } from "lucide-react";
+import { CheckCircle, XCircle, Trash2, Loader2, History } from "lucide-react";
 import { LanguageToggleButton } from "./LanguageToggleButton";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { ContractVersionHistory } from "@/components/ContractVersionHistory";
 
 interface AdminContractReviewDialogProps {
   isOpen: boolean;
@@ -38,6 +39,7 @@ export function AdminContractReviewDialog({
   const [currentLanguage, setCurrentLanguage] = useState<'en' | 'ar'>('en');
   const [adminNotes, setAdminNotes] = useState(contract.admin_notes || "");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
   const displayContent = currentLanguage === 'en' ? contract.content_en : contract.content_ar;
 
@@ -211,16 +213,28 @@ export function AdminContractReviewDialog({
           </div>
 
           <div className="flex flex-col sm:flex-row gap-2 justify-between">
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={handleDelete}
-              disabled={isProcessing}
-              className="w-full sm:w-auto"
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              Delete
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowHistory(true)}
+                disabled={isProcessing}
+                className="w-full sm:w-auto"
+              >
+                <History className="w-4 h-4 mr-2" />
+                View History
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleDelete}
+                disabled={isProcessing}
+                className="w-full sm:w-auto"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete
+              </Button>
+            </div>
             
             <div className="flex flex-col sm:flex-row gap-2">
               <Button variant="outline" onClick={onClose} disabled={isProcessing} className="w-full sm:w-auto">
@@ -251,6 +265,13 @@ export function AdminContractReviewDialog({
           </div>
         </div>
       </DialogContent>
+
+      <ContractVersionHistory
+        isOpen={showHistory}
+        onClose={() => setShowHistory(false)}
+        contractId={contract.id}
+        currentVersion={contract.version}
+      />
     </Dialog>
   );
 }

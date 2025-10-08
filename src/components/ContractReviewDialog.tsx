@@ -5,11 +5,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useContracts, Contract } from "@/hooks/useContracts";
-import { Download, Send, AlertCircle, Package } from "lucide-react";
+import { Download, Send, AlertCircle, Package, History } from "lucide-react";
 import { LanguageToggleButton } from "./LanguageToggleButton";
 import { DhlShipmentDialog } from "./DhlShipmentDialog";
 import { downloadContractPdf } from "@/utils/contractPdfGenerator";
 import { Badge } from "@/components/ui/badge";
+import { ContractVersionHistory } from "@/components/ContractVersionHistory";
 
 interface ContractReviewDialogProps {
   isOpen: boolean;
@@ -36,6 +37,7 @@ export function ContractReviewDialog({
   const [changeRequest, setChangeRequest] = useState("");
   const [isRequestingChanges, setIsRequestingChanges] = useState(false);
   const [showDhlDialog, setShowDhlDialog] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
   const displayContent = currentLanguage === 'en' ? contract.content_en : contract.content_ar;
 
@@ -203,28 +205,41 @@ export function ContractReviewDialog({
               />
             </div>
 
-            <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={onClose}>
-                Close
+            <div className="flex gap-2 justify-between">
+              <Button variant="outline" onClick={() => setShowHistory(true)}>
+                <History className="w-4 h-4 mr-2" />
+                View History
               </Button>
-              <Button
-                variant="outline"
-                onClick={handleRequestChanges}
-                disabled={isRequestingChanges || !changeRequest.trim()}
-              >
-                <Send className="w-4 h-4 mr-2" />
-                Request Changes
-              </Button>
-              {contract.status === 'downloaded' && (
-                <Button onClick={() => setShowDhlDialog(true)}>
-                  <Package className="w-4 h-4 mr-2" />
-                  Mark as Sent for Signature
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={onClose}>
+                  Close
                 </Button>
-              )}
+                <Button
+                  variant="outline"
+                  onClick={handleRequestChanges}
+                  disabled={isRequestingChanges || !changeRequest.trim()}
+                >
+                  <Send className="w-4 h-4 mr-2" />
+                  Request Changes
+                </Button>
+                {contract.status === 'downloaded' && (
+                  <Button onClick={() => setShowDhlDialog(true)}>
+                    <Package className="w-4 h-4 mr-2" />
+                    Mark as Sent for Signature
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </DialogContent>
       </Dialog>
+
+      <ContractVersionHistory
+        isOpen={showHistory}
+        onClose={() => setShowHistory(false)}
+        contractId={contract.id}
+        currentVersion={contract.version}
+      />
 
       <DhlShipmentDialog
         isOpen={showDhlDialog}

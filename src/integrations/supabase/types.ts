@@ -660,6 +660,62 @@ export type Database = {
         }
         Relationships: []
       }
+      contract_history: {
+        Row: {
+          admin_notes: string | null
+          change_notes: string | null
+          change_source: string | null
+          client_change_request: string | null
+          content_ar: string | null
+          content_en: string | null
+          contract_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          metadata: Json | null
+          status: string
+          version: number
+        }
+        Insert: {
+          admin_notes?: string | null
+          change_notes?: string | null
+          change_source?: string | null
+          client_change_request?: string | null
+          content_ar?: string | null
+          content_en?: string | null
+          contract_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          metadata?: Json | null
+          status: string
+          version: number
+        }
+        Update: {
+          admin_notes?: string | null
+          change_notes?: string | null
+          change_source?: string | null
+          client_change_request?: string | null
+          content_ar?: string | null
+          content_en?: string | null
+          contract_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          metadata?: Json | null
+          status?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_history_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contracts: {
         Row: {
           admin_notes: string | null

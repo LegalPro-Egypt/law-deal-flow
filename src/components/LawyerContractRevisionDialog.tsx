@@ -5,10 +5,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, FileText, AlertCircle } from 'lucide-react';
+import { Loader2, FileText, AlertCircle, History } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Contract } from '@/hooks/useContracts';
+import { ContractVersionHistory } from '@/components/ContractVersionHistory';
 
 interface LawyerContractRevisionDialogProps {
   isOpen: boolean;
@@ -28,6 +29,7 @@ export const LawyerContractRevisionDialog = ({
   const [changeNotes, setChangeNotes] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentLanguage, setCurrentLanguage] = useState<'en' | 'ar'>('en');
+  const [showHistory, setShowHistory] = useState(false);
   const { toast } = useToast();
 
   const handleResubmit = async () => {
@@ -53,7 +55,6 @@ export const LawyerContractRevisionDialog = ({
           change_source: 'lawyer_revision',
           status: 'pending_admin_review',
           version: contract.version + 1,
-          previous_version_id: contract.id,
           updated_at: new Date().toISOString(),
         })
         .eq('id', contract.id);
@@ -147,30 +148,48 @@ export const LawyerContractRevisionDialog = ({
             />
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-2 justify-end">
+          <div className="flex flex-col sm:flex-row gap-2 justify-between">
             <Button
               variant="outline"
-              onClick={onClose}
+              onClick={() => setShowHistory(true)}
               disabled={isProcessing}
               className="w-full sm:w-auto"
             >
-              Cancel
+              <History className="w-4 h-4 mr-2" />
+              View History
             </Button>
-            <Button
-              onClick={handleResubmit}
-              disabled={isProcessing || !changeNotes.trim()}
-              className="w-full sm:w-auto"
-            >
-              {isProcessing ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <FileText className="w-4 h-4 mr-2" />
-              )}
-              Resubmit for Review
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button
+                variant="outline"
+                onClick={onClose}
+                disabled={isProcessing}
+                className="w-full sm:w-auto"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleResubmit}
+                disabled={isProcessing || !changeNotes.trim()}
+                className="w-full sm:w-auto"
+              >
+                {isProcessing ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <FileText className="w-4 h-4 mr-2" />
+                )}
+                Resubmit for Review
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>
+
+      <ContractVersionHistory
+        isOpen={showHistory}
+        onClose={() => setShowHistory(false)}
+        contractId={contract.id}
+        currentVersion={contract.version}
+      />
     </Dialog>
   );
 };
