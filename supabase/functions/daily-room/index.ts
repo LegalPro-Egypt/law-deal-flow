@@ -137,6 +137,14 @@ serve(async (req) => {
       url: dailyRoom.url
     });
 
+    console.log('✅ Created room:', {
+      url: dailyRoom.url,
+      name: dailyRoom.name,
+      isValidFormat: dailyRoom.url?.includes('daily.co'),
+      urlLength: dailyRoom.url?.length,
+      urlStartsWith: dailyRoom.url?.substring(0, 30)
+    });
+
     // Insert session record
     const { data: session, error: sessionError } = await supabase
       .from('communication_sessions')
@@ -157,6 +165,15 @@ serve(async (req) => {
     }
 
     console.log('Session created:', session.id);
+
+    console.log('📤 Returning response:', {
+      success: true,
+      roomUrl: dailyRoom.url,
+      roomName: dailyRoom.name,
+      sessionId: session.id,
+      urlStartsWith: dailyRoom.url?.substring(0, 30),
+      urlFormat: dailyRoom.url?.match(/https:\/\/.+\.daily\.co\/.+/) ? 'valid' : 'INVALID'
+    });
 
     return new Response(
       JSON.stringify({

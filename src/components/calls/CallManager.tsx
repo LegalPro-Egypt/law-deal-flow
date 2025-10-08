@@ -111,6 +111,16 @@ export const CallManager: React.FC = () => {
       <AnimatePresence>
         {activeCall && (
           <>
+            {console.log('🔍 [CallManager] About to render call component with:', {
+              type: activeCall.type,
+              roomUrl: activeCall.roomUrl,
+              sessionId: activeCall.sessionId,
+              callerName: activeCall.callerName,
+              roomUrlValid: activeCall.roomUrl?.includes('daily.co'),
+              roomUrlLength: activeCall.roomUrl?.length,
+              urlStartsWith: activeCall.roomUrl?.substring(0, 30)
+            })}
+            
             {activeCall.type === 'video' ? (
               <DailyVideoCall
                 roomUrl={activeCall.roomUrl}

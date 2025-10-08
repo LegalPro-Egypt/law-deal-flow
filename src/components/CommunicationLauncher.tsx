@@ -130,6 +130,15 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
 
   // Show active call if there is one
   if (activeCall) {
+    console.log('🔍 [CommunicationLauncher] About to render call component with:', {
+      type: activeCall.type,
+      roomUrl: activeCall.roomUrl,
+      sessionId: activeCall.sessionId,
+      roomUrlValid: activeCall.roomUrl?.includes('daily.co'),
+      roomUrlLength: activeCall.roomUrl?.length,
+      urlStartsWith: activeCall.roomUrl?.substring(0, 30)
+    });
+    
     if (activeCall.type === 'video') {
       return (
         <DailyVideoCall
