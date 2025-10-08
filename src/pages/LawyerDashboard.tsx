@@ -643,8 +643,11 @@ const LawyerDashboard = () => {
                   {currentCase.proposal ? t('dashboard.cases.editProposal') : t('dashboard.cases.createProposal')}
                 </Button>
                 
-                {/* Create Contract Button - Only show if proposal is accepted and no contract exists */}
-                {currentCase.proposal?.status === 'accepted' && (
+                {/* Create Contract Button - Show after consultation is paid and no contract exists */}
+                {currentCase.proposal && 
+                 (currentCase.proposal.status === 'accepted' || 
+                  (currentCase.consultation_paid && ['consultation_paid', 'active'].includes(currentCase.status))) &&
+                 (!contracts || contracts.length === 0) && (
                   <Button 
                     size="sm" 
                     variant="outline"
