@@ -163,7 +163,7 @@ export const DailyVideoCall: React.FC<DailyVideoCallProps> = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[9999] bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900"
+      className="fixed inset-0 z-[9999] bg-gray-100"
       onMouseMove={handleMouseMove}
     >
       {/* Daily.co iframe container */}
@@ -171,20 +171,20 @@ export const DailyVideoCall: React.FC<DailyVideoCallProps> = ({
 
       {/* Connection status overlay */}
       {callState !== 'joined' && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
           <div className="text-center space-y-4">
             {callState === 'initializing' && (
-              <div className="text-white text-xl">Initializing call...</div>
+              <div className="text-gray-800 text-xl">Initializing call...</div>
             )}
             {callState === 'loading' && (
-              <div className="text-white text-xl">Loading video interface...</div>
+              <div className="text-gray-800 text-xl">Loading video interface...</div>
             )}
             {callState === 'joining' && (
-              <div className="text-white text-xl">Connecting to call room...</div>
+              <div className="text-gray-800 text-xl">Connecting to call room...</div>
             )}
             {callState === 'error' && (
               <>
-                <div className="text-red-400 text-xl">Connection Failed</div>
+                <div className="text-red-600 text-xl">Connection Failed</div>
                 <Button onClick={onEnd} variant="secondary">
                   Close
                 </Button>

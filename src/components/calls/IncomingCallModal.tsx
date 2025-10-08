@@ -36,7 +36,7 @@ export const IncomingCallModal: React.FC<IncomingCallModalProps> = ({
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 rounded-2xl p-8 max-w-sm w-full border border-white/10 shadow-2xl"
+        className="bg-white rounded-2xl p-8 max-w-sm w-full border border-gray-200 shadow-2xl"
       >
         {/* Avatar with pulse animation */}
         <div className="relative w-24 h-24 mx-auto mb-6">
@@ -61,11 +61,11 @@ export const IncomingCallModal: React.FC<IncomingCallModalProps> = ({
         </div>
 
         {/* Caller info */}
-        <h2 className="text-white text-2xl font-semibold text-center mb-2">
+        <h2 className="text-gray-800 text-2xl font-semibold text-center mb-2">
           {callerName}
         </h2>
         
-        <p className="text-white/70 text-center mb-2">
+        <p className="text-gray-600 text-center mb-2">
           {caseTitle}
         </p>
 

@@ -156,7 +156,7 @@ export const DailyVoiceCall: React.FC<DailyVoiceCallProps> = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[9999] bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex flex-col items-center justify-center"
+      className="fixed inset-0 z-[9999] bg-gray-100 flex flex-col items-center justify-center"
     >
       {/* Avatar with pulse animation */}
       <div className="relative mb-8">
@@ -183,10 +183,10 @@ export const DailyVoiceCall: React.FC<DailyVoiceCallProps> = ({
       </div>
 
       {/* Caller name */}
-      <h2 className="text-white text-3xl font-semibold mb-2">{callerName}</h2>
+      <h2 className="text-gray-800 text-3xl font-semibold mb-2">{callerName}</h2>
 
       {/* Call status/duration */}
-      <div className="text-white/70 text-lg mb-12">
+      <div className="text-gray-600 text-lg mb-12">
         {callState === 'joining' && 'Connecting...'}
         {callState === 'joined' && formatDuration(callDuration)}
         {callState === 'error' && 'Connection Error'}
@@ -226,13 +226,13 @@ export const DailyVoiceCall: React.FC<DailyVoiceCallProps> = ({
 
       {/* Labels */}
       <div className="flex items-center gap-6 mt-4">
-        <span className="text-white/60 text-sm w-16 text-center">
+        <span className="text-gray-500 text-sm w-16 text-center">
           {isAudioMuted ? 'Unmute' : 'Mute'}
         </span>
-        <span className="text-white/60 text-sm w-16 text-center">
+        <span className="text-gray-500 text-sm w-16 text-center">
           {isSpeakerOn ? 'Speaker' : 'Muted'}
         </span>
-        <span className="text-white/60 text-sm w-16 text-center">End Call</span>
+        <span className="text-gray-500 text-sm w-16 text-center">End Call</span>
       </div>
     </motion.div>
   );
