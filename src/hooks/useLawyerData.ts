@@ -12,6 +12,12 @@ interface LawyerCase {
   urgency: string;
   client_name: string;
   client_email: string;
+  client_id?: string;
+  user_id?: string;
+  consultation_paid?: boolean;
+  payment_status?: string;
+  consultation_completed_at?: string;
+  grace_period_expires_at?: string;
   created_at: string;
   updated_at: string;
   total_fee?: number;
@@ -42,7 +48,7 @@ interface Payout {
   created_at: string;
 }
 
-export const useLawyerData = () => {
+export const useLawyerData = (targetUserId?: string) => {
   const [assignedCases, setAssignedCases] = useState<LawyerCase[]>([]);
   const [payouts, setPayouts] = useState<Payout[]>([]);
   const [stats, setStats] = useState({
@@ -54,17 +60,18 @@ export const useLawyerData = () => {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { toast } = useToast();
+  const effectiveUserId = targetUserId || user?.id;
 
   const fetchAssignedCases = async () => {
-    if (!user) return;
+    if (!effectiveUserId) return;
     
     try {
-      console.log('Fetching assigned cases for lawyer:', user.id);
+      console.log('Fetching assigned cases for lawyer:', effectiveUserId);
       
       const { data: casesData, error: casesError } = await supabase
         .from('cases')
         .select('*')
-        .eq('assigned_lawyer_id', user.id)
+        .eq('assigned_lawyer_id', effectiveUserId)
         .order('created_at', { ascending: false });
 
       if (casesError) throw casesError;
@@ -80,7 +87,7 @@ export const useLawyerData = () => {
             .from('proposals')
             .select('*')
             .eq('case_id', caseItem.id)
-            .eq('lawyer_id', user.id)
+            .eq('lawyer_id', effectiveUserId)
             .maybeSingle();
           
           console.log('Proposal data for case', caseItem.id, ':', proposalData);
@@ -108,7 +115,7 @@ export const useLawyerData = () => {
   };
 
   const sendProposal = async (caseId: string, proposal: Omit<Proposal, 'id' | 'case_id' | 'status'>) => {
-    if (!user) return;
+    if (!effectiveUserId) return;
 
     try {
       // Update the case with proposal details
@@ -121,7 +128,7 @@ export const useLawyerData = () => {
           status: 'proposal_sent'
         })
         .eq('id', caseId)
-        .eq('assigned_lawyer_id', user.id);
+        .eq('assigned_lawyer_id', effectiveUserId);
 
       if (error) throw error;
 
@@ -169,7 +176,7 @@ Please review and let me know if you have any questions.`
   };
 
   const sendMessage = async (caseId: string, content: string) => {
-    if (!user) return;
+    if (!effectiveUserId) return;
 
     try {
       // Get conversation for this case
@@ -229,7 +236,7 @@ Please review and let me know if you have any questions.`
 
   useEffect(() => {
     const loadData = async () => {
-      if (user) {
+      if (effectiveUserId) {
         setLoading(true);
         await fetchAssignedCases();
         setLoading(false);
@@ -237,7 +244,7 @@ Please review and let me know if you have any questions.`
     };
 
     loadData();
-  }, [user]);
+  }, [effectiveUserId]);
 
   useEffect(() => {
     if (assignedCases.length > 0) {
@@ -247,7 +254,7 @@ Please review and let me know if you have any questions.`
 
   // Set up real-time subscriptions
   useEffect(() => {
-    if (!user) return;
+    if (!effectiveUserId) return;
 
     const casesChannel = supabase
       .channel('lawyer-cases')
@@ -257,7 +264,7 @@ Please review and let me know if you have any questions.`
           event: '*',
           schema: 'public',
           table: 'cases',
-          filter: `assigned_lawyer_id=eq.${user.id}`
+          filter: `assigned_lawyer_id=eq.${effectiveUserId}`
         },
         () => {
           fetchAssignedCases();
@@ -268,10 +275,10 @@ Please review and let me know if you have any questions.`
     return () => {
       supabase.removeChannel(casesChannel);
     };
-  }, [user]);
+  }, [effectiveUserId]);
 
   const updateProposal = async (proposalId: string, updatedData: Partial<Proposal>) => {
-    if (!user) return;
+    if (!effectiveUserId) return;
 
     try {
       const { error } = await supabase
@@ -281,7 +288,7 @@ Please review and let me know if you have any questions.`
           updated_at: new Date().toISOString()
         })
         .eq('id', proposalId)
-        .eq('lawyer_id', user.id);
+        .eq('lawyer_id', effectiveUserId);
 
       if (error) throw error;
 

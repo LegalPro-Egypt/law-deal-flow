@@ -97,7 +97,7 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
   
   // When viewing as another user, use custom data fetching
   // Otherwise use the standard hook
-  const clientData = useClientData();
+  const clientData = useClientData(effectiveUserId);
   const { 
     cases, 
     activeCase, 
@@ -420,6 +420,13 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
       <CallManager />
+
+      {/* Admin View Banner */}
+      {viewAsUserId && (
+        <div className="bg-blue-600 text-white py-2 px-4 text-center text-sm font-medium">
+          🔍 Admin View - Viewing client's dashboard (Data is read-only in this view)
+        </div>
+      )}
 
       {/* Header */}
       <header className="backdrop-blur-md bg-background/80 border-b border-border/50 sticky top-0 z-50">

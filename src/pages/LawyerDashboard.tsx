@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLawyerChatNotifications } from "@/hooks/useLawyerChatNotifications";
 import { useToast } from "@/hooks/use-toast";
 import { useMoneyRequests } from "@/hooks/useMoneyRequests";
+import { useLawyerData } from "@/hooks/useLawyerData";
 import { Button } from "@/components/ui/button";
 import { CallManager } from "@/components/calls/CallManager";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -95,19 +96,15 @@ const LawyerDashboard = ({ viewAsUserId }: LawyerDashboardProps = {}) => {
   const { user, profile, loading: authLoading, role } = useAuth();
   const effectiveUserId = viewAsUserId || user?.id;
   const { t, isRTL } = useLanguage();
-  const [stats, setStats] = useState<LawyerStats>({
-    activeCases: 0,
-    completedCases: 0,
-    pendingCases: 0,
-    totalEarnings: 0
-  });
-  const [cases, setCases] = useState<Case[]>([]);
-  const [loading, setLoading] = useState(true);
+  
+  // Use the hook instead of manual data fetching
+  const { assignedCases, stats, loading, refreshData: refreshLawyerData } = useLawyerData(effectiveUserId);
+  const cases = assignedCases;
   const [chatbotOpen, setChatbotOpen] = useState(false);
   const [showVerificationForm, setShowVerificationForm] = useState(false);
   const [selectedCaseId, setSelectedCaseId] = useState<string>("");
   const [caseDetailsOpen, setCaseDetailsOpen] = useState(false);
-  const [selectedCaseForProposal, setSelectedCaseForProposal] = useState<Case | null>(null);
+  const [selectedCaseForProposal, setSelectedCaseForProposal] = useState<any>(null);
   const [moneyRequestDialogOpen, setMoneyRequestDialogOpen] = useState(false);
   const { isCaseEligibleForMoneyRequest } = useMoneyRequests();
   
@@ -130,92 +127,6 @@ const LawyerDashboard = ({ viewAsUserId }: LawyerDashboardProps = {}) => {
   }, [currentCase]);
 
   const { unreadCounts, getTotalUnreadCount } = useLawyerChatNotifications();
-
-  useEffect(() => {
-    console.log('LawyerDashboard: User state changed', { user: effectiveUserId, authLoading });
-    if (!authLoading && effectiveUserId) {
-      console.log('LawyerDashboard: Fetching dashboard data for user', effectiveUserId);
-      fetchDashboardData();
-    }
-  }, [effectiveUserId, authLoading]);
-
-  const fetchDashboardData = async () => {
-    if (!effectiveUserId) return;
-
-    try {
-      // Fetch assigned cases with payment information
-      const { data: casesData, error: casesError } = await supabase
-        .from('cases')
-        .select('*, consultation_paid, payment_status')
-        .eq('assigned_lawyer_id', effectiveUserId)
-        .order('created_at', { ascending: false });
-
-      if (casesError) throw casesError;
-      
-      console.log('fetchDashboardData: Found cases:', casesData?.length);
-
-      // Fetch proposals for each case
-      const casesWithProposals = await Promise.all(
-        (casesData || []).map(async (caseItem) => {
-          console.log('fetchDashboardData: Fetching proposal for case:', caseItem.id);
-          
-          const { data: proposalData, error: proposalError } = await supabase
-            .from('proposals')
-            .select('*')
-            .eq('case_id', caseItem.id)
-            .eq('lawyer_id', effectiveUserId)
-            .maybeSingle();
-          
-          console.log('fetchDashboardData: Proposal data for case', caseItem.id, ':', proposalData);
-          if (proposalError) {
-            console.error('fetchDashboardData: Proposal fetch error:', proposalError);
-          }
-          
-          return {
-            ...caseItem,
-            proposal: proposalData || undefined
-          };
-        })
-      );
-      
-      console.log('fetchDashboardData: Cases with proposals:', casesWithProposals);
-      setCases(casesWithProposals);
-
-      // Twilio sessions removed
-
-      // Calculate stats with proper status mapping
-      const pendingCases = casesWithProposals?.filter(c => 
-        c.status === 'lawyer_assigned' || 
-        c.status === 'proposal_sent' ||
-        (c.status === 'proposal_accepted' && !c.consultation_paid)
-      ).length || 0;
-      
-      const activeCases = casesWithProposals?.filter(c => 
-        c.status === 'accepted' || c.status === 'active' || c.status === 'in_progress'
-      ).length || 0;
-      
-      const completedCases = casesWithProposals?.filter(c => 
-        c.status === 'completed' || c.status === 'closed'
-      ).length || 0;
-
-      setStats({
-        activeCases,
-        completedCases,
-        pendingCases,
-        totalEarnings: 0 // TODO: Calculate earnings when payment system is implemented
-      });
-
-    } catch (error: any) {
-      console.error('Error fetching dashboard data:', error);
-      toast({
-        title: t('common.error'),
-        description: t('dashboard.error'),
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSignOut = async () => {
     try {
@@ -345,7 +256,7 @@ const LawyerDashboard = ({ viewAsUserId }: LawyerDashboardProps = {}) => {
           <CompleteVerificationForm 
             onComplete={() => {
               setShowVerificationForm(false);
-              fetchDashboardData(); // Refresh profile data
+              refreshLawyerData(); // Refresh profile data
             }}
           />
         </div>
@@ -401,6 +312,13 @@ const LawyerDashboard = ({ viewAsUserId }: LawyerDashboardProps = {}) => {
   return (
     <div className={`min-h-screen bg-background rtl-safe-container ${isRTL() ? 'rtl' : 'ltr'}`}>
       <CallManager />
+      
+      {/* Admin View Banner */}
+      {viewAsUserId && (
+        <div className="bg-blue-600 text-white py-2 px-4 text-center text-sm font-medium">
+          🔍 Admin View - Viewing lawyer's dashboard (Data is read-only in this view)
+        </div>
+      )}
       
       {/* Header */}
       <header className="border-b bg-background/95 backdrop-blur sticky top-0 z-50">
@@ -550,7 +468,10 @@ const LawyerDashboard = ({ viewAsUserId }: LawyerDashboardProps = {}) => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">{t('dashboard.stats.pendingCases')}</p>
-                  <p className="text-3xl font-bold">{stats.pendingCases}</p>
+                  <p className="text-3xl font-bold">{cases.filter(c => 
+                    c.status === 'lawyer_assigned' || 
+                    c.status === 'proposal_sent'
+                  ).length}</p>
                 </div>
                 <Clock className="h-8 w-8 text-warning" />
               </div>
@@ -562,7 +483,9 @@ const LawyerDashboard = ({ viewAsUserId }: LawyerDashboardProps = {}) => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">{t('dashboard.stats.completedCases')}</p>
-                  <p className="text-3xl font-bold">{stats.completedCases}</p>
+                  <p className="text-3xl font-bold">{cases.filter(c => 
+                    c.status === 'completed' || c.status === 'closed'
+                  ).length}</p>
                 </div>
                 <CheckCircle className="h-8 w-8 text-primary" />
               </div>
@@ -656,7 +579,6 @@ const LawyerDashboard = ({ viewAsUserId }: LawyerDashboardProps = {}) => {
                 
                 {/* Create Contract Button - Show after lawyer completes consultation and no contract exists */}
                 {currentCase.proposal && 
-                 currentCase.consultation_completed_at &&
                  (!contracts || contracts.length === 0) && (
                   <Button 
                     size="sm" 
@@ -699,7 +621,7 @@ const LawyerDashboard = ({ viewAsUserId }: LawyerDashboardProps = {}) => {
                 <CaseCalendar
                   caseId={currentCase.id}
                   isLawyer={true}
-                  clientId={currentCase.user_id}
+                  clientId={currentCase.user_id || currentCase.client_id || ''}
                   lawyerId={profile?.user_id}
                 />
               </CollapsibleCard>
@@ -741,7 +663,7 @@ const LawyerDashboard = ({ viewAsUserId }: LawyerDashboardProps = {}) => {
         clientName={selectedCaseForProposal?.client_name || ''}
         existingProposal={selectedCaseForProposal?.proposal}
         onProposalSent={() => {
-          fetchDashboardData();
+          refreshLawyerData();
           setSelectedCaseForProposal(null);
         }}
       />
@@ -750,7 +672,7 @@ const LawyerDashboard = ({ viewAsUserId }: LawyerDashboardProps = {}) => {
       <MoneyRequestDialog
         open={moneyRequestDialogOpen}
         onOpenChange={setMoneyRequestDialogOpen}
-        cases={cases}
+        cases={cases as any}
       />
 
       {/* Contract Creation Dialog */}
@@ -764,9 +686,9 @@ const LawyerDashboard = ({ viewAsUserId }: LawyerDashboardProps = {}) => {
           proposalId={contractProposalId}
           caseId={currentCase.id}
           lawyerId={user?.id || ''}
-          clientId={currentCase.user_id}
+          clientId={currentCase.user_id || currentCase.client_id || ''}
           onContractCreated={() => {
-            fetchDashboardData();
+            refreshLawyerData();
             toast({
               title: "Contract Created",
               description: "Contract has been submitted for admin review"

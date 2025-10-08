@@ -58,7 +58,7 @@ interface ClientDocument {
   case_id: string;
 }
 
-export const useClientData = () => {
+export const useClientData = (targetUserId?: string) => {
   const [cases, setCases] = useState<ClientCase[]>([]);
   const [activeCase, setActiveCase] = useState<ClientCase | null>(null);
   const [messages, setMessages] = useState<ClientMessage[]>([]);
@@ -67,21 +67,22 @@ export const useClientData = () => {
   const [fetchingCases, setFetchingCases] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
+  const effectiveUserId = targetUserId || user?.id;
 
   const fetchCases = async () => {
-    if (!user) {
+    if (!effectiveUserId) {
       console.log('useClientData: No user available for fetching cases');
       return;
     }
     
-    console.log('useClientData: Fetching cases for user:', user.id);
+    console.log('useClientData: Fetching cases for user:', effectiveUserId);
     setFetchingCases(true);
     
     try {
       const { data, error } = await supabase
         .from('cases')
         .select('*, consultation_paid, payment_status, payment_amount, payment_date')
-        .eq('user_id', user.id)
+        .eq('user_id', effectiveUserId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -118,7 +119,7 @@ export const useClientData = () => {
   };
 
   const fetchMessages = async (caseId?: string) => {
-    if (!user || !caseId) return;
+    if (!effectiveUserId || !caseId) return;
     
     try {
       // First get the conversation for this case
@@ -126,7 +127,7 @@ export const useClientData = () => {
         .from('conversations')
         .select('id')
         .eq('case_id', caseId)
-        .eq('user_id', user.id)
+        .eq('user_id', effectiveUserId)
         .single();
 
       if (convError || !conversations) return;
@@ -214,7 +215,7 @@ export const useClientData = () => {
   };
 
   const sendMessage = async (content: string, conversationId: string) => {
-    if (!user) return;
+    if (!effectiveUserId) return;
 
     try {
       const { error } = await supabase
@@ -249,7 +250,7 @@ export const useClientData = () => {
 
   useEffect(() => {
     const loadData = async () => {
-      if (user) {
+      if (effectiveUserId) {
         console.log('useClientData: User authenticated, loading data...');
         setLoading(true);
         await fetchCases();
@@ -265,7 +266,7 @@ export const useClientData = () => {
     };
 
     loadData();
-  }, [user]);
+  }, [effectiveUserId]);
 
   useEffect(() => {
     if (activeCase) {
@@ -276,7 +277,7 @@ export const useClientData = () => {
 
   // Set up real-time subscriptions
   useEffect(() => {
-    if (!user || !activeCase) return;
+    if (!effectiveUserId || !activeCase) return;
 
     const messagesChannel = supabase
       .channel('client-messages')
@@ -313,11 +314,11 @@ export const useClientData = () => {
       supabase.removeChannel(messagesChannel);
       supabase.removeChannel(documentsChannel);
     };
-  }, [user, activeCase]);
+  }, [effectiveUserId, activeCase]);
 
   // Realtime subscription for cases list (updates status, assignment, etc.)
   useEffect(() => {
-    if (!user) return;
+    if (!effectiveUserId) return;
     const casesChannel = supabase
       .channel('client-cases')
       .on(
@@ -326,7 +327,7 @@ export const useClientData = () => {
           event: '*',
           schema: 'public',
           table: 'cases',
-          filter: `user_id=eq.${user.id}`,
+          filter: `user_id=eq.${effectiveUserId}`,
         },
         () => {
           fetchCases();
@@ -337,11 +338,11 @@ export const useClientData = () => {
     return () => {
       supabase.removeChannel(casesChannel);
     };
-  }, [user]);
+  }, [effectiveUserId]);
 
   const refreshData = async () => {
     console.log('useClientData: Manual refresh triggered');
-    if (user) {
+    if (effectiveUserId) {
       setLoading(true);
       await fetchCases();
       setLoading(false);
