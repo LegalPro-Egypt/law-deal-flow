@@ -13,7 +13,20 @@ serve(async (req) => {
   }
 
   try {
-    const { proposalId, consultationNotes, language = 'both' } = await req.json();
+    const { 
+      proposalId, 
+      consultationNotes, 
+      language = 'both',
+      // New fields from contract creation dialog
+      paymentStructure,
+      consultationFee,
+      remainingFee,
+      contingencyPercentage,
+      hybridFixedFee,
+      hybridContingencyPercentage,
+      timeline,
+      strategy
+    } = await req.json();
 
     if (!proposalId) {
       throw new Error('proposalId is required');
@@ -66,18 +79,28 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured');
     }
 
+    // Use provided values if present, otherwise fall back to proposal data
+    const effectivePaymentStructure = paymentStructure || proposal.payment_structure;
+    const effectiveConsultationFee = consultationFee ?? proposal.consultation_fee;
+    const effectiveRemainingFee = remainingFee ?? proposal.remaining_fee;
+    const effectiveContingencyPercentage = contingencyPercentage ?? proposal.contingency_percentage;
+    const effectiveHybridFixedFee = hybridFixedFee ?? proposal.hybrid_fixed_fee;
+    const effectiveHybridContingencyPercentage = hybridContingencyPercentage ?? proposal.hybrid_contingency_percentage;
+    const effectiveTimeline = timeline || proposal.timeline;
+    const effectiveStrategy = strategy || proposal.strategy;
+
     const paymentStructureText = 
-      proposal.payment_structure === 'fixed_fee'
-        ? `Fixed Fee: ${proposal.total_fee} EGP (Consultation: ${proposal.consultation_fee} EGP, Remaining: ${proposal.remaining_fee} EGP)`
-        : proposal.payment_structure === 'contingency'
-        ? `Contingency Fee: ${proposal.contingency_percentage}% of the outcome`
-        : `Hybrid: ${proposal.hybrid_fixed_fee} EGP + ${proposal.hybrid_contingency_percentage}% contingency`;
+      effectivePaymentStructure === 'fixed_fee'
+        ? `Fixed Fee: ${(effectiveConsultationFee || 0) + (effectiveRemainingFee || 0)} EGP (Consultation: ${effectiveConsultationFee} EGP, Remaining: ${effectiveRemainingFee} EGP)`
+        : effectivePaymentStructure === 'contingency'
+        ? `Contingency Fee: ${effectiveContingencyPercentage}% of the outcome`
+        : `Hybrid: ${effectiveHybridFixedFee} EGP + ${effectiveHybridContingencyPercentage}% contingency`;
 
     const systemPrompt = `You are an expert Egyptian legal contract writer. Generate a comprehensive, legally binding contract based on the provided case details and proposal.
 
 PAYMENT STRUCTURE: ${paymentStructureText}
-TIMELINE: ${proposal.timeline || 'Not specified'}
-STRATEGY: ${proposal.strategy || 'Not specified'}
+TIMELINE: ${effectiveTimeline || 'Not specified'}
+STRATEGY: ${effectiveStrategy || 'Not specified'}
 ${consultationNotes ? `CONSULTATION NOTES: ${consultationNotes}` : ''}
 
 The contract must include:

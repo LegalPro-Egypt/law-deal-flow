@@ -670,26 +670,34 @@ export type Database = {
           change_source: string | null
           client_change_request: string | null
           client_id: string
+          consultation_fee: number | null
           consultation_notes: string | null
           content_ar: string | null
           content_en: string | null
+          contingency_percentage: number | null
           created_at: string | null
           dhl_tracking_number: string | null
           downloaded_at: string | null
           expected_delivery_date: string | null
+          hybrid_contingency_percentage: number | null
+          hybrid_fixed_fee: number | null
           id: string
           lawyer_id: string
           metadata: Json | null
+          payment_structure: string | null
           pdf_downloaded: boolean | null
           physically_received_at: string | null
           previous_version_id: string | null
           proposal_id: string
           received_by: string | null
+          remaining_fee: number | null
           sent_at: string | null
           sent_for_signature_at: string | null
           shipment_notes: string | null
           signed_at: string | null
           status: string
+          strategy: string | null
+          timeline: string | null
           updated_at: string | null
           version: number | null
           viewed_at: string | null
@@ -703,26 +711,34 @@ export type Database = {
           change_source?: string | null
           client_change_request?: string | null
           client_id: string
+          consultation_fee?: number | null
           consultation_notes?: string | null
           content_ar?: string | null
           content_en?: string | null
+          contingency_percentage?: number | null
           created_at?: string | null
           dhl_tracking_number?: string | null
           downloaded_at?: string | null
           expected_delivery_date?: string | null
+          hybrid_contingency_percentage?: number | null
+          hybrid_fixed_fee?: number | null
           id?: string
           lawyer_id: string
           metadata?: Json | null
+          payment_structure?: string | null
           pdf_downloaded?: boolean | null
           physically_received_at?: string | null
           previous_version_id?: string | null
           proposal_id: string
           received_by?: string | null
+          remaining_fee?: number | null
           sent_at?: string | null
           sent_for_signature_at?: string | null
           shipment_notes?: string | null
           signed_at?: string | null
           status?: string
+          strategy?: string | null
+          timeline?: string | null
           updated_at?: string | null
           version?: number | null
           viewed_at?: string | null
@@ -736,26 +752,34 @@ export type Database = {
           change_source?: string | null
           client_change_request?: string | null
           client_id?: string
+          consultation_fee?: number | null
           consultation_notes?: string | null
           content_ar?: string | null
           content_en?: string | null
+          contingency_percentage?: number | null
           created_at?: string | null
           dhl_tracking_number?: string | null
           downloaded_at?: string | null
           expected_delivery_date?: string | null
+          hybrid_contingency_percentage?: number | null
+          hybrid_fixed_fee?: number | null
           id?: string
           lawyer_id?: string
           metadata?: Json | null
+          payment_structure?: string | null
           pdf_downloaded?: boolean | null
           physically_received_at?: string | null
           previous_version_id?: string | null
           proposal_id?: string
           received_by?: string | null
+          remaining_fee?: number | null
           sent_at?: string | null
           sent_for_signature_at?: string | null
           shipment_notes?: string | null
           signed_at?: string | null
           status?: string
+          strategy?: string | null
+          timeline?: string | null
           updated_at?: string | null
           version?: number | null
           viewed_at?: string | null

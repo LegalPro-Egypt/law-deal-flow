@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,6 +37,49 @@ export function ContractCreationDialog({
   const [currentDisplayLanguage, setCurrentDisplayLanguage] = useState<'en' | 'ar'>('en');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Payment structure fields
+  const [paymentStructure, setPaymentStructure] = useState<'fixed_fee' | 'contingency' | 'hybrid'>('fixed_fee');
+  const [consultationFee, setConsultationFee] = useState(0);
+  const [remainingFee, setRemainingFee] = useState(0);
+  const [contingencyPercentage, setContingencyPercentage] = useState<number>();
+  const [hybridFixedFee, setHybridFixedFee] = useState<number>();
+  const [hybridContingencyPercentage, setHybridContingencyPercentage] = useState<number>();
+  const [timeline, setTimeline] = useState("");
+  const [strategy, setStrategy] = useState("");
+
+  // Fetch and pre-populate from existing proposal
+  useEffect(() => {
+    const fetchProposalData = async () => {
+      if (!proposalId) return;
+      
+      const { data, error } = await supabase
+        .from('proposals')
+        .select('*')
+        .eq('id', proposalId)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching proposal:', error);
+        return;
+      }
+
+      if (data) {
+        setPaymentStructure((data.payment_structure || 'fixed_fee') as 'fixed_fee' | 'contingency' | 'hybrid');
+        setConsultationFee(data.consultation_fee || 0);
+        setRemainingFee(data.remaining_fee || 0);
+        setContingencyPercentage(data.contingency_percentage);
+        setHybridFixedFee(data.hybrid_fixed_fee);
+        setHybridContingencyPercentage(data.hybrid_contingency_percentage);
+        setTimeline(data.timeline || '');
+        setStrategy(data.strategy || '');
+      }
+    };
+    
+    if (isOpen && proposalId) {
+      fetchProposalData();
+    }
+  }, [isOpen, proposalId]);
 
   const handleGenerate = async () => {
     setIsGenerating(true);
@@ -44,7 +88,15 @@ export function ContractCreationDialog({
         body: {
           proposalId,
           consultationNotes,
-          language
+          language,
+          paymentStructure,
+          consultationFee,
+          remainingFee,
+          contingencyPercentage,
+          hybridFixedFee,
+          hybridContingencyPercentage,
+          timeline,
+          strategy
         }
       });
 
@@ -90,6 +142,14 @@ export function ContractCreationDialog({
           content_en: contentEn || null,
           content_ar: contentAr || null,
           consultation_notes: consultationNotes || null,
+          payment_structure: paymentStructure,
+          consultation_fee: consultationFee,
+          remaining_fee: remainingFee,
+          contingency_percentage: contingencyPercentage,
+          hybrid_fixed_fee: hybridFixedFee,
+          hybrid_contingency_percentage: hybridContingencyPercentage,
+          timeline: timeline || null,
+          strategy: strategy || null,
           status: 'pending_admin_review'
         });
 
@@ -123,6 +183,140 @@ export function ContractCreationDialog({
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Payment Structure Section */}
+          <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
+            <h3 className="font-semibold text-sm">Payment Structure</h3>
+            
+            <div>
+              <Label htmlFor="payment-structure">Payment Structure</Label>
+              <Select
+                value={paymentStructure}
+                onValueChange={(value: 'fixed_fee' | 'contingency' | 'hybrid') => setPaymentStructure(value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="fixed_fee">Fixed Fee</SelectItem>
+                  <SelectItem value="contingency">Contingency</SelectItem>
+                  <SelectItem value="hybrid">Hybrid (Fixed + Contingency)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {paymentStructure === 'fixed_fee' && (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="consultation-fee">Consultation Fee (EGP)</Label>
+                  <Input
+                    id="consultation-fee"
+                    type="number"
+                    value={consultationFee}
+                    onChange={(e) => setConsultationFee(Number(e.target.value))}
+                    min="0"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="remaining-fee">Remaining Fee (EGP)</Label>
+                  <Input
+                    id="remaining-fee"
+                    type="number"
+                    value={remainingFee}
+                    onChange={(e) => setRemainingFee(Number(e.target.value))}
+                    min="0"
+                  />
+                </div>
+              </div>
+            )}
+
+            {paymentStructure === 'contingency' && (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="consultation-fee-cont">Consultation Fee (EGP)</Label>
+                  <Input
+                    id="consultation-fee-cont"
+                    type="number"
+                    value={consultationFee}
+                    onChange={(e) => setConsultationFee(Number(e.target.value))}
+                    min="0"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="contingency-percentage">Contingency Percentage (%)</Label>
+                  <Input
+                    id="contingency-percentage"
+                    type="number"
+                    value={contingencyPercentage || ''}
+                    onChange={(e) => setContingencyPercentage(Number(e.target.value))}
+                    min="0"
+                    max="100"
+                  />
+                </div>
+              </div>
+            )}
+
+            {paymentStructure === 'hybrid' && (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="consultation-fee-hybrid">Consultation Fee (EGP)</Label>
+                  <Input
+                    id="consultation-fee-hybrid"
+                    type="number"
+                    value={consultationFee}
+                    onChange={(e) => setConsultationFee(Number(e.target.value))}
+                    min="0"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="hybrid-fixed">Hybrid Fixed Fee (EGP)</Label>
+                  <Input
+                    id="hybrid-fixed"
+                    type="number"
+                    value={hybridFixedFee || ''}
+                    onChange={(e) => setHybridFixedFee(Number(e.target.value))}
+                    min="0"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <Label htmlFor="hybrid-contingency">Hybrid Contingency (%)</Label>
+                  <Input
+                    id="hybrid-contingency"
+                    type="number"
+                    value={hybridContingencyPercentage || ''}
+                    onChange={(e) => setHybridContingencyPercentage(Number(e.target.value))}
+                    min="0"
+                    max="100"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Timeline and Strategy Section */}
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="timeline">Timeline</Label>
+              <Input
+                id="timeline"
+                value={timeline}
+                onChange={(e) => setTimeline(e.target.value)}
+                placeholder="e.g., 4-6 weeks"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="strategy">Legal Strategy (Optional)</Label>
+              <Textarea
+                id="strategy"
+                value={strategy}
+                onChange={(e) => setStrategy(e.target.value)}
+                placeholder="Describe the legal strategy..."
+                rows={3}
+              />
+            </div>
+          </div>
+
+          {/* Consultation Notes */}
           <div>
             <Label htmlFor="consultation-notes">Consultation Notes (Optional)</Label>
             <Textarea
@@ -134,6 +328,7 @@ export function ContractCreationDialog({
             />
           </div>
 
+          {/* Language Selection */}
           <div>
             <Label htmlFor="language">Generate In</Label>
             <Select
