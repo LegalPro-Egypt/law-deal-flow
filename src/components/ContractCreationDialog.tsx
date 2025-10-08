@@ -40,7 +40,6 @@ export function ContractCreationDialog({
   
   // Payment structure fields
   const [paymentStructure, setPaymentStructure] = useState<'fixed_fee' | 'contingency' | 'hybrid'>('fixed_fee');
-  const [consultationFee, setConsultationFee] = useState(0);
   const [remainingFee, setRemainingFee] = useState(0);
   const [contingencyPercentage, setContingencyPercentage] = useState<number>();
   const [hybridFixedFee, setHybridFixedFee] = useState<number>();
@@ -66,7 +65,6 @@ export function ContractCreationDialog({
 
       if (data) {
         setPaymentStructure((data.payment_structure || 'fixed_fee') as 'fixed_fee' | 'contingency' | 'hybrid');
-        setConsultationFee(data.consultation_fee || 0);
         setRemainingFee(data.remaining_fee || 0);
         setContingencyPercentage(data.contingency_percentage);
         setHybridFixedFee(data.hybrid_fixed_fee);
@@ -90,7 +88,6 @@ export function ContractCreationDialog({
           consultationNotes,
           language,
           paymentStructure,
-          consultationFee,
           remainingFee,
           contingencyPercentage,
           hybridFixedFee,
@@ -143,7 +140,6 @@ export function ContractCreationDialog({
           content_ar: contentAr || null,
           consultation_notes: consultationNotes || null,
           payment_structure: paymentStructure,
-          consultation_fee: consultationFee,
           remaining_fee: remainingFee,
           contingency_percentage: contingencyPercentage,
           hybrid_fixed_fee: hybridFixedFee,
@@ -205,80 +201,49 @@ export function ContractCreationDialog({
             </div>
 
             {paymentStructure === 'fixed_fee' && (
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="consultation-fee">Consultation Fee (EGP)</Label>
-                  <Input
-                    id="consultation-fee"
-                    type="number"
-                    value={consultationFee}
-                    onChange={(e) => setConsultationFee(Number(e.target.value))}
-                    min="0"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="remaining-fee">Remaining Fee (EGP)</Label>
-                  <Input
-                    id="remaining-fee"
-                    type="number"
-                    value={remainingFee}
-                    onChange={(e) => setRemainingFee(Number(e.target.value))}
-                    min="0"
-                  />
-                </div>
+              <div>
+                <Label htmlFor="remaining-fee">Total Fee (EGP)</Label>
+                <Input
+                  id="remaining-fee"
+                  type="number"
+                  value={remainingFee}
+                  onChange={(e) => setRemainingFee(Number(e.target.value))}
+                  min="0"
+                  placeholder="Enter total fee for case work"
+                />
               </div>
             )}
 
             {paymentStructure === 'contingency' && (
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="consultation-fee-cont">Consultation Fee (EGP)</Label>
-                  <Input
-                    id="consultation-fee-cont"
-                    type="number"
-                    value={consultationFee}
-                    onChange={(e) => setConsultationFee(Number(e.target.value))}
-                    min="0"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="contingency-percentage">Contingency Percentage (%)</Label>
-                  <Input
-                    id="contingency-percentage"
-                    type="number"
-                    value={contingencyPercentage || ''}
-                    onChange={(e) => setContingencyPercentage(Number(e.target.value))}
-                    min="0"
-                    max="100"
-                  />
-                </div>
+              <div>
+                <Label htmlFor="contingency-percentage">Contingency Percentage (%)</Label>
+                <Input
+                  id="contingency-percentage"
+                  type="number"
+                  value={contingencyPercentage || ''}
+                  onChange={(e) => setContingencyPercentage(Number(e.target.value))}
+                  min="0"
+                  max="100"
+                  placeholder="Percentage of case outcome"
+                />
               </div>
             )}
 
             {paymentStructure === 'hybrid' && (
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="consultation-fee-hybrid">Consultation Fee (EGP)</Label>
-                  <Input
-                    id="consultation-fee-hybrid"
-                    type="number"
-                    value={consultationFee}
-                    onChange={(e) => setConsultationFee(Number(e.target.value))}
-                    min="0"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="hybrid-fixed">Hybrid Fixed Fee (EGP)</Label>
+                  <Label htmlFor="hybrid-fixed">Fixed Fee Component (EGP)</Label>
                   <Input
                     id="hybrid-fixed"
                     type="number"
                     value={hybridFixedFee || ''}
                     onChange={(e) => setHybridFixedFee(Number(e.target.value))}
                     min="0"
+                    placeholder="Fixed fee portion"
                   />
                 </div>
-                <div className="col-span-2">
-                  <Label htmlFor="hybrid-contingency">Hybrid Contingency (%)</Label>
+                <div>
+                  <Label htmlFor="hybrid-contingency">Contingency Component (%)</Label>
                   <Input
                     id="hybrid-contingency"
                     type="number"
@@ -286,6 +251,7 @@ export function ContractCreationDialog({
                     onChange={(e) => setHybridContingencyPercentage(Number(e.target.value))}
                     min="0"
                     max="100"
+                    placeholder="Contingency percentage"
                   />
                 </div>
               </div>

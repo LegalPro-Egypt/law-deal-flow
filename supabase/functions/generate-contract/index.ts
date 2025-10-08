@@ -91,10 +91,10 @@ serve(async (req) => {
 
     const paymentStructureText = 
       effectivePaymentStructure === 'fixed_fee'
-        ? `Fixed Fee: ${(effectiveConsultationFee || 0) + (effectiveRemainingFee || 0)} EGP (Consultation: ${effectiveConsultationFee} EGP, Remaining: ${effectiveRemainingFee} EGP)`
+        ? `Fixed Fee: ${effectiveRemainingFee} EGP`
         : effectivePaymentStructure === 'contingency'
         ? `Contingency Fee: ${effectiveContingencyPercentage}% of the outcome`
-        : `Hybrid: ${effectiveHybridFixedFee} EGP + ${effectiveHybridContingencyPercentage}% contingency`;
+        : `Hybrid: ${effectiveHybridFixedFee} EGP fixed + ${effectiveHybridContingencyPercentage}% contingency`;
 
     const systemPrompt = `You are an expert Egyptian legal contract writer. Generate a comprehensive, legally binding contract based on the provided case details and proposal.
 
