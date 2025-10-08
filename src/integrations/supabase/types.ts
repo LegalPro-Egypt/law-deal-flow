@@ -565,6 +565,65 @@ export type Database = {
         }
         Relationships: []
       }
+      communication_sessions: {
+        Row: {
+          case_id: string
+          created_at: string
+          duration_seconds: number | null
+          ended_at: string | null
+          id: string
+          initiated_at: string
+          initiated_by: string
+          metadata: Json | null
+          room_name: string
+          room_url: string
+          session_type: string
+          started_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          initiated_at?: string
+          initiated_by: string
+          metadata?: Json | null
+          room_name: string
+          room_url: string
+          session_type: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          initiated_at?: string
+          initiated_by?: string
+          metadata?: Json | null
+          room_name?: string
+          room_url?: string
+          session_type?: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communication_sessions_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_translations: {
         Row: {
           cache_key: string
