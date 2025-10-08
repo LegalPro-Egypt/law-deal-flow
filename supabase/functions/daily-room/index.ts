@@ -18,8 +18,20 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const dailyApiKey = Deno.env.get('DAILY_API_KEY');
 
+    console.log('Environment check:', {
+      hasSupabaseUrl: !!supabaseUrl,
+      hasSupabaseKey: !!supabaseKey,
+      hasDailyApiKey: !!dailyApiKey,
+      dailyApiKeyLength: dailyApiKey?.length || 0
+    });
+
     if (!dailyApiKey) {
       throw new Error('DAILY_API_KEY is not configured');
+    }
+
+    // Validate the API key format
+    if (typeof dailyApiKey !== 'string' || dailyApiKey.trim().length === 0) {
+      throw new Error('DAILY_API_KEY is invalid format - must be a non-empty string');
     }
 
     // Get authorization token from request
@@ -71,6 +83,13 @@ serve(async (req) => {
 
     // Create Daily.co room
     const roomName = `case-${caseId}-${Date.now()}`;
+    
+    console.log('Creating Daily.co room:', {
+      roomName,
+      sessionType,
+      apiKeyPrefix: dailyApiKey.substring(0, 10) + '...'
+    });
+
     const dailyResponse = await fetch('https://api.daily.co/v1/rooms', {
       method: 'POST',
       headers: {
@@ -91,14 +110,32 @@ serve(async (req) => {
       }),
     });
 
+    console.log('Daily.co API response status:', dailyResponse.status, dailyResponse.statusText);
+
     if (!dailyResponse.ok) {
       const errorText = await dailyResponse.text();
-      console.error('Daily.co API error:', errorText);
-      throw new Error(`Failed to create Daily.co room: ${dailyResponse.statusText}`);
+      let errorJson = null;
+      try {
+        errorJson = JSON.parse(errorText);
+      } catch (e) {
+        // Error text is not JSON
+      }
+      
+      console.error('Daily.co API error:', {
+        status: dailyResponse.status,
+        statusText: dailyResponse.statusText,
+        body: errorText,
+        json: errorJson
+      });
+      
+      throw new Error(`Daily.co API error ${dailyResponse.status}: ${errorText || dailyResponse.statusText}`);
     }
 
     const dailyRoom = await dailyResponse.json();
-    console.log('Daily.co room created:', dailyRoom.name);
+    console.log('Daily.co room created successfully:', {
+      name: dailyRoom.name,
+      url: dailyRoom.url
+    });
 
     // Insert session record
     const { data: session, error: sessionError } = await supabase
@@ -134,13 +171,23 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error('Error in daily-room function:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      cause: error.cause
+    });
+    
     return new Response(
       JSON.stringify({
         success: false,
         error: error.message,
+        details: error.toString(),
+        stack: error.stack,
+        name: error.name
       }),
       {
-        status: 400,
+        status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );

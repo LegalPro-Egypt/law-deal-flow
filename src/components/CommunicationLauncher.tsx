@@ -62,6 +62,12 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
     setIsCreatingCall(true);
     
     try {
+      console.log('🔵 Invoking daily-room edge function:', {
+        caseId,
+        sessionType: callType,
+        timestamp: new Date().toISOString()
+      });
+
       const { data, error } = await supabase.functions.invoke('daily-room', {
         body: {
           caseId,
@@ -69,23 +75,54 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
         },
       });
 
-      if (error) throw error;
+      console.log('🔵 Edge function response:', {
+        data,
+        error,
+        hasData: !!data,
+        hasError: !!error
+      });
+
+      if (error) {
+        console.error('🔴 Edge function error:', error);
+        console.error('🔴 Full error object:', JSON.stringify(error, null, 2));
+        throw new Error(error.message || 'Failed to invoke edge function');
+      }
+
+      if (!data) {
+        throw new Error('No response data from edge function');
+      }
 
       if (data.success) {
+        console.log('✅ Call room created successfully:', {
+          sessionId: data.sessionId,
+          roomName: data.roomName
+        });
+
         setActiveCall({
           type: callType,
           roomUrl: data.roomUrl,
           sessionId: data.sessionId,
         });
+        toast({
+          title: "Call Started",
+          description: `${callType === 'video' ? 'Video' : 'Voice'} call has been initiated.`,
+        });
       } else {
-        throw new Error(data.error || 'Failed to create call');
+        console.error('🔴 Edge function returned error:', {
+          error: data.error,
+          details: data.details,
+          stack: data.stack
+        });
+        throw new Error(data.error || data.details || 'Failed to create call room');
       }
     } catch (error: any) {
-      console.error('Error starting call:', error);
+      console.error('🔴 Error starting call:', error);
+      console.error('🔴 Full error object:', JSON.stringify(error, null, 2));
+      
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to start call',
-        variant: 'destructive',
+        title: "Error Starting Call",
+        description: error.message || "Failed to start call. Please check console logs for details.",
+        variant: "destructive",
       });
     } finally {
       setIsCreatingCall(false);
