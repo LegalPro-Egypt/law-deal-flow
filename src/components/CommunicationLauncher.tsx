@@ -8,8 +8,7 @@ import { useChatNotifications } from '@/hooks/useChatNotifications';
 import { useLanguage } from '@/hooks/useLanguage';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { DailyVideoCall } from './calls/DailyVideoCall';
-import { DailyVoiceCall } from './calls/DailyVoiceCall';
+import { DailyCallFrame } from './calls/DailyCallFrame';
 
 interface CommunicationLauncherProps {
   caseId: string;
@@ -139,23 +138,12 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
       urlStartsWith: activeCall.roomUrl?.substring(0, 30)
     });
     
-    if (activeCall.type === 'video') {
-      return (
-        <DailyVideoCall
-          roomUrl={activeCall.roomUrl}
-          sessionId={activeCall.sessionId}
-          onEnd={handleEndCall}
-        />
-      );
-    } else {
-      return (
-        <DailyVoiceCall
-          roomUrl={activeCall.roomUrl}
-          sessionId={activeCall.sessionId}
-          onEnd={handleEndCall}
-        />
-      );
-    }
+    return (
+      <DailyCallFrame
+        roomUrl={activeCall.roomUrl}
+        onEnd={handleEndCall}
+      />
+    );
   }
 
   // Show direct chat interface if open

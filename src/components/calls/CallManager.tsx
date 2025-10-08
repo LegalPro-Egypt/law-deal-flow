@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { useCallNotifications } from '@/hooks/useCallNotifications';
 import { IncomingCallModal } from './IncomingCallModal';
-import { DailyVideoCall } from './DailyVideoCall';
-import { DailyVoiceCall } from './DailyVoiceCall';
+import { DailyCallFrame } from './DailyCallFrame';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -121,20 +120,10 @@ export const CallManager: React.FC = () => {
               urlStartsWith: activeCall.roomUrl?.substring(0, 30)
             })}
             
-            {activeCall.type === 'video' ? (
-              <DailyVideoCall
-                roomUrl={activeCall.roomUrl}
-                sessionId={activeCall.sessionId}
-                onEnd={handleEndCall}
-              />
-            ) : (
-              <DailyVoiceCall
-                roomUrl={activeCall.roomUrl}
-                sessionId={activeCall.sessionId}
-                callerName={activeCall.callerName}
-                onEnd={handleEndCall}
-              />
-            )}
+            <DailyCallFrame
+              roomUrl={activeCall.roomUrl}
+              onEnd={handleEndCall}
+            />
           </>
         )}
       </AnimatePresence>
