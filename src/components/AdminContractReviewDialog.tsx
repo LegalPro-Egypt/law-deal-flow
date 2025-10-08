@@ -149,7 +149,7 @@ export function AdminContractReviewDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[95vw] sm:max-w-3xl lg:max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle>Admin Contract Review</DialogTitle>
@@ -210,25 +210,27 @@ export function AdminContractReviewDialog({
             />
           </div>
 
-          <div className="flex gap-2 justify-between">
+          <div className="flex flex-col sm:flex-row gap-2 justify-between">
             <Button
               variant="destructive"
               size="sm"
               onClick={handleDelete}
               disabled={isProcessing}
+              className="w-full sm:w-auto"
             >
               <Trash2 className="w-4 h-4 mr-2" />
               Delete
             </Button>
             
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={onClose} disabled={isProcessing}>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button variant="outline" onClick={onClose} disabled={isProcessing} className="w-full sm:w-auto">
                 Close
               </Button>
               <Button
                 variant="outline"
                 onClick={handleRequestChanges}
                 disabled={isProcessing || !adminNotes.trim()}
+                className="w-full sm:w-auto"
               >
                 {isProcessing ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -237,7 +239,7 @@ export function AdminContractReviewDialog({
                 )}
                 Request Changes
               </Button>
-              <Button onClick={handleApprove} disabled={isProcessing}>
+              <Button onClick={handleApprove} disabled={isProcessing} className="w-full sm:w-auto">
                 {isProcessing ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 ) : (
