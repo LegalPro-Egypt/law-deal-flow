@@ -59,11 +59,6 @@ serve(async (req) => {
           description,
           category,
           user_id
-        ),
-        profiles!proposals_lawyer_id_fkey (
-          first_name,
-          last_name,
-          email
         )
       `)
       .eq('id', proposalId)
@@ -80,6 +75,15 @@ serve(async (req) => {
     }
     
     console.log('Successfully fetched proposal:', proposal.id);
+
+    // Fetch lawyer profile separately
+    const { data: lawyerProfile } = await supabaseClient
+      .from('profiles')
+      .select('first_name, last_name, email')
+      .eq('user_id', proposal.lawyer_id)
+      .single();
+    
+    console.log('Lawyer profile fetched:', lawyerProfile?.email);
 
     // Fetch case documents
     const { data: documents } = await supabaseClient
