@@ -28,7 +28,10 @@ export const DailyVoiceCall: React.FC<DailyVoiceCallProps> = ({
   useEffect(() => {
     const initCall = async () => {
       try {
-        console.log('Initializing Daily.co voice call:', roomUrl);
+        console.log('🎤 [DailyVoiceCall] Props received:', { roomUrl, sessionId, callerName });
+        console.log('🎤 [DailyVoiceCall] Initializing voice call...');
+        
+        setCallState('joining');
         
         const call = DailyIframe.createCallObject({
           audioSource: true,
@@ -36,31 +39,60 @@ export const DailyVoiceCall: React.FC<DailyVoiceCallProps> = ({
         });
 
         callRef.current = call;
+        console.log('🎤 [DailyVoiceCall] Daily call object created');
 
-        // Set up event listeners
+        // Set up comprehensive event listeners
+        call.on('loading', () => {
+          console.log('🔵 [DailyVoiceCall] Loading...');
+        });
+
+        call.on('loaded', () => {
+          console.log('🔵 [DailyVoiceCall] Loaded');
+        });
+
+        call.on('joining-meeting', () => {
+          console.log('🔵 [DailyVoiceCall] Joining meeting...');
+          setCallState('joining');
+        });
+
         call.on('joined-meeting', () => {
-          console.log('Joined voice call successfully');
+          console.log('✅ [DailyVoiceCall] Joined voice call successfully!');
+          console.log('👥 [DailyVoiceCall] Current participants:', Object.keys(call.participants()).length);
           setCallState('joined');
         });
 
+        call.on('participant-joined', (event) => {
+          console.log('👤 [DailyVoiceCall] Participant joined:', event.participant.user_name || 'Anonymous');
+          console.log('👥 [DailyVoiceCall] Total participants:', Object.keys(call.participants()).length);
+        });
+
+        call.on('participant-left', (event) => {
+          console.log('👋 [DailyVoiceCall] Participant left:', event.participant.user_name || 'Anonymous');
+          console.log('👥 [DailyVoiceCall] Remaining participants:', Object.keys(call.participants()).length);
+        });
+
         call.on('error', (error) => {
-          console.error('Daily.co error:', error);
+          console.error('🔴 [DailyVoiceCall] Daily.co error:', error);
           setCallState('error');
         });
 
         call.on('left-meeting', () => {
-          console.log('Left voice call');
+          console.log('👋 [DailyVoiceCall] Left voice call');
           onEnd();
         });
 
         call.on('active-speaker-change', (event: any) => {
+          console.log('🔊 [DailyVoiceCall] Active speaker:', event?.activeSpeaker?.peerId);
           setIsSpeaking(event.activeSpeaker?.peerId !== call.participants().local.session_id);
         });
 
         // Join the room
-        await call.join({ url: roomUrl });
+        console.log('🎤 [DailyVoiceCall] Attempting to join room:', roomUrl);
+        const joinResult = await call.join({ url: roomUrl });
+        console.log('🎤 [DailyVoiceCall] Join result:', joinResult);
+        
       } catch (error) {
-        console.error('Error initializing call:', error);
+        console.error('🔴 [DailyVoiceCall] Error initializing voice call:', error);
         setCallState('error');
       }
     };
@@ -69,10 +101,11 @@ export const DailyVoiceCall: React.FC<DailyVoiceCallProps> = ({
 
     return () => {
       if (callRef.current) {
+        console.log('🧹 [DailyVoiceCall] Cleaning up call');
         callRef.current.destroy();
       }
     };
-  }, [roomUrl, onEnd]);
+  }, [roomUrl, sessionId, callerName, onEnd]);
 
   // Call duration timer
   useEffect(() => {

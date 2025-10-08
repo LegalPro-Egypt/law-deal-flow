@@ -22,9 +22,16 @@ export const CallManager: React.FC = () => {
   const handleAnswer = async () => {
     if (!incomingCall) return;
 
+    console.log('📞 [CallManager] Answering call:', {
+      sessionId: incomingCall.id,
+      roomUrl: incomingCall.room_url,
+      type: incomingCall.session_type,
+    });
+
     const success = await answerCall(incomingCall.id);
     
     if (success) {
+      console.log('✅ [CallManager] Call answered, setting active call');
       setActiveCall({
         sessionId: incomingCall.id,
         roomUrl: incomingCall.room_url,
@@ -33,6 +40,7 @@ export const CallManager: React.FC = () => {
       });
       clearIncomingCall();
     } else {
+      console.error('🔴 [CallManager] Failed to answer call');
       toast({
         title: 'Error',
         description: 'Failed to answer call',
@@ -58,6 +66,11 @@ export const CallManager: React.FC = () => {
   const handleEndCall = async () => {
     if (!activeCall) return;
 
+    console.log('👋 [CallManager] Ending call:', {
+      sessionId: activeCall.sessionId,
+      type: activeCall.type,
+    });
+
     try {
       // Update session to ended
       await supabase
@@ -68,6 +81,7 @@ export const CallManager: React.FC = () => {
         })
         .eq('id', activeCall.sessionId);
 
+      console.log('✅ [CallManager] Call ended, clearing active call state');
       setActiveCall(null);
       
       toast({
@@ -75,7 +89,7 @@ export const CallManager: React.FC = () => {
         description: 'The call has been ended successfully',
       });
     } catch (error) {
-      console.error('Error ending call:', error);
+      console.error('🔴 [CallManager] Error ending call:', error);
       setActiveCall(null);
     }
   };

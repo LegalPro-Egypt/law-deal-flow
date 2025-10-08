@@ -59,14 +59,9 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
   const caseUnreadCount = unreadCounts[caseId] || 0;
 
   const handleStartCall = async (callType: 'video' | 'voice') => {
-    setIsCreatingCall(true);
-    
     try {
-      console.log('🔵 Invoking daily-room edge function:', {
-        caseId,
-        sessionType: callType,
-        timestamp: new Date().toISOString()
-      });
+      setIsCreatingCall(true);
+      console.log('📞 [CommunicationLauncher] Starting call:', { caseId, callType });
 
       const { data, error } = await supabase.functions.invoke('daily-room', {
         body: {
@@ -75,54 +70,41 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
         },
       });
 
-      console.log('🔵 Edge function response:', {
-        data,
-        error,
-        hasData: !!data,
-        hasError: !!error
-      });
+      console.log('📞 [CommunicationLauncher] Room creation response:', { data, error });
 
       if (error) {
-        console.error('🔴 Edge function error:', error);
-        console.error('🔴 Full error object:', JSON.stringify(error, null, 2));
-        throw new Error(error.message || 'Failed to invoke edge function');
-      }
-
-      if (!data) {
-        throw new Error('No response data from edge function');
-      }
-
-      if (data.success) {
-        console.log('✅ Call room created successfully:', {
-          sessionId: data.sessionId,
-          roomName: data.roomName
+        console.error('🔴 [CommunicationLauncher] Error creating room:', error);
+        toast({
+          title: 'Error',
+          description: error.message || 'Failed to create call room',
+          variant: 'destructive',
         });
+        return;
+      }
 
+      if (data?.success) {
+        console.log('✅ [CommunicationLauncher] Room created successfully');
+        console.log('📞 [CommunicationLauncher] Room URL:', data.roomUrl);
+        console.log('📞 [CommunicationLauncher] Session ID:', data.sessionId);
+        
+        // Immediately join the room as the initiator
         setActiveCall({
           type: callType,
           roomUrl: data.roomUrl,
           sessionId: data.sessionId,
         });
+        
         toast({
-          title: "Call Started",
-          description: `${callType === 'video' ? 'Video' : 'Voice'} call has been initiated.`,
+          title: 'Connecting...',
+          description: 'Joining call room...',
         });
-      } else {
-        console.error('🔴 Edge function returned error:', {
-          error: data.error,
-          details: data.details,
-          stack: data.stack
-        });
-        throw new Error(data.error || data.details || 'Failed to create call room');
       }
-    } catch (error: any) {
-      console.error('🔴 Error starting call:', error);
-      console.error('🔴 Full error object:', JSON.stringify(error, null, 2));
-      
+    } catch (error) {
+      console.error('🔴 [CommunicationLauncher] Error starting call:', error);
       toast({
-        title: "Error Starting Call",
-        description: error.message || "Failed to start call. Please check console logs for details.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to initiate call',
+        variant: 'destructive',
       });
     } finally {
       setIsCreatingCall(false);

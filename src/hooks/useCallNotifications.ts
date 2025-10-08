@@ -20,7 +20,7 @@ export const useCallNotifications = () => {
   useEffect(() => {
     if (!user) return;
 
-    // Subscribe to new communication sessions
+    // Subscribe to new communication sessions (for receiving calls)
     const channel = supabase
       .channel('communication-sessions')
       .on(
@@ -32,13 +32,14 @@ export const useCallNotifications = () => {
           filter: `status=eq.pending`,
         },
         async (payload: any) => {
-          console.log('New call notification:', payload);
+          console.log('📱 [useCallNotifications] New call notification:', payload);
           
           // Check if this call is for the current user
           const session = payload.new;
           
           // Skip if user initiated this call
           if (session.initiated_by === user.id) {
+            console.log('📱 [useCallNotifications] Skipping - user is initiator');
             return;
           }
 
@@ -56,6 +57,7 @@ export const useCallNotifications = () => {
           const isLawyer = caseData.assigned_lawyer_id === user.id;
 
           if (!isClient && !isLawyer) {
+            console.log('📱 [useCallNotifications] User not part of this case');
             return;
           }
 
@@ -70,6 +72,11 @@ export const useCallNotifications = () => {
             ? `${callerProfile.first_name || ''} ${callerProfile.last_name || ''}`.trim() || callerProfile.email
             : 'Unknown';
 
+          console.log('📱 [useCallNotifications] Setting incoming call:', {
+            caller: callerName,
+            type: session.session_type,
+          });
+
           setIncomingCall({
             id: session.id,
             case_id: session.case_id,
@@ -82,9 +89,32 @@ export const useCallNotifications = () => {
           });
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'communication_sessions',
+          filter: `initiated_by=eq.${user.id}`,
+        },
+        (payload: any) => {
+          console.log('📱 [useCallNotifications] Session status updated:', {
+            status: payload.new.status,
+            sessionId: payload.new.id,
+          });
+          
+          // If call was declined, notify initiator
+          if (payload.new.status === 'declined') {
+            console.log('📱 [useCallNotifications] Call was declined');
+          }
+        }
+      )
       .subscribe();
 
+    console.log('📱 [useCallNotifications] Subscribed to communication sessions');
+
     return () => {
+      console.log('📱 [useCallNotifications] Unsubscribing from communication sessions');
       supabase.removeChannel(channel);
     };
   }, [user]);

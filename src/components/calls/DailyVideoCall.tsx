@@ -16,44 +16,91 @@ export const DailyVideoCall: React.FC<DailyVideoCallProps> = ({
   onEnd,
 }) => {
   const callRef = useRef<DailyCall | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [isAudioMuted, setIsAudioMuted] = useState(false);
   const [isVideoMuted, setIsVideoMuted] = useState(false);
   const [showControls, setShowControls] = useState(true);
-  const [callState, setCallState] = useState<'joining' | 'joined' | 'error'>('joining');
+  const [callState, setCallState] = useState<'initializing' | 'loading' | 'joining' | 'joined' | 'error'>('initializing');
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
     const initCall = async () => {
       try {
-        console.log('Initializing Daily.co video call:', roomUrl);
+        console.log('🎥 [DailyVideoCall] Props received:', { roomUrl, sessionId });
+        console.log('🎥 [DailyVideoCall] Initializing video call...');
         
-        const call = DailyIframe.createCallObject({
-          audioSource: true,
-          videoSource: true,
+        if (!containerRef.current) {
+          console.error('🔴 [DailyVideoCall] Container ref not ready');
+          setCallState('error');
+          return;
+        }
+
+        setCallState('loading');
+        
+        const call = DailyIframe.createFrame(containerRef.current, {
+          showLeaveButton: false,
+          showFullscreenButton: true,
+          iframeStyle: {
+            position: 'absolute',
+            width: '100%',
+            height: '100%',
+            border: 'none',
+          },
         });
 
         callRef.current = call;
+        console.log('🎥 [DailyVideoCall] Daily frame created');
 
-        // Set up event listeners
+        // Set up comprehensive event listeners
+        call.on('loading', () => {
+          console.log('🔵 [DailyVideoCall] Loading...');
+          setCallState('loading');
+        });
+
+        call.on('loaded', () => {
+          console.log('🔵 [DailyVideoCall] Loaded');
+        });
+
+        call.on('joining-meeting', () => {
+          console.log('🔵 [DailyVideoCall] Joining meeting...');
+          setCallState('joining');
+        });
+
         call.on('joined-meeting', () => {
-          console.log('Joined meeting successfully');
+          console.log('✅ [DailyVideoCall] Joined meeting successfully!');
+          console.log('👥 [DailyVideoCall] Current participants:', Object.keys(call.participants()).length);
           setCallState('joined');
         });
 
+        call.on('participant-joined', (event) => {
+          console.log('👤 [DailyVideoCall] Participant joined:', event.participant.user_name || 'Anonymous');
+          console.log('👥 [DailyVideoCall] Total participants:', Object.keys(call.participants()).length);
+        });
+
+        call.on('participant-left', (event) => {
+          console.log('👋 [DailyVideoCall] Participant left:', event.participant.user_name || 'Anonymous');
+          console.log('👥 [DailyVideoCall] Remaining participants:', Object.keys(call.participants()).length);
+        });
+
         call.on('error', (error) => {
-          console.error('Daily.co error:', error);
+          console.error('🔴 [DailyVideoCall] Daily.co error:', error);
           setCallState('error');
         });
 
         call.on('left-meeting', () => {
-          console.log('Left meeting');
+          console.log('👋 [DailyVideoCall] Left meeting');
           onEnd();
         });
 
         // Join the room
-        await call.join({ url: roomUrl });
+        console.log('🎥 [DailyVideoCall] Attempting to join room:', roomUrl);
+        setCallState('joining');
+        
+        const joinResult = await call.join({ url: roomUrl });
+        console.log('🎥 [DailyVideoCall] Join result:', joinResult);
+        
       } catch (error) {
-        console.error('Error initializing call:', error);
+        console.error('🔴 [DailyVideoCall] Error initializing call:', error);
         setCallState('error');
       }
     };
@@ -62,10 +109,11 @@ export const DailyVideoCall: React.FC<DailyVideoCallProps> = ({
 
     return () => {
       if (callRef.current) {
+        console.log('🧹 [DailyVideoCall] Cleaning up call');
         callRef.current.destroy();
       }
     };
-  }, [roomUrl, onEnd]);
+  }, [roomUrl, sessionId, onEnd]);
 
   useEffect(() => {
     // Auto-hide controls after 3 seconds
@@ -119,22 +167,32 @@ export const DailyVideoCall: React.FC<DailyVideoCallProps> = ({
       onMouseMove={handleMouseMove}
     >
       {/* Daily.co iframe container */}
-      <div id="daily-call-container" className="absolute inset-0">
-        {callState === 'joining' && (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-white text-xl">Connecting...</div>
+      <div ref={containerRef} className="absolute inset-0" />
+
+      {/* Connection status overlay */}
+      {callState !== 'joined' && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
+          <div className="text-center space-y-4">
+            {callState === 'initializing' && (
+              <div className="text-white text-xl">Initializing call...</div>
+            )}
+            {callState === 'loading' && (
+              <div className="text-white text-xl">Loading video interface...</div>
+            )}
+            {callState === 'joining' && (
+              <div className="text-white text-xl">Connecting to call room...</div>
+            )}
+            {callState === 'error' && (
+              <>
+                <div className="text-red-400 text-xl">Connection Failed</div>
+                <Button onClick={onEnd} variant="secondary">
+                  Close
+                </Button>
+              </>
+            )}
           </div>
-        )}
-        
-        {callState === 'error' && (
-          <div className="flex flex-col items-center justify-center h-full gap-4">
-            <div className="text-white text-xl">Connection Error</div>
-            <Button onClick={onEnd} variant="secondary">
-              Close
-            </Button>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Controls overlay */}
       <AnimatePresence>
