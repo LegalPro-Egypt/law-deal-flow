@@ -23,6 +23,7 @@ interface AdminContractReviewDialogProps {
   };
   lawyerName?: string;
   onUpdate?: () => void;
+  viewMode?: boolean;
 }
 
 export function AdminContractReviewDialog({
@@ -31,7 +32,8 @@ export function AdminContractReviewDialog({
   contract,
   caseInfo,
   lawyerName,
-  onUpdate
+  onUpdate,
+  viewMode = false
 }: AdminContractReviewDialogProps) {
   const { toast } = useToast();
   const { user } = useAuth();
@@ -209,6 +211,8 @@ export function AdminContractReviewDialog({
               onChange={(e) => setAdminNotes(e.target.value)}
               placeholder="Add notes about the review or required changes..."
               rows={3}
+              disabled={viewMode}
+              readOnly={viewMode}
             />
           </div>
 
@@ -224,43 +228,49 @@ export function AdminContractReviewDialog({
                 <History className="w-4 h-4 mr-2" />
                 View History
               </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleDelete}
-                disabled={isProcessing}
-                className="w-full sm:w-auto"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete
-              </Button>
+              {!viewMode && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleDelete}
+                  disabled={isProcessing}
+                  className="w-full sm:w-auto"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete
+                </Button>
+              )}
             </div>
             
             <div className="flex flex-col sm:flex-row gap-2">
               <Button variant="outline" onClick={onClose} disabled={isProcessing} className="w-full sm:w-auto">
                 Close
               </Button>
-              <Button
-                variant="outline"
-                onClick={handleRequestChanges}
-                disabled={isProcessing || !adminNotes.trim()}
-                className="w-full sm:w-auto"
-              >
-                {isProcessing ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <XCircle className="w-4 h-4 mr-2" />
-                )}
-                Request Changes
-              </Button>
-              <Button onClick={handleApprove} disabled={isProcessing} className="w-full sm:w-auto">
-                {isProcessing ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                )}
-                Approve & Send to Client
-              </Button>
+              {!viewMode && (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={handleRequestChanges}
+                    disabled={isProcessing || !adminNotes.trim()}
+                    className="w-full sm:w-auto"
+                  >
+                    {isProcessing ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <XCircle className="w-4 h-4 mr-2" />
+                    )}
+                    Request Changes
+                  </Button>
+                  <Button onClick={handleApprove} disabled={isProcessing} className="w-full sm:w-auto">
+                    {isProcessing ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                    )}
+                    Approve & Send to Client
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>

@@ -115,6 +115,8 @@ export function AdminSidebar() {
         return stats.pendingProposals;
       case 'contracts-review':
         return stats.pendingContracts || 0;
+      case 'all-contracts':
+        return stats.totalContracts || 0;
       default:
         return 0;
     }
@@ -364,6 +366,23 @@ export function AdminSidebar() {
                             {getBadgeCount('contracts-review') > 0 && (
                               <Badge variant="destructive" className="ml-auto">
                                 {getBadgeCount('contracts-review')}
+                              </Badge>
+                            )}
+                          </>
+                        )}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild data-active={isActive("/admin/contracts")}>
+                      <Link to="/admin/contracts" onClick={handleNavClick}>
+                        <FolderOpen className="h-4 w-4" />
+                        {showLabels && (
+                          <>
+                            <span>All Contracts</span>
+                            {getBadgeCount('all-contracts') > 0 && (
+                              <Badge variant="secondary" className="ml-auto">
+                                {getBadgeCount('all-contracts')}
                               </Badge>
                             )}
                           </>
