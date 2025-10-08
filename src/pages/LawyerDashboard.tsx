@@ -310,7 +310,7 @@ const LawyerDashboard = ({ viewAsUserId }: LawyerDashboardProps = {}) => {
   }
 
   return (
-    <div className={`min-h-screen bg-background rtl-safe-container ${isRTL() ? 'rtl' : 'ltr'}`}>
+    <div className={`min-h-screen bg-background rtl-safe-container overflow-x-hidden ${isRTL() ? 'rtl' : 'ltr'}`}>
       <CallManager />
       
       {/* Admin View Banner */}
