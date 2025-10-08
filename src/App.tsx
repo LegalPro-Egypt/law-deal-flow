@@ -29,6 +29,7 @@ import AdminWaitingListPage from "@/pages/admin/AdminWaitingListPage";
 import AdminAnonymousPage from "@/pages/admin/AdminAnonymousPage";
 import AdminCasesReviewPage from "@/pages/admin/AdminCasesReviewPage";
 import AdminProposalsReviewPage from "@/pages/admin/AdminProposalsReviewPage";
+import AdminContractsReviewPage from "@/pages/admin/AdminContractsReviewPage";
 import PaymentsReportPage from "@/pages/admin/reports/PaymentsReportPage";
 import RevenueReportPage from "@/pages/admin/reports/RevenueReportPage";
 import CaseStatusReportPage from "@/pages/admin/reports/CaseStatusReportPage";
@@ -144,6 +145,7 @@ function AppContent() {
           <Route path="anonymous" element={<AdminAnonymousPage />} />
           <Route path="cases/review" element={<AdminCasesReviewPage />} />
           <Route path="proposals/review" element={<AdminProposalsReviewPage />} />
+          <Route path="contracts/review" element={<AdminContractsReviewPage />} />
           <Route path="reports/payments" element={<PaymentsReportPage />} />
           <Route path="reports/revenue" element={<RevenueReportPage />} />
           <Route path="reports/case-status" element={<CaseStatusReportPage />} />

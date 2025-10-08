@@ -11,6 +11,7 @@ interface AdminStats {
   pendingReviews: number;
   pendingVerifications: number;
   pendingProposals: number;
+  pendingContracts: number;
 }
 
 interface IntakeConversation {
@@ -53,7 +54,8 @@ export const useAdminData = () => {
     totalClients: 0,
     pendingReviews: 0,
     pendingVerifications: 0,
-    pendingProposals: 0
+    pendingProposals: 0,
+    pendingContracts: 0
   });
   const [pendingIntakes, setPendingIntakes] = useState<IntakeConversation[]>([]);
   const [cases, setCases] = useState<CaseItem[]>([]);
@@ -115,6 +117,12 @@ export const useAdminData = () => {
         .select('*', { count: 'exact', head: true })
         .eq('status', 'pending_admin_review');
 
+      // Get pending contracts (contracts with draft or pending_admin_review status)
+      const { count: pendingContracts } = await supabase
+        .from('contracts')
+        .select('*', { count: 'exact', head: true })
+        .in('status', ['draft', 'pending_admin_review']);
+
       setStats({
         totalCases: totalCases || 0,
         activeCases: activeCases || 0,
@@ -123,7 +131,8 @@ export const useAdminData = () => {
         totalClients: totalClients || 0,
         pendingReviews: pendingReviews || 0,
         pendingVerifications: pendingVerifications || 0,
-        pendingProposals: pendingProposals || 0
+        pendingProposals: pendingProposals || 0,
+        pendingContracts: pendingContracts || 0
       });
     } catch (error: any) {
       console.error('Error fetching admin stats:', error);
