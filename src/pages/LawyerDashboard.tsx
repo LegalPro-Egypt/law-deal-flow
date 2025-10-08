@@ -55,6 +55,7 @@ import { LanguageToggle } from "@/components/LanguageToggle";
 import { VerificationStatusBadge } from "@/components/VerificationStatusBadge";
 import { ContractCreationDialog } from "@/components/ContractCreationDialog";
 import { useContracts } from "@/hooks/useContracts";
+import { LawyerContractsNeedingChanges } from "@/components/LawyerContractsNeedingChanges";
 
 
 interface LawyerStats {
@@ -574,6 +575,11 @@ const LawyerDashboard = () => {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Contracts Needing Changes */}
+        <div className="mt-8">
+          <LawyerContractsNeedingChanges />
         </div>
 
         {/* Communication Section */}
