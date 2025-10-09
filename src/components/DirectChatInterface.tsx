@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { MessageCircle, Send, X, User, Users, Paperclip, Download, FileText, Image as ImageIcon, File } from 'lucide-react';
+import { MessageCircle, Send, X, Paperclip, FileText, Image as ImageIcon, File } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
@@ -50,7 +48,6 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [userRole, setUserRole] = useState<'client' | 'lawyer'>('client');
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -259,10 +256,6 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
     });
   };
 
-  const getMessageIcon = (role: string) => {
-    return role === 'lawyer' ? <Users className="w-4 h-4" /> : <User className="w-4 h-4" />;
-  };
-
   const getFileIcon = (fileType: string) => {
     if (fileType.startsWith('image/')) {
       return <ImageIcon className="w-4 h-4" />;
@@ -301,26 +294,39 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
   };
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
-      {/* DEBUG: DirectChatInterface live */}
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="flex items-center gap-2">
-          <MessageCircle className="w-5 h-5" />
-          Chat - {caseTitle}
-        </CardTitle>
-        {onClose && (
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            <X className="w-4 h-4" />
-          </Button>
-        )}
-      </CardHeader>
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
+        onClick={onClose}
+      />
       
-      <CardContent className="space-y-4">
+      <motion.div
+        initial={{ y: '100%' }}
+        animate={{ y: 0 }}
+        exit={{ y: '100%' }}
+        transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+        className="fixed inset-0 z-50 bg-background flex flex-col"
+        style={{ willChange: 'transform' }}
+      >
+        {/* Header */}
+        <div className="h-16 bg-background/95 backdrop-blur-md border-b flex items-center justify-between px-4 shadow-sm flex-shrink-0">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <MessageCircle className="w-5 h-5 text-primary flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <h2 className="font-semibold text-base truncate">{caseTitle}</h2>
+              <p className="text-xs text-muted-foreground">Direct Chat</p>
+            </div>
+          </div>
+          <Button variant="ghost" size="sm" onClick={onClose} className="h-10 w-10 p-0">
+            <X className="w-5 h-5" />
+          </Button>
+        </div>
+
         {/* Messages Area */}
-        <ScrollArea 
-          ref={scrollAreaRef}
-          className="h-96 w-full rounded-md border p-3"
-        >
+        <div className="flex-1 overflow-y-auto px-4 py-4">
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-sm text-muted-foreground">Loading messages...</div>
@@ -328,12 +334,12 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
           ) : messages.length === 0 ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center text-muted-foreground">
-                <MessageCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                <MessageCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
                 <p className="text-sm">No messages yet. Start the conversation!</p>
               </div>
             </div>
           ) : (
-            <div className="space-y-1">
+            <div className="space-y-2 max-w-4xl mx-auto">
               {messages.map((message, index) => {
                 const isOwnMessage = 
                   (userRole === 'client' && message.role === 'user') ||
@@ -349,20 +355,18 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
                   >
                     <div
                       className={`
-                        relative inline-block max-w-[75%] px-3 py-1.5 shadow-sm
+                        relative inline-block max-w-[85%] md:max-w-[70%] px-3 py-2 shadow-sm
                         ${isOwnMessage
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-gray-100 text-gray-900'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted text-foreground'
                         }
-                        rounded-[18px]
+                        rounded-2xl transition-shadow hover:shadow-md
                       `}
                     >
-                      <div className="pr-12">
+                      <div className="pr-14">
                         {renderMessageContent(message)}
                       </div>
-                      <div className={`absolute bottom-1 right-2 text-[11px] opacity-70 ${
-                        isOwnMessage ? 'text-white' : 'text-gray-600'
-                      }`}>
+                      <div className={`absolute bottom-1.5 right-2.5 text-[11px] opacity-70`}>
                         {formatTime(message.created_at)}
                       </div>
                     </div>
@@ -372,62 +376,63 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
               <div ref={messagesEndRef} />
             </div>
           )}
-        </ScrollArea>
+        </div>
 
-        {/* Message Input */}
-        <div className="space-y-2">
-          {isUploading && (
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Uploading file...</span>
-                <span>{uploadProgress}%</span>
+        {/* Input Area */}
+        <div className="bg-background/95 backdrop-blur-md border-t p-4 flex-shrink-0">
+          <div className="max-w-4xl mx-auto space-y-2">
+            {isUploading && (
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Uploading file...</span>
+                  <span>{uploadProgress}%</span>
+                </div>
+                <Progress value={uploadProgress} className="w-full" />
               </div>
-              <Progress value={uploadProgress} className="w-full" />
+            )}
+            
+            <div className="flex items-end gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,application/pdf,.doc,.docx,.xlsx,.ppt,.pptx"
+                className="hidden"
+                onChange={(e) => { e.stopPropagation(); handleFileSelect(e); }}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
+                disabled={isUploading || sending}
+                className="h-11 w-11 flex-shrink-0"
+              >
+                <Paperclip className="w-5 h-5" />
+              </Button>
+              <Input
+                placeholder="Type your message..."
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyDown={handleKeyPress}
+                disabled={sending || isUploading}
+                className="flex-1 h-11"
+              />
+              <Button
+                onClick={sendMessage}
+                disabled={!newMessage.trim() || sending || isUploading}
+                size="icon"
+                className="h-11 w-11 flex-shrink-0"
+              >
+                <Send className="w-5 h-5" />
+              </Button>
             </div>
-          )}
-          
-          <div className="flex gap-2">
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*,application/pdf,.doc,.docx,.xlsx,.ppt,.pptx"
-          className="hidden"
-          onChange={(e) => { e.stopPropagation(); handleFileSelect(e); }}
-        />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
-              disabled={isUploading || sending}
-              className="px-3"
-            >
-              <Paperclip className="w-4 h-4" />
-            </Button>
-            <Input
-              placeholder="Type your message..."
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyDown={handleKeyPress}
-              disabled={sending || isUploading}
-              className="flex-1"
-            />
-            <Button
-              onClick={sendMessage}
-              disabled={!newMessage.trim() || sending || isUploading}
-              size="sm"
-              className="px-3"
-            >
-              <Send className="w-4 h-4" />
-            </Button>
+            
+            <div className="text-xs text-muted-foreground text-center">
+              {sending ? 'Sending...' : isUploading ? 'Uploading file...' : 'Press Enter to send, Shift+Enter for new line'}
+            </div>
           </div>
         </div>
-
-        {/* Status */}
-        <div className="text-xs text-muted-foreground text-center">
-          {sending ? 'Sending...' : isUploading ? 'Uploading file...' : 'Press Enter to send, Shift+Enter for new line'}
-        </div>
-      </CardContent>
-    </Card>
+      </motion.div>
+    </AnimatePresence>
   );
 };

@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { MessageCircle, Send, X, User, UserCheck, Gavel, Paperclip, Download, FileText, Image as ImageIcon, File } from 'lucide-react';
+import { MessageCircle, Send, X, Paperclip, FileText, Image as ImageIcon, File } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useLawyerChatNotifications } from '@/hooks/useLawyerChatNotifications';
@@ -190,32 +188,6 @@ export const LawyerDirectChatInterface: React.FC<LawyerDirectChatInterfaceProps>
     });
   };
 
-  const getMessageIcon = (role: string) => {
-    switch (role) {
-      case 'user':
-        return <User className="w-4 h-4" />;
-      case 'lawyer':
-        return <Gavel className="w-4 h-4" />;
-      case 'assistant':
-        return <MessageCircle className="w-4 h-4" />;
-      default:
-        return <MessageCircle className="w-4 h-4" />;
-    }
-  };
-
-  const getRoleLabel = (role: string) => {
-    switch (role) {
-      case 'user':
-        return clientName || 'Client';
-      case 'lawyer':
-        return 'You';
-      case 'assistant':
-        return 'AI Assistant';
-      default:
-        return role;
-    }
-  };
-
   const getFileIcon = (fileType: string) => {
     if (fileType.startsWith('image/')) {
       return <ImageIcon className="w-4 h-4" />;
@@ -254,38 +226,53 @@ export const LawyerDirectChatInterface: React.FC<LawyerDirectChatInterfaceProps>
   };
 
   return (
-    <Card className="h-96 flex flex-col">
-      {/* DEBUG: LawyerDirectChatInterface live */}
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <MessageCircle className="w-5 h-5" />
-            Chat with {clientName} - {caseTitle}
-          </CardTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="h-8 w-8 p-0"
-          >
-            <X className="w-4 h-4" />
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
+        onClick={onClose}
+      />
+      
+      <motion.div
+        initial={{ y: '100%' }}
+        animate={{ y: 0 }}
+        exit={{ y: '100%' }}
+        transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+        className="fixed inset-0 z-50 bg-background flex flex-col"
+        style={{ willChange: 'transform' }}
+      >
+        {/* Header */}
+        <div className="h-16 bg-background/95 backdrop-blur-md border-b flex items-center justify-between px-4 shadow-sm flex-shrink-0">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <MessageCircle className="w-5 h-5 text-primary flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <h2 className="font-semibold text-base truncate">Chat with {clientName}</h2>
+              <p className="text-xs text-muted-foreground truncate">{caseTitle}</p>
+            </div>
+          </div>
+          <Button variant="ghost" size="sm" onClick={onClose} className="h-10 w-10 p-0">
+            <X className="w-5 h-5" />
           </Button>
         </div>
-      </CardHeader>
-      
-      <CardContent className="flex-1 flex flex-col p-3 pt-0">
-        <ScrollArea className="flex-1 mb-3">
-          <div className="space-y-1 px-2">
-            {loading ? (
-              <div className="text-center text-muted-foreground py-4">
-                Loading messages...
+
+        {/* Messages Area */}
+        <div className="flex-1 overflow-y-auto px-4 py-4">
+          {loading ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-sm text-muted-foreground">Loading messages...</div>
+            </div>
+          ) : messages.length === 0 ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center text-muted-foreground">
+                <MessageCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p className="text-sm">No messages yet. Start the conversation with your client!</p>
               </div>
-            ) : messages.length === 0 ? (
-              <div className="text-center text-muted-foreground py-4">
-                No messages yet. Start the conversation with your client!
-              </div>
-            ) : (
-              messages.map((message, index) => {
+            </div>
+          ) : (
+            <div className="space-y-2 max-w-4xl mx-auto">
+              {messages.map((message, index) => {
                 const prevMessage = messages[index - 1];
                 const isFirstInGroup = !prevMessage || prevMessage.role !== message.role;
                 
@@ -298,79 +285,81 @@ export const LawyerDirectChatInterface: React.FC<LawyerDirectChatInterfaceProps>
                   >
                     <div
                       className={`
-                        relative inline-block max-w-[75%] px-3 py-1.5 shadow-sm overflow-hidden
+                        relative inline-block max-w-[85%] md:max-w-[70%] px-3 py-2 shadow-sm
                         ${message.role === 'lawyer'
-                          ? 'bg-gray-100 text-gray-900'
-                          : 'bg-blue-500 text-white'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted text-foreground'
                         }
-                        rounded-[18px]
+                        rounded-2xl transition-shadow hover:shadow-md
                       `}
                     >
-                      <div className="pr-12">
+                      <div className="pr-14">
                         {renderMessageContent(message)}
                       </div>
-                      <div className={`absolute bottom-1 right-2 text-[11px] opacity-70 ${
-                        message.role === 'lawyer' ? 'text-gray-600' : 'text-white'
-                      }`}>
+                      <div className={`absolute bottom-1.5 right-2.5 text-[11px] opacity-70`}>
                         {formatMessageTime(message.created_at)}
                       </div>
                     </div>
                   </div>
                 );
-              })
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-        </ScrollArea>
-
-        <div className="space-y-2">
-          {isUploading && (
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Uploading file...</span>
-                <span>{uploadProgress}%</span>
-              </div>
-              <Progress value={uploadProgress} className="w-full" />
+              })}
+              <div ref={messagesEndRef} />
             </div>
           )}
-          
-          <div className="flex gap-2">
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*,application/pdf,.doc,.docx,.xlsx,.ppt,.pptx"
-          className="hidden"
-          onChange={(e) => { e.stopPropagation(); handleFileSelect(e); }}
-        />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
-              disabled={isUploading || sending}
-              className="px-3"
-            >
-              <Paperclip className="w-4 h-4" />
-            </Button>
-            <Input
-              ref={inputRef}
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Type your message to the client..."
-              disabled={sending || isUploading}
-              className="flex-1"
-            />
-            <Button
-              onClick={handleSendMessage}
-              disabled={!newMessage.trim() || sending || isUploading}
-              size="sm"
-            >
-              <Send className="w-4 h-4" />
-            </Button>
+        </div>
+
+        {/* Input Area */}
+        <div className="bg-background/95 backdrop-blur-md border-t p-4 flex-shrink-0">
+          <div className="max-w-4xl mx-auto space-y-2">
+            {isUploading && (
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Uploading file...</span>
+                  <span>{uploadProgress}%</span>
+                </div>
+                <Progress value={uploadProgress} className="w-full" />
+              </div>
+            )}
+            
+            <div className="flex items-end gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,application/pdf,.doc,.docx,.xlsx,.ppt,.pptx"
+                className="hidden"
+                onChange={(e) => { e.stopPropagation(); handleFileSelect(e); }}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
+                disabled={isUploading || sending}
+                className="h-11 w-11 flex-shrink-0"
+              >
+                <Paperclip className="w-5 h-5" />
+              </Button>
+              <Input
+                ref={inputRef}
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Type your message to the client..."
+                disabled={sending || isUploading}
+                className="flex-1 h-11"
+              />
+              <Button
+                onClick={handleSendMessage}
+                disabled={!newMessage.trim() || sending || isUploading}
+                size="icon"
+                className="h-11 w-11 flex-shrink-0"
+              >
+                <Send className="w-5 h-5" />
+              </Button>
+            </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </motion.div>
+    </AnimatePresence>
   );
 };

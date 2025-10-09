@@ -149,15 +149,11 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
   // Show direct chat interface if open
   if (showDirectChat) {
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-        <div className="w-full max-w-2xl">
-          <DirectChatInterface
-            caseId={caseId}
-            caseTitle={caseTitle}
-            onClose={() => setShowDirectChat(false)}
-          />
-        </div>
-      </div>
+      <DirectChatInterface
+        caseId={caseId}
+        caseTitle={caseTitle}
+        onClose={() => setShowDirectChat(false)}
+      />
     );
   }
 
