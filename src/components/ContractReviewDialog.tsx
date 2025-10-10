@@ -208,9 +208,9 @@ export function ContractReviewDialog({
           </div>
 
       {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-3 sm:py-4 flex flex-col gap-4">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-3 sm:py-4">
             {contract.dhl_tracking_number && (
-              <div className="bg-muted p-3 rounded-lg">
+              <div className="bg-muted p-3 rounded-lg mb-4">
                 <p className="text-sm font-medium mb-1">Shipment Tracking</p>
                 <p className="text-sm text-muted-foreground">
                   DHL Tracking: {contract.dhl_tracking_number}
@@ -223,17 +223,15 @@ export function ContractReviewDialog({
               </div>
             )}
 
-            <div className="bg-background border rounded-lg p-4 flex-1 overflow-y-auto min-h-0">
-              <pre
-                className={`whitespace-pre-wrap ${currentLanguage === 'ar' ? 'text-right' : ''}`}
-                dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
-              >
-                {displayContent}
-              </pre>
-            </div>
+            <pre
+              className={`whitespace-pre-wrap mb-4 ${currentLanguage === 'ar' ? 'text-right' : ''}`}
+              dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
+            >
+              {displayContent}
+            </pre>
 
             {(contract.status === 'viewed' || contract.status === 'sent') && (
-              <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 p-3 rounded-lg">
+              <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 p-3 rounded-lg mb-4">
                 <div className="flex gap-2">
                   <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
                   <div className="text-sm">
@@ -247,7 +245,7 @@ export function ContractReviewDialog({
             )}
 
             {(contract.status === 'client_accepted' || contract.status === 'downloaded') && (
-              <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 p-3 rounded-lg">
+              <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 p-3 rounded-lg mb-4">
                 <div className="flex gap-2">
                   <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
                   <div className="text-sm">
