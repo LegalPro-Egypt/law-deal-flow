@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { formatCaseStatus } from "@/utils/caseUtils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { CallManager } from "@/components/calls/CallManager";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -775,12 +776,13 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
           </Collapsible>
         )}
 
-        {/* Proposals Card */}
+        {/* Proposals & Contracts Card */}
         <Card className="bg-gradient-card shadow-card border-2 border-accent/20 hover:border-accent/40 transition-colors" id="inbox-section">
           <CardHeader>
             <CardTitle className="flex items-center">
               <Mail className="h-5 w-5 mr-2" />
-              Proposals
+              <FileText className="h-5 w-5 mr-2" />
+              Proposals & Contracts
               {unreadCount > 0 && (
                 <Badge variant="destructive" className="ml-2">
                   {unreadCount}
@@ -788,11 +790,71 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
               )}
             </CardTitle>
             <CardDescription>
-              View proposals, messages, and updates from your legal team
+              View proposals, contracts, and updates from your legal team
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <NotificationsInbox activeCaseId={activeCase?.id} />
+          <CardContent className="space-y-6">
+            {/* Proposals Section */}
+            <div>
+              <h3 className="text-sm font-semibold mb-3 flex items-center">
+                <Mail className="h-4 w-4 mr-2" />
+                Proposals
+              </h3>
+              <NotificationsInbox activeCaseId={activeCase?.id} />
+            </div>
+
+            {/* Separator - only show if contracts exist */}
+            {contracts && contracts.length > 0 && (
+              <Separator className="my-4" />
+            )}
+
+            {/* Contracts Section */}
+            {contracts && contracts.length > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold mb-3 flex items-center">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Contracts
+                </h3>
+                <div className="space-y-3">
+                  {contracts.map((contract) => (
+                    <div
+                      key={contract.id}
+                      className="p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                      onClick={() => {
+                        setSelectedContract(contract);
+                        setShowContractReview(true);
+                      }}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium">Contract #{contract.id.slice(0, 8)}</span>
+                        </div>
+                        <Badge className={
+                          contract.status === 'sent' ? 'bg-blue-500' :
+                          contract.status === 'viewed' ? 'bg-purple-500' :
+                          contract.status === 'downloaded' ? 'bg-green-500' :
+                          contract.status === 'sent_for_signature' ? 'bg-orange-500' :
+                          contract.status === 'physically_signed' ? 'bg-emerald-500' :
+                          contract.status === 'active' ? 'bg-green-600' :
+                          'bg-gray-500'
+                        }>
+                          {contract.status.replace(/_/g, ' ').toUpperCase()}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Created: {new Date(contract.created_at).toLocaleDateString()}
+                      </p>
+                      {contract.dhl_tracking_number && (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          DHL Tracking: {contract.dhl_tracking_number}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -863,61 +925,6 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
             </CollapsibleContent>
           </Card>
         </Collapsible>
-
-        {/* Contracts Card */}
-        {contracts && contracts.length > 0 && (
-          <Card className="bg-gradient-card shadow-card border-2 border-primary/20 hover:border-primary/40 transition-colors">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <FileText className="h-5 w-5 mr-2" />
-                Contracts
-              </CardTitle>
-              <CardDescription>
-                View and manage your legal contracts
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {contracts.map((contract) => (
-                  <div
-                    key={contract.id}
-                    className="p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
-                    onClick={() => {
-                      setSelectedContract(contract);
-                      setShowContractReview(true);
-                    }}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">Contract #{contract.id.slice(0, 8)}</span>
-                      </div>
-                      <Badge className={
-                        contract.status === 'sent' ? 'bg-blue-500' :
-                        contract.status === 'viewed' ? 'bg-purple-500' :
-                        contract.status === 'downloaded' ? 'bg-green-500' :
-                        contract.status === 'sent_for_signature' ? 'bg-orange-500' :
-                        contract.status === 'physically_signed' ? 'bg-emerald-500' :
-                        contract.status === 'active' ? 'bg-green-600' :
-                        'bg-gray-500'
-                      }>
-                        {contract.status.replace(/_/g, ' ').toUpperCase()}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Created: {new Date(contract.created_at).toLocaleDateString()}
-                    </p>
-                    {contract.dhl_tracking_number && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        DHL Tracking: {contract.dhl_tracking_number}
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Calendar Card */}
         <Collapsible open={!collapsedCards.calendar} onOpenChange={() => toggleCard('calendar')}>
