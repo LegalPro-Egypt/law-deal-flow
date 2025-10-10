@@ -188,8 +188,10 @@ export const useContracts = (caseId?: string, userId?: string) => {
       const { data, error } = await supabase
         .from('contracts')
         .update({
-          status: 'client_accepted',
-          client_accepted_at: new Date().toISOString()
+          status: 'downloaded',
+          client_accepted_at: new Date().toISOString(),
+          pdf_downloaded: true,
+          downloaded_at: new Date().toISOString()
         })
         .eq('id', contractId)
         .select()
@@ -202,7 +204,7 @@ export const useContracts = (caseId?: string, userId?: string) => {
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
       toast({
         title: 'Contract Accepted',
-        description: 'You have successfully accepted the contract. You can now download the PDF.'
+        description: 'You have successfully accepted the contract and it has been downloaded.'
       });
     },
     onError: (error: Error) => {

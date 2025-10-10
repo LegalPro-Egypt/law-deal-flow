@@ -11,6 +11,7 @@ import { DhlShipmentDialog } from "./DhlShipmentDialog";
 import { downloadContractPdf } from "@/utils/contractPdfGenerator";
 import { Badge } from "@/components/ui/badge";
 import { ContractVersionHistory } from "@/components/ContractVersionHistory";
+import { ContractNextStepsDialog } from "@/components/ContractNextStepsDialog";
 import { cn } from "@/lib/utils";
 
 interface ContractReviewDialogProps {
@@ -39,6 +40,7 @@ export function ContractReviewDialog({
   const [isRequestingChanges, setIsRequestingChanges] = useState(false);
   const [showDhlDialog, setShowDhlDialog] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [showNextSteps, setShowNextSteps] = useState(false);
 
   const displayContent = currentLanguage === 'en' ? contract.content_en : contract.content_ar;
 
@@ -135,6 +137,15 @@ export function ContractReviewDialog({
   const handleAcceptContract = async () => {
     try {
       await acceptContract.mutateAsync(contract.id);
+      
+      // Automatically trigger PDF download after acceptance
+      await handleDownloadPdf();
+      
+      // Close the contract review dialog
+      onClose();
+      
+      // Show the next steps dialog
+      setShowNextSteps(true);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -314,7 +325,8 @@ export function ContractReviewDialog({
                       onClick={handleAcceptContract}
                       className="w-full sm:w-auto"
                     >
-                      Accept Contract
+                      <Download className="w-4 h-4 mr-2" />
+                      {currentLanguage === 'ar' ? 'قبول وتنزيل' : 'Accept & Download'}
                     </Button>
                   </>
                 )}
@@ -345,6 +357,12 @@ export function ContractReviewDialog({
         isOpen={showDhlDialog}
         onClose={() => setShowDhlDialog(false)}
         contractId={contract.id}
+      />
+
+      <ContractNextStepsDialog 
+        isOpen={showNextSteps}
+        onClose={() => setShowNextSteps(false)}
+        currentLanguage={currentLanguage}
       />
     </>
   );
