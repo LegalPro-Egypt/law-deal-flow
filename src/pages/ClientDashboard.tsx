@@ -35,9 +35,12 @@ import {
   X,
   LayoutGrid,
   LayoutList,
-  Eye
+  Eye,
+  PenTool,
+  CreditCard
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import jsPDF from 'jspdf';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -64,6 +67,8 @@ import { DocumentThumbnail } from "@/components/DocumentThumbnail";
 import { DocumentPreview } from "@/components/DocumentPreview";
 import { ContractReviewDialog } from "@/components/ContractReviewDialog";
 import { useContracts } from "@/hooks/useContracts";
+import { useLanguage } from "@/hooks/useLanguage";
+import { ProposalReviewDialog } from "@/components/ProposalReviewDialog";
 
 interface ClientDashboardProps {
   viewAsUserId?: string;
@@ -112,11 +117,14 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
     refreshData
   } = clientData;
   
-  const { unreadCount } = useNotifications();
+  const { unreadCount, proposals, proposalsWithCases, needsPayment } = useNotifications();
   const { totalUnreadCount } = useChatNotifications();
   const { contracts, isLoading: contractsLoading } = useContracts(activeCase?.id, effectiveUserId);
   const [selectedContract, setSelectedContract] = useState<any>(null);
   const [showContractReview, setShowContractReview] = useState(false);
+  const [selectedProposal, setSelectedProposal] = useState<any>(null);
+  const [showProposalReview, setShowProposalReview] = useState(false);
+  const { currentLanguage } = useLanguage();
 
 
   const handleSendMessage = async () => {
@@ -779,82 +787,217 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
         {/* Proposals & Contracts Card */}
         <Card className="bg-gradient-card shadow-card border-2 border-accent/20 hover:border-accent/40 transition-colors" id="inbox-section">
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <Mail className="h-5 w-5 mr-2" />
-              <FileText className="h-5 w-5 mr-2" />
-              Proposals & Contracts
+            <CardTitle className="flex items-center justify-between">
+              <span>Proposals & Contracts</span>
               {unreadCount > 0 && (
-                <Badge variant="destructive" className="ml-2">
-                  {unreadCount}
-                </Badge>
+                <Badge variant="destructive">{unreadCount}</Badge>
               )}
             </CardTitle>
             <CardDescription>
               View proposals, contracts, and updates from your legal team
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Proposals Section */}
-            <div>
-              <h3 className="text-sm font-semibold mb-3 flex items-center">
-                <Mail className="h-4 w-4 mr-2" />
-                Proposals
-              </h3>
-              <NotificationsInbox activeCaseId={activeCase?.id} />
-            </div>
-
-            {/* Separator - only show if contracts exist */}
-            {contracts && contracts.length > 0 && (
-              <Separator className="my-4" />
-            )}
-
-            {/* Contracts Section */}
-            {contracts && contracts.length > 0 && (
-              <div>
-                <h3 className="text-sm font-semibold mb-3 flex items-center">
-                  <FileText className="h-4 w-4 mr-2" />
+          <CardContent>
+            <Tabs defaultValue="proposals" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="proposals" className="flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Proposals
+                  {proposals && proposals.length > 0 && (
+                    <Badge variant="secondary" className="ml-1">{proposals.length}</Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="contracts" className="flex items-center gap-2">
+                  <PenTool className="h-4 w-4" />
                   Contracts
-                </h3>
-                <div className="space-y-3">
-                  {contracts.map((contract) => (
-                    <div
-                      key={contract.id}
-                      className="p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
-                      onClick={() => {
-                        setSelectedContract(contract);
-                        setShowContractReview(true);
-                      }}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">Contract #{contract.id.slice(0, 8)}</span>
+                  {contracts && contracts.length > 0 && (
+                    <Badge variant="secondary" className="ml-1">{contracts.length}</Badge>
+                  )}
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="proposals" className="mt-0">
+                {!proposals || proposals.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <FileText className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                    <p className="text-muted-foreground">
+                      {currentLanguage === 'ar' ? 'لا توجد عروض بعد' : 'No proposals yet'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {proposalsWithCases.filter(p => !activeCase?.id || p.case?.id === activeCase.id).map((proposalWithCase) => {
+                      const getProposalStatusBadge = (status: string) => {
+                        switch (status) {
+                          case 'pending':
+                            return <Badge className="bg-emerald-500 hover:bg-emerald-500">New</Badge>;
+                          case 'viewed':
+                            return <Badge className="bg-purple-500 hover:bg-purple-500">Viewed</Badge>;
+                          case 'accepted':
+                            return <Badge className="bg-blue-500 hover:bg-blue-500">Accepted</Badge>;
+                          case 'rejected':
+                            return <Badge className="bg-red-500 hover:bg-red-500">Rejected</Badge>;
+                          default:
+                            return <Badge variant="outline">{status}</Badge>;
+                        }
+                      };
+
+                      return (
+                        <div key={proposalWithCase.id} className="p-4 rounded-lg border border-border bg-card hover:bg-accent/5 transition-colors">
+                          <div className="flex items-start justify-between gap-3 mb-3">
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                              <FileText className="h-5 w-5 text-muted-foreground shrink-0" />
+                              <h4 className="font-semibold text-base truncate">
+                                New Legal Proposal Received
+                              </h4>
+                            </div>
+                            {getProposalStatusBadge(proposalWithCase.status)}
+                          </div>
+
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground mb-4">
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {new Date(proposalWithCase.created_at).toLocaleDateString()}
+                            </span>
+                            {proposalWithCase.case && (
+                              <>
+                                <span>•</span>
+                                <span className="truncate">{proposalWithCase.case.title}</span>
+                              </>
+                            )}
+                          </div>
+
+                          {proposalWithCase.consultation_fee && (
+                            <p className="text-sm text-muted-foreground mb-4">
+                              Consultation Fee: ${proposalWithCase.consultation_fee}
+                            </p>
+                          )}
+
+                          <div className="flex justify-end gap-2">
+                            {needsPayment(proposalWithCase) && (
+                              <Button 
+                                size="sm" 
+                                variant="default"
+                                className="bg-primary hover:bg-primary/90"
+                                onClick={() => {
+                                  const isGracePeriodPayment = proposalWithCase.case?.status === 'active' && proposalWithCase.case?.consultation_completed_at;
+                                  const remainingFee = proposalWithCase.remaining_fee || 0;
+                                  const paymentType = isGracePeriodPayment ? 'remaining' : 'consultation';
+                                  
+                                  navigate('/payment', {
+                                    state: {
+                                      paymentData: {
+                                        type: paymentType,
+                                        caseId: proposalWithCase.case?.id,
+                                        proposalId: proposalWithCase.id,
+                                        consultationFee: proposalWithCase.consultation_fee,
+                                        remainingFee: remainingFee,
+                                        totalFee: proposalWithCase.final_total_fee || proposalWithCase.total_fee,
+                                        lawyerName: proposalWithCase.case?.assigned_lawyer_name || 'Your Lawyer',
+                                        caseTitle: proposalWithCase.case?.title
+                                      }
+                                    }
+                                  });
+                                }}
+                              >
+                                <CreditCard className="h-4 w-4 mr-2" />
+                                Complete Payment
+                              </Button>
+                            )}
+                            <Button 
+                              size="sm" 
+                              className="bg-primary hover:bg-primary/90"
+                              onClick={() => {
+                                setSelectedProposal(proposalWithCase);
+                                setShowProposalReview(true);
+                              }}
+                            >
+                              View Proposal
+                            </Button>
+                          </div>
                         </div>
-                        <Badge className={
-                          contract.status === 'sent' ? 'bg-blue-500' :
-                          contract.status === 'viewed' ? 'bg-purple-500' :
-                          contract.status === 'downloaded' ? 'bg-green-500' :
-                          contract.status === 'sent_for_signature' ? 'bg-orange-500' :
-                          contract.status === 'physically_signed' ? 'bg-emerald-500' :
-                          contract.status === 'active' ? 'bg-green-600' :
-                          'bg-gray-500'
-                        }>
-                          {contract.status.replace(/_/g, ' ').toUpperCase()}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        Created: {new Date(contract.created_at).toLocaleDateString()}
-                      </p>
-                      {contract.dhl_tracking_number && (
-                        <p className="text-sm text-muted-foreground mt-1">
-                          DHL Tracking: {contract.dhl_tracking_number}
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+                      );
+                    })}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="contracts" className="mt-0">
+                {!contracts || contracts.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <PenTool className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                    <p className="text-muted-foreground">
+                      {currentLanguage === 'ar' ? 'لا توجد عقود بعد' : 'No contracts yet'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {contracts.map((contract) => {
+                      const getContractStatusBadge = (status: string) => {
+                        switch (status) {
+                          case 'sent':
+                            return <Badge className="bg-emerald-500 hover:bg-emerald-500">Sent</Badge>;
+                          case 'viewed':
+                            return <Badge className="bg-purple-500 hover:bg-purple-500">Viewed</Badge>;
+                          case 'downloaded':
+                            return <Badge className="bg-blue-500 hover:bg-blue-500">Downloaded</Badge>;
+                          case 'sent_for_signature':
+                            return <Badge className="bg-orange-500 hover:bg-orange-500">Sent for Signature</Badge>;
+                          case 'physically_signed':
+                            return <Badge className="bg-emerald-600 hover:bg-emerald-600">Physically Signed</Badge>;
+                          case 'active':
+                            return <Badge className="bg-green-600 hover:bg-green-600">Active</Badge>;
+                          default:
+                            return <Badge variant="outline">{status.replace(/_/g, ' ').toUpperCase()}</Badge>;
+                        }
+                      };
+
+                      return (
+                        <div key={contract.id} className="p-4 rounded-lg border border-border bg-card hover:bg-accent/5 transition-colors">
+                          <div className="flex items-start justify-between gap-3 mb-3">
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                              <PenTool className="h-5 w-5 text-muted-foreground shrink-0" />
+                              <h4 className="font-semibold text-base truncate">
+                                Contract #{contract.id.slice(0, 8)}
+                              </h4>
+                            </div>
+                            {getContractStatusBadge(contract.status)}
+                          </div>
+
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground mb-4">
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {new Date(contract.created_at).toLocaleDateString()}
+                            </span>
+                            <span>•</span>
+                            <span>ID: #{contract.id.slice(0, 8)}</span>
+                          </div>
+
+                          {contract.dhl_tracking_number && (
+                            <p className="text-sm text-muted-foreground mb-4">
+                              📦 DHL Tracking: {contract.dhl_tracking_number}
+                            </p>
+                          )}
+
+                          <div className="flex justify-end">
+                            <Button 
+                              size="sm" 
+                              className="bg-primary hover:bg-primary/90"
+                              onClick={() => {
+                                setSelectedContract(contract);
+                                setShowContractReview(true);
+                              }}
+                            >
+                              View Contract
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
 
@@ -1345,6 +1488,21 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
           onClose={() => setPreviewDocument(null)}
           document={previewDocument}
         />
+
+        {/* Proposal Review Dialog */}
+        {selectedProposal && (
+          <ProposalReviewDialog
+            open={showProposalReview}
+            onOpenChange={(open) => {
+              setShowProposalReview(open);
+              if (!open) setSelectedProposal(null);
+            }}
+            proposal={selectedProposal}
+            onProposalUpdate={() => {
+              refreshData();
+            }}
+          />
+        )}
 
         {/* Contract Review Dialog */}
         {selectedContract && (
