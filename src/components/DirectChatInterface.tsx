@@ -3,12 +3,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
-import { MessageCircle, Send, X, Paperclip, FileText, Image as ImageIcon, File } from 'lucide-react';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { MessageCircle, Send, X, Paperclip, FileText, Image as ImageIcon, File, Headphones } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { useChatNotifications } from '@/hooks/useChatNotifications';
 import { useChatFileUpload } from '@/hooks/useChatFileUpload';
+
+type ChatMode = 'lawyer' | 'support';
 
 interface Message {
   id: string;
@@ -32,12 +35,18 @@ interface Message {
 interface DirectChatInterfaceProps {
   caseId: string;
   caseTitle: string;
+  lawyerId?: string;
+  lawyerName?: string;
+  lawyerProfilePicture?: string;
   onClose?: () => void;
 }
 
 export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
   caseId,
   caseTitle,
+  lawyerId,
+  lawyerName,
+  lawyerProfilePicture,
   onClose
 }) => {
   const { user } = useAuth();
@@ -48,6 +57,7 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [userRole, setUserRole] = useState<'client' | 'lawyer'>('client');
+  const [chatMode, setChatMode] = useState<ChatMode>('lawyer');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -73,11 +83,13 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
     if (!caseId) return;
 
     try {
+      const channel = chatMode === 'lawyer' ? 'direct' : 'support';
+      
       const { data, error } = await supabase
         .from('case_messages')
         .select('id, role, content, created_at, is_read, message_type, metadata')
         .eq('case_id', caseId)
-        .eq('metadata->>channel', 'direct')
+        .eq('metadata->>channel', channel)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
@@ -108,6 +120,7 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
     
     try {
       const messageRole = userRole === 'lawyer' ? 'lawyer' : 'user';
+      const channel = chatMode === 'lawyer' ? 'direct' : 'support';
       
       const { error } = await supabase
         .from('case_messages')
@@ -116,7 +129,7 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
           role: messageRole,
           content: newMessage.trim(),
           message_type: 'text',
-          metadata: { channel: 'direct' }
+          metadata: { channel }
         });
 
       if (error) throw error;
@@ -152,13 +165,15 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
         return;
       }
 
+      const channel = chatMode === 'lawyer' ? 'direct' : 'support';
+      
       console.log('DirectChatInterface: Upload successful, inserting message');
       const { error } = await supabase.from('case_messages').insert({
         case_id: caseId,
         role: (userRole === 'lawyer' ? 'lawyer' : 'user'),
         content: '',
         message_type: 'file',
-        metadata: { channel: 'direct', file: uploaded } as any
+        metadata: { channel, file: uploaded } as any
       });
 
       if (error) {
@@ -194,6 +209,8 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
 
     fetchMessages();
 
+    const expectedChannel = chatMode === 'lawyer' ? 'direct' : 'support';
+    
     const channel = supabase
       .channel(`case-${caseId}-messages`)
       .on(
@@ -207,8 +224,10 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
         (payload) => {
           if (payload.eventType === 'INSERT') {
             const newMsg = payload.new as Message;
-            // Only process messages from the direct channel
-            if (newMsg.metadata?.channel === 'direct') {
+            const msgChannel = newMsg.metadata?.channel || 'direct';
+            
+            // Only process messages from the active channel
+            if (msgChannel === expectedChannel) {
               setMessages(prev => [...prev, newMsg]);
               
               // Auto-mark as read if it's not our own message
@@ -235,7 +254,7 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [caseId, userRole]);
+  }, [caseId, userRole, chatMode]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -248,6 +267,15 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
       markMessagesAsRead(caseId);
     }
   }, [caseId, messages.length]);
+
+  const getInitials = (name?: string) => {
+    if (!name) return 'L';
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    }
+    return name[0].toUpperCase();
+  };
 
   const formatTime = (dateString: string) => {
     return new Date(dateString).toLocaleTimeString('en-US', {
@@ -312,22 +340,81 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
         style={{ willChange: 'transform' }}
       >
         {/* Header */}
-        <div className="h-16 bg-background/95 backdrop-blur-md border-b flex items-center justify-between px-4 shadow-sm flex-shrink-0">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <MessageCircle className="w-5 h-5 text-primary flex-shrink-0" />
-            <div className="flex-1 min-w-0">
-              <h2 className="font-semibold text-base truncate">{caseTitle}</h2>
-              <p className="text-xs text-muted-foreground">Direct Chat</p>
-            </div>
+        <div className="h-16 bg-background/95 backdrop-blur-md border-b flex items-center gap-4 px-4 shadow-sm flex-shrink-0">
+          {/* Avatar Switcher */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Lawyer Avatar */}
+            <button
+              onClick={() => setChatMode('lawyer')}
+              className={`relative rounded-full transition-all ${
+                chatMode === 'lawyer' 
+                  ? 'ring-2 ring-primary' 
+                  : 'opacity-60 hover:opacity-100'
+              }`}
+              aria-label={`Switch to lawyer chat with ${lawyerName || 'your lawyer'}`}
+            >
+              <Avatar className="h-10 w-10 md:h-12 md:w-12">
+                <AvatarImage src={lawyerProfilePicture} alt={lawyerName} />
+                <AvatarFallback className="bg-primary text-primary-foreground">
+                  {getInitials(lawyerName)}
+                </AvatarFallback>
+              </Avatar>
+              {chatMode === 'lawyer' && (
+                <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
+              )}
+            </button>
+
+            {/* Support Avatar */}
+            <button
+              onClick={() => setChatMode('support')}
+              className={`relative rounded-full transition-all ${
+                chatMode === 'support' 
+                  ? 'ring-2 ring-primary' 
+                  : 'opacity-60 hover:opacity-100'
+              }`}
+              aria-label="Switch to support chat"
+            >
+              <Avatar className="h-10 w-10 md:h-12 md:w-12">
+                <AvatarFallback className="bg-blue-500 text-white">
+                  <Headphones className="w-5 h-5 md:w-6 md:h-6" />
+                </AvatarFallback>
+              </Avatar>
+              {chatMode === 'support' && (
+                <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
+              )}
+            </button>
           </div>
-          <Button variant="ghost" size="sm" onClick={onClose} className="h-10 w-10 p-0">
+
+          {/* Title Section */}
+          <div className="flex-1 min-w-0">
+            <h2 className="font-semibold text-base truncate">{caseTitle}</h2>
+            <p className="text-xs text-muted-foreground truncate">
+              {chatMode === 'lawyer' 
+                ? `Chat with ${lawyerName || 'Your Lawyer'}` 
+                : 'Support Chat'}
+            </p>
+          </div>
+
+          {/* Close Button */}
+          <Button variant="ghost" size="sm" onClick={onClose} className="h-10 w-10 p-0 flex-shrink-0">
             <X className="w-5 h-5" />
           </Button>
         </div>
 
         {/* Messages Area */}
         <div className="flex-1 overflow-y-auto px-4 py-4">
-          {loading ? (
+          {chatMode === 'support' ? (
+            <div className="flex items-center justify-center h-full p-8">
+              <div className="text-center text-muted-foreground max-w-md">
+                <Headphones className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                <h3 className="font-semibold text-lg mb-2">Support Chat Coming Soon</h3>
+                <p className="text-sm">
+                  Support chat functionality is currently being developed. 
+                  Please use the lawyer chat for now or contact us directly.
+                </p>
+              </div>
+            </div>
+          ) : loading ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-sm text-muted-foreground">Loading messages...</div>
             </div>

@@ -36,6 +36,42 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
     sessionId: string;
   } | null>(null);
   const [isCreatingCall, setIsCreatingCall] = useState(false);
+  const [lawyerInfo, setLawyerInfo] = useState<{
+    id: string;
+    name: string;
+    profilePicture?: string;
+  } | null>(null);
+
+  // Fetch lawyer info
+  useEffect(() => {
+    const fetchLawyerInfo = async () => {
+      if (!caseId) return;
+      
+      const { data: caseData } = await supabase
+        .from('cases')
+        .select(`
+          assigned_lawyer_id,
+          assigned_lawyer:profiles!assigned_lawyer_id(
+            first_name,
+            last_name,
+            profile_picture_url
+          )
+        `)
+        .eq('id', caseId)
+        .single();
+      
+      if (caseData?.assigned_lawyer) {
+        const lawyer = caseData.assigned_lawyer as any;
+        setLawyerInfo({
+          id: caseData.assigned_lawyer_id,
+          name: `${lawyer.first_name || ''} ${lawyer.last_name || ''}`.trim(),
+          profilePicture: lawyer.profile_picture_url
+        });
+      }
+    };
+    
+    fetchLawyerInfo();
+  }, [caseId]);
 
   // Persist chat modal open state
   const storageKey = `directChatOpen:${caseId}`;
@@ -152,6 +188,9 @@ export const CommunicationLauncher: React.FC<CommunicationLauncherProps> = ({
       <DirectChatInterface
         caseId={caseId}
         caseTitle={caseTitle}
+        lawyerId={lawyerInfo?.id}
+        lawyerName={lawyerInfo?.name}
+        lawyerProfilePicture={lawyerInfo?.profilePicture}
         onClose={() => setShowDirectChat(false)}
       />
     );
