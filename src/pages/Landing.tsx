@@ -5,7 +5,8 @@ import { Card } from "@/components/ui/card";
 import { Scale, Shield, MessageSquare, Users, Clock, Check, Brain, Lock, ShieldCheck, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { HomepageChatbot } from "@/components/HomepageChatbot";
+import HomepageChatbot from "@/components/HomepageChatbot";
+import HeroChatInput from "@/components/HeroChatInput";
 import { ProBonoSection } from "@/components/ProBonoSection";
 import { PromotionalPopup } from "@/components/PromotionalPopup";
 import { LanguageToggle } from "@/components/LanguageToggle";
@@ -19,6 +20,7 @@ const Landing = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [showPromoPopup, setShowPromoPopup] = useState(false);
+  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
   
 
   useEffect(() => {
@@ -149,13 +151,13 @@ const Landing = () => {
                   <p>{t('landing.hero.trustSignals.securePayments.subtitle')}</p>
                 </div>
               </div>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* Anonymous Q&A Chatbot Section */}
-      <HomepageChatbot />
+          {/* Hero Chat Input */}
+          <HeroChatInput onOpenChat={() => setIsChatModalOpen(true)} />
+        </section>
 
       {/* Pro Bono Impact Section */}
       <ProBonoSection />
@@ -422,6 +424,13 @@ const Landing = () => {
         isOpen={showPromoPopup}
         onClose={handleClosePromo}
         onSignUp={handleSignUpFromPromo}
+      />
+
+      {/* Chat Modal */}
+      <HomepageChatbot 
+        isModal={true} 
+        open={isChatModalOpen} 
+        onOpenChange={setIsChatModalOpen} 
       />
     </div>
   );

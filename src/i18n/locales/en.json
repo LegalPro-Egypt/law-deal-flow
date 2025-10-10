@@ -420,6 +420,10 @@
           "title": "Secure Payments",
           "subtitle": "Bank-level encryption"
         }
+      },
+      "chatInput": {
+        "placeholder": "Ask a legal question...",
+        "ctaText": "Try Lexa →"
       }
     },
     "tryLegalAssistant": "Try Our Legal Assistant",
