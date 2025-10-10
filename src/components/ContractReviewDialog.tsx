@@ -167,11 +167,12 @@ export function ContractReviewDialog({
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent 
           className={cn(
-            "max-w-4xl flex flex-col overflow-hidden",
-            "h-[100dvh] sm:h-auto",
-            "w-full sm:max-h-[90vh]",
-            "p-0 gap-0",
-            "sm:rounded-lg"
+            // Mobile: full-screen takeover
+            "inset-0 left-0 top-0 translate-x-0 translate-y-0 h-[100dvh] w-screen rounded-none",
+            // Layout
+            "flex flex-col overflow-hidden p-0 gap-0",
+            // Desktop: back to centered modal
+            "sm:h-auto sm:w-full sm:max-w-4xl sm:max-h-[90vh] sm:rounded-lg sm:left-[50%] sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%]"
           )}
           style={{
             maxHeight: '-webkit-fill-available',
