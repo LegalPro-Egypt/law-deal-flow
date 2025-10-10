@@ -179,6 +179,21 @@ export const LawyerDirectChatInterface: React.FC<LawyerDirectChatInterfaceProps>
     inputRef.current?.focus();
   }, []);
 
+  // Lock body scroll when chat opens
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.height = '100%';
+    
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
+    };
+  }, []);
+
   const formatMessageTime = (timestamp: string) => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString('en-US', {
@@ -227,22 +242,34 @@ export const LawyerDirectChatInterface: React.FC<LawyerDirectChatInterfaceProps>
 
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
-        onClick={onClose}
-      />
-      
-      <motion.div
-        initial={{ y: '100%' }}
-        animate={{ y: 0 }}
-        exit={{ y: '100%' }}
-        transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-        className="fixed inset-0 z-50 bg-background flex flex-col"
-        style={{ willChange: 'transform' }}
-      >
+      <>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60]"
+          onClick={onClose}
+          style={{ touchAction: 'none' }}
+        />
+        
+        <motion.div
+          initial={{ y: '100%' }}
+          animate={{ y: 0 }}
+          exit={{ y: '100%' }}
+          transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+          className="fixed inset-0 z-[61] bg-background flex flex-col"
+          style={{ 
+            willChange: 'transform',
+            overscrollBehavior: 'contain',
+            touchAction: 'pan-y',
+            WebkitOverflowScrolling: 'touch',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0
+          }}
+        >
         {/* Header */}
         <div className="h-16 bg-background/95 backdrop-blur-md border-b flex items-center justify-between px-4 shadow-sm flex-shrink-0">
           <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -258,7 +285,7 @@ export const LawyerDirectChatInterface: React.FC<LawyerDirectChatInterfaceProps>
         </div>
 
         {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto px-4 py-4">
+        <div className="flex-1 overflow-y-auto px-4 py-4" style={{ overscrollBehavior: 'contain' }}>
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-sm text-muted-foreground">Loading messages...</div>
@@ -360,6 +387,7 @@ export const LawyerDirectChatInterface: React.FC<LawyerDirectChatInterfaceProps>
           </div>
         </div>
       </motion.div>
+      </>
     </AnimatePresence>
   );
 };

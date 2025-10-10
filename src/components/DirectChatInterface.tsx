@@ -268,6 +268,21 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
     }
   }, [caseId, messages.length]);
 
+  // Lock body scroll when chat opens
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.height = '100%';
+    
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
+    };
+  }, []);
+
   const getInitials = (name?: string) => {
     if (!name) return 'L';
     const parts = name.trim().split(' ');
@@ -323,22 +338,34 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
 
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
-        onClick={onClose}
-      />
-      
-      <motion.div
-        initial={{ y: '100%' }}
-        animate={{ y: 0 }}
-        exit={{ y: '100%' }}
-        transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-        className="fixed inset-0 z-50 bg-background flex flex-col"
-        style={{ willChange: 'transform' }}
-      >
+      <>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60]"
+          onClick={onClose}
+          style={{ touchAction: 'none' }}
+        />
+        
+        <motion.div
+          initial={{ y: '100%' }}
+          animate={{ y: 0 }}
+          exit={{ y: '100%' }}
+          transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+          className="fixed inset-0 z-[61] bg-background flex flex-col"
+          style={{ 
+            willChange: 'transform',
+            overscrollBehavior: 'contain',
+            touchAction: 'pan-y',
+            WebkitOverflowScrolling: 'touch',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0
+          }}
+        >
         {/* Header */}
         <div className="h-16 bg-background/95 backdrop-blur-md border-b flex items-center gap-4 px-4 shadow-sm flex-shrink-0">
           {/* Avatar Switcher */}
@@ -402,7 +429,7 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
         </div>
 
         {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto px-4 py-4">
+        <div className="flex-1 overflow-y-auto px-4 py-4" style={{ overscrollBehavior: 'contain' }}>
           {chatMode === 'support' ? (
             <div className="flex items-center justify-center h-full p-8">
               <div className="text-center text-muted-foreground max-w-md">
@@ -520,6 +547,7 @@ export const DirectChatInterface: React.FC<DirectChatInterfaceProps> = ({
           </div>
         </div>
       </motion.div>
+      </>
     </AnimatePresence>
   );
 };
