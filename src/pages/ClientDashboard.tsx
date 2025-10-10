@@ -941,6 +941,8 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
                             return <Badge className="bg-purple-500 hover:bg-purple-500">Viewed</Badge>;
                           case 'downloaded':
                             return <Badge className="bg-blue-500 hover:bg-blue-500">Downloaded</Badge>;
+                          case 'changes_requested':
+                            return <Badge className="bg-amber-500 hover:bg-amber-500">Changes Requested</Badge>;
                           case 'sent_for_signature':
                             return <Badge className="bg-orange-500 hover:bg-orange-500">Sent for Signature</Badge>;
                           case 'physically_signed':

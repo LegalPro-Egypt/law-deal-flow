@@ -95,8 +95,12 @@ export const LawyerContractRevisionDialog = ({
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              <strong>Admin Feedback:</strong>
-              <p className="mt-2 whitespace-pre-wrap">{contract.admin_notes}</p>
+              <strong>{contract.change_source === 'client_request' ? 'Client Feedback:' : 'Admin Feedback:'}</strong>
+              <p className="mt-2 whitespace-pre-wrap">
+                {contract.change_source === 'client_request' 
+                  ? contract.client_change_request 
+                  : contract.admin_notes}
+              </p>
             </AlertDescription>
           </Alert>
 
