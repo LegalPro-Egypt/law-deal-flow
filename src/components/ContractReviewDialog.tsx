@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,6 +11,7 @@ import { DhlShipmentDialog } from "./DhlShipmentDialog";
 import { downloadContractPdf } from "@/utils/contractPdfGenerator";
 import { Badge } from "@/components/ui/badge";
 import { ContractVersionHistory } from "@/components/ContractVersionHistory";
+import { cn } from "@/lib/utils";
 
 interface ContractReviewDialogProps {
   isOpen: boolean;
@@ -117,6 +118,20 @@ export function ContractReviewDialog({
     }
   });
 
+  // Lock body scroll on mobile when dialog is open
+  useEffect(() => {
+    if (isOpen) {
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+      
+      return () => {
+        document.body.style.overflow = originalStyle;
+        document.body.style.touchAction = '';
+      };
+    }
+  }, [isOpen]);
+
   const handleAcceptContract = async () => {
     try {
       await acceptContract.mutateAsync(contract.id);
@@ -150,15 +165,32 @@ export function ContractReviewDialog({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <div className="flex items-center justify-between">
-              <DialogTitle>Contract Review</DialogTitle>
-              {getStatusBadge()}
-            </div>
-          </DialogHeader>
-
-          <div className="space-y-4">
+        <DialogContent 
+          className={cn(
+            "max-w-4xl flex flex-col overflow-hidden",
+            "h-[100dvh] sm:h-auto",
+            "w-full sm:max-h-[90vh]",
+            "p-0 gap-0",
+            "sm:rounded-lg"
+          )}
+          style={{
+            maxHeight: '-webkit-fill-available',
+          }}
+        >
+          {/* Fixed Header */}
+          <div 
+            className="flex-shrink-0 px-6 py-4 border-b bg-background"
+            style={{ 
+              paddingTop: 'max(1rem, env(safe-area-inset-top))' 
+            }}
+          >
+            <DialogHeader>
+              <div className="flex items-center justify-between mb-3">
+                <DialogTitle>Contract Review</DialogTitle>
+                {getStatusBadge()}
+              </div>
+            </DialogHeader>
+            
             <div className="flex items-center justify-between">
               <LanguageToggleButton
                 currentLanguage={currentLanguage}
@@ -173,7 +205,10 @@ export function ContractReviewDialog({
                 </Button>
               )}
             </div>
+          </div>
 
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
             {contract.dhl_tracking_number && (
               <div className="bg-muted p-3 rounded-lg">
                 <p className="text-sm font-medium mb-1">Shipment Tracking</p>
@@ -188,7 +223,7 @@ export function ContractReviewDialog({
               </div>
             )}
 
-            <div className="bg-background border rounded-lg p-4 max-h-[400px] overflow-y-auto">
+            <div className="bg-background border rounded-lg p-4 max-h-[300px] overflow-y-auto">
               <pre
                 className={`whitespace-pre-wrap ${currentLanguage === 'ar' ? 'text-right' : ''}`}
                 dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
@@ -237,14 +272,31 @@ export function ContractReviewDialog({
                 />
               </div>
             )}
+          </div>
 
-            <div className="flex gap-2 justify-between">
-              <Button variant="outline" onClick={() => setShowHistory(true)}>
+          {/* Fixed Footer */}
+          <div 
+            className="flex-shrink-0 px-4 sm:px-6 py-3 sm:py-4 border-t bg-background"
+            style={{ 
+              paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' 
+            }}
+          >
+            <div className="flex flex-col sm:flex-row gap-2 sm:justify-between">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowHistory(true)}
+                className="w-full sm:w-auto"
+              >
                 <History className="w-4 h-4 mr-2" />
                 View History
               </Button>
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={onClose}>
+              
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={onClose}
+                  className="w-full sm:w-auto"
+                >
                   Close
                 </Button>
                 
@@ -254,18 +306,25 @@ export function ContractReviewDialog({
                       variant="outline"
                       onClick={handleRequestChanges}
                       disabled={isRequestingChanges || !changeRequest.trim()}
+                      className="w-full sm:w-auto"
                     >
                       <Send className="w-4 h-4 mr-2" />
                       Request Changes
                     </Button>
-                    <Button onClick={handleAcceptContract}>
+                    <Button 
+                      onClick={handleAcceptContract}
+                      className="w-full sm:w-auto"
+                    >
                       Accept Contract
                     </Button>
                   </>
                 )}
                 
                 {contract.status === 'downloaded' && (
-                  <Button onClick={() => setShowDhlDialog(true)}>
+                  <Button 
+                    onClick={() => setShowDhlDialog(true)}
+                    className="w-full sm:w-auto"
+                  >
                     <Package className="w-4 h-4 mr-2" />
                     Mark as Sent for Signature
                   </Button>
