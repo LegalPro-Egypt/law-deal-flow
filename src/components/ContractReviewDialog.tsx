@@ -207,8 +207,8 @@ export function ContractReviewDialog({
             </div>
           </div>
 
-          {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-3 sm:py-4 flex flex-col gap-4">
             {contract.dhl_tracking_number && (
               <div className="bg-muted p-3 rounded-lg">
                 <p className="text-sm font-medium mb-1">Shipment Tracking</p>
@@ -223,7 +223,7 @@ export function ContractReviewDialog({
               </div>
             )}
 
-            <div className="bg-background border rounded-lg p-4 max-h-[300px] overflow-y-auto">
+            <div className="bg-background border rounded-lg p-4 flex-1 overflow-y-auto min-h-0">
               <pre
                 className={`whitespace-pre-wrap ${currentLanguage === 'ar' ? 'text-right' : ''}`}
                 dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
