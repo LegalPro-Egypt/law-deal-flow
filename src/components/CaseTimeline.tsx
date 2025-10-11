@@ -212,122 +212,106 @@ export const CaseTimeline: React.FC<CaseTimelineProps> = ({ caseId, caseData, us
           Case Milestones
         </CardTitle>
       </CardHeader>
-      <CardContent className="max-h-[500px] overflow-y-auto scrollbar-thin">
-        <div className="relative pl-6">
+      <CardContent>
+        <div className="relative">
           {/* Timeline line */}
-          <div className="absolute left-[11px] top-2 bottom-2 w-px bg-gradient-to-b from-primary/50 via-border to-border" />
+          <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border" />
           
-          <div className="space-y-1">
+          <div className="space-y-6">
             {/* Case creation event */}
             {caseData && (
-              <div className="relative flex items-center gap-3 py-2 group">
-                <div className="relative z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-background border-2 border-primary/30">
-                  <div className="h-2 w-2 rounded-full bg-primary" />
+              <div className="relative flex items-start gap-4">
+                <div className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                  <FileText className="h-4 w-4" />
                 </div>
-                <div className="flex-1 min-w-0 flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Case Created</span>
-                  <span className="text-xs text-muted-foreground/60">
-                    {format(new Date(caseData.created_at), 'MMM d, yyyy')}
-                  </span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium">Case Created</h4>
+                    <span className="text-sm text-muted-foreground">
+                      {format(new Date(caseData.created_at), 'MMM d, yyyy')}
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {caseData.title} was submitted for review
+                  </p>
                 </div>
               </div>
             )}
 
             {/* All timeline events (system + manual) */}
-            {allEvents.map((event, index) => {
-              const isLatest = index === allEvents.length - 1;
+            {allEvents.map((event) => {
               if (event.type === 'system') {
-                // Condensed view for past milestones
-                if (!isLatest) {
-                  return (
-                    <div key={event.id} className="relative flex items-center gap-3 py-2 group">
-                      <div className="relative z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-background border-2 border-success/30">
-                        <div className="h-2 w-2 rounded-full bg-success" />
-                      </div>
-                      <div className="flex-1 min-w-0 flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">{event.title}</span>
-                        <span className="text-xs text-muted-foreground/60 whitespace-nowrap">
-                          {format(event.timestamp, 'MMM d, yyyy')}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                }
-                
-                // Expanded view for latest milestone
                 return (
-                  <div key={event.id} className="relative flex items-start gap-4 p-5 mt-2 bg-gradient-to-br from-success/5 to-success/10 rounded-xl border border-success/20 shadow-sm">
-                    <div className="relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-success shadow-lg shadow-success/20">
-                      {React.cloneElement(event.icon as React.ReactElement, { className: 'h-7 w-7 text-success-foreground' })}
+                  <div key={event.id} className="relative flex items-start gap-4">
+                    <div className={`relative z-10 flex h-8 w-8 items-center justify-center rounded-full ${
+                      event.status === 'completed' ? 'bg-success text-success-foreground' : 'bg-warning text-warning-foreground'
+                    }`}>
+                      {event.icon}
                     </div>
-                    <div className="flex-1 min-w-0 space-y-3 pt-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
-                        <h4 className="font-semibold text-lg leading-tight">{event.title}</h4>
-                        <CheckCircle className="h-5 w-5 text-success shrink-0 mt-0.5" />
-                      </div>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        {event.description}
-                      </p>
-                      <div className="flex items-center gap-2 pt-1">
-                        <Badge variant="secondary" className="bg-success/10 text-success border-0 text-xs">
-                          completed
-                        </Badge>
-                        <span className="text-xs text-muted-foreground/70">
-                          {format(event.timestamp, 'MMM d, yyyy · h:mm a')}
-                        </span>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="font-medium">{event.title}</h4>
+                            <Badge variant="secondary" className={event.status === 'completed' ? 'bg-success text-success-foreground' : 'bg-warning text-warning-foreground'}>
+                              {event.status}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {event.description}
+                          </p>
+                          <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                            <span>{format(event.timestamp, 'MMM d, yyyy h:mm a')}</span>
+                          </div>
+                        </div>
+                        <div className="flex-shrink-0">
+                          {event.status === 'completed' ? (
+                            <CheckCircle className="h-4 w-4 text-success" />
+                          ) : (
+                            <AlertCircle className="h-4 w-4 text-warning" />
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
                 );
               } else {
-                // Manual activity - condensed for past, expanded for latest
-                if (!isLatest) {
-                  return (
-                    <div key={event.id} className="relative flex items-center gap-3 py-2 group">
-                      <div className="relative z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-background border-2 border-primary/30">
-                        <div className="h-2 w-2 rounded-full bg-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0 flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">{event.title}</span>
-                        <span className="text-xs text-muted-foreground/60 whitespace-nowrap">
-                          {format(event.timestamp, 'MMM d, yyyy')}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                }
-
-                // Expanded view for latest activity
+                // Manual activity
                 return (
-                  <div key={event.id} className="relative flex items-start gap-4 p-5 mt-2 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl border border-primary/20 shadow-sm">
-                    <div className="relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary shadow-lg shadow-primary/20">
-                      {React.cloneElement(getActivityIcon(event.activity_type) as React.ReactElement, { className: 'h-7 w-7 text-primary-foreground' })}
+                  <div key={event.id} className="relative flex items-start gap-4">
+                    <div className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full bg-card border-2 border-border">
+                      {getActivityIcon(event.activity_type)}
                     </div>
-                    <div className="flex-1 min-w-0 space-y-3 pt-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <h4 className="font-semibold text-lg leading-tight">{event.title}</h4>
-                          <Badge variant="outline" className="mt-2 text-xs">
-                            {formatActivityType(event.activity_type)}
-                          </Badge>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="font-medium">{event.title}</h4>
+                            <Badge variant="secondary" className={getStatusColor(event.status)}>
+                              {event.status}
+                            </Badge>
+                            <Badge variant="outline">
+                              {formatActivityType(event.activity_type)}
+                            </Badge>
+                          </div>
+                          {event.description && (
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {event.description}
+                            </p>
+                          )}
+                          <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                            <span>{format(event.timestamp, 'MMM d, yyyy h:mm a')}</span>
+                            {event.hours_worked && (
+                              <span className="flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                {event.hours_worked}h
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        {getStatusIcon(event.status)}
-                      </div>
-                      {event.description && (
-                        <p className="text-sm text-muted-foreground leading-relaxed">
-                          {event.description}
-                        </p>
-                      )}
-                      <div className="flex items-center gap-3 pt-1">
-                        <span className="text-xs text-muted-foreground/70">
-                          {format(event.timestamp, 'MMM d, yyyy · h:mm a')}
-                        </span>
-                        {event.hours_worked && (
-                          <span className="flex items-center gap-1 text-xs text-muted-foreground/70">
-                            <Clock className="h-3 w-3" />
-                            {event.hours_worked}h
-                          </span>
-                        )}
+                        <div className="flex-shrink-0">
+                          {getStatusIcon(event.status)}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -336,12 +320,12 @@ export const CaseTimeline: React.FC<CaseTimelineProps> = ({ caseId, caseData, us
             })}
 
             {allEvents.length === 0 && (
-              <div className="relative flex items-center gap-3 py-8 px-4">
-                <div className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full bg-muted/50">
-                  <Circle className="h-5 w-5 text-muted-foreground/50" />
+              <div className="relative flex items-center gap-4 py-8">
+                <div className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full bg-muted">
+                  <Circle className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm text-muted-foreground/70">
+                  <p className="text-muted-foreground">
                     {userRole === 'lawyer' 
                       ? "No milestones yet. Use the form above to add updates for your client."
                       : "No milestones yet. Your lawyer will add updates as they work on your case."
