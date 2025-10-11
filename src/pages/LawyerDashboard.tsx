@@ -36,9 +36,8 @@ import { CaseDetailsDialog } from "@/components/CaseDetailsDialog";
 import { CreateProposalDialog } from "@/components/CreateProposalDialog";
 import { MoneyRequestDialog } from "@/components/MoneyRequestDialog";
 import { CommunicationInbox } from "@/components/CommunicationInbox";
-import { CaseWorkProgress } from "@/components/CaseWorkProgress";
+import { CaseProgress } from "@/components/CaseProgress";
 import { CaseActivityForm } from "@/components/CaseActivityForm";
-import { CaseTimeline } from "@/components/CaseTimeline";
 import { CaseCalendar } from "@/components/CaseCalendar";
 import { NotificationMenu } from "@/components/NotificationMenu";
 import { CollapsibleCard } from "@/components/CollapsibleCard";
@@ -550,9 +549,9 @@ const LawyerDashboard = ({ viewAsUserId }: LawyerDashboardProps = {}) => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-0 space-y-6">
-                {/* Case Work Progress */}
+                {/* Case Progress - Unified Component */}
                 {(currentCase.status === 'work_in_progress' || currentCase.status === 'pending_client_confirmation' || currentCase.status === 'completed') && (
-                  <CaseWorkProgress caseData={currentCase} />
+                  <CaseProgress caseData={currentCase} userRole="lawyer" />
                 )}
               </CardContent>
               <CardFooter className="flex gap-2 flex-wrap">
@@ -600,15 +599,12 @@ const LawyerDashboard = ({ viewAsUserId }: LawyerDashboardProps = {}) => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
               {/* Case Milestones */}
               <CollapsibleCard
-                title="Case Milestones"
+                title="Add Case Update"
                 icon={<Clock className="h-5 w-5" />}
-                description="Add updates and track case progress"
+                description="Add manual updates and milestones"
                 defaultOpen={false}
               >
-                <div className="space-y-4">
-                  <CaseActivityForm caseId={currentCase.id} />
-                  <CaseTimeline caseId={currentCase.id} caseData={currentCase} userRole={role} />
-                </div>
+                <CaseActivityForm caseId={currentCase.id} />
               </CollapsibleCard>
 
               {/* Calendar & Appointments */}
