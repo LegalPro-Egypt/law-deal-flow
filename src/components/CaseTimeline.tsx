@@ -212,52 +212,77 @@ export const CaseTimeline: React.FC<CaseTimelineProps> = ({ caseId, caseData, us
           Case Milestones
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="max-h-[500px] overflow-y-auto">
         <div className="relative">
           {/* Timeline line */}
           <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border" />
           
-          <div className="space-y-6">
+          <div className="space-y-3">
             {/* Case creation event */}
             {caseData && (
-              <div className="relative flex items-start gap-4">
-                <div className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                  <FileText className="h-4 w-4" />
+              <div className="relative flex items-start gap-3">
+                <div className="relative z-10 flex h-6 w-6 items-center justify-center rounded-full bg-primary/20 text-primary">
+                  <FileText className="h-3 w-3" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <h4 className="font-medium">Case Created</h4>
-                    <span className="text-sm text-muted-foreground">
+                    <h4 className="text-sm font-medium">Case Created</h4>
+                    <span className="text-xs text-muted-foreground">
                       {format(new Date(caseData.created_at), 'MMM d, yyyy')}
                     </span>
                   </div>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {caseData.title} was submitted for review
-                  </p>
                 </div>
               </div>
             )}
 
             {/* All timeline events (system + manual) */}
-            {allEvents.map((event) => {
+            {allEvents.map((event, index) => {
+              const isLatest = index === allEvents.length - 1;
               if (event.type === 'system') {
+                // Condensed view for past milestones
+                if (!isLatest) {
+                  return (
+                    <div key={event.id} className="relative flex items-start gap-3">
+                      <div className={`relative z-10 flex h-6 w-6 items-center justify-center rounded-full ${
+                        event.status === 'completed' ? 'bg-success/20 text-success' : 'bg-warning/20 text-warning'
+                      }`}>
+                        {React.cloneElement(event.icon as React.ReactElement, { className: 'h-3 w-3' })}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-sm font-medium">{event.title}</h4>
+                            <Badge variant="secondary" className={`text-xs ${event.status === 'completed' ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
+                              {event.status}
+                            </Badge>
+                          </div>
+                          <span className="text-xs text-muted-foreground whitespace-nowrap">
+                            {format(event.timestamp, 'MMM d, yyyy')}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+                
+                // Expanded view for latest milestone
                 return (
-                  <div key={event.id} className="relative flex items-start gap-4">
-                    <div className={`relative z-10 flex h-8 w-8 items-center justify-center rounded-full ${
+                  <div key={event.id} className="relative flex items-start gap-4 p-3 bg-muted/30 rounded-lg">
+                    <div className={`relative z-10 flex h-10 w-10 items-center justify-center rounded-full ${
                       event.status === 'completed' ? 'bg-success text-success-foreground' : 'bg-warning text-warning-foreground'
                     }`}>
-                      {event.icon}
+                      {React.cloneElement(event.icon as React.ReactElement, { className: 'h-5 w-5' })}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h4 className="font-medium">{event.title}</h4>
+                            <h4 className="font-semibold">{event.title}</h4>
                             <Badge variant="secondary" className={event.status === 'completed' ? 'bg-success text-success-foreground' : 'bg-warning text-warning-foreground'}>
                               {event.status}
                             </Badge>
                           </div>
-                          <p className="text-sm text-muted-foreground mt-1">
+                          <p className="text-sm text-muted-foreground mt-2">
                             {event.description}
                           </p>
                           <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
@@ -266,9 +291,9 @@ export const CaseTimeline: React.FC<CaseTimelineProps> = ({ caseId, caseData, us
                         </div>
                         <div className="flex-shrink-0">
                           {event.status === 'completed' ? (
-                            <CheckCircle className="h-4 w-4 text-success" />
+                            <CheckCircle className="h-5 w-5 text-success" />
                           ) : (
-                            <AlertCircle className="h-4 w-4 text-warning" />
+                            <AlertCircle className="h-5 w-5 text-warning" />
                           )}
                         </div>
                       </div>
@@ -276,17 +301,41 @@ export const CaseTimeline: React.FC<CaseTimelineProps> = ({ caseId, caseData, us
                   </div>
                 );
               } else {
-                // Manual activity
+                // Manual activity - condensed for past, expanded for latest
+                if (!isLatest) {
+                  return (
+                    <div key={event.id} className="relative flex items-start gap-3">
+                      <div className="relative z-10 flex h-6 w-6 items-center justify-center rounded-full bg-muted border border-border">
+                        {React.cloneElement(getActivityIcon(event.activity_type) as React.ReactElement, { className: 'h-3 w-3' })}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-sm font-medium">{event.title}</h4>
+                            <Badge variant="secondary" className={`text-xs ${getStatusColor(event.status)}`}>
+                              {event.status}
+                            </Badge>
+                          </div>
+                          <span className="text-xs text-muted-foreground whitespace-nowrap">
+                            {format(event.timestamp, 'MMM d, yyyy')}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+
+                // Expanded view for latest activity
                 return (
-                  <div key={event.id} className="relative flex items-start gap-4">
-                    <div className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full bg-card border-2 border-border">
-                      {getActivityIcon(event.activity_type)}
+                  <div key={event.id} className="relative flex items-start gap-4 p-3 bg-muted/30 rounded-lg">
+                    <div className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full bg-card border-2 border-primary">
+                      {React.cloneElement(getActivityIcon(event.activity_type) as React.ReactElement, { className: 'h-5 w-5' })}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h4 className="font-medium">{event.title}</h4>
+                            <h4 className="font-semibold">{event.title}</h4>
                             <Badge variant="secondary" className={getStatusColor(event.status)}>
                               {event.status}
                             </Badge>
@@ -295,7 +344,7 @@ export const CaseTimeline: React.FC<CaseTimelineProps> = ({ caseId, caseData, us
                             </Badge>
                           </div>
                           {event.description && (
-                            <p className="text-sm text-muted-foreground mt-1">
+                            <p className="text-sm text-muted-foreground mt-2">
                               {event.description}
                             </p>
                           )}
