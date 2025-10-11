@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useContracts } from "@/hooks/useContracts";
 import { Loader2, Package } from "lucide-react";
@@ -21,16 +22,36 @@ export function DhlShipmentDialog({
 }: DhlShipmentDialogProps) {
   const { toast } = useToast();
   const { updateContractStatus } = useContracts();
+  const [courier, setCourier] = useState("");
+  const [customCourier, setCustomCourier] = useState("");
   const [trackingNumber, setTrackingNumber] = useState("");
   const [expectedDate, setExpectedDate] = useState("");
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
+    if (!courier) {
+      toast({
+        title: "Error",
+        description: "Please select a courier company",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (courier === "other" && !customCourier.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter the courier name",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (!trackingNumber.trim()) {
       toast({
         title: "Error",
-        description: "Please enter a DHL tracking number",
+        description: "Please enter a tracking number",
         variant: "destructive"
       });
       return;
@@ -43,6 +64,7 @@ export function DhlShipmentDialog({
         status: 'sent_for_signature',
         updates: {
           dhl_tracking_number: trackingNumber,
+          courier_company: courier === "other" ? customCourier : courier,
           expected_delivery_date: expectedDate || null,
           shipment_notes: notes || null,
           sent_for_signature_at: new Date().toISOString()
@@ -78,7 +100,37 @@ export function DhlShipmentDialog({
 
         <div className="space-y-4">
           <div>
-            <Label htmlFor="tracking">DHL Tracking Number *</Label>
+            <Label htmlFor="courier">Courier *</Label>
+            <Select value={courier} onValueChange={setCourier}>
+              <SelectTrigger id="courier">
+                <SelectValue placeholder="Select courier..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="egypt-post">Egypt Post</SelectItem>
+                <SelectItem value="egypt-express">Egypt Express (EGXPress)</SelectItem>
+                <SelectItem value="bosta">Bosta</SelectItem>
+                <SelectItem value="dhl">DHL Express (Egypt)</SelectItem>
+                <SelectItem value="ups">UPS Egypt</SelectItem>
+                <SelectItem value="fedex">FedEx Egypt</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {courier === "other" && (
+            <div>
+              <Label htmlFor="custom-courier">Courier Name *</Label>
+              <Input
+                id="custom-courier"
+                value={customCourier}
+                onChange={(e) => setCustomCourier(e.target.value)}
+                placeholder="e.g., Aramex"
+              />
+            </div>
+          )}
+
+          <div>
+            <Label htmlFor="tracking">Tracking Number *</Label>
             <Input
               id="tracking"
               value={trackingNumber}
@@ -111,7 +163,7 @@ export function DhlShipmentDialog({
           <div className="bg-muted p-3 rounded-lg text-sm">
             <p className="font-medium mb-1">Next Steps:</p>
             <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
-              <li>Send the printed contract via DHL</li>
+              <li>Send the printed contract via your chosen courier</li>
               <li>Admin will confirm receipt</li>
               <li>You'll be notified once confirmed</li>
             </ol>
@@ -123,7 +175,7 @@ export function DhlShipmentDialog({
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={isSubmitting || !trackingNumber.trim()}
+              disabled={isSubmitting || !courier || !trackingNumber.trim() || (courier === "other" && !customCourier.trim())}
             >
               {isSubmitting ? (
                 <>
