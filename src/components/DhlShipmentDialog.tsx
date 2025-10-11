@@ -26,7 +26,6 @@ export function DhlShipmentDialog({
   const [courier, setCourier] = useState("");
   const [customCourier, setCustomCourier] = useState("");
   const [trackingNumber, setTrackingNumber] = useState("");
-  const [expectedDate, setExpectedDate] = useState("");
   const [notes, setNotes] = useState("");
   const [signedContractFile, setSignedContractFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -91,7 +90,6 @@ export function DhlShipmentDialog({
         updates: {
           dhl_tracking_number: trackingNumber,
           courier_company: courier === "other" ? customCourier : courier,
-          expected_delivery_date: expectedDate || null,
           shipment_notes: notes || null,
           sent_for_signature_at: new Date().toISOString(),
           metadata: {
@@ -165,16 +163,6 @@ export function DhlShipmentDialog({
               value={trackingNumber}
               onChange={(e) => setTrackingNumber(e.target.value)}
               placeholder="e.g., 1234567890"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="expected-date">Expected Delivery Date</Label>
-            <Input
-              id="expected-date"
-              type="date"
-              value={expectedDate}
-              onChange={(e) => setExpectedDate(e.target.value)}
             />
           </div>
 
