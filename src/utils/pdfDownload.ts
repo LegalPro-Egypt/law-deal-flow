@@ -6,35 +6,47 @@ export const isMobileDevice = (): boolean => {
 
 export const downloadPDF = (pdf: jsPDF, filename: string): void => {
   try {
-    if (isMobileDevice()) {
-      // For mobile devices: create blob URL and open in new window
-      const pdfBlob = pdf.output('blob');
-      const blobUrl = URL.createObjectURL(pdfBlob);
-      
-      // Try to download first, fallback to opening in new window
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = filename;
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      
-      try {
-        link.click();
-      } catch (error) {
-        // If direct download fails, open in new window
-        window.open(blobUrl, '_blank');
-      }
-      
-      document.body.removeChild(link);
-      
-      // Clean up blob URL after a delay
-      setTimeout(() => {
-        URL.revokeObjectURL(blobUrl);
-      }, 100);
-    } else {
-      // For desktop: use standard save method
-      pdf.save(filename);
+    // Unified blob-based download for better iframe/mobile support
+    const inIframe = (() => { try { return window.self !== window.top; } catch { return true; } })();
+
+    // Create blob and object URL
+    const pdfBlob = pdf.output('blob');
+    const blobUrl = URL.createObjectURL(pdfBlob);
+
+    // Create hidden anchor element
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = filename;
+    link.target = '_blank'; // helps in environments blocking direct downloads
+    link.rel = 'noopener';
+    link.style.display = 'none';
+    document.body.appendChild(link);
+
+    try {
+      // Try multiple click strategies for broader browser support
+      link.click();
+      link.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
+    } catch (clickError) {
+      console.warn('Direct download click failed, opening new tab as fallback', clickError);
+      window.open(blobUrl, '_blank', 'noopener,noreferrer');
     }
+
+    // In sandboxed iframe or on some mobile browsers, also open a tab as fallback after a short delay
+    if (isMobileDevice() || inIframe) {
+      setTimeout(() => {
+        try {
+          window.open(blobUrl, '_blank', 'noopener,noreferrer');
+        } catch (openError) {
+          console.error('Fallback open failed:', openError);
+        }
+      }, 150);
+    }
+
+    // Cleanup
+    document.body.removeChild(link);
+    setTimeout(() => {
+      try { URL.revokeObjectURL(blobUrl); } catch {}
+    }, 1500);
   } catch (error) {
     console.error('Error downloading PDF:', error);
     // Fallback: try opening in new window
