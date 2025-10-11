@@ -281,6 +281,8 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
 
   const handleDownloadContract = async (contract: any) => {
     try {
+      console.log('Contract object:', contract);
+      
       const contractCase = cases?.find(c => c.id === contract.case_id);
       
       if (!contractCase) {
@@ -292,14 +294,36 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
         return;
       }
 
+      // Check if contract has content
+      const content = currentLanguage === 'ar' 
+        ? (contract.content_ar || contract.content_en) 
+        : (contract.content_en || contract.content_ar);
+      
+      console.log('Contract content:', content);
+      
+      if (!content) {
+        toast({
+          title: "Error",
+          description: "Contract content is missing. Please contact support.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { downloadContractPdf } = await import('@/utils/contractPdfGenerator');
+      
+      console.log('Generating PDF with data:', {
+        caseNumber: contractCase.case_number,
+        caseTitle: contractCase.title,
+        language: currentLanguage
+      });
       
       downloadContractPdf({
         caseNumber: contractCase.case_number,
         caseTitle: contractCase.title || 'Legal Contract',
         clientName: contractCase.client_name || 'Client',
         lawyerName: 'Lawyer',
-        content: currentLanguage === 'ar' ? (contract.content_ar || contract.content_en) : contract.content_en,
+        content: content,
         language: (currentLanguage as 'ar' | 'en'),
         paymentStructure: contract.consultation_fee ? {
           consultationFee: contract.consultation_fee,
@@ -308,6 +332,8 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
         } : undefined,
         createdAt: new Date(contract.created_at).toLocaleDateString()
       });
+
+      console.log('PDF generation completed');
 
       toast({
         title: "Success",
