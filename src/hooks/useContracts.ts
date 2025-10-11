@@ -14,6 +14,7 @@ export interface Contract {
   pdf_downloaded: boolean;
   downloaded_at: string | null;
   dhl_tracking_number: string | null;
+  courier_company?: string | null;
   expected_delivery_date: string | null;
   shipment_notes: string | null;
   sent_for_signature_at: string | null;
