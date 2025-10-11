@@ -26,53 +26,50 @@ export const generateContractPdf = (data: ContractPdfData): jsPDF => {
   
   let yPosition = margin;
 
-  // Helper function to add text
-  const addText = (text: string, size: number, isBold: boolean = false) => {
+  // Helper function to add text with proper pagination
+  const paginateText = (text: string, size: number, isBold: boolean = false) => {
     doc.setFontSize(size);
-    if (isBold) {
-      doc.setFont('helvetica', 'bold');
-    } else {
-      doc.setFont('helvetica', 'normal');
-    }
+    doc.setFont('helvetica', isBold ? 'bold' : 'normal');
     
+    const lineHeight = size * 0.55;
     const lines = doc.splitTextToSize(text, maxWidth);
     
-    // Check if we need a new page
-    if (yPosition + (lines.length * size * 0.5) > pageHeight - margin) {
-      doc.addPage();
-      yPosition = margin;
-    }
-    
-    if (isRTL) {
-      lines.reverse().forEach((line: string) => {
+    for (const line of lines) {
+      // Check if current line fits on page
+      if (yPosition + lineHeight > pageHeight - margin) {
+        doc.addPage();
+        yPosition = margin;
+      }
+      
+      if (isRTL) {
         doc.text(line, pageWidth - margin, yPosition, { align: 'right' });
-        yPosition += size * 0.5;
-      });
-    } else {
-      doc.text(lines, margin, yPosition);
-      yPosition += lines.length * size * 0.5;
+      } else {
+        doc.text(line, margin, yPosition);
+      }
+      
+      yPosition += lineHeight;
     }
     
     yPosition += 5;
   };
 
   // Header
-  addText(isRTL ? 'عقد قانوني' : 'LEGAL CONTRACT', 20, true);
+  paginateText(isRTL ? 'عقد قانوني' : 'LEGAL CONTRACT', 20, true);
   yPosition += 5;
 
   // Case Information
-  addText(isRTL ? `رقم القضية: ${data.caseNumber}` : `Case Number: ${data.caseNumber}`, 12, true);
-  addText(isRTL ? `عنوان القضية: ${data.caseTitle}` : `Case Title: ${data.caseTitle}`, 12, true);
-  addText(isRTL ? `العميل: ${data.clientName}` : `Client: ${data.clientName}`, 12, true);
-  addText(isRTL ? `المحامي: ${data.lawyerName}` : `Lawyer: ${data.lawyerName}`, 12, true);
-  addText(isRTL ? `التاريخ: ${data.createdAt}` : `Date: ${data.createdAt}`, 12, true);
+  paginateText(isRTL ? `رقم القضية: ${data.caseNumber}` : `Case Number: ${data.caseNumber}`, 12, true);
+  paginateText(isRTL ? `عنوان القضية: ${data.caseTitle}` : `Case Title: ${data.caseTitle}`, 12, true);
+  paginateText(isRTL ? `العميل: ${data.clientName}` : `Client: ${data.clientName}`, 12, true);
+  paginateText(isRTL ? `المحامي: ${data.lawyerName}` : `Lawyer: ${data.lawyerName}`, 12, true);
+  paginateText(isRTL ? `التاريخ: ${data.createdAt}` : `Date: ${data.createdAt}`, 12, true);
   yPosition += 10;
 
   // Payment Structure (if available)
   if (data.paymentStructure) {
-    addText(isRTL ? 'هيكل الدفع:' : 'Payment Structure:', 14, true);
+    paginateText(isRTL ? 'هيكل الدفع:' : 'Payment Structure:', 14, true);
     if (data.paymentStructure.consultationFee) {
-      addText(
+      paginateText(
         isRTL 
           ? `رسوم الاستشارة: ${data.paymentStructure.consultationFee} جنيه` 
           : `Consultation Fee: EGP ${data.paymentStructure.consultationFee}`,
@@ -80,7 +77,7 @@ export const generateContractPdf = (data: ContractPdfData): jsPDF => {
       );
     }
     if (data.paymentStructure.remainingFee) {
-      addText(
+      paginateText(
         isRTL 
           ? `الرسوم المتبقية: ${data.paymentStructure.remainingFee} جنيه` 
           : `Remaining Fee: EGP ${data.paymentStructure.remainingFee}`,
@@ -88,7 +85,7 @@ export const generateContractPdf = (data: ContractPdfData): jsPDF => {
       );
     }
     if (data.paymentStructure.totalFee) {
-      addText(
+      paginateText(
         isRTL 
           ? `إجمالي الرسوم: ${data.paymentStructure.totalFee} جنيه` 
           : `Total Fee: EGP ${data.paymentStructure.totalFee}`,
@@ -105,16 +102,23 @@ export const generateContractPdf = (data: ContractPdfData): jsPDF => {
   yPosition += 10;
 
   // Contract Content
-  addText(isRTL ? 'شروط وأحكام العقد:' : 'Contract Terms and Conditions:', 14, true);
-  addText(data.content, 11);
+  paginateText(isRTL ? 'شروط وأحكام العقد:' : 'Contract Terms and Conditions:', 14, true);
+  paginateText(data.content, 11);
   yPosition += 10;
+
+  // Ensure enough space for signature section
+  const signatureBlockHeight = 70;
+  if (yPosition + signatureBlockHeight > pageHeight - margin) {
+    doc.addPage();
+    yPosition = margin;
+  }
 
   // Signature Section
   doc.setLineWidth(0.5);
   doc.line(margin, yPosition, pageWidth - margin, yPosition);
   yPosition += 10;
 
-  addText(isRTL ? 'التوقيعات' : 'SIGNATURES', 14, true);
+  paginateText(isRTL ? 'التوقيعات' : 'SIGNATURES', 14, true);
   yPosition += 5;
 
   const signatureY = yPosition;
