@@ -52,8 +52,7 @@ import DocumentUpload from "@/components/DocumentUpload";
 import CaseSelector from "@/components/CaseSelector";
 import { CommunicationInbox } from "@/components/CommunicationInbox";
 import { NotificationsInbox } from "@/components/NotificationsInbox";
-import { CaseWorkProgress } from "@/components/CaseWorkProgress";
-import { CaseTimeline } from "@/components/CaseTimeline";
+import { CaseProgress } from "@/components/CaseProgress";
 import { CaseCalendar } from "@/components/CaseCalendar";
 import { NotificationMenu } from "@/components/NotificationMenu";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -743,22 +742,10 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
                     <Clock className="h-4 w-4 text-accent" />
                   </div>
                   
-                  {/* Case Work Progress */}
-                  {(activeCase.status === 'work_in_progress' || activeCase.status === 'pending_client_confirmation' || activeCase.status === 'completed') && (
-                    <div className="mt-4">
-                      <CaseWorkProgress caseData={{
-                        id: activeCase.id,
-                        case_number: activeCase.case_number,
-                        status: activeCase.status,
-                        assigned_lawyer_id: activeCase.assigned_lawyer_id
-                      }} />
-                    </div>
-                  )}
-                  
-                  {/* Case Milestones */}
+                  {/* Case Progress - Unified Component */}
                   {activeCase.assigned_lawyer_id && (
                     <div className="mt-4">
-                      <CaseTimeline caseId={activeCase.id} caseData={activeCase} userRole={role} />
+                      <CaseProgress caseData={activeCase} userRole={role as 'lawyer' | 'client' | 'admin'} />
                     </div>
                   )}
                 </div>
