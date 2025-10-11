@@ -279,6 +279,50 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
   };
 
 
+  const handleDownloadContract = async (contract: any) => {
+    try {
+      const contractCase = cases?.find(c => c.id === contract.case_id);
+      
+      if (!contractCase) {
+        toast({
+          title: "Error",
+          description: "Could not find case data for this contract",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { downloadContractPdf } = await import('@/utils/contractPdfGenerator');
+      
+      downloadContractPdf({
+        caseNumber: contractCase.case_number,
+        caseTitle: contractCase.title || 'Legal Contract',
+        clientName: contractCase.client_name || 'Client',
+        lawyerName: 'Lawyer',
+        content: currentLanguage === 'ar' ? (contract.content_ar || contract.content_en) : contract.content_en,
+        language: (currentLanguage as 'ar' | 'en'),
+        paymentStructure: contract.consultation_fee ? {
+          consultationFee: contract.consultation_fee,
+          remainingFee: contract.remaining_fee,
+          totalFee: contract.total_fee
+        } : undefined,
+        createdAt: new Date(contract.created_at).toLocaleDateString()
+      });
+
+      toast({
+        title: "Success",
+        description: getUserFriendlyDownloadMessage(),
+      });
+    } catch (error) {
+      console.error('Error downloading contract:', error);
+      toast({
+        title: "Error",
+        description: "Failed to download contract. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleReviewCase = async () => {
     if (!activeCase) return;
     
@@ -981,7 +1025,19 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
                             </p>
                           )}
 
-                          <div className="flex justify-end">
+                          <div className="flex justify-end gap-2">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDownloadContract(contract);
+                              }}
+                              className="px-2"
+                              title="Download Contract PDF"
+                            >
+                              <Download className="h-4 w-4" />
+                            </Button>
                             <Button 
                               size="sm" 
                               className="bg-primary hover:bg-primary/90"
