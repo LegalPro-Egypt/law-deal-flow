@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf';
+import { downloadPDF } from './pdfDownload';
 
 interface ContractPdfData {
   caseNumber: string;
@@ -159,5 +160,5 @@ export const generateContractPdf = (data: ContractPdfData): jsPDF => {
 export const downloadContractPdf = (data: ContractPdfData, filename?: string) => {
   const doc = generateContractPdf(data);
   const fileName = filename || `contract-${data.caseNumber}-${Date.now()}.pdf`;
-  doc.save(fileName);
+  downloadPDF(doc, fileName);
 };

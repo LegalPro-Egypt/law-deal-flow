@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Clock, FileText, User, Calendar, CheckCircle, AlertCircle, Circle, DollarSign, MessageSquare } from 'lucide-react';
 import { useCaseActivities } from '@/hooks/useCaseActivities';
+import { useContracts } from '@/hooks/useContracts';
 import { format } from 'date-fns';
 
 interface CaseTimelineProps {
@@ -22,6 +23,7 @@ interface CaseTimelineProps {
 
 export const CaseTimeline: React.FC<CaseTimelineProps> = ({ caseId, caseData, userRole }) => {
   const { activities, loading } = useCaseActivities(caseId);
+  const { contracts } = useContracts(caseId);
 
   // Generate system milestones from case data
   const systemMilestones = useMemo(() => {
@@ -89,6 +91,20 @@ export const CaseTimeline: React.FC<CaseTimelineProps> = ({ caseId, caseData, us
       });
     }
 
+    // Contract accepted milestone
+    const acceptedContract = contracts?.find(c => c.client_accepted_at);
+    if (acceptedContract?.client_accepted_at) {
+      milestones.push({
+        id: 'contract-accepted',
+        type: 'system',
+        timestamp: new Date(acceptedContract.client_accepted_at),
+        icon: <FileText className="h-4 w-4" />,
+        title: 'Contract Accepted',
+        description: 'You accepted the contract. Please print, sign, and ship it to proceed.',
+        status: 'completed'
+      });
+    }
+
     // Work started milestone
     if (caseData.status === 'work_in_progress') {
       milestones.push({
@@ -103,7 +119,7 @@ export const CaseTimeline: React.FC<CaseTimelineProps> = ({ caseId, caseData, us
     }
 
     return milestones;
-  }, [caseData]);
+  }, [caseData, contracts]);
 
   // Combine and sort all timeline events
   const allEvents = useMemo(() => {
