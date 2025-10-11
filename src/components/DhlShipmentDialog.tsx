@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useContracts } from "@/hooks/useContracts";
-import { Loader2, Package } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Loader2, Package, Upload } from "lucide-react";
 
 interface DhlShipmentDialogProps {
   isOpen: boolean;
@@ -27,6 +28,7 @@ export function DhlShipmentDialog({
   const [trackingNumber, setTrackingNumber] = useState("");
   const [expectedDate, setExpectedDate] = useState("");
   const [notes, setNotes] = useState("");
+  const [signedContractFile, setSignedContractFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
@@ -57,8 +59,32 @@ export function DhlShipmentDialog({
       return;
     }
 
+    if (!signedContractFile) {
+      toast({
+        title: "Error",
+        description: "Please upload a copy of the signed contract",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
+      // Upload the signed contract file
+      const fileExt = signedContractFile.name.split('.').pop();
+      const fileName = `${contractId}_signed_${Date.now()}.${fileExt}`;
+      const filePath = `contracts/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('case-documents')
+        .upload(filePath, signedContractFile);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('case-documents')
+        .getPublicUrl(filePath);
+
       await updateContractStatus.mutateAsync({
         contractId,
         status: 'sent_for_signature',
@@ -67,7 +93,10 @@ export function DhlShipmentDialog({
           courier_company: courier === "other" ? customCourier : courier,
           expected_delivery_date: expectedDate || null,
           shipment_notes: notes || null,
-          sent_for_signature_at: new Date().toISOString()
+          sent_for_signature_at: new Date().toISOString(),
+          metadata: {
+            signed_contract_url: publicUrl
+          }
         }
       });
 
@@ -160,6 +189,28 @@ export function DhlShipmentDialog({
             />
           </div>
 
+          <div>
+            <Label htmlFor="signed-contract">Upload Signed Contract *</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="signed-contract"
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png"
+                onChange={(e) => setSignedContractFile(e.target.files?.[0] || null)}
+                className="cursor-pointer"
+              />
+              {signedContractFile && (
+                <span className="text-sm text-muted-foreground flex items-center gap-1">
+                  <Upload className="w-4 h-4" />
+                  {signedContractFile.name}
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Upload a photo or scan of the signed contract (PDF, JPG, or PNG)
+            </p>
+          </div>
+
           <div className="bg-muted p-3 rounded-lg text-sm">
             <p className="font-medium mb-1">Next Steps:</p>
             <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
@@ -175,7 +226,7 @@ export function DhlShipmentDialog({
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={isSubmitting || !courier || !trackingNumber.trim() || (courier === "other" && !customCourier.trim())}
+              disabled={isSubmitting || !courier || !trackingNumber.trim() || (courier === "other" && !customCourier.trim()) || !signedContractFile}
             >
               {isSubmitting ? (
                 <>
