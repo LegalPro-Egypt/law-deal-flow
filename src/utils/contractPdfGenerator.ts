@@ -104,47 +104,6 @@ export const generateContractPdf = (data: ContractPdfData): jsPDF => {
   // Contract Content
   paginateText(isRTL ? 'شروط وأحكام العقد:' : 'Contract Terms and Conditions:', 14, true);
   paginateText(data.content, 11);
-  yPosition += 10;
-
-  // Ensure enough space for signature section
-  const signatureBlockHeight = 70;
-  if (yPosition + signatureBlockHeight > pageHeight - margin) {
-    doc.addPage();
-    yPosition = margin;
-  }
-
-  // Signature Section
-  doc.setLineWidth(0.5);
-  doc.line(margin, yPosition, pageWidth - margin, yPosition);
-  yPosition += 10;
-
-  paginateText(isRTL ? 'التوقيعات' : 'SIGNATURES', 14, true);
-  yPosition += 5;
-
-  const signatureY = yPosition;
-  const signatureWidth = 60;
-  const signatureSpacing = (pageWidth - 2 * margin - 2 * signatureWidth) / 3;
-
-  // Client Signature
-  const clientX = margin + signatureSpacing;
-  doc.line(clientX, signatureY + 20, clientX + signatureWidth, signatureY + 20);
-  doc.setFontSize(10);
-  doc.text(
-    isRTL ? 'توقيع العميل' : 'Client Signature',
-    clientX + signatureWidth / 2,
-    signatureY + 25,
-    { align: 'center' }
-  );
-
-  // Lawyer Signature
-  const lawyerX = clientX + signatureWidth + signatureSpacing;
-  doc.line(lawyerX, signatureY + 20, lawyerX + signatureWidth, signatureY + 20);
-  doc.text(
-    isRTL ? 'توقيع المحامي' : 'Lawyer Signature',
-    lawyerX + signatureWidth / 2,
-    signatureY + 25,
-    { align: 'center' }
-  );
 
   // Footer
   doc.setFontSize(8);
