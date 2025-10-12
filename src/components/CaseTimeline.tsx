@@ -218,6 +218,26 @@ export const CaseTimeline: React.FC<CaseTimelineProps> = ({ caseId, caseData, us
           <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border" />
           
           <div className="space-y-6">
+            {/* Case creation event */}
+            {caseData && (
+              <div className="relative flex items-start gap-4">
+                <div className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                  <FileText className="h-4 w-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium">Case Created</h4>
+                    <span className="text-sm text-muted-foreground">
+                      {format(new Date(caseData.created_at), 'MMM d, yyyy')}
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {caseData.title} was submitted for review
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* All timeline events (system + manual) */}
             {allEvents.map((event) => {
               if (event.type === 'system') {
