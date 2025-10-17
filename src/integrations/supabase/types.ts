@@ -1854,6 +1854,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          assigned_at: string | null
+          assigned_by: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       visitor_analytics: {
         Row: {
           bot_classification: string | null
@@ -1957,8 +1981,19 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      current_user_has_role: {
+        Args: { _role: Database["public"]["Enums"]["app_role"] }
+        Returns: boolean
+      }
       has_admin_role: {
         Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
         Returns: boolean
       }
       is_original_admin: {
@@ -1979,6 +2014,7 @@ export type Database = {
       }
     }
     Enums: {
+      app_role: "admin" | "lawyer" | "client"
       notification_type:
         | "case_activity"
         | "missed_call"
@@ -2122,6 +2158,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "lawyer", "client"],
       notification_type: [
         "case_activity",
         "missed_call",

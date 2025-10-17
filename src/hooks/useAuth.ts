@@ -36,11 +36,24 @@ export const useAuth = () => {
                 console.error('useAuth: Profile fetch error:', error);
                 setProfile(null);
               } else if (profileData) {
-                console.log('useAuth: Profile loaded:', profileData);
-                setProfile(profileData);
+                // Fetch role from secure user_roles table
+                const { data: roleData } = await supabase
+                  .from('user_roles')
+                  .select('role')
+                  .eq('user_id', session.user.id)
+                  .maybeSingle();
+                
+                // Override profile role with secure role from user_roles
+                const secureProfile = {
+                  ...profileData,
+                  role: roleData?.role || 'client'
+                };
+                
+                console.log('useAuth: Profile loaded with secure role:', secureProfile);
+                setProfile(secureProfile);
               } else {
-                // No profile exists, create a profile with client role by default
-                console.log('useAuth: No profile found, creating client profile');
+                // No profile exists, create a profile
+                console.log('useAuth: No profile found, creating profile');
                 const { data: newProfile, error: createError } = await supabase
                   .from('profiles')
                   .insert({
@@ -57,6 +70,16 @@ export const useAuth = () => {
                   console.error('useAuth: Profile creation error:', createError);
                   setProfile(null);
                 } else {
+                  // Create default client role in user_roles table
+                  await supabase
+                    .from('user_roles')
+                    .insert({
+                      user_id: session.user.id,
+                      role: 'client'
+                    })
+                    .select()
+                    .maybeSingle();
+                  
                   console.log('useAuth: Profile created:', newProfile);
                   setProfile(newProfile);
                 }
@@ -100,11 +123,24 @@ export const useAuth = () => {
               console.error('useAuth: Initial profile fetch error:', profileError);
               setProfile(null);
             } else if (profileData) {
-              console.log('useAuth: Initial profile loaded:', profileData);
-              setProfile(profileData);
+              // Fetch role from secure user_roles table
+              const { data: roleData } = await supabase
+                .from('user_roles')
+                .select('role')
+                .eq('user_id', session.user.id)
+                .maybeSingle();
+              
+              // Override profile role with secure role from user_roles
+              const secureProfile = {
+                ...profileData,
+                role: roleData?.role || 'client'
+              };
+              
+              console.log('useAuth: Initial profile loaded with secure role:', secureProfile);
+              setProfile(secureProfile);
             } else {
-              // No profile exists, create a profile with client role by default
-              console.log('useAuth: No initial profile found, creating client profile');
+              // No profile exists, create a profile
+              console.log('useAuth: No initial profile found, creating profile');
               const { data: newProfile, error: createError } = await supabase
                 .from('profiles')
                 .insert({
@@ -121,6 +157,16 @@ export const useAuth = () => {
                 console.error('useAuth: Initial profile creation error:', createError);
                 setProfile(null);
               } else {
+                // Create default client role in user_roles table
+                await supabase
+                  .from('user_roles')
+                  .insert({
+                    user_id: session.user.id,
+                    role: 'client'
+                  })
+                  .select()
+                  .maybeSingle();
+                
                 console.log('useAuth: Initial profile created:', newProfile);
                 setProfile(newProfile);
               }

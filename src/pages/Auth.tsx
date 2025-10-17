@@ -132,13 +132,14 @@ const Auth = () => {
         setTimeout(async () => {
           try {
             // Get user profile to determine role-based redirect
-            const { data: profile } = await supabase
-              .from('profiles')
+            // Fetch role from secure user_roles table
+            const { data: roleData } = await supabase
+              .from('user_roles')
               .select('role')
               .eq('user_id', session.user.id)
-              .single();
+              .maybeSingle();
             
-            const role = profile?.role || (session.user.email === 'dankevforster@gmail.com' ? 'admin' : 'client');
+            const role = roleData?.role || 'client';
             
             // Remove all auth-related parameters from URL
             const url = new URL(window.location.href);
@@ -153,8 +154,7 @@ const Auth = () => {
             navigate(`/${role}`, { replace: true });
           } catch (error) {
             console.error('Error determining redirect role:', error);
-            const fallbackRole = session.user.email === 'dankevforster@gmail.com' ? 'admin' : 'client';
-            navigate(`/${fallbackRole}`, { replace: true });
+            navigate('/client', { replace: true });
           }
         }, 100);
       }
@@ -165,13 +165,14 @@ const Auth = () => {
         setTimeout(async () => {
           try {
             // Get user profile to determine role-based redirect
-            const { data: profile } = await supabase
-              .from('profiles')
+            // Fetch role from secure user_roles table
+            const { data: roleData } = await supabase
+              .from('user_roles')
               .select('role')
               .eq('user_id', session.user.id)
-              .single();
+              .maybeSingle();
             
-            const role = profile?.role || (session.user.email === 'dankevforster@gmail.com' ? 'admin' : 'client');
+            const role = roleData?.role || 'client';
             
             // Remove auth parameters and redirect based on role
             const url = new URL(window.location.href);
@@ -189,8 +190,7 @@ const Auth = () => {
             });
           } catch (error) {
             console.error('Error determining redirect role:', error);
-            const fallbackRole = session.user.email === 'dankevforster@gmail.com' ? 'admin' : 'client';
-            navigate(`/${fallbackRole}`, { replace: true });
+            navigate('/client', { replace: true });
           }
         }, 100);
       }
@@ -217,18 +217,18 @@ const Auth = () => {
         } else {
           // Determine role for redirect
           try {
-            const { data: profile } = await supabase
-              .from('profiles')
+            // Fetch role from secure user_roles table
+            const { data: roleData } = await supabase
+              .from('user_roles')
               .select('role')
               .eq('user_id', session.user.id)
-              .single();
+              .maybeSingle();
             
-            const role = profile?.role || (session.user.email === 'dankevforster@gmail.com' ? 'admin' : 'client');
+            const role = roleData?.role || 'client';
             navigate(`/${role}`, { replace: true });
           } catch (error) {
             console.error('Error determining redirect role:', error);
-            const fallbackRole = session.user.email === 'dankevforster@gmail.com' ? 'admin' : 'client';
-            navigate(`/${fallbackRole}`, { replace: true });
+            navigate('/client', { replace: true });
           }
         }
       } else if (forceStay) {
@@ -247,84 +247,19 @@ const Auth = () => {
   const handleAdminSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (email !== 'dankevforster@gmail.com') {
-      toast({
-        title: "Access Denied",
-        description: "Admin access is restricted to authorized personnel only.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!password) {
-      toast({
-        title: "Password Required",
-        description: "Please enter your password.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+    // Admin now signs in via Client tab - role determined by database
+    toast({
+      title: "Admin Sign In",
+      description: "Please use the Client tab to sign in with your admin credentials.",
     });
-
-    if (error) {
-      toast({
-        title: "Authentication Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "Success", 
-        description: "Authentication successful! Redirecting to admin dashboard...",
-      });
-      
-      // Remove force parameter and navigate immediately
-      const url = new URL(window.location.href);
-      url.searchParams.delete('force');
-      window.history.replaceState({}, '', url.toString());
-      
-      navigate('/admin', { replace: true });
-    }
-    
-    setIsLoading(false);
   };
 
   const handleForgotPassword = async () => {
-    if (email !== 'dankevforster@gmail.com') {
-      toast({
-        title: "Access Denied",
-        description: "Password reset is only available for the admin account.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setResetLoading(true);
-    
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth?reset=admin`,
+    // Admin uses the client forgot password flow
+    toast({
+      title: "Password Reset",
+      description: "Please use the Client tab's forgot password option.",
     });
-
-    if (error) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "Password Reset Sent",
-        description: "Check your email for the password reset link.",
-      });
-    }
-    
-    setResetLoading(false);
   };
 
   const handleSetNewPassword = async (e: React.FormEvent) => {
@@ -710,10 +645,9 @@ const Auth = () => {
             ) : (
               // Normal Authentication Tabs
               <Tabs defaultValue="client" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="client">Client</TabsTrigger>
                   <TabsTrigger value="lawyer">Lawyer</TabsTrigger>
-                  <TabsTrigger value="admin">Admin</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="client">
@@ -758,13 +692,14 @@ const Auth = () => {
                               try {
                                 const { data: { session } } = await supabase.auth.getSession();
                                 if (session) {
-                                  const { data: profile } = await supabase
-                                    .from('profiles')
+                                  // Fetch role from secure user_roles table
+                                  const { data: roleData } = await supabase
+                                    .from('user_roles')
                                     .select('role')
                                     .eq('user_id', session.user.id)
-                                    .single();
+                                    .maybeSingle();
                                   
-                                  const role = profile?.role || (session.user.email === 'dankevforster@gmail.com' ? 'admin' : 'client');
+                                  const role = roleData?.role || 'client';
                                   navigate(`/${role}`, { replace: true });
                                 }
                               } catch (error) {
@@ -1002,68 +937,6 @@ const Auth = () => {
                         )}
                       </div>
                     )}
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="admin">
-                  <div className="space-y-4 mt-6">
-                    <div className="text-center mb-6">
-                      <Lock className="h-8 w-8 mx-auto text-primary mb-2" />
-                      <h3 className="text-lg font-semibold">Admin Portal</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Enter your admin credentials to access the dashboard
-                      </p>
-                    </div>
-                    
-                    <form onSubmit={handleAdminSignIn} className="space-y-4">
-                      <div>
-                        <Label htmlFor="admin-email">Email Address</Label>
-                        <Input
-                          id="admin-email"
-                          type="email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          placeholder="Enter your admin email"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="admin-password">Password</Label>
-                        <Input
-                          id="admin-password"
-                          type="password"
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          placeholder="Enter your password"
-                          required
-                        />
-                      </div>
-                      <Button 
-                        type="submit" 
-                        className="w-full bg-gradient-primary"
-                        disabled={isLoading}
-                      >
-                        {isLoading ? "Signing In..." : "Sign In"}
-                      </Button>
-                      
-                      {email === 'dankevforster@gmail.com' && (
-                        <div className="text-center">
-                          <Button
-                            type="button"
-                            variant="link"
-                            className="text-sm text-primary p-0"
-                            onClick={handleForgotPassword}
-                            disabled={resetLoading}
-                          >
-                            {resetLoading ? "Sending..." : "Forgot/Set password?"}
-                          </Button>
-                        </div>
-                      )}
-                      
-                      <p className="text-xs text-muted-foreground text-center">
-                        Secure admin authentication for authorized personnel only
-                      </p>
-                    </form>
                   </div>
                 </TabsContent>
               </Tabs>
