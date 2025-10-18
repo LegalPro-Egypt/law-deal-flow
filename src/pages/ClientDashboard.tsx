@@ -563,20 +563,11 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="bg-background border border-border shadow-lg z-50 w-48">
-                  <DropdownMenuItem onClick={() => setIntakeConversationOpen(true)}>
-                    <Bot className="h-4 w-4 mr-2" />
-                    AI Intake Conversation
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => navigate('/help')}>
                     <HelpCircle className="h-4 w-4 mr-2" />
                     Contact Support
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleDownloadCaseSummary}>
-                    <Download className="h-4 w-4 mr-2" />
-                    Download Summary
-                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setPaymentHistoryOpen(true)}>
                     <Receipt className="h-4 w-4 mr-2" />
                     Payment History
