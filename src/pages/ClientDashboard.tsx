@@ -11,9 +11,9 @@ import {
   Scale, 
   User,
   MessageSquare, 
-  FileText, 
-  Clock, 
-  CheckCircle, 
+  FileText,
+  Clock,
+  CheckCircle,
   AlertCircle,
   Download,
   Upload,
@@ -71,6 +71,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { BottomNav } from "@/components/navigation/BottomNav";
 import { ClientHeader } from "@/components/navigation/ClientHeader";
 import { LexaInput } from "@/components/dashboard/LexaInput";
+import { MilestonesCard } from "@/components/dashboard/MilestonesCard";
 import { cn } from "@/lib/utils";
 
 interface ClientDashboardProps {
@@ -475,10 +476,21 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
       {/* New Client Header */}
       <ClientHeader />
 
-      {/* Lexa Q&A Entry Point */}
-      <div className="container mx-auto px-4 max-w-6xl mt-4">
-        <LexaInput />
-      </div>
+        {/* Lexa Q&A Entry Point */}
+        <div className="container mx-auto px-4 max-w-6xl mt-4">
+          <LexaInput />
+        </div>
+
+        {/* Milestones Summary Card */}
+        {activeCase.assigned_lawyer_id && (
+          <div className="container mx-auto px-4 max-w-6xl mt-4">
+            <MilestonesCard 
+              caseId={activeCase.id}
+              caseData={activeCase}
+              userRole={role}
+            />
+          </div>
+        )}
 
       <div className="container mx-auto px-4 py-8 max-w-6xl space-y-4">
         {/* Payment Required Card */}
@@ -543,94 +555,6 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
           </Card>
         )}
 
-        {/* Case Timeline Card */}
-        <Collapsible open={!collapsedCards.timeline} onOpenChange={() => toggleCard('timeline')}>
-          <Card className="bg-gradient-card shadow-card border-2 border-primary/20 hover:border-primary/40 transition-colors">
-            <CollapsibleTrigger asChild>
-              <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center">
-                      <Clock className="h-5 w-5 mr-2" />
-                      Case Timeline
-                    </CardTitle>
-                    {collapsedCards.timeline && (
-                      <CardDescription>
-                        Current Status: {formatCaseStatus(activeCase.status, activeCase.consultation_paid, activeCase.payment_status)}
-                      </CardDescription>
-                    )}
-                  </div>
-                  {collapsedCards.timeline ? (
-                    <ChevronRight className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
-                  )}
-                </div>
-              </CardHeader>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-3 h-3 rounded-full bg-success" />
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium">Case Created</span>
-                        <span className="text-sm text-muted-foreground">{formatDate(activeCase.created_at)}</span>
-                      </div>
-                    </div>
-                    <CheckCircle className="h-4 w-4 text-success" />
-                  </div>
-                  
-                  {activeCase.assigned_lawyer_id && (
-                    <div className="flex items-center space-x-3">
-                      <div className="w-3 h-3 rounded-full bg-success" />
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium">Case Approved</span>
-                          <span className="text-sm text-muted-foreground">{formatDate(activeCase.updated_at)}</span>
-                        </div>
-                      </div>
-                      <CheckCircle className="h-4 w-4 text-success" />
-                    </div>
-                  )}
-                  
-                  <div className="flex items-center space-x-3">
-                    <div className={`w-3 h-3 rounded-full ${getStatusColor(activeCase.status)}`} />
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium">
-                          Current Status: {formatCaseStatus(activeCase.status, activeCase.consultation_paid, activeCase.payment_status)}
-                        </span>
-                        <span className="text-sm text-muted-foreground">{formatDate(activeCase.updated_at)}</span>
-                      </div>
-                    </div>
-                    <Clock className="h-4 w-4 text-accent" />
-                  </div>
-                  
-                  {/* Case Work Progress */}
-                  {(activeCase.status === 'work_in_progress' || activeCase.status === 'pending_client_confirmation' || activeCase.status === 'completed') && (
-                    <div className="mt-4">
-                      <CaseWorkProgress caseData={{
-                        id: activeCase.id,
-                        case_number: activeCase.case_number,
-                        status: activeCase.status,
-                        assigned_lawyer_id: activeCase.assigned_lawyer_id
-                      }} />
-                    </div>
-                  )}
-                  
-                  {/* Case Milestones */}
-                  {activeCase.assigned_lawyer_id && (
-                    <div className="mt-4">
-                      <CaseTimeline caseId={activeCase.id} caseData={activeCase} userRole={role} />
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </CollapsibleContent>
-          </Card>
-        </Collapsible>
 
         {/* Case Setup Progress Card */}
         {!stepCompletion.allComplete && (
