@@ -22,7 +22,7 @@ export const LexaInput = () => {
   return (
     <form 
       onSubmit={handleSubmit}
-      className="flex items-center gap-3 px-4 bg-white rounded-xl shadow-sm border border-border hover:border-primary/40 hover:shadow-md transition-all duration-200 h-12 group cursor-text"
+      className="flex items-center gap-3 px-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 h-12 group cursor-text"
       role="button"
       tabIndex={0}
       aria-label="Ask Lexa a legal question"
