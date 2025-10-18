@@ -35,7 +35,7 @@ export const LexaInput = () => {
         onChange={(e) => setQuestion(e.target.value)}
         onKeyPress={handleKeyPress}
         placeholder="Ask Lexa…"
-        className="flex-1 bg-transparent border-none outline-none text-sm text-foreground placeholder:text-muted-foreground"
+        className="flex-1 bg-transparent border-none outline-none text-base text-foreground placeholder:text-muted-foreground"
       />
       
       {question.trim() && (
