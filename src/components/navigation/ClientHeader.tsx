@@ -19,14 +19,16 @@ export const ClientHeader = () => {
         const lastName = user.user_metadata?.last_name;
         const fullName = user.user_metadata?.full_name;
         
+        const capitalizeFirst = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
+        
         let displayName = "";
         
         if (firstName && lastName) {
-          displayName = `${firstName} ${lastName}`;
+          displayName = `${capitalizeFirst(firstName)} ${capitalizeFirst(lastName)}`;
         } else if (fullName) {
-          displayName = fullName;
+          displayName = fullName.split(' ').map(capitalizeFirst).join(' ');
         } else if (firstName) {
-          displayName = firstName;
+          displayName = capitalizeFirst(firstName);
         } else {
           displayName = "User";
         }
