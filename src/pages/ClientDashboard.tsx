@@ -72,6 +72,7 @@ import { BottomNav } from "@/components/navigation/BottomNav";
 import { ClientHeader } from "@/components/navigation/ClientHeader";
 import { LexaInput } from "@/components/dashboard/LexaInput";
 import { MilestonesCard } from "@/components/dashboard/MilestonesCard";
+import { ConnectCard } from "@/components/dashboard/ConnectCard";
 import { cn } from "@/lib/utils";
 
 interface ClientDashboardProps {
@@ -876,73 +877,72 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
           </CardContent>
         </Card>
 
-        {/* Communication Center */}
-        <Collapsible open={!collapsedCards.communication} onOpenChange={() => toggleCard('communication')}>
-          <Card className="bg-gradient-card shadow-card border-2 border-success/20 hover:border-success/40 transition-colors">
-            <CollapsibleTrigger asChild>
-              <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center">
-                      <MessageSquare className="h-5 w-5 mr-2" />
-                      Communication Center
-                      {totalUnreadCount > 0 && (
-                        <Badge variant="destructive" className="ml-2">
-                          {totalUnreadCount}
-                        </Badge>
-                      )}
-                    </CardTitle>
-                    <CardDescription className="flex items-center justify-between">
-                      <span>Direct communication with your legal team</span>
-                      {cases.length > 1 && (
-                        <div className="flex items-center gap-2 ml-4">
-                          <span className="text-xs">Case:</span>
-                          <select 
-                            value={activeCase.id} 
-                            onChange={(e) => {
-                              const selectedCase = cases.find(c => c.id === e.target.value);
-                              if (selectedCase) setActiveCase(selectedCase);
-                            }}
-                            className="text-xs bg-background border border-border rounded px-2 py-1"
-                          >
-                            {cases.map((caseItem) => (
-                              <option key={caseItem.id} value={caseItem.id}>
-                                {caseItem.case_number} - {caseItem.title}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      )}
-                    </CardDescription>
-                  </div>
-                  {collapsedCards.communication ? (
-                    <ChevronRight className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
-                  )}
+        {/* Connect Card */}
+        <ConnectCard 
+          unreadCount={totalUnreadCount}
+          onClick={() => toggleCard('communication')}
+        />
+
+        {/* Communication Inbox (Hidden by default, shown when Connect card is clicked) */}
+        {!collapsedCards.communication && (
+          <Card className="bg-gradient-card shadow-card border-2 border-success/20">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center">
+                    <MessageSquare className="h-5 w-5 mr-2" />
+                    Communication Center
+                  </CardTitle>
+                  <CardDescription className="flex items-center justify-between">
+                    <span>Direct communication with your legal team</span>
+                    {cases.length > 1 && (
+                      <div className="flex items-center gap-2 ml-4">
+                        <span className="text-xs">Case:</span>
+                        <select 
+                          value={activeCase.id} 
+                          onChange={(e) => {
+                            const selectedCase = cases.find(c => c.id === e.target.value);
+                            if (selectedCase) setActiveCase(selectedCase);
+                          }}
+                          className="text-xs bg-background border border-border rounded px-2 py-1"
+                        >
+                          {cases.map((caseItem) => (
+                            <option key={caseItem.id} value={caseItem.id}>
+                              {caseItem.case_number} - {caseItem.title}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </CardDescription>
                 </div>
-              </CardHeader>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <CardContent>
-                <CommunicationInbox
-                  cases={cases}
-                  userRole="client"
-                  caseId={activeCase.id}
-                  caseTitle={activeCase.title}
-                  caseStatus={activeCase.status}
-                  consultationPaid={activeCase.consultation_paid || false}
-                  paymentStatus={activeCase.payment_status || 'pending'}
-                  lawyerAssigned={!!activeCase.assigned_lawyer_id}
-                />
-                <div className="mt-2 p-2 bg-muted/50 rounded text-xs text-muted-foreground">
-                  <AlertCircle className="h-3 w-3 inline mr-1" />
-                  All communication must remain on platform. External contact details will be automatically redacted.
-                </div>
-              </CardContent>
-            </CollapsibleContent>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => toggleCard('communication')}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <CommunicationInbox
+                cases={cases}
+                userRole="client"
+                caseId={activeCase.id}
+                caseTitle={activeCase.title}
+                caseStatus={activeCase.status}
+                consultationPaid={activeCase.consultation_paid || false}
+                paymentStatus={activeCase.payment_status || 'pending'}
+                lawyerAssigned={!!activeCase.assigned_lawyer_id}
+              />
+              <div className="mt-2 p-2 bg-muted/50 rounded text-xs text-muted-foreground">
+                <AlertCircle className="h-3 w-3 inline mr-1" />
+                All communication must remain on platform. External contact details will be automatically redacted.
+              </div>
+            </CardContent>
           </Card>
-        </Collapsible>
+        )}
 
         {/* Calendar Card */}
         <Collapsible open={!collapsedCards.calendar} onOpenChange={() => toggleCard('calendar')}>
