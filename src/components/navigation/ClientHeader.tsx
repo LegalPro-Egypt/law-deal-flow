@@ -15,21 +15,24 @@ export const ClientHeader = () => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
-        // Try to get full_name from metadata
+        const firstName = user.user_metadata?.first_name;
+        const lastName = user.user_metadata?.last_name;
         const fullName = user.user_metadata?.full_name;
-        if (fullName) {
-          setUserName(fullName);
-          setUserInitial(fullName.charAt(0).toUpperCase());
-        } else if (user.email) {
-          // Take email prefix and capitalize each word
-          const emailPrefix = user.email.split('@')[0];
-          const formatted = emailPrefix
-            .split(/[._-]/)
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(' ');
-          setUserName(formatted);
-          setUserInitial(formatted.charAt(0).toUpperCase());
+        
+        let displayName = "";
+        
+        if (firstName && lastName) {
+          displayName = `${firstName} ${lastName}`;
+        } else if (fullName) {
+          displayName = fullName;
+        } else if (firstName) {
+          displayName = firstName;
+        } else {
+          displayName = "User";
         }
+        
+        setUserName(displayName);
+        setUserInitial(displayName.charAt(0).toUpperCase());
       }
     };
 
@@ -39,10 +42,13 @@ export const ClientHeader = () => {
   return (
     <div className="flex items-center justify-between px-4 py-3 bg-background">
       {/* Left: Greeting */}
-      <div className="flex items-center gap-2">
-        <span className="text-2xl">👋</span>
+      <div className="flex flex-col">
+        <div className="flex items-center gap-1">
+          <span className="text-2xl">👋</span>
+          <span className="text-base font-normal text-muted-foreground">Hello,</span>
+        </div>
         <h1 className="text-xl font-semibold text-foreground">
-          Hello, {userName}!
+          {userName}!
         </h1>
       </div>
 
