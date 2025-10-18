@@ -56,10 +56,25 @@ export function MilestonesCard({ caseId, caseData, userRole }: MilestonesCardPro
         </div>
         
         <div className="relative">
-          <FastForward className="w-6 h-6 text-white" style={{
-            opacity: 0.8,
-            filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.3))'
-          }} />
+          <div className="relative w-36 h-36">
+            <svg 
+              className="absolute inset-0" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <defs>
+                <linearGradient id="fadeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="rgba(255,255,255,0)" />
+                  <stop offset="100%" stopColor="rgba(255,255,255,1)" />
+                </linearGradient>
+              </defs>
+              <g fill="url(#fadeGradient)">
+                <polygon points="5,4 15,12 5,20" />
+                <polygon points="13,4 23,12 13,20" />
+              </g>
+            </svg>
+          </div>
         </div>
       </button>
 
