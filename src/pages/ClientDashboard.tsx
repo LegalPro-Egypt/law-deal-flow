@@ -643,6 +643,8 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
           </Collapsible>
         )}
 
+        {/* Dashboard Cards Grid - 2x2 on mobile */}
+        <div className="grid grid-cols-2 gap-4">
         {/* Proposals & Contracts Card */}
         <Card className="bg-gradient-card shadow-card border-2 border-accent/20 hover:border-accent/40 transition-colors" id="inbox-section">
           <CardHeader>
@@ -1266,6 +1268,7 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
             </CollapsibleContent>
           </Card>
         </Collapsible>
+        </div>
 
         {/* AI Intake Conversation Dialog */}
         <Dialog open={intakeConversationOpen} onOpenChange={setIntakeConversationOpen}>
