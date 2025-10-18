@@ -6,7 +6,7 @@ import { useNotifications } from "@/hooks/useNotifications";
 
 export const ClientHeader = () => {
   const navigate = useNavigate();
-  const [firstName, setFirstName] = useState<string>("");
+  const [userName, setUserName] = useState<string>("");
   const [userInitial, setUserInitial] = useState<string>("");
   const { unreadCount } = useNotifications();
 
@@ -15,26 +15,21 @@ export const ClientHeader = () => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
-        let extractedFirstName = "";
-        
-        // Try to get first_name from metadata
-        if (user.user_metadata?.first_name) {
-          extractedFirstName = user.user_metadata.first_name;
-        } 
-        // Else try to extract from full_name
-        else if (user.user_metadata?.full_name) {
-          extractedFirstName = user.user_metadata.full_name.split(' ')[0];
-        } 
-        // Else use email prefix
-        else if (user.email) {
+        // Try to get full_name from metadata
+        const fullName = user.user_metadata?.full_name;
+        if (fullName) {
+          setUserName(fullName);
+          setUserInitial(fullName.charAt(0).toUpperCase());
+        } else if (user.email) {
+          // Take email prefix and capitalize each word
           const emailPrefix = user.email.split('@')[0];
-          extractedFirstName = emailPrefix
-            .split(/[._-]/)[0]
-            .charAt(0).toUpperCase() + emailPrefix.split(/[._-]/)[0].slice(1);
+          const formatted = emailPrefix
+            .split(/[._-]/)
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+          setUserName(formatted);
+          setUserInitial(formatted.charAt(0).toUpperCase());
         }
-        
-        setFirstName(extractedFirstName);
-        setUserInitial(extractedFirstName.charAt(0).toUpperCase());
       }
     };
 
@@ -42,24 +37,21 @@ export const ClientHeader = () => {
   }, []);
 
   return (
-    <div className="flex items-center justify-between px-4 pt-4 pb-2 bg-background">
+    <div className="flex items-center justify-between px-4 py-3 bg-background">
       {/* Left: Greeting */}
-      <div className="flex flex-col">
-        <div className="flex items-center gap-2">
-          <span className="text-xl">👋</span>
-          <span className="font-normal text-muted-foreground">Hello,</span>
-        </div>
+      <div className="flex items-center gap-2">
+        <span className="text-2xl">👋</span>
         <h1 className="text-xl font-semibold text-foreground">
-          {firstName}
+          Hello, {userName}!
         </h1>
       </div>
 
       {/* Right: Pill container with bell + avatar */}
-      <div className="flex items-center gap-2 bg-background border border-border rounded-full px-2 py-1">
+      <div className="flex items-center gap-2 bg-muted rounded-full px-2 py-1">
         {/* Notification Bell */}
         <button
           onClick={() => navigate("/notifications")}
-          className="relative p-2 hover:bg-muted/50 rounded-full transition-colors"
+          className="relative p-2 hover:bg-background/50 rounded-full transition-colors"
           aria-label="Notifications"
         >
           <Bell className="h-5 w-5 text-muted-foreground" />
@@ -71,7 +63,7 @@ export const ClientHeader = () => {
         {/* Avatar */}
         <button
           onClick={() => navigate("/account")}
-          className="w-10 h-10 rounded-full bg-muted-foreground flex items-center justify-center text-background font-medium hover:opacity-80 transition-opacity"
+          className="w-10 h-10 rounded-full bg-muted-foreground flex items-center justify-center text-background font-semibold hover:opacity-80 transition-opacity"
           aria-label="Account"
         >
           {userInitial}
