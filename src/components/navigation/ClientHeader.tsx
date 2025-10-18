@@ -44,7 +44,7 @@ export const ClientHeader = () => {
       {/* Left: Greeting */}
       <div className="flex flex-col">
         <div className="flex items-center gap-1">
-          <span className="text-xl">👋</span>
+          <span className="text-base">👋</span>
           <span className="text-xl font-normal text-muted-foreground">Hello,</span>
         </div>
         <h1 className="text-xl font-semibold text-foreground">
