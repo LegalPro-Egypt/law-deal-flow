@@ -71,6 +71,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { ProposalReviewDialog } from "@/components/ProposalReviewDialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { BottomNav } from "@/components/navigation/BottomNav";
+import { UserMenuDropdown } from "@/components/navigation/UserMenuDropdown";
 import { cn } from "@/lib/utils";
 
 interface ClientDashboardProps {
@@ -555,56 +556,17 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
                 </Link>
               </Button>
               
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-9 w-9 sm:h-10 sm:w-auto sm:px-4">
-                    <AlignJustify className="h-4 w-4" />
-                    <span className="hidden sm:inline sm:ml-2">More</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-background border border-border shadow-lg z-50 w-48">
-                  <DropdownMenuItem onClick={() => navigate('/help')}>
-                    <HelpCircle className="h-4 w-4 mr-2" />
-                    Contact Support
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setPaymentHistoryOpen(true)}>
-                    <Receipt className="h-4 w-4 mr-2" />
-                    Payment History
-                  </DropdownMenuItem>
-                  {activeCase.status === 'proposal_accepted' && !activeCase.consultation_paid && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem 
-                        onClick={() => {
-                          navigate('/payment', {
-                            state: {
-                              paymentData: {
-                                caseId: activeCase.id,
-                                consultationFee: activeCase.consultation_fee || 0,
-                                remainingFee: activeCase.remaining_fee || 0,
-                                totalFee: activeCase.total_fee || 0,
-                                lawyerName: 'Your Lawyer',
-                                caseTitle: activeCase.title,
-                                type: 'consultation'
-                              }
-                            }
-                          });
-                        }}
-                        className="text-primary font-medium"
-                      >
-                        <Receipt className="h-4 w-4 mr-2" />
-                        Complete Payment
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut} className="text-destructive hover:text-destructive">
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Sign Out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <UserMenuDropdown
+                activeCase={activeCase}
+                onPaymentHistoryOpen={() => setPaymentHistoryOpen(true)}
+                onSignOut={handleSignOut}
+                align="end"
+              >
+                <Button variant="outline" size="sm" className="h-9 w-9 sm:h-10 sm:w-auto sm:px-4">
+                  <AlignJustify className="h-4 w-4" />
+                  <span className="hidden sm:inline sm:ml-2">More</span>
+                </Button>
+              </UserMenuDropdown>
             </div>
           </div>
         </div>
@@ -1603,7 +1565,14 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
       </div>
 
       {/* Bottom Navigation - Mobile Only */}
-      {isMobile && <BottomNav active="home" />}
+      {isMobile && (
+        <BottomNav 
+          active="home"
+          activeCase={activeCase}
+          onPaymentHistoryOpen={() => setPaymentHistoryOpen(true)}
+          onSignOut={handleSignOut}
+        />
+      )}
     </div>
   );
 };

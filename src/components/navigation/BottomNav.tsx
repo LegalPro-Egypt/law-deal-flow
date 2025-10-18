@@ -1,27 +1,30 @@
-import { Home, Plus, User } from "lucide-react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { Home, Plus, AlignJustify } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { UserMenuDropdown } from "./UserMenuDropdown";
 
 interface BottomNavProps {
   active?: "home" | "profile";
+  activeCase: {
+    status: string;
+    consultation_paid: boolean;
+    consultation_fee?: number;
+    remaining_fee?: number;
+    total_fee?: number;
+    id: string;
+    title: string;
+  } | null;
+  onPaymentHistoryOpen: () => void;
+  onSignOut: () => void;
 }
 
-export const BottomNav = ({ active = "home" }: BottomNavProps) => {
+export const BottomNav = ({ 
+  active = "home", 
+  activeCase,
+  onPaymentHistoryOpen,
+  onSignOut
+}: BottomNavProps) => {
   const navigate = useNavigate();
-  const location = useLocation();
-
-  const handleProfileClick = () => {
-    // If already on client page, scroll to profile section
-    if (location.pathname === "/client") {
-      const profileSection = document.getElementById("profile");
-      if (profileSection) {
-        profileSection.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    } else {
-      // Navigate to client page
-      navigate("/client");
-    }
-  };
 
   return (
     <nav
@@ -56,19 +59,25 @@ export const BottomNav = ({ active = "home" }: BottomNavProps) => {
         {/* Spacer for FAB */}
         <div className="flex-1" />
 
-        {/* Profile */}
-        <button
-          onClick={handleProfileClick}
-          className={cn(
-            "flex flex-col items-center justify-center gap-1 min-h-[44px] flex-1 text-xs font-medium transition-colors",
-            active === "profile" ? "text-primary" : "text-muted-foreground"
-          )}
-          aria-label="Profile"
-          aria-current={active === "profile" ? "page" : undefined}
+        {/* Menu */}
+        <UserMenuDropdown
+          activeCase={activeCase}
+          onPaymentHistoryOpen={onPaymentHistoryOpen}
+          onSignOut={onSignOut}
+          align="end"
+          side="top"
         >
-          <User className="h-5 w-5" />
-          <span>Profile</span>
-        </button>
+          <button
+            className={cn(
+              "flex flex-col items-center justify-center gap-1 min-h-[44px] flex-1 text-xs font-medium transition-colors",
+              active === "profile" ? "text-primary" : "text-muted-foreground"
+            )}
+            aria-label="Menu"
+          >
+            <AlignJustify className="h-5 w-5" />
+            <span>Menu</span>
+          </button>
+        </UserMenuDropdown>
       </div>
     </nav>
   );
