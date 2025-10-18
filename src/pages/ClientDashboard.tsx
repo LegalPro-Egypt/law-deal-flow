@@ -49,13 +49,11 @@ import { useClientData } from "@/hooks/useClientData";
 import { useAuth } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
 import DocumentUpload from "@/components/DocumentUpload";
-import CaseSelector from "@/components/CaseSelector";
 import { CommunicationInbox } from "@/components/CommunicationInbox";
 import { NotificationsInbox } from "@/components/NotificationsInbox";
 import { CaseWorkProgress } from "@/components/CaseWorkProgress";
 import { CaseTimeline } from "@/components/CaseTimeline";
 import { CaseCalendar } from "@/components/CaseCalendar";
-import { NotificationMenu } from "@/components/NotificationMenu";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useChatNotifications } from "@/hooks/useChatNotifications";
 import { NotificationBadge } from "@/components/ui/notification-badge";
@@ -71,7 +69,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { ProposalReviewDialog } from "@/components/ProposalReviewDialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { BottomNav } from "@/components/navigation/BottomNav";
-import { UserMenuDropdown } from "@/components/navigation/UserMenuDropdown";
+import { ClientHeader } from "@/components/navigation/ClientHeader";
 import { cn } from "@/lib/utils";
 
 interface ClientDashboardProps {
@@ -420,21 +418,7 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <header className="bg-card border-b border-border sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
-            <div className="flex items-center justify-between h-14 sm:h-16">
-              <div className="flex items-center space-x-2 sm:space-x-4">
-                <Link to="/?force=true" className="flex items-center space-x-2 sm:space-x-4 hover:opacity-80 transition-opacity">
-                  <Scale className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
-                  <div className="flex items-center space-x-1 sm:space-x-2">
-                    <h1 className="text-lg sm:text-xl font-bold">LegalPro</h1>
-                    <Badge variant="secondary" className="text-xs hidden sm:block">Client Portal</Badge>
-                  </div>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </header>
+        <ClientHeader />
         <div className="container mx-auto px-4 py-8 space-y-6">
           <Skeleton className="h-32 w-full" />
           <Skeleton className="h-96 w-full" />
@@ -446,33 +430,7 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
   if (!activeCase) {
     return (
       <div className="min-h-screen bg-background">
-        <header className="bg-card border-b border-border sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
-            <div className="flex items-center justify-between h-14 sm:h-16">
-              <div className="flex items-center space-x-2 sm:space-x-4">
-                <Link to="/?force=true" className="flex items-center space-x-2 sm:space-x-4 hover:opacity-80 transition-opacity">
-                  <Scale className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
-                  <div className="flex items-center space-x-1 sm:space-x-2">
-                    <h1 className="text-lg sm:text-xl font-bold">LegalPro</h1>
-                    <Badge variant="secondary" className="text-xs hidden sm:block">Client Portal</Badge>
-                  </div>
-                </Link>
-              </div>
-              <div className="flex items-center space-x-1 sm:space-x-2">
-                <Button asChild className="h-9 sm:h-10" size="sm">
-                  <Link to="/intake?new=1">
-                    <Plus className="h-4 w-4 sm:mr-2" />
-                    <span className="hidden sm:inline">Start New Case</span>
-                  </Link>
-                </Button>
-                <Button variant="ghost" size="sm" onClick={handleSignOut} className="h-9 w-9 sm:h-10 sm:w-auto sm:px-4">
-                  <LogOut className="h-4 w-4" />
-                  <span className="hidden sm:inline sm:ml-2">Sign Out</span>
-                </Button>
-              </div>
-            </div>
-          </div>
-        </header>
+        <ClientHeader />
         <div className="container mx-auto px-4 py-8 text-center">
           <Card className="max-w-md mx-auto">
             <CardContent className="p-8">
@@ -497,6 +455,7 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
             </CardContent>
           </Card>
         </div>
+        {isMobile && <BottomNav active="home" activeCase={null} onPaymentHistoryOpen={() => {}} onSignOut={handleSignOut} />}
       </div>
     );
   }
@@ -512,65 +471,8 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
         </div>
       )}
 
-      {/* Header */}
-      <header className="backdrop-blur-md bg-background/80 border-b border-border/50 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
-          <div className="flex items-center justify-between h-14 sm:h-16">
-            {/* Logo and Title */}
-            <Link to="/?force=true" className="flex items-center space-x-2 sm:space-x-4 hover:opacity-80 transition-opacity">
-              <Scale className="h-8 w-8 text-primary" />
-              <div className="flex items-center space-x-1 sm:space-x-2">
-                <h1 className="text-xl font-bold font-futura text-foreground">
-                  LegalPro
-                </h1>
-                <Badge variant="secondary" className="text-xs hidden sm:block">
-                  Client Portal
-                </Badge>
-              </div>
-            </Link>
-
-            {/* Case Selector with Details */}
-            <div className="flex-1 max-w-[160px] sm:max-w-sm mx-2 sm:mx-4">
-              <CaseSelector 
-                cases={cases}
-                activeCase={activeCase}
-                onCaseSelect={(caseId) => {
-                  const selectedCase = cases.find(c => c.id === caseId);
-                  if (selectedCase) setActiveCase(selectedCase);
-                }}
-                showCaseDetails={true}
-              />
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4">
-              <NotificationMenu />
-              <Button
-                asChild
-                className="bg-primary hover:bg-primary/90 text-primary-foreground h-9 sm:h-10"
-                size="sm"
-              >
-                <Link to="/intake?new=1">
-                  <Plus className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Start New Case</span>
-                </Link>
-              </Button>
-              
-              <UserMenuDropdown
-                activeCase={activeCase}
-                onPaymentHistoryOpen={() => setPaymentHistoryOpen(true)}
-                onSignOut={handleSignOut}
-                align="end"
-              >
-                <Button variant="outline" size="sm" className="h-9 w-9 sm:h-10 sm:w-auto sm:px-4">
-                  <AlignJustify className="h-4 w-4" />
-                  <span className="hidden sm:inline sm:ml-2">More</span>
-                </Button>
-              </UserMenuDropdown>
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* New Client Header */}
+      <ClientHeader />
 
       <div className="container mx-auto px-4 py-8 max-w-6xl space-y-4">
         {/* Payment Required Card */}
