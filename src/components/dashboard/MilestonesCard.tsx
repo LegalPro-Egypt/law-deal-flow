@@ -36,7 +36,7 @@ export function MilestonesCard({ caseId, caseData, userRole }: MilestonesCardPro
   };
 
   const latestDate = getLatestDate();
-  const formattedDate = format(latestDate, "dd MMM yyyy");
+  const todaysDate = format(new Date(), "dd MMM yyyy");
   const lastUpdated = formatDistanceToNow(latestDate, { addSuffix: true });
 
   return (
@@ -47,7 +47,7 @@ export function MilestonesCard({ caseId, caseData, userRole }: MilestonesCardPro
         aria-label="View case milestones"
       >
         <div className="flex flex-col items-start gap-0 leading-none">
-          <span className="text-xs text-white/80 leading-tight">{formattedDate}</span>
+          <span className="text-xs text-white/80 leading-tight">{todaysDate}</span>
           <div className="flex items-center gap-1.5 leading-none">
             <span className="text-lg font-semibold text-white leading-tight">Milestones</span>
             <span className="w-2 h-2 bg-green-500 rounded-full inline-block"></span>
