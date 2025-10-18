@@ -70,6 +70,7 @@ import { ProposalReviewDialog } from "@/components/ProposalReviewDialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { BottomNav } from "@/components/navigation/BottomNav";
 import { ClientHeader } from "@/components/navigation/ClientHeader";
+import { LexaInput } from "@/components/dashboard/LexaInput";
 import { cn } from "@/lib/utils";
 
 interface ClientDashboardProps {
@@ -473,6 +474,11 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
 
       {/* New Client Header */}
       <ClientHeader />
+
+      {/* Lexa Q&A Entry Point */}
+      <div className="container mx-auto px-4 max-w-6xl mt-4">
+        <LexaInput />
+      </div>
 
       <div className="container mx-auto px-4 py-8 max-w-6xl space-y-4">
         {/* Payment Required Card */}

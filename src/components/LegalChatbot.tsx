@@ -28,6 +28,7 @@ interface LegalChatbotProps {
   onCaseDataExtracted?: (data: CaseData) => void;
   onCaseCreated?: (caseId: string) => void;
   className?: string;
+  initialMessage?: string;
 }
 
 export const LegalChatbot: React.FC<LegalChatbotProps> = ({
@@ -36,11 +37,13 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = ({
   caseId,
   onCaseDataExtracted,
   onCaseCreated,
-  className
+  className,
+  initialMessage
 }) => {
   const [inputMessage, setInputMessage] = useState('');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const initialMessageSentRef = useRef(false);
   const { toast } = useToast();
 
   const {
@@ -102,6 +105,14 @@ export const LegalChatbot: React.FC<LegalChatbotProps> = ({
       onCaseCreated(hookCaseId);
     }
   }, [hookCaseId, onCaseCreated]);
+
+  // Auto-send initial message if provided
+  useEffect(() => {
+    if (initialMessage && conversationId && !initialMessageSentRef.current && !isLoading) {
+      initialMessageSentRef.current = true;
+      sendMessage(initialMessage);
+    }
+  }, [initialMessage, conversationId, isLoading, sendMessage]);
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;

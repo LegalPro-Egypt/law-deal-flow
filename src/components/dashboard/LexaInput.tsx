@@ -1,0 +1,46 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { HelpCircle, ArrowRight } from 'lucide-react';
+
+export const LexaInput = () => {
+  const [question, setQuestion] = useState('');
+  const navigate = useNavigate();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (question.trim()) {
+      navigate('/qa-chat', { state: { initialMessage: question.trim() } });
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSubmit(e as any);
+    }
+  };
+
+  return (
+    <form 
+      onSubmit={handleSubmit}
+      className="flex items-center gap-3 px-4 bg-white rounded-xl shadow-sm border border-border hover:border-primary/40 hover:shadow-md transition-all duration-200 h-12 group cursor-text"
+      role="button"
+      tabIndex={0}
+      aria-label="Ask Lexa a legal question"
+    >
+      <HelpCircle className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+      
+      <input
+        type="text"
+        value={question}
+        onChange={(e) => setQuestion(e.target.value)}
+        onKeyPress={handleKeyPress}
+        placeholder="Ask Lexa…"
+        className="flex-1 bg-transparent border-none outline-none text-sm text-foreground placeholder:text-muted-foreground"
+      />
+      
+      {question.trim() && (
+        <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+      )}
+    </form>
+  );
+};

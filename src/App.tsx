@@ -50,6 +50,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import ProBono from "./pages/ProBono";
 import Payment from "./pages/Payment";
+import QAChat from "./pages/QAChat";
 import NotFound from "./pages/NotFound";
 import { useState } from "react";
 
@@ -126,6 +127,11 @@ function AppContent() {
         <Route path="/client" element={
           <ProtectedRoute requiredRole="client">
             <ClientDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/qa-chat" element={
+          <ProtectedRoute requiredRole="client">
+            <QAChat />
           </ProtectedRoute>
         } />
         <Route path="/lawyer" element={
