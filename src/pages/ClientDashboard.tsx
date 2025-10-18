@@ -69,6 +69,14 @@ import { ContractReviewDialog } from "@/components/ContractReviewDialog";
 import { useContracts } from "@/hooks/useContracts";
 import { useLanguage } from "@/hooks/useLanguage";
 import { ProposalReviewDialog } from "@/components/ProposalReviewDialog";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { MobileTabBar, MobileTab } from "@/components/client-mobile/MobileTabBar";
+import { MobileWelcomeView } from "@/components/client-mobile/MobileWelcomeView";
+import { MobileMilestonesView } from "@/components/client-mobile/MobileMilestonesView";
+import { MobileConnectView } from "@/components/client-mobile/MobileConnectView";
+import { MobileProposalsContractsView } from "@/components/client-mobile/MobileProposalsContractsView";
+import { MobileCalendarView } from "@/components/client-mobile/MobileCalendarView";
+import { MobileDocumentsView } from "@/components/client-mobile/MobileDocumentsView";
 
 interface ClientDashboardProps {
   viewAsUserId?: string;
@@ -125,6 +133,8 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
   const [selectedProposal, setSelectedProposal] = useState<any>(null);
   const [showProposalReview, setShowProposalReview] = useState(false);
   const { currentLanguage } = useLanguage();
+  const isMobile = useIsMobile();
+  const [mobileActiveTab, setMobileActiveTab] = useState<MobileTab>('welcome');
 
 
   const handleSendMessage = async () => {
@@ -496,6 +506,229 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
     );
   }
 
+  // Mobile View
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-background">
+        <CallManager />
+
+        {/* Admin View Banner */}
+        {viewAsUserId && (
+          <div className="bg-blue-600 text-white py-2 px-4 text-center text-xs font-medium">
+            🔍 Admin View - Viewing client's dashboard
+          </div>
+        )}
+
+        {/* Mobile Header - Only show on welcome screen */}
+        {mobileActiveTab === 'welcome' && (
+          <header className="backdrop-blur-md bg-background/80 border-b border-border/50 sticky top-0 z-40 px-4 py-3">
+            <div className="flex items-center justify-between">
+              <Link to="/?force=true" className="flex items-center gap-2">
+                <Scale className="h-6 w-6 text-primary" />
+                <h1 className="text-lg font-bold">LegalPro</h1>
+              </Link>
+              <div className="flex items-center gap-2">
+                <NotificationMenu />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <AlignJustify className="h-5 w-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem onClick={() => navigate('/intake?new=1')}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      New Case
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setIntakeConversationOpen(true)}>
+                      <Bot className="h-4 w-4 mr-2" />
+                      AI Conversation
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/help')}>
+                      <HelpCircle className="h-4 w-4 mr-2" />
+                      Support
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sign Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+
+            {/* Case Selector for Mobile */}
+            <div className="mt-3">
+              <CaseSelector 
+                cases={cases}
+                activeCase={activeCase}
+                onCaseSelect={(caseId) => {
+                  const selectedCase = cases.find(c => c.id === caseId);
+                  if (selectedCase) setActiveCase(selectedCase);
+                }}
+                showCaseDetails={false}
+              />
+            </div>
+          </header>
+        )}
+
+        {/* Mobile Views */}
+        {mobileActiveTab === 'welcome' && (
+          <MobileWelcomeView
+            caseData={activeCase}
+            onNavigate={setMobileActiveTab}
+            paymentRequired={activeCase.status === 'proposal_accepted' && !activeCase.consultation_paid}
+            onPaymentClick={() => {
+              navigate('/payment', {
+                state: {
+                  paymentData: {
+                    caseId: activeCase.id,
+                    consultationFee: activeCase.consultation_fee || 0,
+                    remainingFee: activeCase.remaining_fee || 0,
+                    totalFee: activeCase.total_fee || 0,
+                    lawyerName: 'Your Lawyer',
+                    caseTitle: activeCase.title,
+                    type: 'consultation'
+                  }
+                }
+              });
+            }}
+          />
+        )}
+
+        {mobileActiveTab === 'milestones' && (
+          <MobileMilestonesView
+            caseId={activeCase.id}
+            caseData={activeCase}
+            onBack={() => setMobileActiveTab('welcome')}
+          />
+        )}
+
+        {mobileActiveTab === 'connect' && (
+          <MobileConnectView
+            caseId={activeCase.id}
+            cases={cases}
+            onBack={() => setMobileActiveTab('welcome')}
+          />
+        )}
+
+        {mobileActiveTab === 'proposals' && (
+          <MobileProposalsContractsView
+            caseId={activeCase.id}
+            onBack={() => setMobileActiveTab('welcome')}
+          />
+        )}
+
+        {mobileActiveTab === 'calendar' && (
+          <MobileCalendarView
+            caseId={activeCase.id}
+            clientId={effectiveUserId}
+            lawyerId={activeCase.assigned_lawyer_id}
+            onBack={() => setMobileActiveTab('welcome')}
+          />
+        )}
+
+        {mobileActiveTab === 'documents' && (
+          <MobileDocumentsView
+            caseId={activeCase.id}
+            documents={documents}
+            onBack={() => setMobileActiveTab('welcome')}
+            onDocumentRename={renameDocument}
+          />
+        )}
+
+        {/* Mobile Tab Bar */}
+        <MobileTabBar
+          activeTab={mobileActiveTab}
+          onTabChange={setMobileActiveTab}
+        />
+
+        {/* Dialogs - Same as desktop */}
+        <Dialog open={intakeConversationOpen} onOpenChange={setIntakeConversationOpen}>
+          <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center">
+                <Bot className="h-5 w-5 mr-2" />
+                AI Intake Conversation
+              </DialogTitle>
+              <DialogDescription>
+                Review your conversation with our AI assistant
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              {messages.length > 0 ? messages.map((msg: any) => (
+                <div
+                  key={msg.id}
+                  className={`flex ${msg.sender === 'client' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div className={`max-w-[80%] p-3 rounded-lg ${
+                    msg.sender === 'client' 
+                      ? 'bg-primary text-primary-foreground' 
+                      : 'bg-muted'
+                  }`}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs opacity-75">
+                        {msg.sender === 'client' ? 'You' : 'AI Assistant'}
+                      </span>
+                      <span className="text-xs opacity-75">
+                        {new Date(msg.created_at).toLocaleTimeString()}
+                      </span>
+                    </div>
+                    <p className="text-sm">{msg.content}</p>
+                  </div>
+                </div>
+              )) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No conversation history available</p>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {selectedProposal && (
+          <ProposalReviewDialog
+            open={showProposalReview}
+            onOpenChange={(open) => {
+              setShowProposalReview(open);
+              if (!open) setSelectedProposal(null);
+            }}
+            proposal={selectedProposal}
+            onProposalUpdate={() => {
+              refreshData();
+            }}
+          />
+        )}
+
+        {selectedContract && (
+          <ContractReviewDialog
+            isOpen={showContractReview}
+            onClose={() => {
+              setShowContractReview(false);
+              setSelectedContract(null);
+            }}
+            contract={selectedContract}
+            caseInfo={{
+              case_number: activeCase?.case_number || '',
+              title: activeCase?.title || '',
+              client_name: activeCase?.client_name || ''
+            }}
+            lawyerName="Lawyer"
+          />
+        )}
+
+        <DocumentPreview
+          isOpen={!!previewDocument}
+          onClose={() => setPreviewDocument(null)}
+          document={previewDocument}
+        />
+      </div>
+    );
+  }
+
+  // Desktop View
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
       <CallManager />
