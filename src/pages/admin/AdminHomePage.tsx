@@ -30,7 +30,8 @@ export default function AdminHomePage() {
     fetchActiveCasesDetailed,
     fetchAllLawyersDetailed,
     fetchAllClientsDetailed,
-    fetchPendingReviewsDetailed 
+    fetchPendingReviewsDetailed,
+    deleteCase 
   } = useAdminData();
   
   // Modal states
@@ -226,6 +227,7 @@ export default function AdminHomePage() {
           setModalData(prev => ({ ...prev, allCases: data }));
         }}
         onViewCase={(caseId) => console.log("View case:", caseId)}
+        onDeleteCase={deleteCase}
       />
 
       <CaseListModal
@@ -239,6 +241,7 @@ export default function AdminHomePage() {
           setModalData(prev => ({ ...prev, activeCases: data }));
         }}
         onViewCase={(caseId) => console.log("View case:", caseId)}
+        onDeleteCase={deleteCase}
       />
 
       <IntakeListModal

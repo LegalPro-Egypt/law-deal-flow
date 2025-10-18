@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { StatsDetailsDialog } from "./StatsDetailsDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,9 +10,11 @@ import {
   User, 
   AlertCircle, 
   Eye,
-  Clock
+  Clock,
+  Trash2
 } from "lucide-react";
 import { formatDate } from "@/utils/dateUtils";
+import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface CaseData {
   id: string;
@@ -35,6 +37,7 @@ interface CaseListModalProps {
   isLoading: boolean;
   onRefresh: () => void;
   onViewCase: (caseId: string) => void;
+  onDeleteCase?: (caseId: string) => Promise<void> | void;
 }
 
 const getStatusColor = (status: string) => {
@@ -66,7 +69,9 @@ export function CaseListModal({
   isLoading,
   onRefresh,
   onViewCase,
+  onDeleteCase,
 }: CaseListModalProps) {
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   if (isLoading) {
     return (
       <StatsDetailsDialog
@@ -155,18 +160,56 @@ export function CaseListModal({
                     </div>
                   </div>
                   
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onViewCase(case_.id)}
-                    className="ml-2"
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-2 ml-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onViewCase(case_.id)}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    {onDeleteCase && (
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => setPendingDeleteId(case_.id)}
+                        title="Delete case"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
           ))
+        )}
+        {onDeleteCase && (
+          <AlertDialog open={!!pendingDeleteId} onOpenChange={(open) => { if (!open) setPendingDeleteId(null); }}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Case</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to permanently delete this case? This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setPendingDeleteId(null)}>Cancel</AlertDialogCancel>
+                <Button
+                  variant="destructive"
+                  onClick={async () => {
+                    if (pendingDeleteId && onDeleteCase) {
+                      await onDeleteCase(pendingDeleteId);
+                      setPendingDeleteId(null);
+                      onRefresh();
+                    }
+                  }}
+                >
+                  Delete
+                </Button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         )}
       </div>
     </StatsDetailsDialog>
