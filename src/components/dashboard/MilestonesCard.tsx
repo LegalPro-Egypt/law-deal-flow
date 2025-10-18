@@ -46,13 +46,13 @@ export function MilestonesCard({ caseId, caseData, userRole }: MilestonesCardPro
         className="w-full bg-blue-950 rounded-2xl px-4 py-3 flex items-center justify-between hover:brightness-110 active:scale-95 transition-all duration-200 cursor-pointer shadow-lg focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2"
         aria-label="View case milestones"
       >
-        <div className="flex flex-col items-start gap-0.5">
-          <span className="text-xs text-white/80">{formattedDate}</span>
-          <div className="flex items-center gap-1.5">
-            <span className="text-lg font-semibold text-white">Milestones</span>
+        <div className="flex flex-col items-start gap-0 leading-none">
+          <span className="text-xs text-white/80 leading-tight">{formattedDate}</span>
+          <div className="flex items-center gap-1.5 leading-none">
+            <span className="text-lg font-semibold text-white leading-tight">Milestones</span>
             <span className="w-2 h-2 bg-green-500 rounded-full inline-block"></span>
           </div>
-          <span className="text-sm text-white/70">Last updated {lastUpdated}</span>
+          <span className="text-sm text-white/70 leading-tight">Last updated {lastUpdated}</span>
         </div>
         
         <div className="relative">
