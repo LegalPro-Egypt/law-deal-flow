@@ -69,6 +69,9 @@ import { ContractReviewDialog } from "@/components/ContractReviewDialog";
 import { useContracts } from "@/hooks/useContracts";
 import { useLanguage } from "@/hooks/useLanguage";
 import { ProposalReviewDialog } from "@/components/ProposalReviewDialog";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { BottomNav } from "@/components/navigation/BottomNav";
+import { cn } from "@/lib/utils";
 
 interface ClientDashboardProps {
   viewAsUserId?: string;
@@ -125,6 +128,7 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
   const [selectedProposal, setSelectedProposal] = useState<any>(null);
   const [showProposalReview, setShowProposalReview] = useState(false);
   const { currentLanguage } = useLanguage();
+  const isMobile = useIsMobile();
 
 
   const handleSendMessage = async () => {
@@ -497,7 +501,7 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
   }
 
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden">
+    <div className={cn("min-h-screen bg-background overflow-x-hidden", isMobile && "pb-24")}>
       <CallManager />
 
       {/* Admin View Banner */}
@@ -770,7 +774,7 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
         {/* Case Setup Progress Card */}
         {!stepCompletion.allComplete && (
           <Collapsible open={!collapsedCards.progress} onOpenChange={() => toggleCard('progress')}>
-            <Card className="bg-gradient-card shadow-card">
+            <Card id="profile" className="bg-gradient-card shadow-card">
               <CollapsibleTrigger asChild>
                 <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
                   <div className="flex items-center justify-between">
@@ -1606,6 +1610,9 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
           />
         )}
       </div>
+
+      {/* Bottom Navigation - Mobile Only */}
+      {isMobile && <BottomNav active="home" />}
     </div>
   );
 };
