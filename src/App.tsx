@@ -51,6 +51,7 @@ import TermsOfService from "./pages/TermsOfService";
 import ProBono from "./pages/ProBono";
 import Payment from "./pages/Payment";
 import QAChat from "./pages/QAChat";
+import CommunicationChat from "./pages/CommunicationChat";
 import NotFound from "./pages/NotFound";
 import { useState } from "react";
 
@@ -132,6 +133,11 @@ function AppContent() {
         <Route path="/qa-chat" element={
           <ProtectedRoute requiredRole="client">
             <QAChat />
+          </ProtectedRoute>
+        } />
+        <Route path="/client/communication" element={
+          <ProtectedRoute requiredRole="client">
+            <CommunicationChat />
           </ProtectedRoute>
         } />
         <Route path="/lawyer" element={
