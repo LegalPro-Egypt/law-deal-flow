@@ -12,7 +12,7 @@ export function ConnectCard({ unreadCount }: ConnectCardProps) {
   return (
     <div 
       onClick={() => navigate('/client/communication')}
-      className="bg-white dark:bg-card rounded-2xl px-4 py-4 shadow-sm border border-gray-200 dark:border-border cursor-pointer hover:shadow-md transition-shadow"
+      className="bg-white dark:bg-card rounded-2xl px-4 py-4 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
     >
       <div className="flex items-start justify-between gap-3">
         {/* LEFT: Icon + Text */}
