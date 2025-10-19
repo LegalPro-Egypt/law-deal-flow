@@ -804,54 +804,91 @@
 .ai-ring {
   position: relative;
   border-radius: 9999px;
-  background: #fff;
+  background: hsl(var(--background));
   isolation: isolate;
+  overflow: hidden; /* clip to pill */
 }
 
+/* Glowing spot that travels around the border */
 .ai-ring::before {
   content: "";
   position: absolute;
-  inset: -2px;
-  border-radius: inherit;
-  padding: 2px;
-  background: conic-gradient(
-    from 0deg,
-    rgba(16, 185, 129, 0) 0deg,
-    rgba(16, 185, 129, 0) 30deg,
-    rgba(16, 185, 129, 0.8) 60deg,
-    rgba(59, 130, 246, 0.8) 90deg,
-    rgba(168, 85, 247, 0.6) 120deg,
-    rgba(168, 85, 247, 0) 150deg,
-    rgba(16, 185, 129, 0) 180deg,
-    rgba(16, 185, 129, 0) 360deg
+  width: 40px;
+  height: 40px;
+  background: radial-gradient(
+    circle,
+    hsl(var(--primary) / 0.9) 0%,
+    hsl(var(--accent) / 0.7) 40%,
+    hsl(var(--accent) / 0) 70%
   );
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  animation: ai-border-chase 3s linear infinite;
-  filter: blur(0.5px);
+  border-radius: 50%;
+  filter: blur(8px);
+  animation: chase-around 3s linear infinite;
+  pointer-events: none;
   z-index: 0;
+}
+
+/* Inner cover to reveal only a thin ring */
+.ai-ring::after {
+  content: "";
+  position: absolute;
+  inset: 2px; /* ring thickness */
+  border-radius: inherit;
+  background: inherit;
+  z-index: 1;
   pointer-events: none;
 }
 
+/* Faster on hover/focus */
 .ai-ring:focus-within::before,
 .ai-ring:hover::before {
   animation-duration: 2s;
 }
 
-@keyframes ai-border-chase {
-  to {
-    transform: rotate(360deg);
+/* Path for the glowing spot around the pill */
+@keyframes chase-around {
+  0% {
+    top: -20px;
+    left: 50%;
+    right: auto;
+    bottom: auto;
+    transform: translateX(-50%);
+  }
+  25% {
+    top: 50%;
+    right: -20px;
+    left: auto;
+    bottom: auto;
+    transform: translateY(-50%);
+  }
+  50% {
+    top: auto;
+    bottom: -20px;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+  }
+  75% {
+    top: 50%;
+    left: -20px;
+    right: auto;
+    bottom: auto;
+    transform: translateY(-50%);
+  }
+  100% {
+    top: -20px;
+    left: 50%;
+    right: auto;
+    bottom: auto;
+    transform: translateX(-50%);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ai-ring::before {
-    animation: none;
-  }
+  .ai-ring::before { animation: none; }
 }
 
-/* Dark mode support */
+/* Dark mode support (background token already adapts) */
 .dark .ai-ring {
   background: hsl(var(--background));
 }
