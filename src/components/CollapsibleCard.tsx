@@ -13,6 +13,7 @@ interface CollapsibleCardProps {
   defaultOpen?: boolean;
   className?: string;
   headerAction?: React.ReactNode;
+  id?: string;
 }
 
 export const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
@@ -22,12 +23,13 @@ export const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
   children,
   defaultOpen = true,
   className,
-  headerAction
+  headerAction,
+  id
 }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <Card className={cn("shadow-card", className)}>
+    <Card className={cn("shadow-card", className)} id={id}>
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
