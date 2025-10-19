@@ -800,70 +800,39 @@
   }
 }
 
-/* AI Shimmer Ring for Ask Lexa Input */
+/* AI Gradient Drop Shadow for Ask Lexa Input */
 .ai-ring {
   position: relative;
   border-radius: 9999px;
   background: hsl(var(--background));
   isolation: isolate;
-  overflow: hidden; /* clip to pill */
-  box-shadow: inset 0 0 0 1px hsl(var(--border) / 0.18); /* subtle base ring */
 }
 
-/* Smooth, rotating arc (GPU accelerated) */
+/* Purple-to-orange gradient glow (90deg = left to right) */
 .ai-ring::before {
   content: "";
   position: absolute;
-  inset: 0; /* cover whole pill */
+  inset: -8px;
   border-radius: inherit;
-  background: conic-gradient(
-    from 0deg,
-    hsl(var(--accent) / 0) 0deg,
-    hsl(var(--accent) / 0) 160deg,     /* most of circle transparent */
-    hsl(var(--primary) / 0.95) 190deg, /* bright lead-in */
-    hsl(var(--accent) / 0.95) 230deg,  /* peak glow */
-    hsl(var(--accent) / 0.55) 300deg,  /* long fading tail */
-    hsl(var(--accent) / 0) 340deg,
-    hsl(var(--accent) / 0) 360deg
-  );
-  filter: blur(1.2px);
-  transform-origin: 50% 50%;
-  animation: ai-orbit 2.6s linear infinite;
-  will-change: transform;
-  backface-visibility: hidden;
-  transform: translateZ(0);
+  background: linear-gradient(90deg, hsl(280 100% 70%), hsl(25 100% 60%));
+  filter: blur(12px);
+  opacity: 0.6;
+  z-index: -1;
   pointer-events: none;
-  z-index: 0;
 }
 
-/* Inner cover defines ring thickness (thicker for visibility) */
+/* Content layer on top */
 .ai-ring::after {
   content: "";
   position: absolute;
-  inset: 3.5px; /* ring thickness; adjust to 3–4.5px to taste */
+  inset: 0;
   border-radius: inherit;
-  background: inherit; /* matches wrapper, hides center */
-  z-index: 1;
+  background: hsl(var(--background));
+  z-index: 0;
   pointer-events: none;
 }
 
-/* Slightly faster on hover/focus */
-.ai-ring:focus-within::before,
-.ai-ring:hover::before {
-  animation-duration: 1.8s;
-}
-
-/* Butter-smooth, transform-only rotation */
-@keyframes ai-orbit {
-  to { transform: rotate(360deg); }
-}
-
-/* Respect reduced motion */
-@media (prefers-reduced-motion: reduce) {
-  .ai-ring::before { animation: none; }
-}
-
-/* Dark mode inherits token already */
+/* Dark mode inherits background token */
 .dark .ai-ring {
   background: hsl(var(--background));
 }
