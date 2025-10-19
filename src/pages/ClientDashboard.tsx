@@ -485,7 +485,7 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
 
         {/* Milestones Summary Card */}
         {activeCase.assigned_lawyer_id && (
-          <div className="container mx-auto px-4 max-w-6xl mt-4">
+          <div className="container mx-auto px-4 max-w-6xl mt-8 mb-2">
             <MilestonesCard 
               caseId={activeCase.id}
               caseData={activeCase}
@@ -494,7 +494,7 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
           </div>
         )}
 
-      <div className="container mx-auto px-4 py-8 max-w-6xl space-y-4">
+      <div className="container mx-auto px-4 pt-4 pb-8 max-w-6xl space-y-4">
         {/* Payment Required Card */}
         {activeCase.status === 'proposal_accepted' && !activeCase.consultation_paid && (
           <Card className="bg-gradient-to-r from-primary/10 via-primary/5 to-background border-2 border-primary shadow-lg">
