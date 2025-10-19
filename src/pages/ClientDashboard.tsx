@@ -480,7 +480,7 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
         <ClientHeader />
         
         {/* Lexa Q&A Entry Point */}
-        <div className="container mx-auto px-4 max-w-6xl pb-4">
+        <div className="container mx-auto px-4 max-w-6xl pt-4 pb-4">
           <LexaInput />
         </div>
       </div>
