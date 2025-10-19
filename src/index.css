@@ -20,13 +20,13 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    /* Welcoming Teal - Primary Brand */
-    --primary: 184 65% 39%;               /* #1E9B8A - Welcoming Teal */
+    /* Professional Blue - Primary Brand */
+    --primary: 210 100% 40%;              /* #0065CC - Professional Blue */
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 184 65% 35%;         /* #1A8A7B - Primary Hover */
-    --primary-500: 184 65% 45%;           /* #2BBBAD - Primary 500 */
-    --primary-600: 184 65% 35%;           /* #1A8A7B - Primary 600 */
-    --primary-700: 184 65% 30%;           /* #147A6C - Primary 700 */
+    --primary-hover: 210 100% 35%;        /* #0058B3 - Primary Hover */
+    --primary-500: 210 100% 45%;          /* #0073E6 - Primary 500 */
+    --primary-600: 210 100% 35%;          /* #0058B3 - Primary 600 */
+    --primary-700: 210 100% 30%;          /* #004C99 - Primary 700 */
 
     /* Professional Secondary */
     --secondary: 214 28% 93%;             /* #EEF2F6 - Muted */
@@ -36,12 +36,12 @@
     --muted: 214 28% 93%;                 /* #EEF2F6 - Muted */
     --muted-foreground: 215 20% 45%;      /* #475569 - Text Muted */
 
-    /* AI Teal - Interactive Accent */
-    --accent: 173 64% 45%;                /* #2BBBAD - AI Teal */
+    /* AI Blue - Interactive Accent */
+    --accent: 210 100% 45%;               /* #0073E6 - AI Blue */
     --accent-foreground: 0 0% 100%;
-    --accent-hover: 173 63% 40%;          /* #239F94 - Accent 600 */
-    --accent-600: 173 63% 40%;            /* #239F94 - Accent 600 */
-    --accent-700: 173 62% 35%;            /* #1E8A81 - Accent 700 */
+    --accent-hover: 210 100% 40%;         /* #0065CC - Accent 600 */
+    --accent-600: 210 100% 40%;           /* #0065CC - Accent 600 */
+    --accent-700: 210 100% 35%;           /* #0058B3 - Accent 700 */
 
     /* Action Emerald - CTA */
     --cta: 133 46% 34%;                   /* #2E7D32 - Action Emerald */
@@ -70,14 +70,14 @@
     /* Borders & Inputs */
     --border: 210 24% 90%;                /* #E2E8F0 - Border */
     --input: 210 24% 90%;
-    --ring: 173 64% 45%;                  /* Accent for focus rings */
+    --ring: 210 100% 45%;                 /* Accent for focus rings */
 
     /* Layout */
     --radius: 0.75rem;
 
     /* Legal-Tech Professional Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(210 28% 17%), hsl(212 28% 21%));
-    --gradient-hero: radial-gradient(1200px 600px at 10% -10%, hsl(173 64% 45% / 0.18), transparent 60%), linear-gradient(180deg, hsl(246 33% 97%), hsl(0 0% 100%));
+    --gradient-hero: radial-gradient(1200px 600px at 10% -10%, hsl(210 100% 45% / 0.18), transparent 60%), linear-gradient(180deg, hsl(246 33% 97%), hsl(0 0% 100%));
     --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(214 28% 98%) 100%);
     
     /* Professional Shadows */
@@ -152,13 +152,13 @@
     --popover: 218 41% 11%;
     --popover-foreground: 214 44% 92%;
 
-    /* Welcoming Teal - Adjusted for dark mode */
-    --primary: 184 65% 39%;               /* Keep same welcoming teal */
+    /* Professional Blue - Adjusted for dark mode */
+    --primary: 210 100% 40%;              /* Keep same professional blue */
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 184 65% 35%;
-    --primary-500: 184 65% 45%;
-    --primary-600: 184 65% 35%;
-    --primary-700: 184 65% 30%;
+    --primary-hover: 210 100% 35%;
+    --primary-500: 210 100% 45%;
+    --primary-600: 210 100% 35%;
+    --primary-700: 210 100% 30%;
 
     --secondary: 215 38% 15%;             /* #162234 - Dark Muted */
     --secondary-foreground: 213 24% 84%;  /* #CBD5E1 - Dark Text */
@@ -166,12 +166,12 @@
     --muted: 215 38% 15%;                 /* #162234 - Dark Muted */
     --muted-foreground: 215 20% 70%;      /* #94A3B8 - Dark Text Muted */
 
-    /* AI Teal - Same values work in dark */
-    --accent: 173 64% 45%;                /* #2BBBAD - AI Teal */
+    /* AI Blue - Same values work in dark */
+    --accent: 210 100% 45%;               /* #0073E6 - AI Blue */
     --accent-foreground: 0 0% 100%;
-    --accent-hover: 173 63% 40%;
-    --accent-600: 173 63% 40%;
-    --accent-700: 173 62% 35%;
+    --accent-hover: 210 100% 40%;
+    --accent-600: 210 100% 40%;
+    --accent-700: 210 100% 35%;
 
     /* Action Emerald - Same values work in dark */
     --cta: 133 46% 34%;                   /* #2E7D32 - Action Emerald */
@@ -196,11 +196,11 @@
 
     --border: 213 36% 25%;                /* #223047 - Dark Border */
     --input: 213 36% 25%;
-    --ring: 173 64% 45%;
+    --ring: 210 100% 45%;
 
     /* Dark Mode Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(210 28% 17%), hsl(212 28% 21%));
-    --gradient-hero: radial-gradient(1200px 600px at 10% -10%, hsl(173 64% 45% / 0.12), transparent 60%), linear-gradient(180deg, hsl(214 36% 8%), hsl(218 41% 11%));
+    --gradient-hero: radial-gradient(1200px 600px at 10% -10%, hsl(210 100% 45% / 0.12), transparent 60%), linear-gradient(180deg, hsl(214 36% 8%), hsl(218 41% 11%));
     --gradient-card: linear-gradient(145deg, hsl(218 41% 11%) 0%, hsl(215 38% 13%) 100%);
     
     /* Enhanced Dark Mode AI Colors */
