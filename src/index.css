@@ -812,7 +812,7 @@
 .ai-ring::before {
   content: "";
   position: absolute;
-  inset: -8px;
+  inset: -6px;
   border-radius: inherit;
   background: linear-gradient(
     90deg,
@@ -822,8 +822,8 @@
     hsl(25 100% 60%)
   );
   background-size: 200% 200%;
-  filter: blur(12px);
-  opacity: 0.6;
+  filter: blur(8px);
+  opacity: 0.35;
   z-index: -1;
   pointer-events: none;
   animation: ai-glow-rotate 4s ease-in-out infinite, ai-glow-pulse 3s ease-in-out infinite;
