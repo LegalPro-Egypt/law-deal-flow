@@ -817,27 +817,29 @@
   background: conic-gradient(
     from 0deg,
     rgba(16, 185, 129, 0) 0deg,
-    rgba(16, 185, 129, 0.6) 60deg,
-    rgba(59, 130, 246, 0.6) 140deg,
-    rgba(168, 85, 247, 0.6) 220deg,
-    rgba(16, 185, 129, 0.6) 300deg,
+    rgba(16, 185, 129, 0) 30deg,
+    rgba(16, 185, 129, 0.8) 60deg,
+    rgba(59, 130, 246, 0.8) 90deg,
+    rgba(168, 85, 247, 0.6) 120deg,
+    rgba(168, 85, 247, 0) 150deg,
+    rgba(16, 185, 129, 0) 180deg,
     rgba(16, 185, 129, 0) 360deg
   );
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
-  animation: ai-spin 8s linear infinite;
-  filter: blur(0.2px);
+  animation: ai-border-chase 3s linear infinite;
+  filter: blur(0.5px);
   z-index: 0;
   pointer-events: none;
 }
 
 .ai-ring:focus-within::before,
 .ai-ring:hover::before {
-  animation-duration: 6s;
+  animation-duration: 2s;
 }
 
-@keyframes ai-spin {
+@keyframes ai-border-chase {
   to {
     transform: rotate(360deg);
   }
