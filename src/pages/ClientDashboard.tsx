@@ -490,7 +490,7 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
 
         {/* Milestones Summary Card */}
         {activeCase.assigned_lawyer_id && (
-          <div className="container mx-auto px-4 max-w-6xl mt-4 mb-2">
+          <div className="container mx-auto px-4 max-w-6xl mt-8 mb-2">
             <MilestonesCard 
               caseId={activeCase.id}
               caseData={activeCase}
