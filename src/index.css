@@ -808,17 +808,26 @@
   isolation: isolate;
 }
 
-/* Purple-to-orange gradient glow (90deg = left to right) */
+/* Rotating purple-to-orange gradient glow with pulse */
 .ai-ring::before {
   content: "";
   position: absolute;
   inset: -8px;
   border-radius: inherit;
-  background: linear-gradient(90deg, hsl(280 100% 70%), hsl(25 100% 60%));
+  background: linear-gradient(
+    90deg,
+    hsl(280 100% 70%),
+    hsl(25 100% 60%),
+    hsl(280 100% 70%),
+    hsl(25 100% 60%)
+  );
+  background-size: 200% 200%;
   filter: blur(12px);
   opacity: 0.6;
   z-index: -1;
   pointer-events: none;
+  animation: ai-glow-rotate 4s ease-in-out infinite, ai-glow-pulse 3s ease-in-out infinite;
+  will-change: background-position, opacity;
 }
 
 /* Content layer on top */
@@ -830,6 +839,32 @@
   background: hsl(var(--background));
   z-index: 0;
   pointer-events: none;
+}
+
+/* Faster animation on hover/focus */
+.ai-ring:hover::before,
+.ai-ring:focus-within::before {
+  animation-duration: 2.5s, 2s;
+}
+
+/* Rotating gradient animation */
+@keyframes ai-glow-rotate {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Subtle pulse animation */
+@keyframes ai-glow-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 0.8; }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .ai-ring::before { 
+    animation: none;
+    opacity: 0.6;
+  }
 }
 
 /* Dark mode inherits background token */
