@@ -475,8 +475,8 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
         </div>
       )}
 
-      {/* New Client Header - Sticky */}
-      <div className="sticky top-0 z-40 bg-background shadow-sm">
+      {/* New Client Header - Fixed */}
+      <div className="fixed top-0 left-0 right-0 z-40 bg-background shadow-sm">
         <ClientHeader />
         
         {/* Lexa Q&A Entry Point */}
@@ -484,6 +484,9 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
           <LexaInput />
         </div>
       </div>
+
+      {/* Spacer to prevent content from hiding under fixed header */}
+      <div className="h-[140px]"></div>
 
         {/* Milestones Summary Card */}
         {activeCase.assigned_lawyer_id && (
