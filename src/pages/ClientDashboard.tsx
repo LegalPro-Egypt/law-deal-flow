@@ -655,7 +655,7 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
 
         {/* Calendar Card */}
         <Collapsible open={!collapsedCards.calendar} onOpenChange={() => toggleCard('calendar')}>
-          <Card className="bg-gradient-card shadow-card">
+          <Card className="bg-gradient-card shadow-card border-0">
             <CollapsibleTrigger asChild>
               <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
                 <div className="flex items-center justify-between">
@@ -691,7 +691,7 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
 
         {/* Case Documents Card */}
         <Collapsible open={!collapsedCards.documents} onOpenChange={() => toggleCard('documents')}>
-          <Card className="bg-gradient-card shadow-card">
+          <Card className="bg-gradient-card shadow-card border-0">
             <CollapsibleTrigger asChild>
               <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
                 <div className="flex items-center justify-between">
