@@ -486,7 +486,7 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
       </div>
 
       {/* Spacer to prevent content from hiding under fixed header */}
-      <div className="h-[140px]"></div>
+      <div className="h-[180px]"></div>
 
         {/* Milestones Summary Card */}
         {activeCase.assigned_lawyer_id && (
