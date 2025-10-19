@@ -43,7 +43,8 @@ export function MilestonesCard({ caseId, caseData, userRole }: MilestonesCardPro
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="w-full bg-blue-950 rounded-2xl px-4 py-4 flex items-center justify-between hover:brightness-110 active:scale-95 transition-all duration-200 cursor-pointer shadow-lg focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2"
+        className="w-full rounded-2xl px-4 py-4 flex items-center justify-between hover:brightness-110 active:scale-95 transition-all duration-200 cursor-pointer shadow-lg focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2"
+        style={{ backgroundColor: 'hsl(var(--milestone-blue))' }}
         aria-label="View case milestones"
       >
         <div className="flex flex-col items-start gap-0 leading-none">

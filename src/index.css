@@ -59,6 +59,9 @@
     --destructive: 0 68% 51%;
     --destructive-foreground: 0 0% 100%;
 
+    /* Dashboard Cards */
+    --milestone-blue: 210 100% 40%;       /* #0065CC - Milestone Card */
+
     /* Text Hierarchy */
     --text-strong: 222 47% 11%;           /* #0F172A - Text Strong */
     --text: 217 19% 27%;                  /* #1F2937 - Text Default */
