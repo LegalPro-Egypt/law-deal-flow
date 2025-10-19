@@ -52,6 +52,7 @@ import ProBono from "./pages/ProBono";
 import Payment from "./pages/Payment";
 import QAChat from "./pages/QAChat";
 import CommunicationChat from "./pages/CommunicationChat";
+import ProposalsContracts from "./pages/ProposalsContracts";
 import NotFound from "./pages/NotFound";
 import { useState } from "react";
 
@@ -138,6 +139,11 @@ function AppContent() {
         <Route path="/client/communication" element={
           <ProtectedRoute requiredRole="client">
             <CommunicationChat />
+          </ProtectedRoute>
+        } />
+        <Route path="/client/proposals-contracts" element={
+          <ProtectedRoute requiredRole="client">
+            <ProposalsContracts />
           </ProtectedRoute>
         } />
         <Route path="/lawyer" element={
