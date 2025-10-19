@@ -476,7 +476,7 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
       )}
 
       {/* New Client Header - Fixed */}
-      <div className="fixed top-0 left-0 right-0 z-40 bg-background shadow-sm">
+      <div className="fixed top-0 left-0 right-0 z-40 bg-background">
         <ClientHeader />
         
         {/* Lexa Q&A Entry Point */}
