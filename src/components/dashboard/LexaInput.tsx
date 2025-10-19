@@ -23,7 +23,7 @@ export const LexaInput = () => {
     <div className="ai-ring shadow-sm">
       <form 
         onSubmit={handleSubmit}
-        className="flex items-center gap-3 px-5 bg-transparent rounded-full hover:shadow-md transition-all duration-200 h-14 group cursor-text"
+        className="relative z-10 flex items-center gap-3 px-5 bg-transparent rounded-full hover:shadow-md transition-all duration-200 h-14 group cursor-text"
         role="button"
         tabIndex={0}
         aria-label="Ask Lexa a legal question"
