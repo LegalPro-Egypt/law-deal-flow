@@ -28,7 +28,7 @@ export const BottomNav = ({
 
   return (
     <nav
-      className="fixed bottom-0 inset-x-0 z-40 bg-card/80 backdrop-blur-md rounded-t-2xl px-6 pt-3 pb-[calc(env(safe-area-inset-bottom)+10px)] md:hidden"
+      className="fixed bottom-0 inset-x-0 z-40 bg-background/80 backdrop-blur-md rounded-t-2xl px-6 pt-3 pb-[calc(env(safe-area-inset-bottom)+10px)] md:hidden"
       role="navigation"
       aria-label="Mobile navigation"
     >
