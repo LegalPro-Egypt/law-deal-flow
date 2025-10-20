@@ -19,7 +19,7 @@ export function ConnectCard({ unreadCount }: ConnectCardProps) {
         <div className="flex flex-col gap-2 flex-1">
           <Mail className="h-6 w-6 text-foreground" />
           <div className="flex flex-col gap-1">
-            <span className="text-2xl font-bold text-foreground leading-[1.3]">Connect</span>
+            <span className="text-foreground">Connect</span>
             <span className="text-sm leading-5 text-gray-500 dark:text-muted-foreground">
               Communicate with your Legal Team
             </span>
