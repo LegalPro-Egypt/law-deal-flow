@@ -19,8 +19,8 @@ export const ProposalsContractsCard = ({ unreadCount }: ProposalsContractsCardPr
         <div className="flex flex-col gap-2 flex-1">
           <FileText className="h-6 w-6 text-foreground" />
           <div className="flex flex-col gap-1">
-            <span className="text-lg font-bold text-foreground leading-[1.3]">Proposals & Contracts</span>
-            <span className="text-sm leading-5 text-gray-500 dark:text-muted-foreground">
+            <span className="text-2xl font-semibold leading-none tracking-tight text-card-foreground">Proposals & Contracts</span>
+            <span className="text-sm text-muted-foreground">
               View proposals and contracts
             </span>
           </div>
