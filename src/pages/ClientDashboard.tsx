@@ -419,7 +419,7 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
 
   // Twilio code removed
 
-  if (loading) {
+  if (loading || fetchingCases) {
     return (
       <div className="min-h-screen bg-background">
         <ClientHeader />

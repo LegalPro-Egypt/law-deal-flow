@@ -40,6 +40,7 @@ interface CommunicationInboxProps {
   paymentStatus?: string;
   lawyerAssigned?: boolean;
   chatNotificationCount?: number;
+  loading?: boolean;
 }
 
 export const CommunicationInbox: React.FC<CommunicationInboxProps> = ({
@@ -51,7 +52,8 @@ export const CommunicationInbox: React.FC<CommunicationInboxProps> = ({
   consultationPaid: initialConsultationPaid,
   paymentStatus: initialPaymentStatus,
   lawyerAssigned = false,
-  chatNotificationCount = 0
+  chatNotificationCount = 0,
+  loading = false
 }) => {
   const { t, isRTL } = useLanguage();
   const [completing, setCompleting] = useState(false);
@@ -170,7 +172,7 @@ export const CommunicationInbox: React.FC<CommunicationInboxProps> = ({
     }
   };
 
-  if (cases.length === 0) {
+  if (!loading && cases.length === 0) {
     return (
       <div className={isRTL() ? 'text-right' : ''}>
         <Alert>

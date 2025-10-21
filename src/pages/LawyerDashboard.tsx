@@ -637,6 +637,7 @@ const LawyerDashboard = ({ viewAsUserId }: LawyerDashboardProps = {}) => {
             userRole="lawyer"
             lawyerAssigned={true}
             chatNotificationCount={getTotalUnreadCount()}
+            loading={loading}
           />
         </div>
       </div>

@@ -62,6 +62,7 @@ const CommunicationChat = () => {
           consultationPaid={activeCase?.consultation_paid || false}
           paymentStatus={activeCase?.payment_status || 'pending'}
           lawyerAssigned={!!activeCase?.assigned_lawyer_id}
+          loading={loading}
         />
         
         <div className="mt-4 p-3 bg-muted/50 rounded-lg text-sm text-muted-foreground flex items-start gap-2">
