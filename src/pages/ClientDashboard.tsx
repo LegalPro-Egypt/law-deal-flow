@@ -29,7 +29,6 @@ import {
   UserCircle,
   Bot,
   HelpCircle,
-  Calendar as CalendarIcon,
   Pencil,
   Check,
   X,
@@ -53,7 +52,6 @@ import { CommunicationInbox } from "@/components/CommunicationInbox";
 import { NotificationsInbox } from "@/components/NotificationsInbox";
 import { CaseWorkProgress } from "@/components/CaseWorkProgress";
 import { CaseTimeline } from "@/components/CaseTimeline";
-import { CaseCalendar } from "@/components/CaseCalendar";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useChatNotifications } from "@/hooks/useChatNotifications";
 import { NotificationBadge } from "@/components/ui/notification-badge";
@@ -74,6 +72,7 @@ import { LexaInput } from "@/components/dashboard/LexaInput";
 import { MilestonesCard } from "@/components/dashboard/MilestonesCard";
 import { ConnectCard } from "@/components/dashboard/ConnectCard";
 import { ProposalsContractsCard } from "@/components/dashboard/ProposalsContractsCard";
+import { CalendarCard } from "@/components/dashboard/CalendarCard";
 import { cn } from "@/lib/utils";
 
 interface ClientDashboardProps {
@@ -100,8 +99,7 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
     personal: true,
     intake: true,
     documents: true,
-    communication: true,
-    calendar: true
+    communication: true
   });
   const { signOut, user, role } = useAuth();
   const navigate = useNavigate();
@@ -659,40 +657,7 @@ const ClientDashboard = ({ viewAsUserId }: ClientDashboardProps = {}) => {
         <ConnectCard unreadCount={totalUnreadCount} />
 
         {/* Calendar Card */}
-        <Collapsible open={!collapsedCards.calendar} onOpenChange={() => toggleCard('calendar')}>
-          <Card className="bg-gradient-card shadow-card border-0">
-            <CollapsibleTrigger asChild>
-              <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center">
-                      <CalendarIcon className="h-5 w-5 mr-2" />
-                      Calendar & Appointments
-                    </CardTitle>
-                    <CardDescription>
-                      View scheduled meetings and appointments
-                    </CardDescription>
-                  </div>
-                  {collapsedCards.calendar ? (
-                    <ChevronRight className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
-                  )}
-                </div>
-              </CardHeader>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <CardContent>
-                <CaseCalendar
-                  caseId={activeCase.id}
-                  isLawyer={false}
-                  clientId={user?.id}
-                  lawyerId={activeCase.assigned_lawyer_id}
-                />
-              </CardContent>
-            </CollapsibleContent>
-          </Card>
-        </Collapsible>
+        <CalendarCard />
 
         {/* Case Documents Card */}
         <Collapsible open={!collapsedCards.documents} onOpenChange={() => toggleCard('documents')}>
